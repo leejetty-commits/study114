@@ -86,8 +86,34 @@ const STUDENT_BASIC_LABELS = {
   budget: '예산',
 };
 
-/** 희망지역은 제출 전에 따로 검사한다. 나머지 일곱 칸의 빈 항목 이름. */
-function studentBasicMissing(data) {
+/** 칸 아래 안내. 희망지역 문구는 제출 검사 문장을 그대로 쓴다. */
+const STUDENT_FIELD_ERRORS = {
+  public_display_name: '표시명을 입력해 주세요.',
+  grade_level: '학교급·학년을 선택해 주세요.',
+  preferred_lesson_type: '희망 유형을 선택해 주세요.',
+  subject: '희망과목을 선택해 주세요.',
+  lesson_format: '수업형태를 선택해 주세요.',
+  preferred_student_count_group: '수업인원을 선택해 주세요.',
+  budget: '예산을 입력해 주세요.',
+};
+
+const STUDENT_ISSUE_ORDER = [
+  'public_display_name',
+  'grade_level',
+  'preferred_lesson_type',
+  'preferred_region',
+  'subject',
+  'lesson_format',
+  'preferred_student_count_group',
+  'budget',
+];
+
+function studentFieldErrorHtml(key) {
+  return `<p class="form-note form-note--error" data-field-error="${key}" hidden></p>`;
+}
+
+/** 희망지역은 제출 전에 따로 검사한다. 나머지 일곱 칸의 빈 항목 키. 판정은 그대로다. */
+function studentBasicMissingKeys(data) {
   const text = (v) => String(v ?? '').trim();
   const hope = data.preferred_lesson_type;
   const format = text(data.lesson_format);
@@ -101,9 +127,153 @@ function studentBasicMissing(data) {
     preferred_student_count_group: format === 'one_on_one' || text(data.preferred_student_count_group) !== '',
     budget: /^\d+$/.test(budget) && Number(budget) >= 1,
   };
-  return Object.keys(STUDENT_BASIC_LABELS)
-    .filter((key) => key in ok && !ok[key])
-    .map((key) => STUDENT_BASIC_LABELS[key]);
+  return Object.keys(STUDENT_BASIC_LABELS).filter((key) => key in ok && !ok[key]);
+}
+
+/** 희망지역은 제출 전에 따로 검사한다. 나머지 일곱 칸의 빈 항목 이름. */
+function studentBasicMissing(data) {
+  return studentBasicMissingKeys(data).map((key) => STUDENT_BASIC_LABELS[key]);
+}
+
+/** 희망지역 제출 검사. 판정·문구는 그대로 두고, 통과하면 저장에 넣던 값만 돌려준다. */
+function studentRegionCheck(form, data) {
+  if (data.preferred_lesson_type === 'study_room') {
+    const hopeRegion = readStudentHopeRegion(form);
+    const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
+    const patch = {
+      region_basis: basis,
+      region_id: hopeRegion?.region_id || '',
+      region_label: hopeRegion?.region_label || '',
+      complex_id: '',
+      complex_address: '',
+      complex_label: '',
+      complex_name: '',
+    };
+    if (basis === 'dong') {
+      if (!patch.region_id) {
+        return { ok: false, message: '행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.' };
+      }
+    } else {
+      const place = String(hopeRegion?.complex_name || '').trim();
+      if (!patch.region_id) {
+        return { ok: false, message: '주소 검색으로 아파트·단지를 다시 선택해 주세요.' };
+      }
+      if (!place) {
+        return { ok: false, message: '아파트·단지 이름이 있는 주소로 다시 검색해 주세요.' };
+      }
+      patch.complex_label = place;
+      patch.complex_name = place;
+      patch.region_label = place;
+    }
+    return { ok: true, patch };
+  }
+  if (data.preferred_lesson_type === 'tutor') {
+    const units = getCityUnits(signupState.tutorUnits || []);
+    if (!units.length) {
+      return { ok: false, system: true, message: TUTOR_UNIT_LIST_ERROR };
+    }
+    const picker = form.querySelector('[data-student-tutor-block] [data-region-cascade]');
+    const regionId = String(picker?.querySelector('[data-field="region_id"]')?.value || '').trim();
+    const city = String(picker?.querySelector('[data-field="region_activity_label"]')?.value || '').trim();
+    const started = Boolean(
+      picker?.querySelector('[data-field="region_sido"]')?.value ||
+        picker?.querySelector('[data-field="region_city"]')?.value,
+    );
+    if (!regionId) {
+      return {
+        ok: false,
+        message: started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.',
+      };
+    }
+    if (regionIdForSido(city) !== regionId) {
+      return { ok: false, message: '희망지역을 목록에서 다시 선택해 주세요.' };
+    }
+    return {
+      ok: true,
+      patch: {
+        region_id: regionId,
+        region_label: city,
+        activity_city: city,
+        region_basis: '',
+        complex_id: '',
+      },
+    };
+  }
+  return { ok: true, patch: {} };
+}
+
+function collectStudentIssues(form, data) {
+  const issues = studentBasicMissingKeys(data).map((key) => ({
+    key,
+    message: STUDENT_FIELD_ERRORS[key],
+  }));
+  if (data.preferred_lesson_type === 'tutor' || data.preferred_lesson_type === 'study_room') {
+    const region = studentRegionCheck(form, data);
+    if (!region.ok && !region.system) issues.push({ key: 'preferred_region', message: region.message });
+  }
+  return issues;
+}
+
+function visibleStudentErrorNotes(form, key) {
+  return [...form.querySelectorAll(`[data-field-error="${key}"]`)].filter((el) => {
+    let node = el.parentElement;
+    while (node) {
+      if (node.hasAttribute?.('hidden')) return false;
+      node = node.parentElement;
+    }
+    return true;
+  });
+}
+
+function clearStudentFieldErrors(form) {
+  form?.querySelectorAll('[data-field-error]').forEach((el) => {
+    el.hidden = true;
+    el.textContent = '';
+  });
+}
+
+function applyStudentFieldErrors(form, issues) {
+  clearStudentFieldErrors(form);
+  const shown = new Set();
+  issues.forEach((issue) => {
+    if (shown.has(issue.key)) return;
+    shown.add(issue.key);
+    visibleStudentErrorNotes(form, issue.key).forEach((el) => {
+      el.hidden = false;
+      el.textContent = issue.message;
+    });
+  });
+}
+
+function firstStudentIssueKey(issues) {
+  return STUDENT_ISSUE_ORDER.find((key) => issues.some((issue) => issue.key === key)) || '';
+}
+
+function focusStudentField(form, key) {
+  const note = visibleStudentErrorNotes(form, key)[0];
+  const field = note?.closest('.student-basic__field') || form;
+  let el = null;
+  if (key === 'public_display_name') el = field.querySelector('#public_display_name');
+  else if (key === 'grade_level') el = field.querySelector('#school_level');
+  else if (key === 'preferred_lesson_type') el = field.querySelector('input[name="preferred_lesson_type"]');
+  else if (key === 'subject') el = field.querySelector('#subject_names');
+  else if (key === 'lesson_format') el = field.querySelector('input[name="lesson_format"]');
+  else if (key === 'preferred_student_count_group') {
+    el = field.querySelector('input[name="preferred_student_count_group"]');
+  } else if (key === 'budget') {
+    el = form.querySelector(
+      '[data-student-tutor-budget]:not([hidden]) input, [data-student-studyroom-budget]:not([hidden]) input',
+    );
+  } else if (key === 'preferred_region') {
+    const tutor = form.querySelector('[data-student-tutor-block]:not([hidden])');
+    const study = form.querySelector('[data-student-studyroom-block]:not([hidden])');
+    if (tutor) el = tutor.querySelector('[data-field="region_sido"]');
+    else if (study) {
+      const open = study.querySelector('[data-dong-search]:not([hidden]), [data-complex-search]:not([hidden])');
+      el = open?.querySelector('[data-address-search]') || open?.querySelector('input, select');
+    }
+  }
+  if (el instanceof HTMLElement) el.focus();
 }
 
 /** 저장된 과외 희망지역 id. 라벨만 있으면 서버 목록에서 다시 찾는다. */
@@ -166,6 +336,7 @@ function renderStudentBasic() {
         <label class="form-label form-label--required" for="public_display_name">표시명</label>
         <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
         <p class="form-hint">${AUTH_WELCOME_COPY.basicDisplayNameHint}</p>
+        ${studentFieldErrorHtml('public_display_name')}
       </div>
       <div class="student-basic__field" data-school-grade-pair>
         <label class="form-label form-label--required" for="school_level">학교급</label>
@@ -183,6 +354,7 @@ function renderStudentBasic() {
           </select>
         </div>
         <p class="form-hint">학교급을 고르면 학년이 따라 열립니다. 미취학은 학년을 고르지 않습니다.</p>
+        ${studentFieldErrorHtml('grade_level')}
       </div>
       <div class="student-basic__field">
         <span class="form-label form-label--required">희망 유형</span>
@@ -192,10 +364,12 @@ function renderStudentBasic() {
           { selected: hope },
         )}
         <p class="form-hint">과외쌤과 공부방 중 먼저 찾을 쪽을 고릅니다.</p>
+        ${studentFieldErrorHtml('preferred_lesson_type')}
       </div>
       <div class="student-basic__field" data-student-studyroom-block ${hope === 'study_room' ? '' : 'hidden'}>
         ${renderStudentHopeRegion(d)}
         <p class="form-hint">주소 검색으로 행정동 또는 아파트단지를 고릅니다.</p>
+        ${studentFieldErrorHtml('preferred_region')}
       </div>
       <div class="student-basic__field" data-student-tutor-block ${hope === 'tutor' ? '' : 'hidden'}>
         <span class="form-label form-label--required">희망지역</span>
@@ -207,6 +381,7 @@ function renderStudentBasic() {
           hiddenLabelName: 'activity_city',
         })}
         <p class="form-hint">광역시·세종은 시·도 선택으로 끝나고, 도는 시·군까지 고릅니다.</p>
+        ${studentFieldErrorHtml('preferred_region')}
       </div>
       <div class="student-basic__field">
         <label class="form-label form-label--required" for="subject_names">희망과목</label>
@@ -214,26 +389,31 @@ function renderStudentBasic() {
           ${renderMainSubjectSelect(d.subject_names || '', { emptyLabel: '과목 선택' })}
         </select>
         <p class="form-hint">${AUTH_WELCOME_COPY.basicSubjectHint}</p>
+        ${studentFieldErrorHtml('subject')}
       </div>
       <div class="student-basic__field">
         <span class="form-label form-label--required">수업형태</span>
         ${renderChips('lesson_format', LESSON_FORMAT_OPTIONS, { selected: lessonFormat, required: false })}
         <p class="form-hint">단독과외와 그룹과외 중 고릅니다. 단독과외는 수업인원이 단독으로 저장됩니다.</p>
+        ${studentFieldErrorHtml('lesson_format')}
       </div>
       <div class="student-basic__field">
         <span class="form-label form-label--required">수업인원</span>
         ${renderChips('preferred_student_count_group', STUDENT_COUNT_OPTIONS, { selected: count, required: false })}
         <p class="form-hint">함께 수업할 인원입니다.</p>
+        ${studentFieldErrorHtml('preferred_student_count_group')}
       </div>
       <div class="student-basic__field" data-student-tutor-budget ${hope === 'tutor' ? '' : 'hidden'}>
         <label class="form-label form-label--required" for="preferred_fee_amount">예산 (천원)</label>
         <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(d.preferred_fee_amount ?? '')}" ${hope === 'tutor' ? '' : 'disabled'} />
         <p class="form-hint">과외쌤 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
+        ${studentFieldErrorHtml('budget')}
       </div>
       <div class="student-basic__field" data-student-studyroom-budget ${hope === 'study_room' ? '' : 'hidden'}>
         <label class="form-label form-label--required" for="preferred_studyroom_fee_amount">예산 (천원)</label>
         <input class="form-input" id="preferred_studyroom_fee_amount" name="preferred_studyroom_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(d.preferred_studyroom_fee_amount ?? '')}" ${hope === 'study_room' ? '' : 'disabled'} />
         <p class="form-hint">공부방 수업의 월 예산입니다. 천원 단위로 적습니다.</p>
+        ${studentFieldErrorHtml('budget')}
       </div>
       <div class="student-basic__field">
         <label class="form-label" for="request_summary">한 줄 요청문</label>
@@ -574,6 +754,9 @@ export function bindSignupBasicEvents(root) {
           signupState.regions.push(region);
         }
       },
+      onApplied() {
+        syncStudentNextButton();
+      },
     });
   }
 
@@ -620,17 +803,44 @@ export function bindSignupBasicEvents(root) {
     bindTutorUnitCascades(studentTutorBlock, getCityUnits(signupState.tutorUnits || []));
   }
 
-  // min=1 위반(0 입력)은 브라우저 말풍선 대신 서버와 같은 「예산」 안내로 막는다.
+  function syncStudentNextButton() {
+    if (role !== 'student' || !form) return;
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (!submitBtn || submitBtn.textContent === '저장 중…') return;
+    const data = collectFormData(form);
+    const region = studentRegionCheck(form, data);
+    const regionMissing =
+      (data.preferred_lesson_type === 'tutor' || data.preferred_lesson_type === 'study_room') &&
+      !region.ok &&
+      !region.system;
+    submitBtn.disabled = studentBasicMissingKeys(data).length > 0 || regionMissing;
+    if (form.dataset.studentBasicTried === '1') {
+      applyStudentFieldErrors(form, collectStudentIssues(form, data));
+    }
+  }
+
+  // min=1 위반(0 입력)은 브라우저 말풍선 대신 예산 칸 안내로 막는다. 학생 폼만 인라인.
   form?.querySelectorAll('#preferred_fee_amount, #preferred_studyroom_fee_amount').forEach((el) => {
     el.addEventListener('invalid', (e) => {
       e.preventDefault();
-      alert(`기본정보를 모두 채워 주세요: ${STUDENT_BASIC_LABELS.budget}`);
+      if (role !== 'student') {
+        alert(`기본정보를 모두 채워 주세요: ${STUDENT_BASIC_LABELS.budget}`);
+        return;
+      }
+      form.dataset.studentBasicTried = '1';
+      applyStudentFieldErrors(form, collectStudentIssues(form, collectFormData(form)));
+      if (el instanceof HTMLElement) el.focus();
     });
   });
 
   syncStudentHopeBlocks();
   syncLessonCountLock();
   bindInputFill(form);
+  if (role === 'student') {
+    form?.addEventListener('input', syncStudentNextButton);
+    form?.addEventListener('change', syncStudentNextButton);
+    syncStudentNextButton();
+  }
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -670,71 +880,20 @@ export function bindSignupBasicEvents(root) {
         data.public_display_name = displayName;
         data.student_name = displayName;
       }
-      if (!data.preferred_lesson_type) {
-        alert('희망 유형을 선택해 주세요.');
+      form.dataset.studentBasicTried = '1';
+      const issues = collectStudentIssues(form, data);
+      if (issues.length) {
+        applyStudentFieldErrors(form, issues);
+        focusStudentField(form, firstStudentIssueKey(issues));
         return;
       }
-      const missing = studentBasicMissing(data);
-      if (missing.length) {
-        alert(`기본정보를 모두 채워 주세요: ${missing.join(', ')}`);
+      clearStudentFieldErrors(form);
+      const region = studentRegionCheck(form, data);
+      if (!region.ok && region.system) {
+        alert(region.message);
         return;
       }
-      if (data.preferred_lesson_type === 'study_room') {
-        const hopeRegion = readStudentHopeRegion(form);
-        const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
-        data.region_basis = basis;
-        data.region_id = hopeRegion?.region_id || '';
-        data.region_label = hopeRegion?.region_label || '';
-        data.complex_id = '';
-        data.complex_address = '';
-        data.complex_label = '';
-        data.complex_name = '';
-        if (basis === 'dong') {
-          if (!data.region_id) {
-            alert('행정동을 찾지 못했습니다. 주소 검색으로 다시 선택해 주세요.');
-            return;
-          }
-        } else {
-          const place = String(hopeRegion?.complex_name || '').trim();
-          if (!data.region_id) {
-            alert('주소 검색으로 아파트·단지를 다시 선택해 주세요.');
-            return;
-          }
-          if (!place) {
-            alert('아파트·단지 이름이 있는 주소로 다시 검색해 주세요.');
-            return;
-          }
-          data.complex_label = place;
-          data.complex_name = place;
-          data.region_label = place;
-        }
-      } else {
-        const units = getCityUnits(signupState.tutorUnits || []);
-        if (!units.length) {
-          alert(TUTOR_UNIT_LIST_ERROR);
-          return;
-        }
-        const picker = form.querySelector('[data-student-tutor-block] [data-region-cascade]');
-        const regionId = String(picker?.querySelector('[data-field="region_id"]')?.value || '').trim();
-        const city = String(picker?.querySelector('[data-field="region_activity_label"]')?.value || '').trim();
-        const started = Boolean(
-          picker?.querySelector('[data-field="region_sido"]')?.value ||
-            picker?.querySelector('[data-field="region_city"]')?.value,
-        );
-        if (!regionId) {
-          alert(started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.');
-          return;
-        }
-        if (regionIdForSido(city) !== regionId) {
-          alert('희망지역을 목록에서 다시 선택해 주세요.');
-          return;
-        }
-        data.region_id = regionId;
-        data.region_label = city;
-        data.activity_city = city;
-        data.region_basis = '';
-        data.complex_id = '';
-      }
+      if (region.patch) Object.assign(data, region.patch);
     }
 
     if (role === 'tutor') {
