@@ -50,9 +50,10 @@ import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-ro
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
+import { parentBranch } from '../../../shared/site-nav-config.js';
 import {
   placeCaption,
-  STUDENT_PLACE_PROMPT,
+  studentPlacePromptFor,
   readGuestBaseline,
   loadGuestBaseline,
   readGuestAxisCounts,
@@ -91,7 +92,7 @@ function visibleCurrentPlace(tab, role, regionLabel) {
     return tab === 'room' ? base.room : tab === 'student' ? base.student : base.tutor;
   }
   // 학생: 서버 저장 지역 라벨(또는 직접 고른 위치) 그대로. 동만 잘라 보이지 않는다.
-  if (role === 'parent') return regionLabel || STUDENT_PLACE_PROMPT;
+  if (role === 'parent') return regionLabel || studentPlacePromptFor(tab, parentBranch());
   if (tab === 'student' && role === 'study_room') {
     return studentCurrentPlace(regionLabel) || placeCaption(regionLabel, 'room') || '';
   }

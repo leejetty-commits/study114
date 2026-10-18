@@ -83,7 +83,7 @@ import {
   serializeCanonical,
   deserializeCanonical,
   placeCaption,
-  STUDENT_PLACE_PROMPT,
+  studentPlacePromptFor,
   memberPlacePrompt,
   expandKakaoSido,
   loadGuestBaseline,
@@ -2484,7 +2484,7 @@ export function renderCompactRegionBar(tab, state, options = {}) {
         </div>`;
     }
     if (role === 'parent') {
-      const label = resolveActiveRegionLabel(tab, state, role) || STUDENT_PLACE_PROMPT;
+      const label = resolveActiveRegionLabel(tab, state, role) || studentPlacePromptFor(tab, parentFindBranch(state));
       if (variant === 'home') {
         return `
           <div class="parent-home-region parent-home-region--tutor" aria-label="희망 지역">
@@ -2530,8 +2530,13 @@ export function renderCompactRegionBar(tab, state, options = {}) {
       </div>`;
   }
 
-  const regionLabel =
-    resolveActiveRegionLabel(tab, state, role) || (role === 'guest' ? guestServerPlace(tab) : memberPlacePrompt(role));
+  const regionFallback =
+    role === 'guest'
+      ? guestServerPlace(tab)
+      : role === 'parent'
+        ? studentPlacePromptFor(tab, parentFindBranch(state))
+        : memberPlacePrompt(role);
+  const regionLabel = resolveActiveRegionLabel(tab, state, role) || regionFallback;
   if (variant === 'home') {
     const badge = tab === 'room' ? '우리동네' : '탐색 지역';
     return `
@@ -2736,7 +2741,7 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     if (!regionLabel) {
       return `
       <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
-        <p class="search-results__hint">${esc(STUDENT_PLACE_PROMPT)}</p>
+        <p class="search-results__hint">${esc(studentPlacePromptFor(tab, parentFindBranch(state)))}</p>
       </section>`;
     }
     // 학생 홈 0건은 티어 렌더가 빈칸(공부방·과외쌤) / 「없다」 카피(학생)를 그린다.

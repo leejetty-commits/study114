@@ -1,3 +1,5 @@
+import { parentBranch } from './site-nav-config.js';
+
 /**
  * 위치 SSOT — CanonicalLocation 하나가 헤더/지도/리스트/URL의 단일 원천
  *
@@ -579,11 +581,39 @@ export const GUEST_PLACE_PROMPT = '위치를 선택해 주세요';
 
 /** 로그인 회원에게 저장 지역이 정말 없을 때만. 게스트 안내문은 쓰지 않는다. */
 export const STUDENT_PLACE_PROMPT = '마이페이지에서 희망지역을 등록해 주세요';
+/** 학생 반대 분기 찾기. 희망지역 등록으로 보내지 않는다. */
+export const OPPOSITE_PLACE_PROMPT = '아래 검색창에서 지역을 선택하여 검색하세요';
 export const MEMBER_PLACE_PROMPT = '마이페이지에서 지역을 등록해 주세요';
 
-/** @param {string} [role] */
+/**
+ * 자기 분기·학생찾기는 미등록 안내를 유지한다.
+ * 공부방 분기 학생의 과외쌤찾기, 과외 분기 학생의 공부방찾기만 검색창 안내를 쓴다.
+ * @param {string} tab
+ * @param {string|null|undefined} branch
+ */
+export function studentPlacePromptFor(tab, branch) {
+  const opposite =
+    (tab === 'tutor' && branch === 'study_room') || (tab === 'room' && branch === 'tutor');
+  return opposite ? OPPOSITE_PLACE_PROMPT : STUDENT_PLACE_PROMPT;
+}
+
+/** 찾기 화면 해시. 지도 제목은 이 모듈 밖이라 여기서 탭을 본다. */
+function findTabFromHash() {
+  if (typeof window === 'undefined') return '';
+  const match = String(window.location.hash || '').match(/#\/search\/(room|tutor|student)/);
+  return match ? match[1] : '';
+}
+
+/**
+ * 학생은 찾기 해시가 반대 분기일 때만 검색창 안내를 쓴다.
+ * 지도 배너가 이 함수로 제목을 고르므로, 상수는 그대로 둔다.
+ * @param {string} [role]
+ */
 export function memberPlacePrompt(role) {
-  return role === 'parent' ? STUDENT_PLACE_PROMPT : MEMBER_PLACE_PROMPT;
+  if (role !== 'parent') return MEMBER_PLACE_PROMPT;
+  const tab = findTabFromHash();
+  if (tab === 'room' || tab === 'tutor') return studentPlacePromptFor(tab, parentBranch());
+  return STUDENT_PLACE_PROMPT;
 }
 
 /** 카카오 우편번호 result.sido 약칭 → 시·도 정식 이름. */
