@@ -75,8 +75,6 @@ export function showPaidGateOverlay(opts = {}) {
 
         <p class="msg-gate__hint">${esc(copy.hint)}</p>
 
-        <p class="msg-gate__note">학부모 화면 아님 · 15장 §7</p>
-
         <div class="msg-overlay__actions">
 
           ${copy.showPlansCta ? `<button type="button" class="btn btn--primary" data-action="gate-plans">${esc(copy.cta)}</button>` : ''}
