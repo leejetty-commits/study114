@@ -132,7 +132,7 @@
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
 }
 
 /* 마이프로필 카드 1 (요약 카드) */
@@ -205,7 +205,7 @@
   grid-template-columns: 144px 1fr;
   gap: var(--space-4);
   align-items: center;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   border-top: 1px solid var(--s5-line);
   border-bottom: 0;
 }
@@ -295,7 +295,7 @@
 .home-app--role-parent .mp-room .p19-input:not(.p19-textarea),
 .home-app--role-parent .mp-room .p19-select {
   height: 44px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   box-sizing: border-box;
   margin-top: var(--space-2);
 }
@@ -313,7 +313,7 @@
 .home-app--role-parent .mp-room .p19-chip {
   height: 44px;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border-radius: 6px;
   border: 1px solid var(--s5-line);
   font-size: 14px;
@@ -361,7 +361,7 @@
   color: #fff;
   height: 44px;
   min-width: 96px;
-  padding: 0 24px;
+  padding: 0 var(--space-6);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 700;
@@ -384,7 +384,7 @@
 .home-app--role-parent .mp-room [data-p19-memo-shell] .p21-inq-choice {
   height: 44px;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border: 1px solid var(--s5-line);
   border-radius: 6px;
   background: var(--s5-surface);
@@ -532,7 +532,7 @@
   font-weight: 400;
   color: var(--s5-muted);
   line-height: 1.4;
-  margin: 8px 0 0 0 !important;
+  margin: var(--space-2) 0 0 0 !important;
 }
 
 .home-app--role-parent .mp-room__tabs {
@@ -542,7 +542,7 @@
 .home-app--role-parent .mp-room [data-hope-region] .register-region-slot__basis .chip {
   height: 44px;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border: 1px solid var(--s5-line);
   border-radius: 6px;
   background: var(--s5-surface);
@@ -600,7 +600,7 @@
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .form-input {
   flex: 1;
   height: 44px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   border: 1px solid var(--s5-line);
   border-radius: 8px;
   font-size: 16px;
@@ -612,7 +612,7 @@
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .btn--secondary {
   height: 44px;
   min-width: 96px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -639,7 +639,7 @@
   background: var(--s5-bg);
   font-size: 14px;
   color: var(--s5-ink);
-  margin: 8px 0 0 0 !important;
+  margin: var(--space-2) 0 0 0 !important;
   border: 0;
   box-sizing: border-box;
 }
