@@ -559,17 +559,31 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
 }
 
 /**
+ * 홈 처음 화면만. 찾기·검색은 surfaceMode를 넘기므로 사진 자리를 넣지 않는다.
+ * @param {{ surfaceMode?: string }} [opts]
+ */
+function homeEmptyMedia(opts = {}) {
+  return !opts.surfaceMode;
+}
+
+/**
  * 프라임·픽 홍보 빈 카드. 문구와 버튼은 같다. 버튼은 「유료상품 보기」.
+ * 사진 자리는 홈에서 그 줄이 전부 빈 카드일 때만 넣는다.
  * @param {'study_room'|'tutor'} kind
  * @param {'prime'|'pick'} tier
+ * @param {{ withMedia?: boolean }} [opts]
  */
-function renderEmptyPromoCard(kind, tier) {
+function renderEmptyPromoCard(kind, tier, opts = {}) {
   const copy = getPrimeEmptyCopy(kind);
   const tone = kind === 'tutor' ? 'tutor' : 'study_room';
   const tierName = tier === 'pick' ? 'pick' : 'prime';
   const flag = tier === 'pick' ? 'data-pick-empty="1"' : 'data-prime-empty="1"';
+  const media = opts.withMedia
+    ? `<div class="expo-media-wrap"><div class="expo-media expo-media--${tierName} expo-media--placeholder" aria-hidden="true"></div></div>`
+    : '';
   return `
     <article class="expo-card expo-card--${tierName} expo-card--empty expo-card--${tone}" ${flag}>
+      ${media}
       <div class="expo-empty-prime">
         <p class="expo-empty-prime__title">${esc(copy.title)}</p>
         <p class="expo-empty-prime__body">${esc(copy.body)}</p>
@@ -582,14 +596,15 @@ function renderEmptyPromoCard(kind, tier) {
  * Prime 빈 슬롯 — 다른 상품으로 채우지 않고 홍보카드 유지
  * @param {'study_room'|'tutor'} kind
  */
-export function renderEmptyPrimePromo(kind) {
-  return renderEmptyPromoCard(kind, 'prime');
+/** @param {'study_room'|'tutor'} kind @param {{ withMedia?: boolean }} [opts] */
+export function renderEmptyPrimePromo(kind, opts = {}) {
+  return renderEmptyPromoCard(kind, 'prime', opts);
 }
 
-/** @param {'study_room'|'tutor'} kind @param {number} [count] */
-export function renderEmptyPrimePromoRow(kind, count) {
+/** @param {'study_room'|'tutor'} kind @param {number} [count] @param {{ withMedia?: boolean }} [opts] */
+export function renderEmptyPrimePromoRow(kind, count, opts = {}) {
   const n = Number(count) > 0 ? Number(count) : getExposurePageSizes().primeSlots;
-  return Array.from({ length: n }, () => renderEmptyPrimePromo(kind)).join('');
+  return Array.from({ length: n }, () => renderEmptyPrimePromo(kind, opts)).join('');
 }
 
 /** 베이직·학생 빈 칸. 프라임 빈 셸과 같은 상자. */
@@ -612,8 +627,9 @@ export function renderGuestVacantBasicList() {
 }
 
 /** 픽 빈 슬롯 — 실픽 카드와 같은 줄. */
-export function renderEmptyPickPromo(kind) {
-  return renderEmptyPromoCard(kind, 'pick');
+/** @param {'study_room'|'tutor'} kind @param {{ withMedia?: boolean }} [opts] */
+export function renderEmptyPickPromo(kind, opts = {}) {
+  return renderEmptyPromoCard(kind, 'pick', opts);
 }
 
 /**
@@ -624,7 +640,7 @@ export function renderEmptyPickPromo(kind) {
  * @param {{ guest?: boolean, viewerRole?: string }} [opts]
  */
 export function renderPickVacantMarkup(kind, opts = {}) {
-  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind);
+  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind, { withMedia: opts.withMedia === true });
   return `<p class="mypage-muted" data-pick-vacant-note="1">${esc(pickZeroNote(kind))}</p>`;
 }
 
@@ -649,7 +665,7 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
     const padCount = shouldPadTutorPrimeSlots(opts) ? Math.max(0, primeSlots - pageItems.length) : 0;
     let cards;
     if (!pageItems.length) {
-      cards = renderEmptyPrimePromoRow(kind, primeSlots);
+      cards = renderEmptyPrimePromoRow(kind, primeSlots, { withMedia: homeEmptyMedia(opts) });
     } else {
       cards = [
         ...pageItems.map((item) => renderExposureBox(kind, 'prime', item, '', opts)),
@@ -664,9 +680,10 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   }
 
   const slots = buildPrimeSlotArray(occupiedItems, primeSlots);
+  const withMedia = homeEmptyMedia(opts) && slots.every((item) => !item);
   const cards = slots
     .map((item) => {
-      if (!item) return renderEmptyPrimePromo(kind);
+      if (!item) return renderEmptyPrimePromo(kind, { withMedia });
       return renderExposureBox(kind, 'prime', item, '', opts);
     })
     .join('');
@@ -1042,7 +1059,7 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const homeVacant = opts.surfaceMode !== 'search' && pickPool.length === 0;
   let pickBody;
   if (homeVacant) {
-    pickBody = renderPickVacantMarkup(kind, opts);
+    pickBody = renderPickVacantMarkup(kind, { ...opts, withMedia: homeEmptyMedia(opts) });
   } else if (opts.surfaceMode === 'search') {
     const vacantPick =
       opts.vacantFill === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
