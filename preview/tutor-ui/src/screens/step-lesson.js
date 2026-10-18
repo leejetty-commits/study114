@@ -70,7 +70,7 @@ export function renderLesson() {
     </label>`,
   ).join('');
 
-  const prevPath = s.basicComplete ? null : '/register/regions';
+  const prevPath = s.basicComplete ? '/register/basic' : '/register/regions';
   const content = `
     <form data-form="lesson">
       ${renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
@@ -123,7 +123,9 @@ export function bindLessonEvents(root) {
   bindGlobalEvents(root);
   bindInputFill(root.querySelector('[data-form="lesson"]'));
   const nextBtn = root.querySelector('[data-action="next"]');
-  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/regions'));
+  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => {
+    navigate(registerState.basicComplete ? '/register/basic' : '/register/regions');
+  });
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
   root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
     registerState.subjects.push(emptySubject());

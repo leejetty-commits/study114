@@ -70,7 +70,7 @@ final class TutorRegisterService
 
             'SELECT * FROM tutors
 
-             WHERE user_id = ? AND profile_status IN ("draft", "pending")
+             WHERE user_id = ?
 
              ORDER BY updated_at DESC, id DESC
 

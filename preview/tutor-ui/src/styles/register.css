@@ -3,3 +3,162 @@
 .register-body:not(.register-body--no-promo) .site-gate-wrap {
   max-width: none;
 }
+
+/* 기본정보 현황 — 공부방 현황과 같은 접기·행·수정 창 */
+.register-overview__dl {
+  margin: 0 0 1.25rem;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.register-overview__row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.35rem;
+  cursor: pointer;
+}
+
+.register-overview__row.is-filled {
+  background: var(--gray-100, #f1f5f9);
+}
+
+.register-overview__row.is-empty {
+  background: #fff;
+}
+
+.register-overview__row:hover,
+.register-overview__row:focus-visible {
+  background: var(--brand-blue-soft, #eff6ff);
+  box-shadow: inset 0 0 0 1px var(--brand-blue, #2563eb);
+  outline: none;
+}
+
+.register-overview__row dt {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-500, #64748b);
+}
+
+.register-overview__row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gray-900, #0f172a);
+}
+
+.register-overview__row.is-empty dd > span {
+  color: var(--gray-400, #94a3b8);
+}
+
+.register-basic-complete-gate {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--gray-50, #f8fafc);
+}
+
+.register-basic-complete-gate__msg {
+  margin: 0 0 0.85rem;
+  font-size: 0.9375rem;
+  color: var(--gray-700, #334155);
+  line-height: 1.45;
+}
+
+.register-basic-complete-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.register-overview__fold {
+  margin: 0.5rem 0 1rem;
+}
+
+.register-overview__fold > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+  padding: 0.35rem 0;
+}
+
+.register-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+  background: rgb(92 45 12 / 0.38);
+}
+
+body.register-edit-open {
+  overflow: hidden;
+}
+
+.register-edit-dialog {
+  width: min(56rem, 100%);
+  max-height: calc(100vh - 2rem);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffaf4 0%, #fff8f0 48%, #fff6ea 100%);
+  border-radius: 1.15rem;
+  border: 1px solid #f3c89a;
+  box-shadow: 0 1.25rem 3rem rgb(180 83 9 / 0.22);
+}
+
+.register-edit-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 1.1rem;
+  background: linear-gradient(135deg, var(--brand-orange, #f57c00), var(--brand-orange-dark, #e65100));
+  border-radius: 1.1rem 1.1rem 0 0;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.register-edit-dialog__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.register-edit-dialog__close {
+  border: 0;
+  background: rgb(255 255 255 / 0.18);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+}
+
+.register-edit-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.85rem 1.1rem 0.4rem;
+}
+
+.register-edit-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.7rem 1.1rem 0.85rem;
+  border-top: 1px solid #f3d0a8;
+  background: #fff4e6;
+  border-radius: 0 0 1.1rem 1.1rem;
+}

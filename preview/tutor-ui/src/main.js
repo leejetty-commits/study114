@@ -92,16 +92,11 @@ function resolveRegisterMode() {
   return gate.mode;
 }
 
+/**
+ * 첫 진입에서 상세로 건너뛰는 일은 init()만 한다.
+ * 여기서 또 건너뛰면 상세 첫 화면의 「이전」이 기본정보 현황에 머물지 못한다.
+ */
 function maybeSkipBasicSteps() {
-  if (!registerState.basicComplete) return false;
-  if (isRegisterEditMode()) return false; // 마이페이지 기본정보 수정
-  const key = getCurrentScreen();
-  if (BASIC_KEYS.has(key)) {
-    if (window.location.hash.split('?')[0] !== '#/register/lesson') {
-      navigate('/register/lesson');
-      return true;
-    }
-  }
   return false;
 }
 
