@@ -278,7 +278,7 @@ export function myshopReturnLabel(snapshot) {
   if (!snapshot) return '이전 목록으로 돌아가기';
   const from = snapshot.sourceRoute || '';
   if (from === 'search' || snapshot.find?.searchExecuted) return '검색결과로 돌아가기';
-  if (from === 'parent' || snapshot.viewerRole === 'parent') return '학부모 홈으로 돌아가기';
+  if (from === 'parent' || snapshot.viewerRole === 'parent') return '학생 홈으로 돌아가기';
   if (from === 'study_room' || snapshot.viewerRole === 'study_room') return '공부방 홈으로 돌아가기';
   if (from === 'tutor' || snapshot.viewerRole === 'tutor') return '과외쌤 홈으로 돌아가기';
   if (from === 'guest' || snapshot.viewerRole === 'guest') return '목록으로 돌아가기';

@@ -93,7 +93,7 @@ export const HOME_BANNER_COPY = {
     headlineLines: ['우리동네 학생 수요를', '요약으로 보고 이어서 살펴보세요'],
     lines: [
       '요청 요약 중심으로 확인하고, 필요하면 쪽지·관심 저장으로 이어가세요',
-      '학부모 과금 없이, 공급자 쪽지권은 필요할 때만 이용합니다',
+      '학생·학부모 과금 없이, 공급자 쪽지권은 필요할 때만 이용합니다',
     ],
     image: '/assets/banners/connect.webp',
     imageAlt: '학생·학부모 연결 분위기',
