@@ -559,11 +559,22 @@ export function renderExposureBox(kind, tier, item, slotLabel, opts = {}) {
 }
 
 /**
- * 홈 처음 화면만. 찾기·검색은 surfaceMode를 넘기므로 사진 자리를 넣지 않는다.
+ * 비회원 홈 프라임 빈 줄. 화면 구분이 없을 때만 사진 자리를 넣는다.
  * @param {{ surfaceMode?: string }} [opts]
  */
 function homeEmptyMedia(opts = {}) {
   return !opts.surfaceMode;
+}
+
+/**
+ * 픽 홍보 빈 카드 사진. 검색 결과는 빼 둔다.
+ * 공부방·과외쌤 홈은 surfaceMode가 region으로 들어오고, 0장 홈은 구분을 넘기지 않는다.
+ * @param {{ surfaceMode?: string, withMedia?: boolean }} [opts]
+ */
+function pickEmptyMedia(opts = {}) {
+  if (opts.withMedia === false) return false;
+  if (opts.withMedia === true) return true;
+  return opts.surfaceMode !== 'search';
 }
 
 /**
@@ -637,10 +648,10 @@ export function renderEmptyPickPromo(kind, opts = {}) {
  * 공부방·과외쌤 모드: 홍보 빈 카드 1장.
  * 학생·비회원: 안내 한 줄.
  * @param {'study_room'|'tutor'} kind
- * @param {{ guest?: boolean, viewerRole?: string }} [opts]
+ * @param {{ guest?: boolean, viewerRole?: string, surfaceMode?: string, withMedia?: boolean }} [opts]
  */
 export function renderPickVacantMarkup(kind, opts = {}) {
-  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind, { withMedia: opts.withMedia === true });
+  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind, { withMedia: pickEmptyMedia(opts) });
   return `<p class="mypage-muted" data-pick-vacant-note="1">${esc(pickZeroNote(kind))}</p>`;
 }
 
@@ -1059,7 +1070,7 @@ export function renderPickPaginatedBlock(kind, listId, headingCfg, allItems, opt
   const homeVacant = opts.surfaceMode !== 'search' && pickPool.length === 0;
   let pickBody;
   if (homeVacant) {
-    pickBody = renderPickVacantMarkup(kind, { ...opts, withMedia: homeEmptyMedia(opts) });
+    pickBody = renderPickVacantMarkup(kind, opts);
   } else if (opts.surfaceMode === 'search') {
     const vacantPick =
       opts.vacantFill === true && (kind === 'study_room' || kind === 'tutor') && pickPool.length === 0;
