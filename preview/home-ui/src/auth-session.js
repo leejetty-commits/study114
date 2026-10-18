@@ -273,10 +273,13 @@ export async function initAuthSession(navigateHome = false, opts = {}) {
     sessionConfirmStatus = 'authenticated';
     const contextRoleType = user.oauth_role_pending === true ? '' : user.role_type;
     applyRoleContext(contextRoleType);
-    await hydrateSessionDependencies(opts);
     if (navigateHome && ROLE_HOME[contextRoleType]) {
+      await hydrateSessionDependencies(opts);
       navigate(ROLE_HOME[contextRoleType]);
+      return user;
     }
+    // 부가 로딩이 끝나기 전에 역할 화면을 그리게, 호출자가 바로 받게 한다.
+    void hydrateSessionDependencies(opts);
     return user;
   } catch (err) {
     if (err instanceof SessionUnconfirmedError) {

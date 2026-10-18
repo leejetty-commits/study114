@@ -161,6 +161,8 @@ function shouldPaintBeforeSession() {
   if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute() || isRegisterIntroRoute() || isInfoBoardRoute()) {
     return false;
   }
+  // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
+  if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }

@@ -42,6 +42,8 @@ function isStudyRoomFindEntry() {
 }
 
 function render() {
+  // 세션 확인 전에는 비회원 헤더·본문을 그리지 않는다. 앱은 빈 채로 둔다.
+  if (!allowFindBoot) return;
   const hashBefore = window.location.hash;
   syncRoleFromHash();
   const app = document.getElementById('app');
@@ -70,9 +72,6 @@ function init() {
     if (window.location.hash === paintedHash) return;
     render();
   });
-  if (!isAuthRedirectPending()) {
-    render();
-  }
   if (!hadHash) {
     setTimeout(() => {
       bootReady = true;
