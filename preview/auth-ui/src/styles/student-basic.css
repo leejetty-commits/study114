@@ -75,6 +75,10 @@
   color: var(--gray-600, #4b5563);
 }
 
+.student-basic .form-note--error {
+  color: #b91c1c;
+}
+
 .student-basic .chip-group {
   display: flex;
   flex-wrap: wrap;
