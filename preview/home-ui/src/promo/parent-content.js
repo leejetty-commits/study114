@@ -109,7 +109,7 @@ export const PARENT_PROMO = {
   },
   finalCta: {
     title: '우리동네 공부방·과외를 기준으로 비교해 보세요',
-    lead: '학생은 찜·비교 뒤에 쪽지로 시작하고, 학생·학부모는 그 과정을 함께 보면 됩니다.',
+    lead: '학생·학부모가 찜·비교 뒤에 쪽지로 시작하고, 과정을 함께 확인하면 됩니다.',
     primaryCta: { label: '가입하고 찾기 시작하기' },
     secondaryCta: { label: '안전이용 안내' },
   },
