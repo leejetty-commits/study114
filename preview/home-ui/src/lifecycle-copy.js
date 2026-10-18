@@ -68,12 +68,12 @@ export function normalizeProfileStatus(status) {
 /** @param {string} [status] */
 export function profileStatusLabel(status) {
   const key = normalizeProfileStatus(status);
-  return PROFILE_STATUS_LABELS[/** @type {ProfileStatusKey} */ (key)] || key || '—';
+  return PROFILE_STATUS_LABELS[/** @type {ProfileStatusKey} */ (key)] || '—';
 }
 
 /** @param {string} [status] */
 export function exposureStatusLabel(status) {
-  return EXPOSURE_STATUS_LABELS[/** @type {ExposureStatusKey} */ (status)] || status || '—';
+  return EXPOSURE_STATUS_LABELS[/** @type {ExposureStatusKey} */ (status)] || '—';
 }
 
 /** @param {number} publicCount */

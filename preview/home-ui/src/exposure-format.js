@@ -130,10 +130,13 @@ export function formatStudyRoomCapacity(capacity_per_time) {
 
 export function formatTeachingStyleBadges(badges, max = 2) {
   if (!badges?.length) return '—';
-  return badges
-    .slice(0, max)
-    .map((b) => TEACHING_STYLE_LABELS[b] || b)
-    .join(' · ');
+  return (
+    badges
+      .slice(0, max)
+      .map((b) => TEACHING_STYLE_LABELS[b])
+      .filter(Boolean)
+      .join(' · ') || '—'
+  );
 }
 
 export function formatStudentBudgetCard(item) {
@@ -178,12 +181,12 @@ export function formatGenderAgeLabel(item) {
 
 export function formatStudentPlaces(lesson_places) {
   if (!lesson_places?.length) return '—';
-  return lesson_places.map((p) => STUDENT_PLACE_LABELS[p] || p).join(' · ');
+  return lesson_places.map((p) => STUDENT_PLACE_LABELS[p]).filter(Boolean).join(' · ') || '—';
 }
 
 export function formatStudentCountGroup(code) {
   if (!code) return '—';
-  return STUDENT_COUNT_LABELS[code] || code;
+  return STUDENT_COUNT_LABELS[code] || '—';
 }
 
 export function formatEducationOffice(education_office_registered) {
@@ -196,12 +199,12 @@ export function formatWeekend(weekend_available) {
 
 export function formatLessonFormat(lesson_format) {
   if (!lesson_format) return '—';
-  return LESSON_FORMAT_LABELS[lesson_format] || lesson_format;
+  return LESSON_FORMAT_LABELS[lesson_format] || '—';
 }
 
 export function formatStudentGenderGroup(code) {
   if (!code) return '—';
-  return STUDENT_GENDER_GROUP_LABELS[code] || code;
+  return STUDENT_GENDER_GROUP_LABELS[code] || '—';
 }
 
 /** 그룹과외일 때 구성+인원, 단독과외일 때 수업형태만 */

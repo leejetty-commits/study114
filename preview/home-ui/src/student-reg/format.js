@@ -42,19 +42,19 @@ export function studentToExposureRow(s) {
 
 /** @param {import('./store.js').StudentRecord} s */
 export function formatStudentSummaryLine(s) {
-  const type = LESSON_TYPE_LABELS[s.preferred_lesson_type] || s.preferred_lesson_type || '—';
+  const type = LESSON_TYPE_LABELS[s.preferred_lesson_type] || '—';
   const fmt = LESSON_FORMAT_LABELS[s.lesson_format] || '';
   return [s.grade_level, s.subject_label, type, fmt].filter(Boolean).join(' · ');
 }
 
 export function labelPlaces(codes) {
   const list = Array.isArray(codes) ? codes : [];
-  return list.map((c) => STUDENT_PLACE_LABELS[c] || c).join(', ') || '—';
+  return list.map((c) => STUDENT_PLACE_LABELS[c]).filter(Boolean).join(', ') || '—';
 }
 
 export function labelTeachingStyles(codes) {
   const list = Array.isArray(codes) ? codes : [];
-  return list.map((c) => TEACHING_STYLE_LABELS[c] || c).join(', ') || '—';
+  return list.map((c) => TEACHING_STYLE_LABELS[c]).filter(Boolean).join(', ') || '—';
 }
 
 export function labelLessonTarget(s) {
@@ -78,7 +78,7 @@ export function labelBudget(s) {
 }
 
 export function labelSchoolLevel(code) {
-  return SCHOOL_LEVEL_LABELS[code] || code || '—';
+  return SCHOOL_LEVEL_LABELS[code] || '—';
 }
 
 export const FORM_OPTIONS = {

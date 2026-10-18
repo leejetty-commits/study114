@@ -53,10 +53,12 @@ function renderProtectedBlock(label, content, visible, opts = {}) {
 export function renderStudentRequestBody(student, viewer) {
   const vis = getStudentProtectedVisibility(student, { viewer });
   const places = (student.lesson_places || [])
-    .map((p) => STUDENT_PLACE_LABELS[p] || p)
+    .map((p) => STUDENT_PLACE_LABELS[p])
+    .filter(Boolean)
     .join(' · ');
   const styles = (student.teaching_style_badges || [])
-    .map((b) => TEACHING_STYLE_LABELS[b] || b)
+    .map((b) => TEACHING_STYLE_LABELS[b])
+    .filter(Boolean)
     .join(' · ');
   const schedule =
     student.lessons_per_week && student.minutes_per_lesson
