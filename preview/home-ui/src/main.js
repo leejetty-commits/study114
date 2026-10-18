@@ -148,6 +148,9 @@ let paintedHash = null;
 let sessionChecked = false;
 
 function render() {
+  // 첫 진입 init()과 같이 #/messages 를 #/mypage/messages 로 바꾼다.
+  // 주소를 바꾼 경우에는 여기서 그리지 않고, 바뀐 주소의 hashchange에 맡긴다.
+  if (bootstrapMessagesRoute()) return;
   if (isMypageRoute()) bootstrapMypageRoute();
   const hashBefore = window.location.hash;
   renderScreen();
