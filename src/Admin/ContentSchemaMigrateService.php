@@ -570,13 +570,13 @@ final class ContentSchemaMigrateService
                 'post_key' => 'notice-001',
                 'author_role' => 'system',
                 'status' => 'published',
-                'title' => '고객센터·안전과외 가이드 1차 오픈 (프리뷰)',
+                'title' => '고객센터·안전과외 가이드 안내',
                 'description' => '',
                 'category_id' => 'general',
                 'meta_json' => json_encode([
                     'body' => [
-                        '고객센터 좌측 메뉴·게시판형 FAQ/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.',
-                        '1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.',
+                        '고객센터 왼쪽 메뉴·자주 묻는 질문·공지와, 약관·정책의 안전과외 · 이용안내의 안전이용을 볼 수 있습니다.',
+                        '공지와 안내는 운영 정책에 따라 업데이트됩니다.',
                     ],
                     'displayDate' => '2026-07-01',
                     'pinned' => true,
@@ -588,13 +588,13 @@ final class ContentSchemaMigrateService
                 'post_key' => 'notice-002',
                 'author_role' => 'system',
                 'status' => 'published',
-                'title' => '쪽지함 프리뷰(16a) 안내',
+                'title' => '쪽지함 이용 안내',
                 'description' => '',
                 'category_id' => 'general',
                 'meta_json' => json_encode([
                     'body' => [
-                        '회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.',
-                        '운영 문의는 고객센터 운영 문의 채널과 별도입니다.',
+                        '회원 간 공식 접촉은 쪽지함을 이용합니다.',
+                        '운영 문의는 고객센터 문의 채널과 별도입니다.',
                     ],
                     'displayDate' => '2026-06-15',
                 ], JSON_UNESCAPED_UNICODE),

@@ -400,7 +400,7 @@ function renderPoliciesSection(path) {
   return `
     <div class="section-head">
       <div>
-        <span class="section-chip">Document hub</span>
+        <span class="section-chip">약관·정책</span>
         <h2>약관·정책</h2>
         <div class="section-underline"></div>
       </div>
@@ -408,7 +408,7 @@ function renderPoliciesSection(path) {
     <p class="section-lead">약관과 운영 정책을 확인합니다. 자료실은 별도 메뉴입니다.</p>
     <div class="tab-pills" role="tablist" aria-label="약관·정책">${tabs}</div>
     <article class="card card--accent doc-article">
-      <p class="doc-card__eyebrow">Doc</p>
+      <p class="doc-card__eyebrow">문서</p>
       <h2>${esc(page.title)}</h2>
       <p>${esc(page.summary)}</p>
       ${shortNotice ? `<div class="sup-flash" role="note" style="margin-top:12px">${esc(shortNotice)}</div>` : ''}

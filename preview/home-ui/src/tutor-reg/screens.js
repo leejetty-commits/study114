@@ -436,7 +436,7 @@ function renderBasicForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '베이직카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
+        '기본카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
@@ -538,7 +538,7 @@ function renderDetailForm(tutor) {
       )}
       ${renderFormSection(
         '학력 · 소개 · 연락',
-        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 베이직카드·픽·프라임 카드 대표 사진입니다.',
+        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 기본카드·픽·프라임 카드 대표 사진입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <div data-trc-field="university">
