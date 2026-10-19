@@ -88,6 +88,7 @@ function statusCell(row) {
 }
 
 function noteCell(row) {
+  if (row.note) return `<span class="rc-note">${esc(row.note)}</span>`;
   if (!row.required) return '';
   const miss = row.status !== 'filled';
   return `<span class="rc-note rc-note--${miss ? 'miss' : 'ok'}">${esc(TRC_COPY.board.required)}</span>`;
