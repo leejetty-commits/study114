@@ -37,7 +37,7 @@ export const PERSONAL_GENDER_OPTIONS = [
 export const GENDER_GROUP_OPTIONS = [
   { value: 'male', label: '남학생' },
   { value: 'female', label: '여학생' },
-  { value: 'mixed', label: '남여' },
+  { value: 'mixed', label: '혼성' },
 ];
 
 export const STUDENT_COUNT_OPTIONS = [
@@ -76,7 +76,7 @@ export const GRADE_BAND_OPTIONS = [
 ];
 
 export const FEE_BASIS_OPTIONS = [
-  { value: 'monthly_by_weekly_schedule', label: '주간 일정 기준' },
+  { value: 'monthly_by_weekly_schedule', label: '주 회수 기준' },
   { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },
 ];
 

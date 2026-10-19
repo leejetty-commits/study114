@@ -393,7 +393,7 @@ const LESSON_PLACE_OPTS = [
 ];
 
 const FEE_BASIS_OPTS = [
-  { value: 'monthly_by_weekly_schedule', label: '주간 일정 기준 월액' },
+  { value: 'monthly_by_weekly_schedule', label: '주 회수 기준' },
   { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },
 ];
 

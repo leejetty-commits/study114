@@ -95,7 +95,7 @@ function overviewRows(units) {
     { label: '주력과목', value: s.main_subject_note, focus: 'main_subject_note' },
     { label: '월 과외비', value: fee ? `${fee}천원` : '', focus: 'preferred_fee_amount' },
     { label: '주 회수', value: optionLabel(lessonWeeklyOptions(s.lessons_per_week), lessonWeeklySelectValue(s.lessons_per_week)), focus: 'lessons_per_week' },
-    { label: '1회 시간', value: optionLabel(lessonDurationOptions(s.minutes_per_lesson), lessonDurationSelectValue(s.minutes_per_lesson)), focus: 'minutes_per_lesson' },
+    { label: '1회 수업시간', value: optionLabel(lessonDurationOptions(s.minutes_per_lesson), lessonDurationSelectValue(s.minutes_per_lesson)), focus: 'minutes_per_lesson' },
     { label: '슬로건', value: s.slogan, focus: 'slogan' },
     { label: '과외지역', value: regionOverviewValue(units), focus: 'tutor-region-0', multiline: true },
   ];
