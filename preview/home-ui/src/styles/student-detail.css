@@ -69,6 +69,10 @@
   gap: var(--space-4);
 }
 
+.student-detail-grid .student-detail-field > .p19-input {
+  margin-top: auto;
+}
+
 .student-detail-form .p19-input,
 .student-detail-form button[type='submit'].btn,
 .student-detail-form .btn.btn--block {
