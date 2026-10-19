@@ -162,3 +162,14 @@ body.register-edit-open {
   background: #fff4e6;
   border-radius: 0 0 1.1rem 1.1rem;
 }
+
+/* 상세등록 1단계(수업·가격) 라디오만 — 라벨을 꺾지 않고 카드째 다음 줄로 (269) */
+.tutor-lesson-step .form-radio-group {
+  flex-wrap: wrap;
+}
+.tutor-lesson-step .form-radio {
+  flex: 1 1 auto;
+}
+.tutor-lesson-step .form-radio__label {
+  white-space: nowrap;
+}
