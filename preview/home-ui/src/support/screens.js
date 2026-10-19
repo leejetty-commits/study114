@@ -172,7 +172,7 @@ function renderSupportQuickCards() {
   return `
     <div class="section-head">
       <div>
-        <span class="section-chip">Quick links</span>
+        <span class="section-chip">빠른 이동</span>
         <h2>바로가기</h2>
         <div class="section-underline"></div>
       </div>
@@ -245,7 +245,7 @@ function renderFaqSection(path) {
   return `
     <div class="section-head">
       <div>
-        <span class="section-chip">FAQ</span>
+        <span class="section-chip">질문</span>
         <h2>자주 묻는 질문</h2>
         <div class="section-underline"></div>
       </div>
@@ -273,7 +273,7 @@ function renderNoticeSection() {
     ${renderSupportQuickCards()}
     <div class="section-head">
       <div>
-        <span class="section-chip">Notices</span>
+        <span class="section-chip">공지</span>
         <h2>공지사항</h2>
         <div class="section-underline"></div>
       </div>
@@ -333,7 +333,7 @@ function renderContactSection() {
   return `
     <div class="section-head">
       <div>
-        <span class="section-chip">Contact</span>
+        <span class="section-chip">문의</span>
         <h2>운영문의</h2>
         <div class="section-underline"></div>
       </div>
@@ -420,7 +420,7 @@ function renderSupportLibrarySection() {
   return `
     <div class="section-head">
       <div>
-        <span class="section-chip">Library</span>
+        <span class="section-chip">자료</span>
         <h2>자료실</h2>
         <div class="section-underline"></div>
       </div>
