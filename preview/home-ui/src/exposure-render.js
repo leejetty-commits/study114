@@ -360,11 +360,11 @@ function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) 
 }
 
 function renderTutorOverlayBottomGrid(item) {
-  const grad = blankDash(formatUniversityStatus(item.university_status) || '');
+  const grad = slotDash(formatUniversityStatus(item.university_status) || '');
   // 학부 대학명·학과만 — university_note(보조)로 학교란을 채우지 않음
-  const edu = blankDash([item.university_name, item.major_name].filter(Boolean).join(' '));
-  const career = blankDash(formatCareerYearBand(item.career_year_band) || '');
-  const fee = blankDash(renderTutorFeeOverlay(item));
+  const edu = slotDash([item.university_name, item.major_name].filter(Boolean).join(' '));
+  const career = slotDash(formatCareerYearBand(item.career_year_band) || '');
+  const fee = slotDash(renderTutorFeeOverlay(item));
   return `<div class="expo-overlay-bl-grid">
     <span class="expo-overlay-bl-grid__cell">${esc(grad)}</span>
     <span class="expo-overlay-bl-grid__cell">${esc(edu)}</span>

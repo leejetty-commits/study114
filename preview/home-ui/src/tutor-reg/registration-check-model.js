@@ -229,7 +229,7 @@ function buildBoard(tutor) {
   const basicValues = {
     display_name: tutor?.tutor_display_name,
     primary_region: tutor?.primary_region_label || tutor?.location_label,
-    school_level: SCHOOL_LEVEL_FORM_LABELS[tutor?.school_level] || '',
+    school_level: SCHOOL_LEVEL_FORM_LABELS[tutor?.school_level] || (basicOk.school_level ? '—' : ''),
     main_subject: tutor?.main_subject_note,
     fee,
     lessons_per_week: weekly,
