@@ -137,7 +137,7 @@ export const TRC_PROMO_MISSING_DEFS = [
   { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },
   { id: 'feature_1', label: '경력특징 1', hint: '픽 카드 강조 한 줄입니다', section: 'detail' },
   { id: 'student_target', label: '학생구성', hint: '지도 대상 성별·인원을 보여 줍니다', section: 'detail' },
-  { id: 'intro_long', label: '상세 소개', hint: '프라임 상세에서 과외를 설명합니다', section: 'detail' },
+  { id: 'intro_long', label: '상세 소개', hint: '상세 소개를 입력하면 카드와 확대카드에 보입니다', section: 'detail' },
   { id: 'feature_2', label: '경력특징 2', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
   { id: 'feature_3', label: '경력특징 3', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
 ];
