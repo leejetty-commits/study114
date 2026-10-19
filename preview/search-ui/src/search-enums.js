@@ -61,7 +61,7 @@ export const AGE_BAND_LABELS = {
 export const GENDER_GROUP_LABELS = {
   male: '남학생',
   female: '여학생',
-  mixed: '남녀',
+  mixed: '혼성',
 };
 
 export const PREFERRED_LESSON_TYPE_LABELS = {
