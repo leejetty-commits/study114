@@ -674,7 +674,7 @@ function exposureKindLabel(sku) {
   const code = String(sku || '').toLowerCase();
   if (code.includes('prime')) return '프라임 노출';
   if (code.includes('pick')) return '픽 노출';
-  if (code.includes('basic')) return '베이직카드 노출';
+  if (code.includes('basic')) return '기본카드 노출';
   return '유료 노출';
 }
 

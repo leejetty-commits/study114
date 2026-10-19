@@ -83,7 +83,7 @@ export const PLAN_RUNTIME_DEFAULTS = {
   prime_empty_title_study_room: '이 자리에 공부방을 홍보하세요',
   prime_empty_body_study_room: '우리 동네 상단 노출을 먼저 잡아보세요',
   prime_empty_title_tutor: '이 자리에 과외쌤을 홍보하세요',
-  prime_empty_body_tutor: '선택 시·주력과목 Prime 영역에 순환 노출됩니다',
+  prime_empty_body_tutor: '선택 시·주력과목 프라임 영역에 순환 노출됩니다',
 };
 
 /** @deprecated 서버 카탈로그 memo_bundle 사용 */
@@ -96,7 +96,7 @@ export const TUTOR_POSITION_MEMO_BUNDLE = {
 const PRODUCT_COPY = {
   prime: {
     tagline: '선택한 지역·과목의 대표 노출',
-    bullets: ['기간형 단건 결제', '자동연장 없음', '만료 후 Basic 복귀'],
+    bullets: ['기간형 단건 결제', '자동연장 없음', '만료 후 기본카드로 복귀'],
     featured: true,
     implemented: true,
     family: 'position',
@@ -104,7 +104,7 @@ const PRODUCT_COPY = {
   },
   pick: {
     tagline: '페이지 순환형 추천 노출',
-    bullets: ['기간형 단건 결제', '자동연장 없음', '만료 후 Basic 복귀'],
+    bullets: ['기간형 단건 결제', '자동연장 없음', '만료 후 기본카드로 복귀'],
     featured: true,
     implemented: true,
     family: 'position',

@@ -201,7 +201,7 @@ function renderBasicForm(editing, units) {
       ${renderGuideNotice(
         editing
           ? '기본정보와 과외지역을 한 화면에서 수정합니다. 저장하면 마이페이지로 돌아갑니다.'
-          : '베이직카드에 나오는 기본정보와 과외지역을 함께 등록합니다. 광역시는 시 전체, 도는 시·군까지 선택합니다.',
+          : '기본카드에 나오는 기본정보와 과외지역을 함께 등록합니다. 광역시는 시 전체, 도는 시·군까지 선택합니다.',
       )}
       ${renderBasicFields(units)}
       ${
