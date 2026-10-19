@@ -132,9 +132,9 @@ function ok(name, cond, detail = '') {
 
 const RAIL_COPY = copyMod.CONCERN_RAIL_COPY || {};
 const POLICY_COPY = {
-  roomEmpty: '아직 글이 미도착중... 첫 이야기를 기다려요',
+  roomEmpty: '아직 글이 없어요. 첫 이야기를 기다려요',
   hotEmpty: '아직 뜨거운 글이 도착하지 않았어요',
-  bestEmpty: '이달의 베스트, 아직 글이 미도착중...',
+  bestEmpty: '이달의 베스트, 아직 글이 없어요',
   loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
 };
 const INTRO_CARD_TEXT = '이 공간의 소개만 볼 수 있어요';

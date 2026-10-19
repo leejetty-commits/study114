@@ -196,9 +196,9 @@ export const CONCERN_COMPOSE_HINT = COMMUNITY_COMPOSE_HINT;
 
 /** 우측 레일 고민방 배너·HOT·이달의 베스트·레일 읽기 팝업 문구. 레일 렌더러는 이 상수만 쓴다. */
 export const CONCERN_RAIL_COPY = {
-  roomEmpty: '아직 글이 미도착중... 첫 이야기를 기다려요',
+  roomEmpty: '아직 글이 없어요. 첫 이야기를 기다려요',
   hotEmpty: '아직 뜨거운 글이 도착하지 않았어요',
-  bestEmpty: '이달의 베스트, 아직 글이 미도착중...',
+  bestEmpty: '이달의 베스트, 아직 글이 없어요',
   loadFailed: '글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요',
   bestTitle: '이달의 베스트',
   hotTitle: '지금 고민 HOT',

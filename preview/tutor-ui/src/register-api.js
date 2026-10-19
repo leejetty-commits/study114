@@ -20,7 +20,7 @@ async function postJson(body) {
     if (res.status >= 500) {
       throw new Error('요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요');
     }
-    throw new Error(data.message || `서버 오류 (${res.status})`);
+    throw new Error(data.message || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요');
   }
   return data;
 }

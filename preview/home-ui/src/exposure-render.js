@@ -134,7 +134,7 @@ function actionCountBtn(icon, count, { title, aria, cls = '', attrs = '', disabl
   if (hideWhenZero && n <= 0) return '';
   const dis = disabled ? ' disabled aria-disabled="true"' : '';
   const label = aria || title;
-  const countHtml = n > 0 ? String(n) : '<span class="item-actions__count-empty">없음</span>';
+  const countHtml = String(n);
   return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" aria-label="${esc(label)}" ${attrs}${dis}>
     <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${countHtml}</span>
   </button>`;
