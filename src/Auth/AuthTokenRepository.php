@@ -87,23 +87,19 @@ final class AuthTokenRepository
         }
 
         $stmt = $this->pdo->prepare(
-            'SELECT created_at FROM auth_tokens
+            'SELECT TIMESTAMPDIFF(SECOND, created_at, NOW()) AS elapsed
+             FROM auth_tokens
              WHERE user_id = ? AND purpose = ? AND used_at IS NULL
              ORDER BY id DESC
              LIMIT 1'
         );
         $stmt->execute([$userId, $purpose]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row) || !isset($row['created_at'])) {
+        if (!is_array($row) || !isset($row['elapsed']) || $row['elapsed'] === null) {
             return 0;
         }
 
-        $createdAt = strtotime((string) $row['created_at']);
-        if ($createdAt === false) {
-            return 0;
-        }
-
-        $elapsed = time() - $createdAt;
+        $elapsed = (int) $row['elapsed'];
 
         return max(0, $cooldownSeconds - $elapsed);
     }
