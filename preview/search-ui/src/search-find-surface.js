@@ -1428,8 +1428,8 @@ export function tutorRepresentativeRegionLabel() {
   return tutorHomePrimaryLabel();
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
-function regionFeedContext(tab, state, role) {
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role @param {'home'|'search'|''} [surfaceType] */
+function regionFeedContext(tab, state, role, surfaceType = '') {
   const ctx = { role, homeSelf: state.homeSelf === true, studyRoomHome: state.studyRoomHome === true };
   const promoFind = role === 'study_room' && tab === 'room' && state.studyRoomHome !== true;
   if ((ctx.studyRoomHome || promoFind) && tab === 'room') {
@@ -1452,6 +1452,16 @@ function regionFeedContext(tab, state, role) {
   }
   if (tab === 'tutor' && role === 'tutor' && state.homeSelf === true && !state.searchExecuted) {
     ctx.tutorHome = true;
+    ctx.liveTutorItems = getTutorHomeTutorLiveItems();
+  }
+  if (
+    tab === 'tutor' &&
+    role === 'tutor' &&
+    surfaceType === 'search' &&
+    state.homeSelf !== true &&
+    !state.searchExecuted
+  ) {
+    ctx.tutorFindInitial = true;
     ctx.liveTutorItems = getTutorHomeTutorLiveItems();
   }
   if (tab === 'student' && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
@@ -1796,8 +1806,8 @@ export function ensureStudentHopeType(state) {
   return null;
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role */
-export function refreshActiveResultItems(tab, state, role) {
+/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state @param {import('./state.js').ViewerRole} role @param {'home'|'search'|''} [surfaceType] */
+export function refreshActiveResultItems(tab, state, role, surfaceType = '') {
   if (!state.searchExecuted && (role || state.role || 'guest') === 'guest') {
     const regionLabel = applyGuestPlace(tab, state);
     const items = guestFeedItems(tab);
@@ -1820,7 +1830,7 @@ export function refreshActiveResultItems(tab, state, role) {
   if (!state.searchExecuted) {
     const regionLabel = resolveActiveRegionLabel(tab, state, role);
     const feed = getRegionFeed(tab, {
-      ...regionFeedContext(tab, state, role),
+      ...regionFeedContext(tab, state, role, surfaceType),
       regionLabel,
     });
     const { items, regionLabel: feedLabel } = feed;
@@ -2695,7 +2705,7 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   }
 
   state.tutorStudentSnap = role === 'tutor' && tab === 'student' && surfaceType === 'home';
-  const activeItems = refreshActiveResultItems(tab, state, role);
+  const activeItems = refreshActiveResultItems(tab, state, role, surfaceType);
   let regionLabel = state.activeRegionLabel || resolveActiveRegionLabel(tab, state, role);
   if (!state.searchExecuted && tab === 'student' && role === 'study_room') {
     regionLabel = studentCurrentPlace(regionLabel);
@@ -2724,6 +2734,10 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     const idx = tab === 'student' ? resolveTutorStudentRegionIndex(state) : resolveTutorRegionIndex(state);
     const slot = tutorHomeRegionLabel(idx);
     regionLabel = slot || (tutorHomeRegionsReady() ? tutorRepresentativeRegionLabel() : '');
+  }
+  if (role === 'tutor' && tab === 'tutor' && surfaceType === 'search' && !state.searchExecuted) {
+    const primary = tutorRepresentativeRegionLabel();
+    if (primary) regionLabel = primary;
   }
   if (role !== 'guest' && role !== 'parent' && regionLabel) {
     const axis = locationAxisForState(tab, state);
@@ -2815,6 +2829,23 @@ export function renderFindResultSection(tab, state, role, options = {}) {
         surfaceType,
       }),
     );
+  }
+
+  if (tab === 'tutor' && role === 'tutor' && surfaceType === 'search' && !state.searchExecuted) {
+    const status = getTutorHomeTutorFeedStatus();
+    const wrap = (inner) => `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}" data-tutor-find-feed="${esc(status)}">
+        ${inner}
+      </section>`;
+    if (status === 'error') {
+      return wrap(`<p class="search-results__hint" role="alert">${GUEST_FEED_ERROR}</p>`);
+    }
+    if (status === 'no-region') {
+      return wrap(`<p class="search-results__hint">${esc('과외지역을 등록하면 과외쌤이 보여요.')}</p>`);
+    }
+    if (status === 'idle' || status === 'loading' || !Array.isArray(getTutorHomeTutorLiveItems())) {
+      return wrap(`<p class="search-results__hint">${GUEST_FEED_LOADING}</p>`);
+    }
   }
 
   if (!state.searchExecuted) {

@@ -47,6 +47,7 @@ import {
 } from '../search-find-surface.js';
 import { bindSearchMapPinLinks } from '../search-map.js';
 import { bootStudyRoomHome, bootStudyRoomStudentDemand } from '@home-ui/study-room-home-seed.js';
+import { bootTutorHome, bootTutorHomeTutors } from '@home-ui/tutor-home-seed.js';
 import { renderBrowseList } from '@home-ui/exposure-render.js';
 import { getStudentDemandForRegion } from '../search-region-feed.js';
 import { renderListSortSelect } from '../../../shared/list-sort.js';
@@ -103,6 +104,10 @@ function visibleCurrentPlace(tab, role, regionLabel) {
   if (tab === 'student') {
     const axis = previewState.studentHopeType === 'study_room' ? 'room' : 'tutor';
     return placeCaption(regionLabel, axis) || '';
+  }
+  if (tab === 'tutor' && role === 'tutor' && !previewState.searchExecuted) {
+    const saved = tutorRepresentativeRegionLabel();
+    if (saved) return placeCaption(saved, 'tutor') || '';
   }
   if (tab === 'room') return placeCaption(regionLabel, 'room') || '';
   return placeCaption(regionLabel, 'tutor') || '';
@@ -235,6 +240,15 @@ export function afterSearchPageMount(rerender, opts = {}) {
   }
   if (previewState.role === 'study_room' && tab === 'student') {
     bootStudyRoomStudentDemand(rerender);
+  }
+  if (
+    previewState.role === 'tutor' &&
+    tab === 'tutor' &&
+    !previewState.searchExecuted &&
+    !previewState._needsSearchRestore
+  ) {
+    bootTutorHome(rerender);
+    bootTutorHomeTutors(rerender);
   }
   if (previewState._needsSearchRestore && previewState.lastSearchFilters) {
     const filters = /** @type {Record<string, string|string[]>} */ ({
