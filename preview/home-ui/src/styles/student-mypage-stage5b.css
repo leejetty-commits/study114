@@ -361,10 +361,10 @@
   color: #fff;
   height: 44px;
   min-width: 96px;
-  padding: 0 var(--space-6);
+  padding: 0 var(--space-4);
   border-radius: 8px;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   box-sizing: border-box;
 }
 
@@ -610,10 +610,10 @@
 
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .btn,
 .home-app--role-parent .mp-room [data-hope-region] .form-address__zip-row .btn--secondary {
-  height: 44px;
+  height: var(--btn-tone-h);
   min-width: 96px;
   padding: 0 var(--space-4);
-  border-radius: 8px;
+  border-radius: var(--btn-tone-radius);
   font-size: 14px;
   font-weight: 600;
   background: #fff;

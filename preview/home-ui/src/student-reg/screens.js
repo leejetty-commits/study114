@@ -383,12 +383,12 @@ function renderDetailForm(student) {
       <section class="p19-form-section student-detail-section">
         <header class="p19-form-section__head student-detail-head">
           <h3 class="p19-form-section__title student-detail-title">학생 상세정보</h3>
-          <p class="p19-form-section__lead student-detail-lead">입력데이터가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
+          <p class="p19-form-section__lead student-detail-lead">정보가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
         </header>
         <div class="p19-form-section__body student-detail-body">
           ${renderDetailField(
             '희망지역 추가값',
-            '기본정보에 적은 희망지역 외에 더 알리고 싶은 지역입니다.',
+            '기본정보 희망지역 외에 더 알릴 지역입니다.',
             renderTextInput('preferred_region_note', student.preferred_region_note || '', {
               placeholder: '예: 대치동 주변',
               maxlength: 255,
@@ -396,24 +396,24 @@ function renderDetailForm(student) {
           )}
           ${renderDetailField(
             '희망 수업장소',
-            '수업이 이루어지면 좋은 장소입니다.',
+            '수업하기 좋은 장소입니다.',
             renderCheckboxGroup('lesson_places', FORM_OPTIONS.lessonPlaces, student.lesson_places),
           )}
           <div class="student-detail-grid">
             ${renderDetailField(
               '주 회수',
-              '일주일에 원하는 수업 횟수입니다.',
+              '원하는 일주일 수업 횟수입니다.',
               renderSelect('lessons_per_week', lessonWeeklyOptions(student.lessons_per_week), lessonWeeklySelectValue(student.lessons_per_week), { empty: true }),
             )}
             ${renderDetailField(
               '1회 수업시간',
-              '한 번 수업의 길이입니다.',
+              '한 번 수업 길이입니다.',
               renderSelect('minutes_per_lesson', lessonDurationOptions(student.minutes_per_lesson), lessonDurationSelectValue(student.minutes_per_lesson), { empty: true }),
             )}
           </div>
           ${renderDetailField(
             '희망 강의스타일',
-            '마음에 드는 수업 방식을 고릅니다.',
+            '원하는 수업 방식을 고릅니다.',
             renderCheckboxGroup('teaching_style_badges', FORM_OPTIONS.teachingStyle, student.teaching_style_badges),
           )}
           <div class="student-detail-grid">
@@ -433,7 +433,7 @@ function renderDetailForm(student) {
             )}
             ${renderDetailField(
               '학생 성별',
-              '학생의 성별입니다.',
+              '',
               renderSelect(
                 'gender',
                 [
@@ -447,7 +447,7 @@ function renderDetailForm(student) {
           </div>
           ${renderDetailField(
             '출생연도',
-            '태어난 해를 네 자리로 적습니다.',
+            '태어난 해 네 자리를 적습니다.',
             renderTextInput('birth_year', student.birth_year || '', {
               type: 'number',
               min: 1900,
@@ -457,7 +457,7 @@ function renderDetailForm(student) {
           )}
           ${renderDetailField(
             '특이요청사항',
-            '매칭에 도움이 되는 요청입니다.',
+            '매칭에 도움 되는 요청입니다.',
             renderTextarea('special_request_note', student.special_request_note || '', {
               rows: 3,
               placeholder: '예: 저녁 시간, 개념부터 천천히',

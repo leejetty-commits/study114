@@ -3,6 +3,7 @@
  * 1번 = 대표(BASIC/PICK/PRIME 카드). 업로드 시 베이직(1:1)·프라임(16:9) 파생본을 만든다.
  */
 
+import '../styles/tutor-profile-photos.css';
 import {
   openPromoCropDialog,
   readImageSize,
@@ -79,8 +80,11 @@ export function tutorCardImagePaths(tutor) {
 }
 
 export function tutorProfilePhotoHint() {
-  const s = TUTOR_PROFILE_PHOTO_SPEC;
-  return `JPG · PNG · WebP / 권장 ${s.recommended} / 파일 최대 4MB · ${s.maxCount}장. 가로·세로가 ${s.minWidth}×${s.minHeight}에 못 미치면(예: 가로만 긴 사진) 자동으로 확대한 뒤, 베이직 정사각(${s.basicSize}×${s.basicSize})·프라임 16:9(${s.primeWidth}×${s.primeHeight})로 맞춥니다. 왼쪽(1번)이 대표 사진입니다.`;
+  return [
+    '최대 3장 · JPG/PNG/WebP · 파일당 최대 4MB',
+    '권장 1200×1200 이상 — 800×800보다 작으면 자동으로 확대합니다.',
+    '1번이 대표 사진입니다. (베이직 720×720 · 프라임 1280×720으로 맞춰집니다)',
+  ].join('\n');
 }
 
 function extOfName(name) {

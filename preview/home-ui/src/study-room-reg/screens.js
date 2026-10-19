@@ -401,7 +401,7 @@ function renderBasicForm(room) {
     <form class="p19-form p20-inline-form" data-p20-form="basic" data-p20-room-id="${room.id}">
       ${renderFormSection(
         '기본정보',
-        '공부방명 · 노출지역 · 주력과목을 마이페이지 가운데 칸에서 바로 수정합니다.',
+        '공부방명 · 노출지역 · 주력과목을 바로 수정합니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field p19-field--full">
@@ -437,7 +437,7 @@ function renderDetailForm(room) {
     <form class="p19-form p20-inline-form" data-p20-form="detail" data-p20-room-id="${room.id}">
       ${renderFormSection(
         '상세정보',
-        '수업·소개·시설을 마이페이지 가운데 칸에서 수정합니다.',
+        '수업·소개·시설을 수정합니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field">

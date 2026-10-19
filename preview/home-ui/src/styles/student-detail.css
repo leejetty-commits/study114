@@ -70,7 +70,8 @@
 }
 
 .student-detail-form .p19-input,
-.student-detail-form .btn {
+.student-detail-form button[type='submit'].btn,
+.student-detail-form .btn.btn--block {
   min-height: 44px;
   border-radius: 8px;
   box-sizing: border-box;
