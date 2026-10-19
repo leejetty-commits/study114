@@ -201,7 +201,7 @@
 .search-form--detail3 .search-field--compact .search-field__label,
 .search-form--detail3 .search-field--range.search-field--compact .search-field__label,
 .search-form--detail3 .search-field--toggle.search-field--compact .search-field__label {
-  font-size: var(--fs-1, 0.75rem) !important;
+  font-size: var(--fs-2, 0.875rem) !important;
   font-weight: 500 !important;
   font-family: var(--font-sans, inherit) !important;
   color: #475569;

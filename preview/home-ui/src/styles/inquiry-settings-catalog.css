@@ -123,8 +123,8 @@
 
 :is([data-p20-inquiries], [data-p21-inquiries]) .p21-inq-save .btn {
   min-width: 120px;
-  min-height: 40px;
-  border-radius: 8px;
+  min-height: var(--btn-tone-h);
+  border-radius: var(--btn-tone-radius);
 }
 
 :is([data-p20-inquiries], [data-p21-inquiries]) .p20-inq-save-hint {

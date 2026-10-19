@@ -683,6 +683,7 @@
 
 .account-settings .btn--sm {
   padding: 0.45rem 0.85rem;
+  padding-block: 0;
   font-size: var(--account-body);
 }
 
