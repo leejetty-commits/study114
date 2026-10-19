@@ -56,7 +56,7 @@ export function formatTutorFeeCard(item) {
 
 export function formatCareerYearBand(career_year_band) {
   if (!career_year_band) return '—';
-  return CAREER_YEAR_BAND_LABELS[career_year_band] || career_year_band;
+  return CAREER_YEAR_BAND_LABELS[career_year_band] || '—';
 }
 
 const TUTOR_STUDENT_GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
@@ -87,7 +87,7 @@ export function formatProofDocument(proof_document_available) {
 
 export function formatTutorLessonPlaces(lesson_places) {
   if (!lesson_places?.length) return '—';
-  return lesson_places.map((p) => TUTOR_PLACE_LABELS[p] || p).join(' · ');
+  return lesson_places.map((p) => TUTOR_PLACE_LABELS[p]).filter(Boolean).join(' · ') || '—';
 }
 
 export function formatGender(gender) {
@@ -101,7 +101,7 @@ export function formatLessonPlace(lesson_place_type) {
   if (lesson_place_type === 'study_room') return '공부방';
   if (lesson_place_type === 'home') return '재택';
   if (lesson_place_type === 'office') return '교습소';
-  return lesson_place_type || '—';
+  return '—';
 }
 
 export function formatLessonOperationType(lesson_operation_type) {
@@ -110,7 +110,7 @@ export function formatLessonOperationType(lesson_operation_type) {
     time_slot_mixed_grade: '타임별 혼합학년',
     individual_visit: '개별 방문',
   };
-  return map[lesson_operation_type] || lesson_operation_type || '—';
+  return map[lesson_operation_type] || '—';
 }
 
 const STUDY_ROOM_CAPACITY_LABELS = {
@@ -163,20 +163,30 @@ export function formatTutorTrustBadges(item) {
   if (item.university_status && UNIVERSITY_STATUS_LABELS[item.university_status]) {
     parts.push(UNIVERSITY_STATUS_LABELS[item.university_status]);
   }
-  if (item.career_year_band) parts.push(formatCareerYearBand(item.career_year_band));
+  if (item.career_year_band && CAREER_YEAR_BAND_LABELS[item.career_year_band]) {
+    parts.push(CAREER_YEAR_BAND_LABELS[item.career_year_band]);
+  }
   return parts.join(' · ') || '—';
 }
 
 export function formatUniversityStatus(university_status) {
   if (!university_status) return '—';
-  return UNIVERSITY_STATUS_LABELS[university_status] || university_status;
+  return UNIVERSITY_STATUS_LABELS[university_status] || '—';
 }
 
 export function formatGenderAgeLabel(item) {
-  const age = item.age_band
-    ? ({ early_20s: '20대 전반', late_20s: '20대 후반', early_30s: '30대 전반', late_30s: '30대 후반', early_40s: '40대 전반', late_40s: '40대 후반', over_50: '50대+' }[item.age_band] || item.age_band)
-    : null;
-  return [item.gender ? formatGender(item.gender) : null, age].filter(Boolean).join(' · ') || '—';
+  const age = {
+    early_20s: '20대 전반',
+    late_20s: '20대 후반',
+    early_30s: '30대 전반',
+    late_30s: '30대 후반',
+    early_40s: '40대 전반',
+    late_40s: '40대 후반',
+    over_50: '50대+',
+  }[item.age_band] || '';
+  const gender = item.gender ? formatGender(item.gender) : '';
+  const genderLabel = gender && gender !== '—' ? gender : '';
+  return [genderLabel, age].filter(Boolean).join(' · ') || '—';
 }
 
 export function formatStudentPlaces(lesson_places) {

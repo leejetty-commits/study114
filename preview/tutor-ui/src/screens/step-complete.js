@@ -1,7 +1,14 @@
-import { registerState } from '../state.js';
+import { registerState, TUTOR_PLACE_OPTIONS } from '../state.js';
 import { renderRegisterShell, renderGuideNotice, bindGlobalEvents, mypageRegistrationsUrl } from '../layout.js';
 import { homeUiUrl } from '../../../shared/preview-links.js';
 import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
+
+function lessonPlaceSummary(places) {
+  const labels = (Array.isArray(places) ? places : [])
+    .map((code) => TUTOR_PLACE_OPTIONS.find((option) => option.value === code)?.label || '')
+    .filter(Boolean);
+  return labels.length ? labels.join(', ') : '—';
+}
 
 export function renderComplete() {
   const s = registerState;
@@ -17,7 +24,7 @@ export function renderComplete() {
       <dt>표시명</dt><dd>${s.tutor_display_name || '—'}</dd>
       <dt>주력과목</dt><dd>${s.main_subject_note || '—'}</dd>
       <dt>월 대표 과외비</dt><dd>${wonToCheonwonInput(s.preferred_fee_amount) ? `${Number(wonToCheonwonInput(s.preferred_fee_amount)).toLocaleString('ko-KR')}천원` : '—'}</dd>
-      <dt>강의장소</dt><dd>${(s.lesson_places || []).length ? s.lesson_places.join(', ') : '—'}</dd>
+      <dt>강의장소</dt><dd>${lessonPlaceSummary(s.lesson_places)}</dd>
     </dl>
     <div class="register-nav" style="border-top:none;padding-top:var(--space-2);">
       <a href="${mypageRegistrationsUrl()}" class="btn btn--secondary">마이페이지에서 수정</a>
