@@ -32,13 +32,15 @@ function textStatus(v) {
   return blank(v) ? 'filled' : 'empty';
 }
 
-function row(id, label, value, status) {
+function row(id, label, value, status, extra) {
+  const more = extra && typeof extra === 'object' ? extra : {};
   return {
     id,
     label,
     value: blank(value) ? String(value) : '',
     status,
     required: TRC_BOARD_REQUIRED_IDS.has(id),
+    note: more.note ? String(more.note) : '',
   };
 }
 
@@ -93,7 +95,7 @@ export function tutorFieldOkMap(tutor) {
   };
 }
 
-/** 베이직카드 = 기본정보 8개. 다 채우면 노출 (정본 73 0절). 상세 항목은 노출 조건이 아니다. */
+/** 기본카드 = 기본정보 8개. 다 채우면 노출 (정본 73 0절). 상세 항목은 노출 조건이 아니다. */
 function basicIdsForTutor() {
   return [...TRC_BASIC_FIELD_IDS];
 }
@@ -169,6 +171,10 @@ function sectionSummary(sec) {
   const requiredMissing = missingRows.filter((r) => r.required);
   const shortage = requiredMissing.length;
   const missLabels = requiredMissing.slice(0, 2).map((r) => r.label);
+  const extra = requiredMissing.length - missLabels.length;
+  const nameList = extra > 0
+    ? `${missLabels.join(', ')} ${TRC_COPY.board.missMore(extra)}`
+    : missLabels.join(', ');
   const requiredComplete = shortage === 0 && rows.some((r) => r.required);
   return {
     filled,
@@ -178,7 +184,7 @@ function sectionSummary(sec) {
     missLabels,
     line: shortage > 0 ? TRC_COPY.board.filledLine(filled, total, shortage) : `완료 ${filled}/${total}`,
     sub: shortage > 0
-      ? (missLabels.length ? `${TRC_COPY.board.missPrefix}: ${missLabels.join(', ')}` : '')
+      ? (nameList ? `${TRC_COPY.board.missPrefix}: ${nameList}` : '')
       : requiredComplete
         ? TRC_COPY.board.allRequiredOk
         : '',
@@ -269,7 +275,13 @@ function buildBoard(tutor) {
       row('feature_1', '특징 1', tutor?.feature_1, textStatus(tutor?.feature_1)),
       row('feature_2', '특징 2', tutor?.feature_2, textStatus(tutor?.feature_2)),
       row('feature_3', '특징 3', tutor?.feature_3, textStatus(tutor?.feature_3)),
-      row('intro_short', '짧은 소개', tutor?.intro_short, textStatus(tutor?.intro_short)),
+      row(
+        'intro',
+        '소개',
+        blank(tutor?.intro_long) ? tutor.intro_long : tutor?.intro_short,
+        introOk(tutor) ? 'filled' : 'empty',
+        { note: TRC_COPY.board.introNote },
+      ),
       row(
         'profile_image',
         '프로필 사진',
@@ -280,7 +292,6 @@ function buildBoard(tutor) {
           : '',
         tutor?.has_profile_image ? 'filled' : 'empty',
       ),
-      row('intro_long', '상세 소개', tutor?.intro_long, textStatus(tutor?.intro_long)),
       row('contact_time_note', '연락 가능 시간', tutor?.contact_time_note, textStatus(tutor?.contact_time_note)),
     ],
   };
