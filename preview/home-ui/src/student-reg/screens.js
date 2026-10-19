@@ -383,7 +383,7 @@ function renderDetailForm(student) {
       <section class="p19-form-section student-detail-section">
         <header class="p19-form-section__head student-detail-head">
           <h3 class="p19-form-section__title student-detail-title">학생 상세정보</h3>
-          <p class="p19-form-section__lead student-detail-lead">입력데이터가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
+          <p class="p19-form-section__lead student-detail-lead">정보가 맞을수록 더 적합한 과외쌤, 공부방을 만날 수 있습니다.</p>
         </header>
         <div class="p19-form-section__body student-detail-body">
           ${renderDetailField(
@@ -433,7 +433,7 @@ function renderDetailForm(student) {
             )}
             ${renderDetailField(
               '학생 성별',
-              '학생의 성별입니다.',
+              '',
               renderSelect(
                 'gender',
                 [

@@ -436,7 +436,7 @@ function renderBasicForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="basic" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '기본정보 · 과외지역',
-        '기본카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다. 광역시는 시 전체, 도는 시·군까지 고릅니다.',
+        '기본카드에 나오는 기본정보와 과외지역을 한 화면에서 수정합니다.',
         `
         <div class="register-grid-2">
           <div class="register-basic-col">
@@ -483,7 +483,7 @@ function renderBasicForm(tutor) {
       <p class="p21-save-feedback" data-p21-save-feedback role="status" ${saveFlash ? '' : 'hidden'} style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;border-radius:0.5rem;background:#ecfdf5;border:1px solid #a7f3d0;color:#047857;font-weight:600;">${saveFlash ? esc(saveFlash) : ''}</p>
       <p class="p19-field__hint" data-p21-dirty-hint hidden>변경된 내용이 있습니다. 기본정보 저장을 눌러 주세요.</p>
       ${renderFormFooter(
-        '저장해도 검색 노출이 바로 바뀌지는 않습니다. 부족한 항목은 등록점검에서 확인합니다.',
+        '저장해도 검색 노출은 바로 바뀌지 않습니다. 부족한 항목 확인은 등록점검에서 합니다.',
         `<button type="submit" class="btn btn--primary" ${units.length ? '' : 'disabled'}>기본정보 저장</button>
          <a href="#${tutorNav(tutor, 'detail')}" class="btn btn--secondary" data-p21-nav="${tutorNav(tutor, 'detail')}">상세정보로</a>
          <a href="#${tutorNav(tutor, 'publish')}" class="btn btn--ghost" data-p21-nav="${tutorNav(tutor, 'publish')}">등록점검</a>`,
@@ -507,7 +507,7 @@ function renderDetailForm(tutor) {
     <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
       ${renderFormSection(
         '수업 · 가격',
-        '월 과외비·주 회수·1회 수업시간은 기본정보에서 수정합니다. 여기서는 수업 상세를 채웁니다.',
+        '월 과외비·주 회수·1회 수업시간은 기본정보에서 수정하고, 여기서는 수업 상세를 채웁니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <label class="p19-field" data-trc-field="fee_basis">
@@ -538,7 +538,7 @@ function renderDetailForm(tutor) {
       )}
       ${renderFormSection(
         '학력 · 소개 · 연락',
-        '프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 기본카드·픽·프라임 카드 대표 사진입니다.',
+        '사진은 아래에서 최대 3장까지 올립니다. 1번이 기본카드·픽·프라임 대표 사진입니다.',
         `
         <div class="p19-field-grid p19-field-grid--2">
           <div data-trc-field="university">
