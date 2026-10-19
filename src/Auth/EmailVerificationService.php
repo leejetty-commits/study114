@@ -29,9 +29,9 @@ final class EmailVerificationService
      */
     public function sendVerification(int $userId): array
     {
-        $cooldown = (int) ($this->config['email_verify_resend_cooldown_seconds'] ?? 300);
+        $cooldown = (int) ($this->config['email_verify_resend_cooldown_seconds'] ?? 600);
         if ($cooldown < 1) {
-            $cooldown = 300;
+            $cooldown = 600;
         }
 
         $stmt = Connection::get()->prepare(
