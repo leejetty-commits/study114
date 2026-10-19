@@ -33,12 +33,12 @@ export function renderTutorDetailBody(item, viewer) {
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>사진</dt><dd>${renderMedia(item.image_path, item.tutor_display_name, 'pick')}</dd>
-        <dt>성별</dt><dd>${esc(formatGender(item.gender))}</dd>
+        <dt>과외쌤 성별</dt><dd>${esc(formatGender(item.gender))}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
         <dt>과외지역</dt><dd>${esc(locationLabel)}</dd>
         <dt>수업장소</dt><dd>${esc(formatTutorLessonPlaces(item.lesson_places))}</dd>
         <dt>대상</dt><dd>${esc(item.grade_band || '—')}</dd>
-        <dt>원생수</dt><dd>${esc(formatTutorStudentTarget(item))}</dd>
+        <dt>학생구성</dt><dd>${esc(formatTutorStudentTarget(item))}</dd>
         <dt>수업료</dt><dd>${esc(formatTutorFeeCard(item))}</dd>
         <dt>일정</dt><dd>${esc(isGuest ? '로그인 후 확인' : schedule)}</dd>
         <dt>특징</dt><dd>${esc(features)}</dd>

@@ -72,7 +72,7 @@ export function renderLesson() {
 
   const prevPath = s.basicComplete ? '/register/basic' : '/register/regions';
   const content = `
-    <form data-form="lesson">
+    <form data-form="lesson" class="tutor-lesson-step">
       ${renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
       ${renderSectionTitle('수업 · 과목 · 가격')}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong> · 마이페이지에서 수정</p>` : ''}
