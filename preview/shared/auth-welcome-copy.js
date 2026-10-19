@@ -34,7 +34,7 @@ export const AUTH_WELCOME_COPY = {
     failHint: '이메일 주소를 확인한 뒤 다시 보낼 수 있어요.',
     doneTitle: '이메일을 확인했어요',
     doneLead: '확인이 끝났어요. 아래 「이 창에서 이어가기」를 누르면 기본정보 입력으로 이어져요.',
-    doneNote: '그 화면을 닫았다면 아래에서 이 창으로 이어갈 수 있어요.',
+    doneNote: '처음 열어 둔 화면을 닫았어도 괜찮아요.',
     resendSuccess: '확인 메일을 다시 보냈어요. 받은편지함과 스팸함을 확인해 주세요.',
     resendCooldown: '최근에 확인 메일을 보냈어요. 잠시 후 다시 시도해 주세요.',
     already: '이미 이메일을 확인했어요.',
