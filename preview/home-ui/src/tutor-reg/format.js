@@ -20,7 +20,7 @@ export { profileStatusLabel };
 
 /** @param {string} status */
 export function detailStatusLabel(status) {
-  return DETAIL_STATUS_LABELS[status] || status || '—';
+  return DETAIL_STATUS_LABELS[status] || '—';
 }
 
 /** @param {TutorRecord} tutor */

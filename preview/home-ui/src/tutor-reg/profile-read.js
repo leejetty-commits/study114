@@ -32,7 +32,7 @@ function display(v) {
 
 function lessonPlacesLabel(tutor) {
   const places = Array.isArray(tutor?.lesson_places) ? tutor.lesson_places : [];
-  return places.map((p) => TUTOR_PLACE_LABELS[p] || p).filter(Boolean).join(' · ');
+  return places.map((p) => TUTOR_PLACE_LABELS[p]).filter(Boolean).join(' · ');
 }
 
 function feeBasisLabel(tutor) {
@@ -75,7 +75,7 @@ function publicChoice(flag) {
 export function buildTutorProfileReadSections(tutor) {
   const t = tutor && typeof tutor === 'object' ? tutor : {};
   const styles = formatTeachingStyleBadges(t.teaching_style_badges, 99);
-  const career = CAREER_YEAR_BAND_LABELS[t.career_year_band] || display(t.career_year_band);
+  const career = CAREER_YEAR_BAND_LABELS[t.career_year_band] || '';
 
   return [
     {
@@ -184,7 +184,7 @@ export function renderTutorProfileRead(tutor) {
           (r) => `
         <div class="p21-profile__row">
           <dt class="p21-profile__label">${esc(r.label)}</dt>
-          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : '미입력'}</dd>
+          <dd class="p21-profile__value${r.value ? '' : ' is-empty'}">${r.value ? esc(r.value) : '—'}</dd>
         </div>`,
         )
         .join('');

@@ -69,7 +69,8 @@ function ensureThreeSlots() {
 
 function optionLabel(options, value) {
   const current = String(value ?? '').trim();
-  return options.find((o) => String(o.value) === current)?.label || current;
+  if (!current) return '';
+  return options.find((o) => String(o.value) === current)?.label || '';
 }
 
 function regionOverviewValue(units) {
