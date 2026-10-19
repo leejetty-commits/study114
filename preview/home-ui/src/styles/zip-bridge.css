@@ -103,7 +103,7 @@
 .guide-app .guide-frame__body > * + *,
 .concern-app .concern-frame__body > * + *,
 .support-app .sup-frame__body > * + * {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .guide-app .guide-frame__body > .pattern-band,
@@ -115,7 +115,7 @@
 .guide-app .guide-frame__body > .pattern-band + *,
 .concern-app .concern-frame__body > .pattern-band + *,
 .support-app .sup-frame__body > .pattern-band + * {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 .uds-theme .fake-tag {
