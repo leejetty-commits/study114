@@ -72,7 +72,7 @@ export const P20_HUB_BLOCK_TITLES = {
 /** P20-05 쪽지설정 — copy */
 export const P20_INQUIRY_COPY = {
   pageTitle: '쪽지설정',
-  pageLead: '지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
+  pageLead: '지금 학생·학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
   currentStatusHeading: '현재상태',
   badgeReceiving: '현재 쪽지를 받는 중',
   badgeClosed: '현재 쪽지를 안 받는 중',
@@ -86,7 +86,7 @@ export const P20_INQUIRY_COPY = {
   receiving: '쪽지 받는 중',
   closed: '쪽지 안받음',
   switchLabel: '쪽지 받는 중',
-  switchLead: '켜면 학부모가 쪽지로 문의할 수 있어요.',
+  switchLead: '켜면 학생·학부모가 쪽지로 문의할 수 있어요.',
   offReasonTitle: '안받는 이유',
   offReasonHint: '쪽지 안받음이면 이유를 고른 뒤 저장합니다.',
   offReasonEmpty: '「쪽지 안받음」을 고르면 이 오른쪽에 잠시 쉼 / 정원 마감이 나타납니다.',
@@ -96,7 +96,7 @@ export const P20_INQUIRY_COPY = {
   saveCta: '저장하기',
   phoneGateTitle: '기본 연락처 검증이 필요합니다',
   phoneGateBody:
-    '학부모의 문의를 받기 시작하려면 휴대폰 검증이 필요합니다. 인증은 내부 신뢰도 점검을 위해서만 사용되며, 전화번호는 외부에 공개되지 않습니다.',
+    '학생·학부모의 문의를 받기 시작하려면 휴대폰 검증이 필요합니다. 인증은 내부 신뢰도 점검을 위해서만 사용되며, 전화번호는 외부에 공개되지 않습니다.',
   phoneOtpLabel: '인증번호 6자리',
   phoneResendCta: '인증번호 다시 받기',
   footnotes: [

@@ -368,10 +368,13 @@ function renderBasicForm(student) {
 
 /** @param {string} label @param {string} hint @param {string} control */
 function renderDetailField(label, hint, control) {
+  const hintHtml = hint
+    ? `<span class="student-detail-hint">${esc(hint)}</span>`
+    : '';
   return `
     <div class="student-detail-field">
       <span class="student-detail-label">${esc(label)}</span>
-      <span class="student-detail-hint">${esc(hint)}</span>
+      ${hintHtml}
       ${control}
     </div>`;
 }
@@ -419,7 +422,7 @@ function renderDetailForm(student) {
           <div class="student-detail-grid">
             ${renderDetailField(
               '희망 과외쌤 성별',
-              '과외쌤 성별 선호입니다.',
+              '원하는 과외쌤 성별입니다.',
               renderSelect(
                 'preferred_tutor_gender',
                 [

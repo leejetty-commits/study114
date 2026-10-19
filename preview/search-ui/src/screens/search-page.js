@@ -1,4 +1,3 @@
-import { PAID_GATE_MESSAGE } from '@home-visibility';
 import {
   canShowSearchTab,
   resolveAllowedTab,
@@ -78,7 +77,7 @@ function renderSubscriptionNote(tab) {
   const msg =
     previewState.subscription === 'paid'
       ? '유료 공급자 — 유료 전용 요청문과 특이요청은 상세 화면에서만 열람'
-      : `무료 공급자 — 메모 접근 시 ${PAID_GATE_MESSAGE}`;
+      : '무료 회원 — 학생의 요청문과 특이요청은 유료 회원만 상세 화면에서 볼 수 있어요';
   return `<p class="search-note">${esc(msg)}</p>`;
 }
 

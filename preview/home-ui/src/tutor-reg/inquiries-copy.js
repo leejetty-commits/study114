@@ -8,7 +8,7 @@
  */
 
 export const P21_INQUIRY_COPY = {
-  pageLead: '지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
+  pageLead: '지금 학생·학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.',
   currentStatusHeading: '현재상태',
   badgeReceiving: '지금은 쪽지 받는 중',
   badgeClosed: '지금은 쪽지 안받음',
