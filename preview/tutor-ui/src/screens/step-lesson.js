@@ -124,6 +124,7 @@ export function bindLessonEvents(root) {
   bindInputFill(root.querySelector('[data-form="lesson"]'));
   const nextBtn = root.querySelector('[data-action="next"]');
   root.querySelector('[data-action="prev"]')?.addEventListener('click', () => {
+    syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
     navigate(registerState.basicComplete ? '/register/basic' : '/register/regions');
   });
   root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
