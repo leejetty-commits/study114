@@ -53,6 +53,7 @@ export function renderContactFormHtml(opts = {}) {
     <form data-form="contact" class="register-form-narrow">
       ${renderSectionTitle('학력 · 경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">
+        <div data-trc-field="university">
         ${renderUniversityNameField({
           variant: 'form',
           name: 'university_name',
@@ -60,9 +61,10 @@ export function renderContactFormHtml(opts = {}) {
           id: 'tutor_univ_contact',
           label: '대학/대학원',
         })}
-        <div class="form-group"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" placeholder="학과명 (서술형)" /></div>
+        </div>
+        <div class="form-group" data-trc-field="major_name"><label class="form-label">전공</label><input class="form-input" name="major_name" value="${s.major_name}" placeholder="학과명 (서술형)" /></div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="university_status">
         <span class="form-label">학적상태</span>
         <div class="form-radio-group">${radios('university_status', UNIVERSITY_STATUS_OPTIONS, s.university_status)}</div>
       </div>
@@ -72,8 +74,8 @@ export function renderContactFormHtml(opts = {}) {
       </div>
       <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
       <div class="register-grid-2 register-grid-2--tight">
-        <div class="form-group"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
-        <div class="form-group"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
+        <div class="form-group" data-trc-field="feature_1"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
+        <div class="form-group" data-trc-field="feature_2"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
       </div>
       <div class="form-group">
         <label class="form-check">

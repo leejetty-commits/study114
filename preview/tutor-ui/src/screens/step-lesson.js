@@ -84,11 +84,11 @@ export function renderLessonFormHtml(opts = {}) {
       ${renderSectionTitle('수업 · 과목 · 가격')}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong> · 마이페이지에서 수정</p>` : ''}
       <div class="register-grid-2">
-        <div class="form-group">
+        <div class="form-group" data-trc-field="student_target">
           <span class="form-label">지도 대상 성별</span>
           <div class="form-radio-group">${radios('student_gender_group', GENDER_GROUP_OPTIONS, s.student_gender_group)}</div>
         </div>
-        <div class="form-group">
+        <div class="form-group" data-trc-field="student_count_group">
           <span class="form-label">수업인원</span>
           <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
         </div>
@@ -101,17 +101,17 @@ export function renderLessonFormHtml(opts = {}) {
       <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
       <button type="button" class="btn btn--secondary btn--sm" data-action="add-subject">+ 과목 추가</button>
       <div class="register-grid-2" style="margin-top:var(--space-4);">
-        <div class="form-group">
+        <div class="form-group" data-trc-field="fee_basis">
           <span class="form-label form-label--required">산정방식</span>
           <div class="form-radio-group">${feeBasis}</div>
         </div>
-        <div class="form-group"><label class="form-label">월 총 횟수</label><input class="form-input" name="monthly_session_count" value="${s.monthly_session_count}" /></div>
+        <div class="form-group" data-trc-field="monthly_session_count"><label class="form-label">월 총 횟수</label><input class="form-input" name="monthly_session_count" value="${s.monthly_session_count}" /></div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="fee_description">
         <label class="form-label" for="fee_description">가격 설명</label>
         <textarea class="form-input form-textarea" name="fee_description" rows="2">${s.fee_description}</textarea>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="lesson_places">
         <span class="form-label">강의장소</span>
         <div class="register-check-grid">${places}</div>
       </div>
