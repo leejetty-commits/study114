@@ -193,8 +193,11 @@
 
 ### 3-3. 등록점검 조건 교체
 
-- `preview/home-ui/src/tutor-reg/registration-check-copy.js` `TRC_PICK_FIELD_IDS`(91줄)는 지금 `feature_1`, `student_target` 이다. 둘 다 베이직 필수가 되므로 「학교·학과 또는 경력」, 「주교재」, 「강의스타일 1개」로 바꾼다.
-- `TRC_PRIME_FIELD_IDS`(94줄)는 지금 `intro_long`, `feature_2`, `feature_3` 이다. 프라임 조건은 「픽 조건 + 소개 + 특징 2·3 + 강의스타일 3개까지」로 바꾼다. 소개를 `intro_short` 와 `intro_long` 중 무엇으로 셀지는 열린 질문이다.
+반영됨(273). 구매를 막는 항목은 `preview/shared/pickprime-requirements.js`와 `src/Paid/TierRequirement.php`가 같이 쓴다.
+
+- 픽 = 학교·학과(대학명) 또는 경력, 주교재, 강의스타일 1개 이상(최대 4개).
+- 프라임 = 픽 + 상세 소개, 특징 2, 특징 3. 강의스타일 1개 이상이면 충족. 카드에는 3개까지 보이고 나머지는 「외 N」.
+- 가입·상세 저장은 이 표시로 막지 않는다.
 
 ---
 

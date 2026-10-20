@@ -208,7 +208,7 @@ DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zi
 | 축 | 조건 |
 |----|------|
 | 베이직 검색 | `profile_status = published` 만 |
-| Pick/Prime 구매 | `published` + 상세 완성(`expanded_complete`) + 홍보지역 ID |
+| Pick/Prime 구매 | `published` + 픽·프라임 필수 항목 + 홍보지역 ID |
 | 쪽지 CTA | `inquiry_status` 만 |
 
 ---
@@ -240,7 +240,7 @@ DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zi
 | 환경 | 정책 |
 |------|------|
 | 운영 · 프리뷰 | 노출 게이트에서 `expanded_complete` **제거** |
-| Pick/Prime | `expanded_complete` + 홍보지역 ID 유지 |
+| Pick/Prime | 픽·프라임 필수 항목 + 홍보지역 ID |
 
 ### 5-2-2. UI 금지 문구 (21§3-3 · 22§7 연동)
 
