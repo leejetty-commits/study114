@@ -346,6 +346,10 @@ final class ProviderCheckoutService
     /** @return array<string, mixed> */
     public function completeOrder(int $userId, string $orderRef): array
     {
+        if (!PaidCheckoutGate::mockCompleteAllowed()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+
         $lockKey = null;
         $paymentCommitted = false;
         try {
@@ -705,6 +709,7 @@ final class ProviderCheckoutService
         );
     }
 
+    // completeOrder 안에서만 부른다. 다른 곳에서 부르면 PaidCheckoutGate::mockCompleteAllowed() 검사를 먼저 거친다.
     /**
      * @param array<string, mixed> $order
      * @return array<string, mixed>|null

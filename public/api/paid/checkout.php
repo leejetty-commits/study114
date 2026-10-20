@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Paid\PaidApi;
+use Study114\Paid\PaidCheckoutGate;
 use Study114\Paid\ProviderCheckoutService;
 
 PaidApi::bootstrap();
@@ -23,6 +24,9 @@ PaidApi::run(static function (): void {
     $service = new ProviderCheckoutService();
 
     if ($action === 'complete') {
+        if (!PaidCheckoutGate::mockCompleteAllowed()) {
+            PaidApi::fail(403, 'payment_not_available', PaidCheckoutGate::CLOSED_MESSAGE);
+        }
         $orderRef = trim((string) ($input['order_ref'] ?? ''));
         if ($orderRef === '') {
             PaidApi::fail(422, 'validation', 'order_ref가 필요합니다.');
