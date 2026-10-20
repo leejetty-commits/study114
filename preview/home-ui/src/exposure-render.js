@@ -470,7 +470,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
       [
         labeled(
           '강의스타일',
-          formatTeachingStyleBadges(item.teaching_style_badges, featureMax === 1 ? 1 : 3),
+          formatTeachingStyleBadges(item.teaching_style_badges, 3),
           { col: 2, cls: 'expo-tbl__cell--style' },
         ),
       ],
@@ -488,7 +488,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
     [labeled('수업장소', optionalTutorPlaces(item.lesson_places)), labeled('원생수', formatTutorStudentTarget(item))],
     [labeled('주교재', item.main_material_note || '—'), labeled('특징', joinFeatures(item, featureMax), { cls: 'expo-tbl__cell--features' })],
     [
-      labeled('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, featureMax === 1 ? 1 : 3), {
+      labeled('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 3), {
         col: 2,
         cls: 'expo-tbl__cell--style',
       }),

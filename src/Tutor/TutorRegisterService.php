@@ -748,23 +748,39 @@ final class TutorRegisterService
 
         }
 
+        $codes = [];
+        foreach ($badges as $badge) {
+            $badge = (string) $badge;
+            if (!in_array($badge, $this->teachingStyleCodes(), true) || in_array($badge, $codes, true)) {
+                continue;
+            }
+            $codes[] = $badge;
+        }
 
+        $existingStmt = $pdo->prepare(
+            'SELECT badge_name FROM tutor_teaching_style_badges WHERE tutor_id = ? ORDER BY display_order ASC'
+        );
+        $existingStmt->execute([$tutorId]);
+        $existing = [];
+        foreach ($existingStmt->fetchAll(PDO::FETCH_COLUMN) as $name) {
+            $name = (string) $name;
+            if (!in_array($name, $existing, true)) {
+                $existing[] = $name;
+            }
+        }
+        $incoming = $codes;
+        $stored = $existing;
+        sort($incoming);
+        sort($stored);
+        if (count($codes) > 4 && $incoming !== $stored) {
+            throw new InvalidArgumentException('강의스타일은 4개까지 고를 수 있어요');
+        }
 
         $pdo->prepare('DELETE FROM tutor_teaching_style_badges WHERE tutor_id = ?')->execute([$tutorId]);
 
-
-
         $i = 0;
 
-        foreach ($badges as $badge) {
-
-            $badge = (string) $badge;
-
-            if (!in_array($badge, $this->teachingStyleCodes(), true)) {
-
-                continue;
-
-            }
+        foreach ($codes as $badge) {
 
             $pdo->prepare(
 

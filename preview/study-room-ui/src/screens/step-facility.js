@@ -4,6 +4,7 @@ import { renderUniversityNameField, bindUniversityNameField } from '../../../sha
 import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
 import { saveCurrentStep, withSaving } from '../save-flow.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { TIER_MARK_NOTE } from '../../../shared/pickprime-requirements.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -23,9 +24,9 @@ function esc(s) {
 }
 
 /** 픽·프라임 카드 항목만 * 표시. 저장은 막지 않는다. */
-function starLabel(forId, text) {
+function tierLabel(forId, text) {
   const forAttr = forId ? ` for="${forId}"` : '';
-  return `<label class="form-label form-label--required form-label--required-text"${forAttr}>${text}<em class="register-required-mark">필수</em></label>`;
+  return `<label class="form-label form-label--tier"${forAttr}>${text}</label>`;
 }
 
 function renderSubtitle(text) {
@@ -87,6 +88,7 @@ export function renderFacilityFormHtml(opts = {}) {
   const notes = proofNotes(s);
   return `
     <form data-form="facility">
+      <p class="form-hint">${TIER_MARK_NOTE}</p>
       ${renderGuideNotice('지금 다 안 채워도 됩니다. 저장(다음)은 눌러 주세요')}
       ${renderSectionTitle('경력 · 특징')}
       <div class="register-grid-3">
@@ -116,7 +118,7 @@ export function renderFacilityFormHtml(opts = {}) {
       </div>
       <div class="register-grid-3">
         <div class="form-group" data-rc-field="feature_1">
-          ${starLabel('feature_1', '경력특징 1')}
+          ${tierLabel('feature_1', '경력특징 1')}
           <input class="form-input" id="feature_1" name="feature_1" value="${esc(s.feature_1)}" />
         </div>
         <div class="form-group">
