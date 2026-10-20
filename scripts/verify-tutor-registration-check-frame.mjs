@@ -125,10 +125,15 @@ assert(css.includes('[data-trc-page] .rc-publish'), 'css: tutor publish scoped')
 assert(router.includes('stripHashQuery'), 'router: strip query');
 assert(TRC_PICK_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'pick extras disjoint from basic');
 assert(TRC_PRIME_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'prime extras disjoint from basic');
-assert(TRC_PRIME_FIELD_IDS.every((id) => !TRC_PICK_FIELD_IDS.includes(id)), 'prime extras disjoint from pick');
-assert(TRC_PICK_FIELD_IDS.includes('feature_1'), 'pick: feature_1');
+assert(TRC_PICK_FIELD_IDS.every((id) => TRC_PRIME_FIELD_IDS.includes(id)), 'prime includes pick');
+assert(
+  TRC_PICK_FIELD_IDS.join(',') === 'school_or_career,main_material_note,teaching_style_badges',
+  'pick: 학교·학과 또는 경력, 주교재, 강의스타일',
+);
 assert(TRC_PRIME_FIELD_IDS.includes('intro_long'), 'prime: intro_long');
+assert(TRC_PRIME_FIELD_IDS.includes('feature_2') && TRC_PRIME_FIELD_IDS.includes('feature_3'), 'prime: feature 2·3');
 assert(!TRC_PICK_FIELD_IDS.includes('display_name'), 'pick does not repeat display_name');
+assert(!TRC_PICK_FIELD_IDS.includes('feature_1'), 'pick: feature_1 removed');
 
 const boardIds = [
   ...TRC_BOARD_BASIC_FIELDS,
