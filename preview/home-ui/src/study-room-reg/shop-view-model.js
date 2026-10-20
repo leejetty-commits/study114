@@ -10,7 +10,6 @@
 
 import { myshopInquiryStatusLine } from './inquiry-display.js';
 import {
-  ROOM_DEFAULT_BASIC,
   blank,
   boolOn,
   formatBoolFlag,
@@ -25,12 +24,11 @@ import {
   formatAttendanceDays,
   formatAudience,
   formatTeachingStyles,
-  formatImageTypeLabel,
   collectRegionLabels,
   formatLivingAreaSentence,
   resolveFacilityNames,
   collectShopPhotos,
-  splitHeroAndGallery,
+  splitPhotoSlots,
 } from './shop-formatters.js';
 
 /** @readonly 섹션 키 — 문서가 아니라 코드 상수 */
@@ -38,7 +36,6 @@ export const SHOP_SECTION_KEYS = Object.freeze([
   'hero',
   'facts',
   'signature',
-  'gallery',
   'classes',
   'career',
   'trust',
@@ -47,6 +44,7 @@ export const SHOP_SECTION_KEYS = Object.freeze([
   'social',
   'reviews',
   'inquiry',
+  'gallery',
 ]);
 
 /** @readonly 렌더 순서 = 키 순서 */
@@ -58,16 +56,20 @@ export const SHOP_SECTION_ORDER = SHOP_SECTION_KEYS;
  */
 export const SHOP_FALLBACK_MATRIX = Object.freeze({
   heroImage: Object.freeze([
-    Object.freeze({ id: 'cover', when: 'images에 cover 있음', then: 'cover → Hero, 나머지 → Gallery' }),
-    Object.freeze({
-      id: 'no_cover_first_photo',
-      when: '사진은 있으나 cover 없음',
-      then: '배열 첫 사진 → Hero, 나머지 → Gallery(interior→facility→other)',
-    }),
     Object.freeze({
       id: 'no_photos',
       when: '사진 0장',
-      then: 'Hero = ROOM_DEFAULT_BASIC(isDefault), Gallery 섹션 숨김',
+      then: '윗단·아랫단 모두 없음. 기본 이미지 없음',
+    }),
+    Object.freeze({
+      id: 'top_only',
+      when: '사진 1~2장',
+      then: '윗단 2칸(왼쪽부터, 빈 칸 유지). 아랫단 없음',
+    }),
+    Object.freeze({
+      id: 'top_and_bottom',
+      when: '사진 3~5장',
+      then: '윗단 2칸 + 아랫단 3칸. 올린 순서. 빈 칸 유지',
     }),
   ]),
   heroCopy: Object.freeze([
@@ -94,20 +96,13 @@ export const SHOP_FALLBACK_MATRIX = Object.freeze({
 
 /**
  * @param {object[]} photos
- * @returns {{ hero: object|null, gallery: object[], ruleId: string }}
+ * @returns {{ top: object[], bottom: object[], ruleId: 'no_photos'|'top_only'|'top_and_bottom' }}
  */
-export function resolveHeroGalleryWithFallback(photos) {
-  const list = Array.isArray(photos) ? photos : [];
-  if (!list.length) {
-    return { hero: null, gallery: [], ruleId: 'no_photos' };
-  }
-  const hasCover = list.some((p) => p.type === 'cover');
-  const { hero, gallery } = splitHeroAndGallery(list);
-  return {
-    hero,
-    gallery,
-    ruleId: hasCover ? 'cover' : 'no_cover_first_photo',
-  };
+export function resolvePhotoSlots(photos) {
+  const { top, bottom } = splitPhotoSlots(photos);
+  const count = top.length + bottom.length;
+  const ruleId = count === 0 ? 'no_photos' : count <= 2 ? 'top_only' : 'top_and_bottom';
+  return { top, bottom, ruleId };
 }
 
 /**
@@ -135,10 +130,10 @@ export function resolveHeroCopy(slogan, introShort) {
 
 /**
  * @typedef {object} ShopViewModel
- * @property {{ name: string, slogan: string, lead: string, livingLine: string, chips: string[], imageSrc: string, imageIsDefault: boolean }} hero
+ * @property {{ name: string, slogan: string, lead: string, livingLine: string, chips: string[], photos: (ShopPhotoVM|null)[], imageSrc: string, imageIsDefault: boolean }} hero
  * @property {{ tiles: { label: string, value: string }[] }} facts
  * @property {{ styles: string[], styleNote: string, introLong: string }} signature
- * @property {{ items: ShopPhotoVM[] }} gallery
+ * @property {{ items: (ShopPhotoVM|null)[] }} photosBottom
  * @property {{ items: object[] }} classes  — 공부방 수업행 (미래 offerings 자리)
  * @property {{ university: string, major: string, careerYears: string, academyYears: string, features: string[] }} career
  * @property {{ items: { label: string, value: string }[] }} trust
@@ -169,9 +164,27 @@ export function buildShopViewModel(s, room = {}) {
     regionLabels.length === 0 ? 'none' : regionLabels.length === 1 ? 'one' : 'many';
 
   const photos = collectShopPhotos(s);
-  const photoSplit = resolveHeroGalleryWithFallback(photos);
-  const heroSrc = photoSplit.hero?.src || ROOM_DEFAULT_BASIC;
-  const imageIsDefault = !photoSplit.hero;
+  const photoSplit = resolvePhotoSlots(photos);
+  const padSlots = (list, size) => {
+    const out = list.slice(0, size);
+    while (out.length < size) out.push(null);
+    return out;
+  };
+  const toPhotoVm = (p, index) =>
+    p
+      ? {
+          src: p.src,
+          blurSrc: p.blurSrc || p.src,
+          type: p.type,
+          title: p.title || '',
+          index,
+        }
+      : null;
+  const topPhotos = photoSplit.ruleId === 'no_photos' ? [] : padSlots(photoSplit.top, 2).map((p, i) => toPhotoVm(p, i + 1));
+  const bottomPhotos =
+    photoSplit.ruleId === 'top_and_bottom' ? padSlots(photoSplit.bottom, 3).map((p, i) => toPhotoVm(p, i + 3)) : [];
+  const heroSrc = topPhotos.find((p) => p?.src)?.src || '';
+  const imageIsDefault = false;
 
   const styles = formatTeachingStyles(s?.teaching_style_ids, s?.teaching_style);
   const styleNote = blank(s?.teaching_style_note);
@@ -226,13 +239,6 @@ export function buildShopViewModel(s, room = {}) {
       ? 'no_classes_fee_tile'
       : 'empty';
 
-  const galleryItems = photoSplit.gallery.map((g) => ({
-    src: g.src,
-    type: g.type,
-    title: g.title || formatImageTypeLabel(g.type),
-    caption: g.title || formatImageTypeLabel(g.type),
-  }));
-
   const trustItems = [];
   if (boolOn(s?.education_office_registered)) {
     trustItems.push({
@@ -275,12 +281,13 @@ export function buildShopViewModel(s, room = {}) {
       lead: copy.lead,
       livingLine: livingSentence,
       chips: [audience, subject, place].filter(Boolean),
+      photos: topPhotos,
       imageSrc: heroSrc,
       imageIsDefault,
     },
     facts: { tiles },
     signature: { styles, styleNote, introLong },
-    gallery: { items: galleryItems },
+    photosBottom: { items: bottomPhotos },
     classes: { items: classItems },
     career: {
       university: blank(s?.university_name),
@@ -321,7 +328,7 @@ export function shopSectionHasContent(vm, key) {
     case 'signature':
       return vm.signature.styles.length > 0 || !!vm.signature.styleNote || !!vm.signature.introLong;
     case 'gallery':
-      return vm.gallery.items.length > 0;
+      return Array.isArray(vm.photosBottom?.items) && vm.photosBottom.items[0] != null;
     case 'classes':
       return vm.classes.items.length > 0;
     case 'career': {
