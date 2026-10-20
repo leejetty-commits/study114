@@ -101,20 +101,26 @@ export async function ensureEmbeddedTutor(tutorId, opts = {}) {
   return registerState;
 }
 
-function detailFormsHtml(tutor) {
+function detailFormsHtml(tutor, section) {
   const publish = tutorSectionPath(tutor.id, 'publish');
   const hub = tutorHubPath(tutor.id);
-  return `
-    ${renderReturnBanner(tutor.id)}
-    <div class="mp-room-embed register-flow" data-embed-section="detail" data-embed-tutor-id="${tutor.id || 0}">
-      ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true })}
-      ${renderContactFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true })}
+  const detail2 = section === 'detail2';
+  const form = detail2
+    ? `${renderContactFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true })}
       <div class="p19-field p19-field--full" data-trc-field="profile_image">
         <span class="p19-field__label">프로필 사진</span>
         ${renderTutorProfilePhotoEditor(tutor)}
+      </div>`
+    : renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true });
+  return `
+    ${renderReturnBanner(tutor.id)}
+    <div class="mp-room-embed register-flow" data-embed-section="${detail2 ? 'detail2' : 'detail'}" data-embed-tutor-id="${tutor.id || 0}">
+      ${form}
+      <div class="register-embed-actions">
+        <button type="button" class="btn btn--secondary" data-action="cancel-detail">취소</button>
+        <button type="button" class="btn btn--secondary" data-action="save-detail">저장</button>
       </div>
       <div class="register-embed-actions">
-        <button type="button" class="btn btn--primary" data-action="save-detail">상세정보 저장</button>
         <a class="btn btn--secondary" href="#${esc(publish)}" data-p21-nav="${esc(publish)}">등록점검</a>
         <a class="btn btn--secondary" href="#${esc(hub)}" data-p21-nav="${esc(hub)}">마이프로필</a>
       </div>
@@ -133,8 +139,8 @@ function blankDetailHtml() {
     </div>`;
 }
 
-/** @param {import('./store.js').TutorRecord} tutor */
-export function renderEmbeddedTutorDetail(tutor) {
+/** @param {import('./store.js').TutorRecord} tutor @param {'detail'|'detail2'} [section] */
+export function renderEmbeddedTutorDetail(tutor, section = 'detail') {
   const tutorId = Number(tutor?.id) || 0;
   if (!tutorId) return blankDetailHtml();
 
@@ -157,7 +163,7 @@ export function renderEmbeddedTutorDetail(tutor) {
   }
 
   markEmbeddedTutorLoaded(tutorId);
-  return detailFormsHtml(tutor);
+  return detailFormsHtml(tutor, section);
 }
 
 /** 탭을 떠나기 전에 입력값을 메모리에 남긴다. 폼에 없는 칸은 비우지 않는다. */
@@ -188,34 +194,44 @@ export function bindEmbeddedTutorDetail(root, rerender) {
   bindContactEvents(wrap, { embed: true, onRefresh: rerender });
   bindTutorProfilePhotos(root, { tutorId, rerender });
 
+  wrap.querySelector('[data-action="cancel-detail"]')?.addEventListener('click', () => {
+    ensureEmbeddedTutor(tutorId, { force: true })
+      .catch(() => {})
+      .finally(() => rerender());
+  });
+
   const saveBtn = wrap.querySelector('[data-action="save-detail"]');
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
-      const lesson = wrap.querySelector('[data-form="lesson"]');
-      const contact = wrap.querySelector('[data-form="contact"]');
-      syncLessonFromForm(lesson, registerState);
-      const lessonErr = validateLessonState(registerState);
-      if (lessonErr) {
-        alert(lessonErr);
-        return;
-      }
+      const detail2 = wrap.getAttribute('data-embed-section') === 'detail2';
       try {
-        await saveAndNavigate(registerState, 'lesson', null);
-        const keepTime = registerState.contact_time_note;
-        const keepFeature3 = registerState.feature_3;
-        const keepIntroLong = registerState.intro_long;
-        syncCareerFromForm(contact, registerState);
-        syncContactFromForm(contact, registerState);
-        if (contact && !contact.querySelector('[name="contact_time_note"]')) registerState.contact_time_note = keepTime;
-        if (contact && !contact.querySelector('[name="feature_3"]')) registerState.feature_3 = keepFeature3;
-        if (contact && !contact.querySelector('[name="intro_long"]')) registerState.intro_long = keepIntroLong;
-        const urlErr = validatePromoUrls(registerState);
-        if (urlErr) {
-          alert(urlErr);
-          return;
+        if (!detail2) {
+          const lesson = wrap.querySelector('[data-form="lesson"]');
+          syncLessonFromForm(lesson, registerState);
+          const lessonErr = validateLessonState(registerState);
+          if (lessonErr) {
+            alert(lessonErr);
+            return;
+          }
+          await saveAndNavigate(registerState, 'lesson', null);
+        } else {
+          const contact = wrap.querySelector('[data-form="contact"]');
+          const keepTime = registerState.contact_time_note;
+          const keepFeature3 = registerState.feature_3;
+          const keepIntroLong = registerState.intro_long;
+          syncCareerFromForm(contact, registerState);
+          syncContactFromForm(contact, registerState);
+          if (contact && !contact.querySelector('[name="contact_time_note"]')) registerState.contact_time_note = keepTime;
+          if (contact && !contact.querySelector('[name="feature_3"]')) registerState.feature_3 = keepFeature3;
+          if (contact && !contact.querySelector('[name="intro_long"]')) registerState.intro_long = keepIntroLong;
+          const urlErr = validatePromoUrls(registerState);
+          if (urlErr) {
+            alert(urlErr);
+            return;
+          }
+          await saveAndNavigate(registerState, 'career', null);
+          await saveAndNavigate(registerState, 'contact', null);
         }
-        await saveAndNavigate(registerState, 'career', null);
-        await saveAndNavigate(registerState, 'contact', null);
       } catch (err) {
         alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
         return;

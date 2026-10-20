@@ -37,6 +37,7 @@ import { TRC_COPY } from './registration-check-copy.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS } from '../../../shared/school-grade.js';
 import { TUTOR_SLOGAN_MAX } from '../../../shared/tutor-basic-fields.js';
+import { tutorDetailTabForFocus } from '../../../shared/tutor-detail-fields.js';
 import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
@@ -85,7 +86,7 @@ function renderTutorShell(tutor, activeSection, bodyHtml) {
   const section =
     activeSection === 'access' || activeSection === 'inquiries'
       ? 'inquiries'
-      : ['hub', 'basic', 'detail', 'publish', 'inquiries'].includes(activeSection)
+      : ['hub', 'basic', 'detail', 'detail2', 'publish', 'inquiries'].includes(activeSection)
         ? activeSection
         : 'hub';
 
@@ -118,14 +119,23 @@ export function renderTutorRegScreen(path) {
     const section = route.section || 'hub';
     if (tutors.length) {
       const tutor = tutors[0];
-      const dest = section === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, section);
+      const hash = window.location.hash.slice(1) || '';
+      const q = hash.includes('?') ? hash.slice(hash.indexOf('?')) : '';
+      const focus = new URLSearchParams(q.startsWith('?') ? q.slice(1) : '').get('focus');
+      let sectionForTutor = section;
+      if ((sectionForTutor === 'detail' || sectionForTutor === 'detail2') && focus) {
+        sectionForTutor = tutorDetailTabForFocus(focus);
+      }
+      const dest = sectionForTutor === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, sectionForTutor);
       queueMicrotask(() => {
         const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
         const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-        if (p === tutorBlankPath(section)) window.location.replace(`#${dest}`);
+        if (p === tutorBlankPath(section) || p === dest) {
+          if ((window.location.hash.slice(1) || '') !== `${dest}${q}`) window.location.replace(`#${dest}${q}`);
+        }
       });
       if (section === 'basic') return renderBasicBridge(tutor);
-      if (section === 'detail') return renderDetailBridge(tutor);
+      if (section === 'detail' || section === 'detail2') return renderDetailBridge(tutor, sectionForTutor);
       if (section === 'publish') return renderPublish(tutor);
       if (section === 'inquiries') return renderInquiries(tutor);
       return renderHub(tutor);
@@ -187,13 +197,27 @@ export function renderTutorRegScreen(path) {
     });
   }
 
+  let detailTab = route.section === 'detail2' ? 'detail2' : 'detail';
+  if ((route.section === 'detail' || route.section === 'detail2') && route.tutorId) {
+    const focus = tutorHashSearchParams(path).get('focus');
+    const tab = focus ? tutorDetailTabForFocus(focus) : route.section;
+    if (focus && tab !== route.section) {
+      detailTab = tab;
+      const q = path.includes('?') ? path.slice(path.indexOf('?')) : '';
+      const dest = `${tutorSectionPath(route.tutorId, tab)}${q}`;
+      queueMicrotask(() => {
+        if ((window.location.hash.slice(1) || '') !== dest) window.location.replace(`#${dest}`);
+      });
+    }
+  }
+
   switch (route.screenId) {
     case 'P21-02':
       return renderHub(tutor);
     case 'P21-03a':
       return renderBasicBridge(tutor);
     case 'P21-03b':
-      return renderDetailBridge(tutor);
+      return renderDetailBridge(tutor, detailTab);
     case 'P21-04':
       return renderPublish(tutor);
     case 'P21-05':
@@ -461,8 +485,9 @@ function renderBasicBridge(tutor) {
   return renderBasicForm(tutor);
 }
 
-function renderDetailBridge(tutor) {
-  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'detail', renderEmbeddedTutorDetail(tutor))}</section>`;
+function renderDetailBridge(tutor, section = 'detail') {
+  const tab = section === 'detail2' ? 'detail2' : 'detail';
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, tab, renderEmbeddedTutorDetail(tutor, tab))}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -518,7 +543,9 @@ function scrollToTutorRcFocus(root) {
   el.classList.add('is-rc-focus');
   queueMicrotask(() => {
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const input = el.matches('input, textarea, select') ? el : el.querySelector('input, textarea, select');
+    const input = el.matches('input, textarea, select, button')
+      ? el
+      : el.querySelector('input, textarea, select, button');
     input?.focus?.();
   });
 }

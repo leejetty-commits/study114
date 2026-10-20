@@ -7,7 +7,7 @@
  * @property {TutorRegScreenId} screenId
  * @property {number} [tutorId]
  * @property {'all'|'draft'|'published'|'hidden'|'not_ready'} [listTab]
- * @property {'hub'|'basic'|'detail'|'publish'|'access'|'inquiries'|'exposure'} [section]
+ * @property {'hub'|'basic'|'detail'|'detail2'|'publish'|'access'|'inquiries'|'exposure'} [section]
  * @property {boolean} [blank]
  */
 
@@ -44,12 +44,13 @@ export function parseTutorRegPath(hashPath) {
     return { screenId: 'P21-01', listTab: /** @type {any} */ (tabMatch[1]) };
   }
 
-  const blankMatch = p.match(/^\/mypage\/registrations\/tutors\/(basic|detail|publish|inquiries)$/);
+  const blankMatch = p.match(/^\/mypage\/registrations\/tutors\/(basic|detail2|detail|publish|inquiries)$/);
   if (blankMatch) {
     const sec = blankMatch[1];
     const map = {
       basic: 'P21-03a',
       detail: 'P21-03b',
+      detail2: 'P21-03b',
       publish: 'P21-04',
       inquiries: 'P21-05',
     };
@@ -66,7 +67,7 @@ export function parseTutorRegPath(hashPath) {
   }
 
   const sectionMatch = p.match(
-    /^\/mypage\/registrations\/tutors\/(\d+)\/(basic|detail|publish|access|inquiries|exposure)$/,
+    /^\/mypage\/registrations\/tutors\/(\d+)\/(basic|detail2|detail|publish|access|inquiries|exposure)$/,
   );
   if (sectionMatch) {
     const tutorId = Number(sectionMatch[1]);
@@ -74,6 +75,7 @@ export function parseTutorRegPath(hashPath) {
     const map = {
       basic: 'P21-03a',
       detail: 'P21-03b',
+      detail2: 'P21-03b',
       publish: 'P21-04',
       access: 'P21-05',
       inquiries: 'P21-05',
@@ -114,7 +116,7 @@ export function tutorHubPath(id) {
   return `${BASE}/${id}`;
 }
 
-/** @param {number} id @param {'basic'|'detail'|'publish'|'access'|'inquiries'|'exposure'} section */
+/** @param {number} id @param {'basic'|'detail'|'detail2'|'publish'|'access'|'inquiries'|'exposure'} section */
 export function tutorSectionPath(id, section) {
   const sec = section === 'access' ? 'inquiries' : section;
   return `${BASE}/${id}/${sec}`;
@@ -134,12 +136,13 @@ export function tutorListTabPath(tab) {
 
 /**
  * 내 등록 2차 탭 — 공부방 STUDY_ROOM_TOP_TABS 자리·이름 정렬
- * (상세2 없음 · exposure는 탭 밖 레거시 경로 유지)
+ * (exposure는 탭 밖 레거시 경로 유지)
  */
 export const TUTOR_REG_TOP_TABS = [
   { key: 'hub', label: '마이프로필' },
   { key: 'basic', label: '기본정보' },
-  { key: 'detail', label: '상세정보' },
+  { key: 'detail', label: '상세정보1' },
+  { key: 'detail2', label: '상세정보2' },
   { key: 'inquiries', label: '쪽지설정' },
   { key: 'publish', label: '등록점검' },
 ];
@@ -149,6 +152,7 @@ export const TUTOR_REG_MENUS = [
   { key: 'inquiries', label: '쪽지설정', screenId: 'P21-05' },
   { key: 'publish', label: '등록점검', screenId: 'P21-04' },
   { key: 'basic', label: '기본정보', screenId: 'P21-03a' },
-  { key: 'detail', label: '상세정보', screenId: 'P21-03b' },
+  { key: 'detail', label: '상세정보1', screenId: 'P21-03b' },
+  { key: 'detail2', label: '상세정보2', screenId: 'P21-03b' },
   { key: 'exposure', label: '노출 상품', screenId: 'P21-06' },
 ];
