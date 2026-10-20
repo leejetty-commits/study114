@@ -30,8 +30,8 @@
 
 ```
 SHOP_SECTION_ORDER =
-  hero → facts → signature → gallery → classes
-  → career → trust → facilities → livingArea → social → reviews → inquiry
+  hero → facts → signature → classes
+  → career → trust → facilities → livingArea → social → reviews → inquiry → gallery
 ```
 
 - **매핑만:** `buildShopViewModel(raw, room)`
@@ -45,13 +45,14 @@ SHOP_SECTION_ORDER =
 
 ## 2) Fallback matrix
 
-상수: `SHOP_FALLBACK_MATRIX` + `resolveHeroGalleryWithFallback` / `resolveHeroCopy`
+상수: `SHOP_FALLBACK_MATRIX` + `resolvePhotoSlots` / `resolveHeroCopy`  
+2026-10-21 종현 확정 275.
 
 | 상황 | 규칙 ID | 결과 |
 | --- | --- | --- |
-| 사진 0 | `no_photos` | Hero 기본 SVG · Gallery 숨김 |
-| 사진 있음 · cover 없음 | `no_cover_first_photo` | 첫 장 Hero · 나머지 Gallery |
-| cover 있음 | `cover` | cover → Hero |
+| 사진 0 | `no_photos` | 윗단·아랫단 없음. 기본 이미지 없음. 이름 카드부터 |
+| 사진 1~2 | `top_only` | 윗단 2칸(4:3, 액자). 빈 칸 유지. 아랫단 없음 |
+| 사진 3~5 | `top_and_bottom` | 윗단 2칸 + 맨 아래 아랫단 3칸(1:1). 올린 순서. 빈 칸은 바탕만 |
 | 슬로건만 / 한줄만 / 동일 | `slogan_only` / `intro_only` / `same` | 중복 없이 Hero 카피 |
 | 수업 0 · 월수업료만 | `no_classes_fee_tile` | classes 숨김 · facts 가격 타일 |
 | 홍보지역 1 | `one` | 「X 생활권」 |
