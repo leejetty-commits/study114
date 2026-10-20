@@ -36,12 +36,12 @@ export const TRC_COPY = {
   },
   board: {
     title: '전체 프로필 현황',
-    lead: '기본정보와 상세정보는 같은 수준의 구역입니다. 상세정보 안은 입력 화면과 같이 수업 · 가격 / 학력 · 소개 · 연락으로 나뉩니다.',
+    lead: '상세정보는 입력 화면과 같이 상세정보1 / 상세정보2로 나뉩니다.',
     sections: {
       basic: '기본정보',
       detail: '상세정보',
-      detail1: '수업 · 가격',
-      detail2: '학력 · 소개 · 연락',
+      detail1: '수업 · 과목 · 가격',
+      detail2: '학력 · 경력 · 특징',
     },
     cols: {
       item: '항목',
@@ -89,25 +89,31 @@ export const TRC_REQUIRED_FIELD_IDS = [
 export const TRC_BOARD_BASIC_FIELDS = TUTOR_BASIC_FIELDS.map((f) => ({ id: f.key, label: f.label, required: true }));
 
 export const TRC_BOARD_DETAIL1_FIELDS = [
-  { id: 'fee_basis', label: '산정방식', required: false },
-  { id: 'monthly_session_count', label: '월 총 횟수', required: false },
   { id: 'student_gender_group', label: '지도 대상 성별', required: false },
   { id: 'student_count_group', label: '수업인원', required: false },
-  { id: 'lesson_places', label: '강의장소', required: false },
+  { id: 'age_band', label: '과외쌤 연령대', required: false },
+  { id: 'subjects', label: '추가 과목', required: false },
+  { id: 'fee_basis', label: '산정방식', required: false },
+  { id: 'schedule', label: '주 회수', required: false },
   { id: 'fee_description', label: '가격 설명', required: false },
+  { id: 'lesson_places', label: '강의장소', required: false },
 ];
 
 export const TRC_BOARD_DETAIL2_FIELDS = [
   { id: 'university_name', label: '대학/대학원', required: false },
   { id: 'major_name', label: '전공', required: false },
   { id: 'university_status', label: '학적상태', required: false },
+  { id: 'career_year_band', label: '경력구간', required: false },
+  { id: 'main_material_note', label: '주교재', required: false },
   { id: 'feature_1', label: '특징 1', required: false },
   { id: 'feature_2', label: '특징 2', required: false },
   { id: 'feature_3', label: '특징 3', required: false },
-  { id: 'intro_short', label: '짧은 소개', required: false },
-  { id: 'profile_image', label: '프로필 사진', required: false },
+  { id: 'proof_document_available', label: '증빙서류 제출 가능', required: false },
+  { id: 'teaching_style_badges', label: '강의스타일', required: false },
   { id: 'intro_long', label: '상세 소개', required: false },
   { id: 'contact_time_note', label: '연락 가능 시간', required: false },
+  { id: 'promo_channels', label: '홍보 채널', required: false },
+  { id: 'profile_image', label: '프로필 사진', required: false },
 ];
 
 export const TRC_BOARD_REQUIRED_IDS = new Set(
@@ -132,12 +138,11 @@ export const TRC_PROMO_MISSING_DEFS = [
   { id: 'lesson_places', label: '강의장소', hint: '방문·공공장소 등 수업 방식을 보여 줍니다', section: 'detail' },
   { id: 'fee_basis', label: '과외비 산정방식', hint: '주 회수 또는 월 총 횟수 기준을 정합니다', section: 'detail' },
   { id: 'schedule', label: '주 회수/월 총 횟수', hint: '산정방식에 맞는 횟수가 필요합니다', section: 'detail' },
-  { id: 'intro', label: '소개문', hint: '상세 소개를 입력하면 카드와 확대카드에 보입니다', section: 'detail' },
   { id: 'university', label: '대학/대학원', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
   { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },
-  { id: 'feature_1', label: '경력특징 1', hint: '픽 카드 강조 한 줄입니다', section: 'detail' },
-  { id: 'student_target', label: '학생구성', hint: '지도 대상 성별·인원을 보여 줍니다', section: 'detail' },
+  { id: 'feature_1', label: '특징 1', hint: '픽 카드 강조 한 줄입니다', section: 'detail' },
+  { id: 'student_target', label: '지도 대상 성별 · 수업인원', hint: '지도 대상 성별·인원을 보여 줍니다', section: 'detail' },
   { id: 'intro_long', label: '상세 소개', hint: '상세 소개를 입력하면 카드와 확대카드에 보입니다', section: 'detail' },
-  { id: 'feature_2', label: '경력특징 2', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
-  { id: 'feature_3', label: '경력특징 3', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
+  { id: 'feature_2', label: '특징 2', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
+  { id: 'feature_3', label: '특징 3', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
 ];

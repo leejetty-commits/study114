@@ -50,6 +50,7 @@
     "verify:tutor-mypage-frame-ia": "vite-node scripts/verify-tutor-mypage-frame-ia.mjs",
     "verify:tutor-mypage-route-integrity": "vite-node scripts/verify-tutor-mypage-route-integrity.mjs",
     "verify:tutor-registration-check-frame": "vite-node scripts/verify-tutor-registration-check-frame.mjs",
+    "verify:tutor-detail-fields-ssot": "vite-node scripts/verify-tutor-detail-fields-ssot.mjs",
     "verify:tutor-basic-required": "vite-node scripts/verify-tutor-basic-required.mjs",
     "verify:study-room-registration-check-frame": "vite-node scripts/verify-study-room-registration-check-frame.mjs",
     "verify:study-room-inquiries-samples": "vite-node scripts/verify-study-room-inquiries-samples.mjs",

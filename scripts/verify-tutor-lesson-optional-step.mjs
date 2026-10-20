@@ -44,6 +44,7 @@ function base(overrides = {}) {
   assert(!('minutes_per_lesson' in p), '1 lesson payload has no minutes_per_lesson (basic step)');
   assert(!('preferred_fee_amount' in p), '1 lesson payload has no fee (basic step)');
   assert(p.fee_basis_type === 'monthly_by_weekly_schedule', '1 weekly-basis: basis preserved');
+  assert(!('monthly_session_count' in p), '1 weekly-basis: monthly count stays on the server');
   assert(Array.isArray(p.lesson_places) && p.lesson_places.length === 0, '1 lesson payload carries places (detail, empty ok)');
   assert(p.student_gender_group === '' && p.student_count_group === '', '1 lesson payload: 원생수 empty, no default');
 }
@@ -73,7 +74,11 @@ function base(overrides = {}) {
 
 // —— 3) 선택값 입력 시 payload 유지
 {
-  const state = base({ monthly_session_count: '8', fee_description: '협의 가능' });
+  const state = base({
+    fee_basis_type: 'monthly_by_total_sessions',
+    monthly_session_count: '8',
+    fee_description: '협의 가능',
+  });
   assert(validateLessonState(state) === null, '3 filled optionals: validate pass');
   const p = payloadForStep('lesson', state);
   assert(p.monthly_session_count === '8', '3 payload keeps monthly_session_count');
@@ -94,7 +99,7 @@ function base(overrides = {}) {
   assert(ok({ lessons_per_week: '1.5' }).lessons_per_week === false, '3b decimal weekly FAIL (SMALLINT integer)');
   assert(ok({ minutes_per_lesson: '0' }).minutes === false, '3b zero minutes FAIL');
   assert(
-    validateLessonState(base({ monthly_session_count: 'x' })) === '월 총 횟수: 1 이상의 정수로 입력해 주세요.',
+    validateLessonState(base({ fee_basis_type: 'monthly_by_total_sessions', monthly_session_count: 'x' })) === '월 총 횟수: 1 이상의 정수로 입력해 주세요.',
     '3b non-numeric monthly FAIL',
   );
   // DB 기술 계약: tutors.lessons_per_week SMALLINT UNSIGNED (0..65535). 사업 상한 아님.

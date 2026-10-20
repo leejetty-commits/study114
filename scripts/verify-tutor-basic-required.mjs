@@ -155,8 +155,10 @@ const screensOf = {
   'tutor-ui renderBasic': fnBody(files.stepBasic, 'renderBasic'),
 };
 const detailOf = {
-  '마이페이지 renderDetailForm': fnBody(files.screens, 'renderDetailForm'),
-  'tutor-ui renderLesson+renderContact': fnBody(files.stepLesson, 'renderLesson') + read('preview/tutor-ui/src/screens/step-contact.js'),
+  '마이페이지 renderDetailForm': read('preview/home-ui/src/tutor-reg/embedded-panels.js')
+    + read('preview/tutor-ui/src/screens/step-lesson.js')
+    + read('preview/tutor-ui/src/screens/step-contact.js'),
+  'tutor-ui renderLesson+renderContact': fnBody(files.stepLesson, 'renderLessonFormHtml') + read('preview/tutor-ui/src/screens/step-contact.js'),
   'tutor-ui renderDetail': fnBody(files.stepDetail, 'renderDetail'),
 };
 
@@ -450,7 +452,7 @@ const goodSlots = [0, 1, 2].map((i) => renderTutorRegionSlot({ region_id: '' }, 
 tamper(!regionLabelsOk(goodSlots.map((h) => h.replace(' (선택)', ''))), '지역 2·3번 「선택」 지움');
 tamper(!regionLabelsOk([goodSlots[0].replace('</strong>', ' (선택)</strong>'), goodSlots[1], goodSlots[2]]), '지역 1번에 「선택」 붙임');
 tamper(!noFakeDefault(`${files.collect}\nstate.student_gender_group = String(fd.get('student_gender_group') ?? 'mixed');`), "form-collect 에 ?? 'mixed' 대체값 추가");
-tamper(!noFakeDefault(detailOf['마이페이지 renderDetailForm'].replace('tutor.student_count_group)', "tutor.student_count_group || 'solo')")), "마이페이지 상세에 || 'solo' 추가");
+tamper(!noFakeDefault(detailOf['마이페이지 renderDetailForm'].replace('s.student_count_group)', "s.student_count_group || 'solo')")), "마이페이지 상세에 || 'solo' 추가");
 tamper(!noFakeDefault(hydrate.replace("['fee_basis_type'] ?? '')", "['fee_basis_type'] ?? 'monthly_by_weekly_schedule')")), '서버 hydrateTutor 산정방식 기본값 되살림');
 tamper(!registerStateEmpty(files.state.replace("  school_level: '',", "  school_level: 'middle',")), "registerState school_level: 'middle'");
 tamper(!registerStateEmpty(files.state.replace('  images: [],', "  images: [{ image_type: 'profile', image_path: 'profile.jpg' }],")), 'registerState 가짜 사진');

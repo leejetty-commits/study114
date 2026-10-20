@@ -11,31 +11,6 @@ import {
 import { getTutor, updateTutor } from './store.js';
 import { tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
 
-const PROMO_FIELDS_IF_PRESENT = [
-  'youtube_url',
-  'facebook_url',
-  'instagram_url',
-  'youtube_url_2',
-  'youtube_url_3',
-  'youtube_url_4',
-  'blog_url_1',
-  'blog_title_1',
-  'blog_url_2',
-  'blog_title_2',
-  'tiktok_url',
-  'naver_clip_url',
-];
-
-/** 호출자가 넘긴 새 채널만 싣는다. 없는 키를 빈 문자열로 넣으면 저장값이 지워진다. */
-function promoFieldsIfPresent(detail) {
-  /** @type {Record<string, string>} */
-  const out = {};
-  for (const key of PROMO_FIELDS_IF_PRESENT) {
-    if (Object.prototype.hasOwnProperty.call(detail, key)) out[key] = String(detail[key] || '');
-  }
-  return out;
-}
-
 async function postRegisterSave(step, tutorId, payload) {
   const res = await fetch('/api/tutor/register.php', {
     method: 'POST',
@@ -122,74 +97,4 @@ export async function saveTutorBasicInline(tutorId, basic) {
     });
   }
   return updateTutor(tutorId, patch);
-}
-
-/**
- * 상세정보 저장. 기본정보 항목은 saveTutorBasicInline 만 저장한다.
- * @param {number} tutorId
- * @param {Record<string, unknown>} detail
- */
-export async function saveTutorDetailInline(tutorId, detail) {
-  const feeBasis = String(detail.fee_basis_type || '');
-  const monthlySessions = Number(detail.monthly_session_count || 0);
-  const places = Array.isArray(detail.lesson_places) ? detail.lesson_places.map(String) : [];
-  const university = String(detail.university_name || '').trim();
-  const introShort = String(detail.intro_short || '').trim();
-  const introLong = String(detail.intro_long || '').trim();
-
-  if (!feeBasis) throw new Error('산정방식을 선택해 주세요.');
-  if (feeBasis === 'monthly_by_total_sessions' && (!monthlySessions || monthlySessions <= 0)) {
-    throw new Error('월 총 횟수를 입력해 주세요.');
-  }
-  if (!university) throw new Error('대학/대학원을 입력해 주세요.');
-  if (!introShort && !introLong) throw new Error('소개문을 입력해 주세요.');
-
-  if (isRegistrationsApiMode()) {
-    await postRegisterSave('lesson', tutorId, {
-      fee_basis_type: feeBasis,
-      monthly_session_count: detail.monthly_session_count || '',
-      fee_description: detail.fee_description || '',
-      student_gender_group: detail.student_gender_group || '',
-      student_count_group: detail.student_count_group || '',
-      lesson_places: places,
-    });
-    await postRegisterSave('career', tutorId, {
-      university_name: university,
-      major_name: detail.major_name || '',
-      university_status: detail.university_status || '',
-      feature_1: detail.feature_1 || '',
-      feature_2: detail.feature_2 || '',
-      feature_3: detail.feature_3 || '',
-    });
-    await postRegisterSave('contact', tutorId, {
-      contact_time_note: detail.contact_time_note || '',
-      intro_short: introShort || detail.intro_short || '',
-      intro_long: introLong || detail.intro_long || '',
-      ...promoFieldsIfPresent(detail),
-    });
-    await hydrateRegistrationsCache();
-    return getTutor(tutorId);
-  }
-
-  return updateTutor(tutorId, {
-    fee_basis_type: feeBasis,
-    monthly_session_count: monthlySessions || undefined,
-    fee_description: String(detail.fee_description || ''),
-    lesson_places: places,
-    has_lesson_places: places.length > 0,
-    student_gender_group: String(detail.student_gender_group || ''),
-    student_count_group: String(detail.student_count_group || ''),
-    university_name: university,
-    major_name: String(detail.major_name || ''),
-    university_status: String(detail.university_status || ''),
-    feature_1: String(detail.feature_1 || ''),
-    feature_2: String(detail.feature_2 || ''),
-    feature_3: String(detail.feature_3 || ''),
-    intro_short: introShort,
-    intro_long: introLong,
-    contact_time_note: String(detail.contact_time_note || ''),
-    // 프리뷰만: 서버 SSOT와 동일한 필드 충족 시에만 complete
-    detail_completion_status: 'expanded_complete',
-    detail_missing: [],
-  });
 }

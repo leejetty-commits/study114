@@ -23,7 +23,7 @@ import {
   getTutor,
   getPublishReadiness,
 } from './store.js';
-import { saveTutorBasicInline, saveTutorDetailInline } from './inline-save.js';
+import { saveTutorBasicInline } from './inline-save.js';
 import {
   buildTutorRegistrationCheckModel,
 } from './registration-check-model.js';
@@ -32,11 +32,12 @@ import { bindTutorRegistrationCheckEvents } from './registration-check-edit.js';
 import { renderTutorInquiries } from './inquiries-render.js';
 import { bindTutorInquiriesEvents } from './inquiries-edit.js';
 import { renderTutorProfileRead } from './profile-read.js';
-import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile-photos.js';
+import { renderEmbeddedTutorDetail, bindEmbeddedTutorDetail, syncEmbeddedTutorForms } from './embedded-panels.js';
 import { TRC_COPY } from './registration-check-copy.js';
 import { renderMainSubjectSelect } from '../../../shared/main-subjects.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS } from '../../../shared/school-grade.js';
 import { TUTOR_SLOGAN_MAX } from '../../../shared/tutor-basic-fields.js';
+import { tutorDetailTabForFocus } from '../../../shared/tutor-detail-fields.js';
 import {
   renderTutorRegionSlot,
   bindTutorRegionSlotEvents,
@@ -71,10 +72,6 @@ function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
-function reqMark() {
-  return '<em class="p19-required">필수</em>';
-}
-
 function renderReturnToRegistrationCheckBanner(tutorId) {
   if (!isReturnToRegistrationCheck()) return '';
   const href = Number(tutorId) ? tutorSectionPath(tutorId, 'publish') : tutorBlankPath('publish');
@@ -89,7 +86,7 @@ function renderTutorShell(tutor, activeSection, bodyHtml) {
   const section =
     activeSection === 'access' || activeSection === 'inquiries'
       ? 'inquiries'
-      : ['hub', 'basic', 'detail', 'publish', 'inquiries'].includes(activeSection)
+      : ['hub', 'basic', 'detail', 'detail2', 'publish', 'inquiries'].includes(activeSection)
         ? activeSection
         : 'hub';
 
@@ -122,14 +119,23 @@ export function renderTutorRegScreen(path) {
     const section = route.section || 'hub';
     if (tutors.length) {
       const tutor = tutors[0];
-      const dest = section === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, section);
+      const hash = window.location.hash.slice(1) || '';
+      const q = hash.includes('?') ? hash.slice(hash.indexOf('?')) : '';
+      const focus = new URLSearchParams(q.startsWith('?') ? q.slice(1) : '').get('focus');
+      let sectionForTutor = section;
+      if ((sectionForTutor === 'detail' || sectionForTutor === 'detail2') && focus) {
+        sectionForTutor = tutorDetailTabForFocus(focus);
+      }
+      const dest = sectionForTutor === 'hub' ? tutorHubPath(tutor.id) : tutorSectionPath(tutor.id, sectionForTutor);
       queueMicrotask(() => {
         const hashPath = (window.location.hash.slice(1) || '').split('?')[0];
         const p = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
-        if (p === tutorBlankPath(section)) window.location.replace(`#${dest}`);
+        if (p === tutorBlankPath(section) || p === dest) {
+          if ((window.location.hash.slice(1) || '') !== `${dest}${q}`) window.location.replace(`#${dest}${q}`);
+        }
       });
       if (section === 'basic') return renderBasicBridge(tutor);
-      if (section === 'detail') return renderDetailBridge(tutor);
+      if (section === 'detail' || section === 'detail2') return renderDetailBridge(tutor, sectionForTutor);
       if (section === 'publish') return renderPublish(tutor);
       if (section === 'inquiries') return renderInquiries(tutor);
       return renderHub(tutor);
@@ -191,13 +197,29 @@ export function renderTutorRegScreen(path) {
     });
   }
 
+  let detailTab = route.section === 'detail2' ? 'detail2' : 'detail';
+  if ((route.section === 'detail' || route.section === 'detail2') && route.tutorId) {
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : String(path || '');
+    const focus = tutorHashSearchParams(hash).get('focus');
+    const tab = focus ? tutorDetailTabForFocus(focus) : route.section;
+    if (focus && tab !== route.section) {
+      detailTab = tab;
+      const qIndex = hash.indexOf('?');
+      const q = qIndex >= 0 ? hash.slice(qIndex) : '';
+      const dest = `${tutorSectionPath(route.tutorId, tab)}${q}`;
+      queueMicrotask(() => {
+        if ((window.location.hash.slice(1) || '') !== dest) window.location.replace(`#${dest}`);
+      });
+    }
+  }
+
   switch (route.screenId) {
     case 'P21-02':
       return renderHub(tutor);
     case 'P21-03a':
       return renderBasicBridge(tutor);
     case 'P21-03b':
-      return renderDetailBridge(tutor);
+      return renderDetailBridge(tutor, detailTab);
     case 'P21-04':
       return renderPublish(tutor);
     case 'P21-05':
@@ -242,7 +264,7 @@ function renderBlankTutor(section) {
   const tutor = blankTutor();
   const sec = section || 'hub';
   if (sec === 'basic') return renderBasicForm(tutor);
-  if (sec === 'detail') return renderDetailForm(tutor);
+  if (sec === 'detail') return renderDetailBridge(tutor);
   if (sec === 'publish') return renderPublish(tutor);
   if (sec === 'inquiries') return renderInquiries(tutor);
   const greeting = renderNeighborhoodGreetingEditor({
@@ -386,38 +408,6 @@ async function persistTutorBasicForm(form) {
   });
 }
 
-const LESSON_PLACE_OPTS = [
-  { value: 'student_home_visit', label: '학생자택방문' },
-  { value: 'public_place', label: '공공장소' },
-  { value: 'tutor_home', label: '강사자택' },
-];
-
-const FEE_BASIS_OPTS = [
-  { value: 'monthly_by_weekly_schedule', label: '주 회수 기준' },
-  { value: 'monthly_by_total_sessions', label: '월 총 횟수 기준' },
-];
-
-const GENDER_GROUP_OPTS = [
-  { value: 'male', label: '남학생' },
-  { value: 'female', label: '여학생' },
-  { value: 'mixed', label: '혼성' },
-];
-
-const UNIVERSITY_STATUS_OPTS = [
-  { value: '', label: '선택' },
-  { value: 'enrolled', label: '재학' },
-  { value: 'leave', label: '휴학' },
-  { value: 'completed', label: '수료' },
-  { value: 'graduated', label: '졸업' },
-];
-
-const STUDENT_COUNT_OPTS = [
-  { value: 'solo', label: '단독' },
-  { value: 'two', label: '2명' },
-  { value: 'three', label: '3명' },
-  { value: 'four_plus', label: '4명 이상' },
-];
-
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderBasicForm(tutor) {
   const units = getTutorCityUnits();
@@ -493,121 +483,13 @@ function renderBasicForm(tutor) {
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'basic', `${renderReturnToRegistrationCheckBanner(tutor.id)}${formBody}`)}</section>`;
 }
 
-/** @param {import('./store.js').TutorRecord} tutor */
-function renderDetailForm(tutor) {
-  const places = tutor.lesson_places || [];
-  const placeChecks = LESSON_PLACE_OPTS.map(
-    (p) => `
-      <label class="p19-chip${places.includes(p.value) ? ' is-checked' : ''}">
-        <input type="checkbox" name="lesson_places" value="${esc(p.value)}" ${places.includes(p.value) ? 'checked' : ''} />
-        <span>${esc(p.label)}</span>
-      </label>`,
-  ).join('');
-  const formBody = `
-    <form class="p19-form p21-inline-form" data-p21-form="detail" data-p21-tutor-id="${tutor.id}">
-      ${renderFormSection(
-        '수업 · 가격',
-        '월 과외비·주 회수·1회 수업시간은 기본정보에서 수정하고, 여기서는 수업 상세를 채웁니다.',
-        `
-        <div class="p19-field-grid p19-field-grid--2">
-          <label class="p19-field" data-trc-field="fee_basis">
-            <span class="p19-field__label">산정방식 ${reqMark()}</span>
-            <select class="p19-input" name="fee_basis_type">${lessonSelectHtml(FEE_BASIS_OPTS, tutor.fee_basis_type)}</select>
-          </label>
-          <label class="p19-field" data-trc-field="monthly_session_count">
-            <span class="p19-field__label">월 총 횟수</span>
-            <input class="p19-input" name="monthly_session_count" value="${esc(tutor.monthly_session_count || '')}" />
-          </label>
-          <label class="p19-field" data-trc-field="student_target">
-            <span class="p19-field__label">지도 대상 성별</span>
-            <select class="p19-input" name="student_gender_group">${lessonSelectHtml(GENDER_GROUP_OPTS, tutor.student_gender_group)}</select>
-          </label>
-          <label class="p19-field" data-trc-field="student_count_group">
-            <span class="p19-field__label">수업인원</span>
-            <select class="p19-input" name="student_count_group">${lessonSelectHtml(STUDENT_COUNT_OPTS, tutor.student_count_group)}</select>
-          </label>
-          <label class="p19-field p19-field--full" data-trc-field="lesson_places">
-            <span class="p19-field__label">강의장소</span>
-            <div class="p19-chip-group">${placeChecks}</div>
-          </label>
-          <label class="p19-field p19-field--full" data-trc-field="fee_description">
-            <span class="p19-field__label">가격 설명</span>
-            <textarea class="p19-input p19-textarea" name="fee_description" rows="2">${esc(tutor.fee_description || '')}</textarea>
-          </label>
-        </div>`,
-      )}
-      ${renderFormSection(
-        '학력 · 소개 · 연락',
-        '사진은 아래에서 최대 3장까지 올립니다. 1번이 기본카드·픽·프라임 대표 사진입니다.',
-        `
-        <div class="p19-field-grid p19-field-grid--2">
-          <div data-trc-field="university">
-          ${renderUniversityNameField({
-            variant: 'p19',
-            name: 'university_name',
-            value: tutor.university_name || '',
-            id: `p21_univ_${tutor.id || 'new'}`,
-            label: '대학/대학원',
-            required: true,
-          })}
-          </div>
-          <label class="p19-field" data-trc-field="major_name">
-            <span class="p19-field__label">전공</span>
-            <input class="p19-input" name="major_name" value="${esc(tutor.major_name || '')}" placeholder="학과명 (서술형)" />
-          </label>
-          <label class="p19-field" data-trc-field="university_status">
-            <span class="p19-field__label">학적상태</span>
-            <select class="p19-input" name="university_status">
-              ${UNIVERSITY_STATUS_OPTS.map((o) => `<option value="${o.value}" ${String(tutor.university_status || '') === o.value ? 'selected' : ''}>${esc(o.label)}</option>`).join('')}
-            </select>
-          </label>
-          <label class="p19-field" data-trc-field="feature_1">
-            <span class="p19-field__label">특징 1</span>
-            <input class="p19-input" name="feature_1" value="${esc(tutor.feature_1 || '')}" />
-          </label>
-          <label class="p19-field" data-trc-field="feature_2">
-            <span class="p19-field__label">특징 2</span>
-            <input class="p19-input" name="feature_2" value="${esc(tutor.feature_2 || '')}" />
-          </label>
-          <label class="p19-field" data-trc-field="feature_3">
-            <span class="p19-field__label">특징 3</span>
-            <input class="p19-input" name="feature_3" value="${esc(tutor.feature_3 || '')}" />
-          </label>
-          <label class="p19-field p19-field--full" data-trc-field="intro">
-            <span class="p19-field__label">짧은 소개 ${reqMark()}</span>
-            <textarea class="p19-input p19-textarea" name="intro_short" rows="2">${esc(tutor.intro_short || '')}</textarea>
-          </label>
-          <div class="p19-field p19-field--full" data-trc-field="profile_image">
-            <span class="p19-field__label">프로필 사진</span>
-            ${renderTutorProfilePhotoEditor(tutor)}
-          </div>
-          <label class="p19-field p19-field--full" data-trc-field="intro_long">
-            <span class="p19-field__label">상세 소개 ${reqMark()}</span>
-            <textarea class="p19-input p19-textarea" name="intro_long" rows="4">${esc(tutor.intro_long || '')}</textarea>
-          </label>
-          <label class="p19-field" data-trc-field="contact_time_note">
-            <span class="p19-field__label">연락 가능 시간</span>
-            <input class="p19-input" name="contact_time_note" value="${esc(tutor.contact_time_note || '')}" />
-          </label>
-        </div>`,
-      )}
-      ${renderFormFooter(
-        '저장 후 등록점검에서 입력 현황을 확인하세요.',
-        `<button type="submit" class="btn btn--primary">상세정보 저장</button>
-         <a href="#${tutorNav(tutor, 'publish')}" class="btn btn--secondary" data-p21-nav="${tutorNav(tutor, 'publish')}">등록점검</a>
-         <a href="#${tutorNav(tutor, 'hub')}" class="btn btn--ghost" data-p21-nav="${tutorNav(tutor, 'hub')}">마이프로필</a>`,
-      )}
-    </form>`;
-
-  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'detail', `${renderReturnToRegistrationCheckBanner(tutor.id)}${formBody}`)}</section>`;
-}
-
 function renderBasicBridge(tutor) {
   return renderBasicForm(tutor);
 }
 
-function renderDetailBridge(tutor) {
-  return renderDetailForm(tutor);
+function renderDetailBridge(tutor, section = 'detail') {
+  const tab = section === 'detail2' ? 'detail2' : 'detail';
+  return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, tab, renderEmbeddedTutorDetail(tutor, tab))}</section>`;
 }
 
 /** @param {import('./store.js').TutorRecord} tutor */
@@ -663,7 +545,9 @@ function scrollToTutorRcFocus(root) {
   el.classList.add('is-rc-focus');
   queueMicrotask(() => {
     el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const input = el.matches('input, textarea, select') ? el : el.querySelector('input, textarea, select');
+    const input = el.matches('input, textarea, select, button')
+      ? el
+      : el.querySelector('input, textarea, select, button');
     input?.focus?.();
   });
 }
@@ -716,16 +600,9 @@ export function bindTutorRegEvents(root, rerender) {
 
   bindTutorRegistrationCheckEvents(root);
   bindTutorInquiriesEvents(root, rerender);
-  scrollToTutorRcFocus(root);
-
   bindUniversityNameReselect(root);
-  const detailForm = root.querySelector('[data-p21-form="detail"]');
-  if (detailForm) {
-    bindTutorProfilePhotos(root, {
-      tutorId: Number(detailForm.dataset.p21TutorId || 0),
-      rerender,
-    });
-  }
+  bindEmbeddedTutorDetail(root, rerender);
+  scrollToTutorRcFocus(root);
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -747,7 +624,8 @@ export function bindTutorRegEvents(root, rerender) {
       const raw = el.getAttribute('data-p21-nav') || '/mypage/registrations/tutors';
       const next = raw.startsWith('#') ? raw.slice(1) : raw;
       // 라우팅 무결성 우선 — 탭/메뉴 이탈 시 persist·지역목록 validation·alert 금지.
-      // 저장/검증은 form submit(기본정보 저장 버튼)에서만 수행.
+      // 상세 탭 입력만 메모리에 남긴다(L-02). 저장은 각 폼의 저장 버튼에서만 한다.
+      syncEmbeddedTutorForms(root);
       window.location.hash = next;
     });
   });
@@ -769,7 +647,6 @@ export function bindTutorRegEvents(root, rerender) {
       const id = Number(form.dataset.p21TutorId);
       if (!id) return;
       const kind = form.getAttribute('data-p21-form');
-      const fd = new FormData(form);
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
       try {
@@ -777,24 +654,6 @@ export function bindTutorRegEvents(root, rerender) {
           await persistTutorBasicForm(form);
           basicSaveFlash = '저장되었습니다.';
           markTutorBasicClean(form);
-        } else if (kind === 'detail') {
-          await saveTutorDetailInline(id, {
-            fee_basis_type: String(fd.get('fee_basis_type') || ''),
-            monthly_session_count: String(fd.get('monthly_session_count') || ''),
-            fee_description: String(fd.get('fee_description') || ''),
-            student_gender_group: String(fd.get('student_gender_group') || ''),
-            student_count_group: String(fd.get('student_count_group') || ''),
-            lesson_places: fd.getAll('lesson_places').map(String),
-            university_name: String(fd.get('university_name') || '').trim(),
-            major_name: String(fd.get('major_name') || '').trim(),
-            university_status: String(fd.get('university_status') || ''),
-            feature_1: String(fd.get('feature_1') || ''),
-            feature_2: String(fd.get('feature_2') || ''),
-            feature_3: String(fd.get('feature_3') || ''),
-            intro_short: String(fd.get('intro_short') || ''),
-            intro_long: String(fd.get('intro_long') || ''),
-            contact_time_note: String(fd.get('contact_time_note') || ''),
-          });
         }
         if (kind !== 'basic') alert('저장되었습니다.');
         if (isReturnToRegistrationCheck()) {

@@ -9,6 +9,7 @@ import { CAREER_YEAR_BAND_LABELS, TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS }
 import { tutorBlankPath, tutorSectionPath } from './router.js';
 import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
+import { lessonMonthlyLabel } from '../../../shared/lesson-monthly-options.js';
 import { normalizeTutorProfileImages, tutorPhotoPreviewSrc } from './profile-photos.js';
 
 const GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
@@ -50,8 +51,7 @@ function weeklyLabel(tutor) {
 }
 
 function monthlyLabel(tutor) {
-  const n = Number(tutor?.monthly_session_count);
-  return n > 0 ? `월 ${n}회` : '';
+  return lessonMonthlyLabel(tutor?.monthly_session_count);
 }
 
 function minutesLabel(tutor) {
@@ -70,7 +70,7 @@ function publicChoice(flag) {
 
 /**
  * @param {import('./store.js').TutorRecord} tutor
- * @returns {{ id: string, title: string, editSection: 'basic'|'detail'|null, rows: { label: string, value: string }[] }[]}
+ * @returns {{ id: string, title: string, editSection: 'basic'|'detail'|'detail2'|null, rows: { label: string, value: string }[] }[]}
  */
 export function buildTutorProfileReadSections(tutor) {
   const t = tutor && typeof tutor === 'object' ? tutor : {};
@@ -107,7 +107,7 @@ export function buildTutorProfileReadSections(tutor) {
     {
       id: 'education',
       title: '학력 · 자격',
-      editSection: 'detail',
+      editSection: 'detail2',
       rows: [
         { label: '대학/대학원', value: display(t.university_name) },
         { label: '전공', value: display(t.major_name) },
@@ -117,7 +117,7 @@ export function buildTutorProfileReadSections(tutor) {
     {
       id: 'intro',
       title: '소개 · 연락',
-      editSection: 'detail',
+      editSection: 'detail2',
       rows: [
         { label: '짧은 소개', value: display(t.intro_short) },
         { label: '상세 소개', value: display(t.intro_long) },
@@ -130,7 +130,7 @@ export function buildTutorProfileReadSections(tutor) {
     {
       id: 'extra',
       title: '추가 정보',
-      editSection: 'detail',
+      editSection: 'detail2',
       rows: [
         { label: '학생 대상', value: display(t.grade_band) },
         { label: '강의스타일', value: styles && styles !== '—' ? styles : '' },

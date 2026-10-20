@@ -618,24 +618,15 @@ final class TutorRegisterService
         // 노출 상태는 saveStep 의 TutorBasicFields::syncProfileStatus 가 정한다. 입력 profile_status 는 무시.
         // home-ui 인라인 상세저장이 contact 에 intro 를 실어 보내는 경로 지원
 
-        if (array_key_exists('intro_short', $input) || array_key_exists('intro_long', $input)) {
-
-            $introStmt = $pdo->prepare(
-
-                'UPDATE tutors SET intro_short = COALESCE(?, intro_short), intro_long = COALESCE(?, intro_long) WHERE id = ?'
-
-            );
-
-            $introStmt->execute([
-
-                $this->optionalString($input, 'intro_short'),
-
-                $this->optionalString($input, 'intro_long'),
-
-                $tutorId,
-
-            ]);
-
+        if (array_key_exists('intro_short', $input)) {
+            $short = $this->optionalString($input, 'intro_short');
+            $pdo->prepare('UPDATE tutors SET intro_short = COALESCE(?, intro_short) WHERE id = ?')
+                ->execute([$short, $tutorId]);
+        }
+        if (array_key_exists('intro_long', $input)) {
+            $long = trim((string) ($input['intro_long'] ?? ''));
+            $pdo->prepare('UPDATE tutors SET intro_long = ? WHERE id = ?')
+                ->execute([$long, $tutorId]);
         }
 
 
