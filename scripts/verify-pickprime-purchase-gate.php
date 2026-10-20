@@ -59,6 +59,17 @@ check('tutor_one_style', TierRequirement::missingFromRecord('tutor', 'pick', [
     'main_material_note' => '정석',
     'teaching_style_badges' => ['passion'],
 ]) === []);
+check('tutor_pick_open_without_material', TierRequirement::missingFromRecord('tutor', 'pick', [
+    'university_name' => '서울대',
+    'teaching_style_badges' => ['passion'],
+]) === []);
+check('tutor_prime_open_without_material', TierRequirement::missingFromRecord('tutor', 'prime', [
+    'university_name' => '서울대',
+    'teaching_style_badges' => ['passion'],
+    'intro_long' => '소개',
+    'feature_2' => '둘',
+    'feature_3' => '셋',
+]) === []);
 
 $emptyRoom = TierRequirement::missingFromRecord('study_room', 'pick', []);
 check('room_empty_pick', ids($emptyRoom) === TierRequirement::ROOM_PICK_IDS, implode(',', ids($emptyRoom)));
@@ -78,6 +89,14 @@ $completeAt = strpos($checkout, 'function completeOrder');
 check('create_order_checks_before_insert', $createAt !== false && $checkAt !== false && $insertAt !== false && $checkAt < $insertAt);
 $completeBody = $completeAt === false ? '' : substr($checkout, $completeAt, 800);
 check('complete_order_has_no_tier_check', !str_contains($completeBody, 'TierRequirement'));
+
+$tierCheck = (string) file_get_contents(dirname(__DIR__) . '/public/api/paid/tier-check.php');
+check('tier_check_uses_missing_for', substr_count($tierCheck, 'TierRequirement::missingFor') === 2);
+check('tier_check_uses_block_message', str_contains($tierCheck, 'TierRequirement::blockMessage'));
+check('tier_check_missing_is_missing_for', str_contains($tierCheck, "'missing' => \$missing"));
+$ownerAt = strpos($tierCheck, '(int) $ownerId !== $userId');
+$okAt = strpos($tierCheck, 'PaidApi::ok');
+check('tier_check_other_id_403', $ownerAt !== false && $okAt !== false && $ownerAt < $okAt && str_contains($tierCheck, "PaidApi::fail(403, 'forbidden'"));
 
 if (!in_array('sqlite', PDO::getAvailableDrivers(), true)) {
     echo "건너뜀 sqlite_probe — pdo_sqlite 없음\n";
@@ -104,7 +123,7 @@ $pdo->exec(
 );
 $pdo->exec("INSERT INTO tutors (id, university_name) VALUES (7, '')");
 $loaded = TierRequirement::missingFor($pdo, 'tutor', 7, 'pick');
-check('pdo_empty_tutor', count($loaded) === 3, (string) count($loaded));
+check('pdo_empty_tutor', count($loaded) === count(TierRequirement::TUTOR_PICK_IDS), (string) count($loaded));
 
 $stylePdo = new PDO('sqlite::memory:');
 $stylePdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

@@ -20,7 +20,7 @@ import { formatTeachingStyleBadges } from '../preview/home-ui/src/exposure-forma
 import { renderContactFormHtml } from '../preview/tutor-ui/src/screens/step-contact.js';
 import { renderLessonFormHtml, lessonSaveGuard } from '../preview/study-room-ui/src/screens/step-lesson.js';
 import { renderFacilityFormHtml } from '../preview/study-room-ui/src/screens/step-facility.js';
-import { getEligibility } from '../preview/home-ui/src/plans/screens.js';
+import { getEligibility, rememberTierCheck } from '../preview/home-ui/src/plans/screens.js';
 
 const root = process.cwd();
 let failed = 0;
@@ -61,7 +61,7 @@ assert(roomCopy.includes('ROOM_PICK_IDS') && !roomCopy.includes("['cover', 'intr
 assert(sameIds(TRC_PICK_FIELD_IDS, TUTOR_PICK_IDS) && sameIds(TRC_PRIME_FIELD_IDS, TUTOR_PRIME_IDS), 'trc id values');
 assert(sameIds(RC_PICK_FIELD_IDS, ROOM_PICK_IDS) && sameIds(RC_PRIME_FIELD_IDS, ROOM_PRIME_IDS), 'rc id values');
 
-for (const id of ['main_material_note', 'teaching_style_badges', 'intro_long', 'feature_2', 'feature_3']) {
+for (const id of ['teaching_style_badges', 'intro_long', 'feature_2', 'feature_3']) {
   const field = TUTOR_DETAIL_FIELDS.find((item) => item.id === id);
   const label = typeof field.label === 'function' ? field.label({}) : field.label;
   const hit = tutorTierMissing({}, 'prime').find((item) => item.id === id);
@@ -76,9 +76,18 @@ const screens = read('preview/home-ui/src/plans/screens.js');
 const eligibilitySrc = screens.slice(screens.indexOf('export function getEligibility'), screens.indexOf('function renderPositionCard'));
 assert(!eligibilitySrc.includes('성과 불이익'), 'eligibility: old tutor comment gone');
 assert(!eligibilitySrc.includes('expanded_complete'), 'eligibility: no expanded_complete');
+assert(!eligibilitySrc.includes('tutorTierMissing') && !eligibilitySrc.includes('roomTierMissing') && eligibilitySrc.includes('tierPurchaseGate'), 'eligibility reads tier-check cache');
 const blocks = read('preview/home-ui/src/plans/order-blocks.js');
 const roomState = blocks.slice(blocks.indexOf('export function studyRoomRegionPurchaseState'), blocks.indexOf('function tutorRegionPurchaseState'));
 assert(!roomState.includes('expanded_complete'), 'order block: no expanded_complete');
+assert(!roomState.includes('roomTierMissing') && roomState.includes('tierPurchaseGate'), 'order block reads tier-check cache');
+const tutorState = blocks.slice(blocks.indexOf('function tutorRegionPurchaseState'), blocks.indexOf('export function listTutorApplyCities'));
+assert(!tutorState.includes('tutorTierMissing') && tutorState.includes('tierPurchaseGate'), 'tutor order block reads tier-check cache');
+assert(screens.includes('fetchTierCheck') && screens.includes('scheduleTierCheckHydrate'), 'plans fills tier-check cache');
+const exposure = read('preview/home-ui/src/exposure-render.js');
+const styleLines = exposure.split('\n').filter((line) => line.includes('formatTeachingStyleBadges(item.teaching_style_badges'));
+assert(styleLines.filter((line) => line.includes('featureMax === 1 ? 1 : 3')).length === 2, 'pick and prime style counts follow featureMax');
+assert(styleLines.filter((line) => line.includes(', 2)')).length === 2, 'student cards stay at 2');
 
 sessionStorage.setItem(
   'study114-preview-tutors-v1',
@@ -95,9 +104,34 @@ sessionStorage.setItem(
     ],
   }),
 );
+const pendingTutor = getEligibility({ providerType: 'tutor', id: 11 }, 'pick');
+assert(pendingTutor.canBuy === false && pendingTutor.missing.includes('구매 조건을 확인하고 있어요'), 'tier cache pending blocks');
+rememberTierCheck('tutor', 11, {
+  pick: {
+    can_buy: false,
+    missing: [
+      { id: 'school_or_career', label: '학교·학과 또는 경력' },
+      { id: 'teaching_style_badges', label: '강의스타일' },
+    ],
+    message: '픽 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다',
+  },
+  prime: { can_buy: false, missing: [], message: '' },
+});
 const emptyTutor = getEligibility({ providerType: 'tutor', id: 11 }, 'pick');
 assert(emptyTutor.canBuy === false && emptyTutor.missing.some((line) => line.includes('등록점검에서 남은 항목을 채우면 구매가 열립니다')), 'empty tutor pick blocked');
-assert(emptyTutor.missing.includes('학교·학과 또는 경력') && emptyTutor.missing.includes('주교재') && emptyTutor.missing.includes('강의스타일'), 'empty tutor names');
+assert(emptyTutor.missing.includes('학교·학과 또는 경력') && emptyTutor.missing.includes('강의스타일') && !emptyTutor.missing.includes('주교재'), 'empty tutor names');
+rememberTierCheck('tutor', 12, {
+  pick: { can_buy: true, missing: [], message: '' },
+  prime: {
+    can_buy: false,
+    missing: [
+      { id: 'intro_long', label: '상세 소개' },
+      { id: 'feature_2', label: '특징 2' },
+      { id: 'feature_3', label: '특징 3' },
+    ],
+    message: '프라임 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다',
+  },
+});
 const pickTutor = getEligibility({ providerType: 'tutor', id: 12 }, 'pick');
 const primeTutor = getEligibility({ providerType: 'tutor', id: 12 }, 'prime');
 assert(pickTutor.canBuy === true, 'pick fields open pick');
@@ -127,6 +161,18 @@ sessionStorage.setItem(
     ],
   }),
 );
+rememberTierCheck('study_room', 21, {
+  pick: {
+    can_buy: false,
+    missing: [{ id: 'cover', label: '대표사진' }],
+    message: '픽 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다',
+  },
+  prime: { can_buy: false, missing: [{ id: 'cover', label: '대표사진' }], message: '' },
+});
+rememberTierCheck('study_room', 22, {
+  pick: { can_buy: true, missing: [], message: '' },
+  prime: { can_buy: false, missing: [{ id: 'intro_long', label: '공부방 소개 / 자랑' }], message: '' },
+});
 const emptyRoom = getEligibility({ providerType: 'study_room', id: 21 }, 'pick');
 assert(emptyRoom.canBuy === false && emptyRoom.missing.some((line) => line.includes('등록점검에서 남은 항목을 채우면 구매가 열립니다')), 'expanded_complete alone does not open pick');
 const roomPick = getEligibility({ providerType: 'study_room', id: 22 }, 'pick');
@@ -135,7 +181,8 @@ assert(roomPick.canBuy === true, 'pick fields open without expanded_complete');
 const contact = renderContactFormHtml({ includeStepNav: true });
 const lesson = renderLessonFormHtml({ includeStepNav: true });
 const facility = renderFacilityFormHtml({ includeStepNav: true });
-assert((contact.match(/form-label--tier/g) || []).length === 7, 'tutor tier marks = 7 labels / 6 bundles');
+assert((contact.match(/form-label--tier/g) || []).length === 6, 'tutor tier marks = 6 labels / 5 bundles');
+assert(contact.includes('>주교재</label>') && !contact.includes('form-label--tier">주교재'), '주교재 star removed');
 assert(contact.includes(TIER_MARK_NOTE), 'tutor note');
 assert(contact.includes('둘 중 하나'), 'school or career hint');
 assert(contact.includes('최대 4개') && contact.includes('강의스타일은 4개까지 고를 수 있어요'), 'style limit copy');

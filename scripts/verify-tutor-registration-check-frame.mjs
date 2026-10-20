@@ -127,7 +127,7 @@ assert(TRC_PICK_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'pic
 assert(TRC_PRIME_FIELD_IDS.every((id) => !TRC_BASIC_FIELD_IDS.includes(id)), 'prime extras disjoint from basic');
 assert(TRC_PICK_FIELD_IDS.every((id) => TRC_PRIME_FIELD_IDS.includes(id)), 'prime includes pick');
 assert(
-  TRC_PICK_FIELD_IDS.join(',') === 'school_or_career,main_material_note,teaching_style_badges',
+  TRC_PICK_FIELD_IDS.join(',') === 'school_or_career,teaching_style_badges',
   'pick: 학교·학과 또는 경력, 주교재, 강의스타일',
 );
 assert(TRC_PRIME_FIELD_IDS.includes('intro_long'), 'prime: intro_long');
