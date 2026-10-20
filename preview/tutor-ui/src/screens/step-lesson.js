@@ -54,13 +54,14 @@ function subjectRow(sub, idx) {
 }
 
 /**
- * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean }} [opts]
+ * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean, embed?: boolean }} [opts]
  * includeStepNav 기본값 true — 상세등록 화면과 같은 HTML.
- * 마이페이지는 단계 이동 대신 저장 바닥줄만 쓴다.
+ * embed 일 때만 가입 안내·마이페이지 링크를 숨긴다.
  */
 export function renderLessonFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
   const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
+  const embed = opts.embed === true;
   const s = registerState;
   const places = TUTOR_PLACE_OPTIONS.map(
     (p) => `
@@ -80,9 +81,9 @@ export function renderLessonFormHtml(opts = {}) {
   const prevPath = s.basicComplete ? '/register/basic' : '/register/regions';
   const content = `
     <form data-form="lesson" class="tutor-lesson-step">
-      ${renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
+      ${embed ? '' : renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
       ${renderSectionTitle('수업 · 과목 · 가격')}
-      ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong> · 마이페이지에서 수정</p>` : ''}
+      ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong>${embed ? ' · 기본정보 탭에서 수정' : ' · 마이페이지에서 수정'}</p>` : ''}
       <div class="register-grid-2">
         <div class="form-group" data-trc-field="student_target">
           <span class="form-label">지도 대상 성별</span>
@@ -115,7 +116,7 @@ export function renderLessonFormHtml(opts = {}) {
         <span class="form-label">강의장소</span>
         <div class="register-check-grid">${places}</div>
       </div>
-      <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역·월 과외비·주 회수·1회 수업시간 등 기본정보는 마이페이지에서 수정</a>
+      ${embed ? '' : `<a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역·월 과외비·주 회수·1회 수업시간 등 기본정보는 마이페이지에서 수정</a>`}
       ${
         includeStepNav
           ? renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '나중에 하기' })

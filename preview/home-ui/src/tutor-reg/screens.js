@@ -571,10 +571,9 @@ export function bindTutorRegEvents(root, rerender) {
 
   bindTutorRegistrationCheckEvents(root);
   bindTutorInquiriesEvents(root, rerender);
-  scrollToTutorRcFocus(root);
-
   bindUniversityNameReselect(root);
   bindEmbeddedTutorDetail(root, rerender);
+  scrollToTutorRcFocus(root);
 
   root.querySelectorAll('[data-p21-retry-cities]').forEach((btn) => {
     btn.addEventListener('click', async () => {

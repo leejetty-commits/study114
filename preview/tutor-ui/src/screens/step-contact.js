@@ -33,12 +33,14 @@ function radios(name, options, selected) {
 }
 
 /**
- * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean }} [opts]
+ * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean, embed?: boolean }} [opts]
  * includeStepNav 기본값 true — 상세등록 화면과 같은 HTML.
+ * embed 일 때만 가입 안내를 숨긴다.
  */
 export function renderContactFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
   const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
+  const embed = opts.embed === true;
   const s = registerState;
   const badges = TEACHING_STYLE_OPTIONS.map(
     (b) => `
@@ -49,7 +51,7 @@ export function renderContactFormHtml(opts = {}) {
   ).join('');
 
   const content = `
-    ${renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 홍보 채널을 확인한 뒤 등록을 마쳐 주세요.')}
+    ${embed ? '' : renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 홍보 채널을 확인한 뒤 등록을 마쳐 주세요.')}
     <form data-form="contact" class="register-form-narrow">
       ${renderSectionTitle('학력 · 경력 · 특징')}
       <div class="register-grid-2 register-grid-2--tight">

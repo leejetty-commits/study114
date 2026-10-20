@@ -10,11 +10,14 @@ import {
   syncLessonFromForm,
   syncCareerFromForm,
   syncContactFromForm,
+  validateLessonState,
 } from '@tutor-ui/form-collect.js';
+import { saveAndNavigate, withSaving } from '@tutor-ui/save-flow.js';
+import { validatePromoUrls } from '../../../shared/promo-links.js';
 import { renderLessonFormHtml, bindLessonEvents } from '@tutor-ui/screens/step-lesson.js';
 import { renderContactFormHtml, bindContactEvents } from '@tutor-ui/screens/step-contact.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
-import { isReturnToRegistrationCheck, tutorSectionPath } from './router.js';
+import { isReturnToRegistrationCheck, tutorSectionPath, tutorHubPath, tutorBlankPath } from './router.js';
 import { TRC_COPY } from './registration-check-copy.js';
 import { renderTutorProfilePhotoEditor, bindTutorProfilePhotos } from './profile-photos.js';
 
@@ -99,14 +102,33 @@ export async function ensureEmbeddedTutor(tutorId, opts = {}) {
 }
 
 function detailFormsHtml(tutor) {
+  const publish = tutorSectionPath(tutor.id, 'publish');
+  const hub = tutorHubPath(tutor.id);
   return `
     ${renderReturnBanner(tutor.id)}
     <div class="mp-room-embed register-flow" data-embed-section="detail" data-embed-tutor-id="${tutor.id || 0}">
-      ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: true })}
-      ${renderContactFormHtml({ includeStepNav: false, includeFooterActions: true })}
+      ${renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true })}
+      ${renderContactFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true })}
       <div class="p19-field p19-field--full" data-trc-field="profile_image">
         <span class="p19-field__label">프로필 사진</span>
         ${renderTutorProfilePhotoEditor(tutor)}
+      </div>
+      <div class="register-embed-actions">
+        <button type="button" class="btn btn--primary" data-action="save-detail">상세정보 저장</button>
+        <a class="btn btn--secondary" href="#${esc(publish)}" data-p21-nav="${esc(publish)}">등록점검</a>
+        <a class="btn btn--secondary" href="#${esc(hub)}" data-p21-nav="${esc(hub)}">마이프로필</a>
+      </div>
+    </div>`;
+}
+
+function blankDetailHtml() {
+  const basic = tutorBlankPath('basic');
+  return `
+    <div class="mypage-empty">
+      <h2 class="p19-list-head__title">과외 프로필이 없습니다</h2>
+      <p class="p19-list-head__lead">계정당 과외 프로필은 1개입니다. 기본등록을 마치면 여기에서 운영할 수 있습니다.</p>
+      <div class="register-embed-actions">
+        <a class="btn btn--secondary" href="#${esc(basic)}" data-p21-nav="${esc(basic)}">기본정보로</a>
       </div>
     </div>`;
 }
@@ -114,7 +136,7 @@ function detailFormsHtml(tutor) {
 /** @param {import('./store.js').TutorRecord} tutor */
 export function renderEmbeddedTutorDetail(tutor) {
   const tutorId = Number(tutor?.id) || 0;
-  if (!tutorId) return detailFormsHtml(tutor);
+  if (!tutorId) return blankDetailHtml();
 
   if (shouldReloadEmbeddedTutor(tutorId)) {
     queueMicrotask(() => {
@@ -162,22 +184,55 @@ export function bindEmbeddedTutorDetail(root, rerender) {
   const tutorId = Number(wrap.getAttribute('data-embed-tutor-id') || 0);
   if (!tutorId) return;
 
-  const onSaved = async () => {
-    if (isRegistrationsApiMode()) {
-      try {
-        await hydrateRegistrationsCache();
-      } catch {
-        /* 저장은 끝났고 목록 캐시만 실패 */
-      }
-    }
-    if (isReturnToRegistrationCheck()) {
-      window.location.hash = tutorSectionPath(tutorId, 'publish');
-      return;
-    }
-    rerender();
-  };
-
-  bindLessonEvents(wrap, { embed: true, onSaved, onRefresh: rerender });
-  bindContactEvents(wrap, { embed: true, onSaved, onRefresh: rerender });
+  bindLessonEvents(wrap, { embed: true, onRefresh: rerender });
+  bindContactEvents(wrap, { embed: true, onRefresh: rerender });
   bindTutorProfilePhotos(root, { tutorId, rerender });
+
+  const saveBtn = wrap.querySelector('[data-action="save-detail"]');
+  saveBtn?.addEventListener('click', () => {
+    withSaving(saveBtn, async () => {
+      const lesson = wrap.querySelector('[data-form="lesson"]');
+      const contact = wrap.querySelector('[data-form="contact"]');
+      syncLessonFromForm(lesson, registerState);
+      const lessonErr = validateLessonState(registerState);
+      if (lessonErr) {
+        alert(lessonErr);
+        return;
+      }
+      try {
+        await saveAndNavigate(registerState, 'lesson', null);
+        const keepTime = registerState.contact_time_note;
+        const keepFeature3 = registerState.feature_3;
+        const keepIntroLong = registerState.intro_long;
+        syncCareerFromForm(contact, registerState);
+        syncContactFromForm(contact, registerState);
+        if (contact && !contact.querySelector('[name="contact_time_note"]')) registerState.contact_time_note = keepTime;
+        if (contact && !contact.querySelector('[name="feature_3"]')) registerState.feature_3 = keepFeature3;
+        if (contact && !contact.querySelector('[name="intro_long"]')) registerState.intro_long = keepIntroLong;
+        const urlErr = validatePromoUrls(registerState);
+        if (urlErr) {
+          alert(urlErr);
+          return;
+        }
+        await saveAndNavigate(registerState, 'career', null);
+        await saveAndNavigate(registerState, 'contact', null);
+      } catch (err) {
+        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        return;
+      }
+      if (isRegistrationsApiMode()) {
+        try {
+          await hydrateRegistrationsCache();
+        } catch {
+          /* 저장은 끝났고 목록 캐시만 실패 */
+        }
+      }
+      alert('저장되었습니다.');
+      if (isReturnToRegistrationCheck()) {
+        window.location.hash = tutorSectionPath(tutorId, 'publish');
+        return;
+      }
+      rerender();
+    });
+  });
 }
