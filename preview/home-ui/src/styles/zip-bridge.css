@@ -106,6 +106,20 @@
   margin-top: 32px;
 }
 
+/* 271: 제목 → 자기 내용 16px (12px + section-head 아래 4px). 윗블럭 → 제목 32px(268)는 그대로 */
+.guide-app .guide-frame__body > .section-head + *,
+.concern-app .concern-frame__body > .section-head + *,
+.support-app .sup-frame__body > .section-head + * {
+  margin-top: 12px;
+}
+
+/* 271-1: 두 번째 이후 제목도 윗블럭 → 제목 32px. (.uds-theme .section-head 의 margin 0 이 268 규칙을 덮어쓰던 것 보완) */
+.guide-app .guide-frame__body > * + .section-head,
+.concern-app .concern-frame__body > * + .section-head,
+.support-app .sup-frame__body > * + .section-head {
+  margin-top: 32px;
+}
+
 .guide-app .guide-frame__body > .pattern-band,
 .concern-app .concern-frame__body > .pattern-band,
 .support-app .sup-frame__body > .pattern-band {
