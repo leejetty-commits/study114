@@ -94,7 +94,14 @@ function noteCell(row) {
   return `<span class="rc-note rc-note--${miss ? 'miss' : 'ok'}">${esc(TRC_COPY.board.required)}</span>`;
 }
 
+function editCell(row) {
+  if (!row.editHref) return '';
+  const path = String(row.editHref).replace(/^#/, '');
+  return `<a class="rc-link rc-row__edit" href="#${esc(path)}" data-p21-nav="${esc(path)}">수정</a>`;
+}
+
 function renderTable(rows, { plain = false } = {}) {
+  const withEdit = (rows || []).some((r) => r.editHref);
   const body = (rows || [])
     .map((r) => {
       const empty = r.status === 'empty';
@@ -111,6 +118,7 @@ function renderTable(rows, { plain = false } = {}) {
             <td class="rc-row__value">${empty ? '—' : esc(r.value)}</td>
             <td class="rc-row__status">${statusCell(r)}</td>
             <td class="rc-row__note">${noteCell(r)}</td>
+            ${withEdit ? `<td class="rc-row__go">${editCell(r)}</td>` : ''}
           </tr>`;
     })
     .join('');
@@ -121,6 +129,7 @@ function renderTable(rows, { plain = false } = {}) {
                   <th>${esc(TRC_COPY.board.cols.value)}</th>
                   <th>${esc(TRC_COPY.board.cols.status)}</th>
                   <th>${esc(TRC_COPY.board.cols.note)}</th>
+                  ${withEdit ? '<th>수정</th>' : ''}
                 </tr>`;
   return `
           <div class="rc-table-wrap">

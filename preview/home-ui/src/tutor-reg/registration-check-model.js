@@ -6,7 +6,6 @@
 import { formatTutorFeeCard } from '../exposure-format.js';
 import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
-import { TUTOR_PLACE_LABELS, UNIVERSITY_STATUS_LABELS } from '../tutor-enums.js';
 import { tutorBlankPath, tutorSectionPath, tutorHubPath } from './router.js';
 import { tutorToExposureRow } from './format.js';
 import {
@@ -20,16 +19,19 @@ import {
 } from './registration-check-copy.js';
 import { tutorBasicOkMap, tutorBasicValuesFromRecord } from '../../../shared/tutor-basic-fields.js';
 import { SCHOOL_LEVEL_FORM_LABELS } from '../../../shared/school-grade.js';
-
-const GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
-const STUDENT_COUNT_LABELS = { solo: '단독', two: '2명', three: '3명', four_plus: '4명 이상' };
+import {
+  TUTOR_DETAIL_FIELDS,
+  TUTOR_DETAIL_GROUP_CAREER,
+  TUTOR_DETAIL_GROUP_LESSON,
+  TUTOR_DETAIL_GROUP_PHOTO,
+  TUTOR_DETAIL_GROUP_PROMO,
+  tutorDetailFieldFocus,
+  tutorDetailFieldText,
+  tutorDetailTabForFocus,
+} from '../../../shared/tutor-detail-fields.js';
 
 function blank(v) {
   return String(v ?? '').trim();
-}
-
-function textStatus(v) {
-  return blank(v) ? 'filled' : 'empty';
 }
 
 function row(id, label, value, status, extra) {
@@ -41,12 +43,8 @@ function row(id, label, value, status, extra) {
     status,
     required: TRC_BOARD_REQUIRED_IDS.has(id),
     note: more.note ? String(more.note) : '',
+    editHref: more.editHref ? String(more.editHref) : '',
   };
-}
-
-function lessonPlacesLabel(tutor) {
-  const places = Array.isArray(tutor?.lesson_places) ? tutor.lesson_places : [];
-  return places.map((p) => TUTOR_PLACE_LABELS[p]).filter(Boolean).join(' · ');
 }
 
 function feeBasisOk(tutor) {
@@ -63,12 +61,6 @@ function scheduleOk(tutor) {
 
 function minutesOk(tutor) {
   return Number(tutor?.minutes_per_lesson) > 0;
-}
-
-function feeBasisLabel(tutor) {
-  if (blank(tutor?.fee_basis_type) === 'monthly_by_total_sessions') return '월 총 횟수 기준';
-  if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 회수 기준';
-  return '';
 }
 
 /** 기본정보 항목은 shared/tutor-basic-fields.js, 나머지는 상세·픽·프라임 항목. */
@@ -97,18 +89,18 @@ function basicIdsForTutor() {
 
 /** 등록점검 항목 id → 입력 화면 data-trc-field (항목이 칸 하나가 아닐 때만) */
 const TRC_FOCUS_FIELD = {
-  schedule: 'monthly_session_count',
   intro: 'intro_long',
   student_gender_group: 'student_target',
 };
 
-/** @param {{ id: string, section?: string }} def */
-function defHref(tutorId, def) {
-  return tutorRegistrationCheckTabHref(
-    tutorId,
-    def.section === 'basic' ? 'basic' : 'detail',
-    TRC_FOCUS_FIELD[def.id] || def.id,
-  );
+/** @param {import('./store.js').TutorRecord} tutor @param {{ id: string, section?: string, focus?: string }} def */
+function defHref(tutor, def) {
+  if (def.section === 'basic') return tutorRegistrationCheckTabHref(tutor.id, 'basic', def.focus || def.id);
+  let focus = TRC_FOCUS_FIELD[def.focus] || TRC_FOCUS_FIELD[def.id] || def.focus || def.id;
+  if (def.id === 'schedule' || def.focus === 'schedule') {
+    focus = tutor?.fee_basis_type === 'monthly_by_total_sessions' ? 'monthly_session_count' : 'lessons_per_week';
+  }
+  return tutorRegistrationCheckTabHref(tutor.id, tutorDetailTabForFocus(focus), focus);
 }
 
 function remainingCount(okMap, ids) {
@@ -118,9 +110,9 @@ function remainingCount(okMap, ids) {
 /**
  * @param {Record<string, boolean>} okMap
  * @param {string[]} ids
- * @param {number} tutorId
+ * @param {import('./store.js').TutorRecord} tutor
  */
-function missingForTier(okMap, ids, tutorId) {
+function missingForTier(okMap, ids, tutor) {
   return ids
     .filter((id) => !okMap[id])
     .map((id) => {
@@ -130,7 +122,7 @@ function missingForTier(okMap, ids, tutorId) {
         id,
         label: def.label,
         hint: def.hint,
-        href: defHref(tutorId, def),
+        href: defHref(tutor, def),
         section: def.section,
       };
     })
@@ -151,7 +143,7 @@ function hashQuery(opts = {}) {
   return qs ? `?${qs}` : '';
 }
 
-/** @param {number} tutorId @param {'basic'|'detail'} section @param {string} [focusId] */
+/** @param {number} tutorId @param {'basic'|'detail'|'detail2'} section @param {string} [focusId] */
 export function tutorRegistrationCheckTabHref(tutorId, section, focusId) {
   if (!Number(tutorId)) return `#${tutorBlankPath(section)}`;
   return `#${tutorSectionPath(tutorId, section)}${hashQuery({
@@ -192,10 +184,6 @@ function weeklyLabel(tutor) {
   return lessonWeeklyLabel(tutor?.lessons_per_week);
 }
 
-function monthlyLabel(tutor) {
-  return Number(tutor?.monthly_session_count) > 0 ? `월 ${tutor.monthly_session_count}회` : '';
-}
-
 function flattenBoardRows(sec) {
   if (Array.isArray(sec?.children) && sec.children.length) {
     return sec.children.flatMap((child) => child.rows || []);
@@ -213,15 +201,9 @@ function withSummary(sec) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function buildBoard(tutor) {
-  const places = lessonPlacesLabel(tutor);
   const fee = Number(tutor?.preferred_fee_amount) > 0 ? formatTutorFeeCard(tutor) : '';
-  const uniStatus = UNIVERSITY_STATUS_LABELS[tutor?.university_status] || '';
-  const basis = feeBasisLabel(tutor);
   const minutes = minutesOk(tutor) ? lessonDurationLabel(tutor.minutes_per_lesson) : '';
-  const gender = GENDER_GROUP_LABELS[tutor?.student_gender_group] || '';
-  const count = STUDENT_COUNT_LABELS[tutor?.student_count_group] || '';
   const weekly = weeklyLabel(tutor);
-  const monthly = monthlyLabel(tutor);
   const basicOk = tutorBasicOkMap(tutorBasicValuesFromRecord(tutor));
   const basicValues = {
     display_name: tutor?.tutor_display_name,
@@ -244,53 +226,35 @@ function buildBoard(tutor) {
     ),
   };
 
+  const detailRow = (field) => {
+    const value = field.value(tutor);
+    const focus = tutorDetailFieldFocus(field, tutor);
+    const extra = { editHref: tutorRegistrationCheckTabHref(tutor.id, field.tab, focus) };
+    if (field.id === 'intro_long') extra.note = TRC_COPY.board.introNote;
+    return row(field.id, tutorDetailFieldText(field, tutor), value, field.filled(tutor) ? 'filled' : 'empty', extra);
+  };
+  const rowsFor = (tab, group) =>
+    TUTOR_DETAIL_FIELDS.filter((field) => field.tab === tab && field.group === group).map(detailRow);
+
   const detail1 = {
     id: 'detail1',
-    title: TRC_COPY.board.sections.detail1,
-    rows: [
-      row('fee_basis', '산정방식', basis, textStatus(basis)),
-      row(
-        'monthly_session_count',
-        '월 총 횟수',
-        monthly,
-        Number(tutor?.monthly_session_count) > 0 ? 'filled' : 'empty',
-      ),
-      row('student_gender_group', '지도 대상 성별', gender, textStatus(gender)),
-      row('student_count_group', '수업인원', count, textStatus(count)),
-      row('lesson_places', '강의장소', places, textStatus(places)),
-      row('fee_description', '가격 설명', tutor?.fee_description, textStatus(tutor?.fee_description)),
-    ],
+    title: TUTOR_DETAIL_GROUP_LESSON,
+    rows: rowsFor('detail', TUTOR_DETAIL_GROUP_LESSON),
   };
-
-  const detail2 = {
-    id: 'detail2',
-    title: TRC_COPY.board.sections.detail2,
-    rows: [
-      row('university_name', '대학/대학원', tutor?.university_name, textStatus(tutor?.university_name)),
-      row('major_name', '전공', tutor?.major_name, textStatus(tutor?.major_name)),
-      row('university_status', '학적상태', uniStatus, textStatus(uniStatus)),
-      row('feature_1', '특징 1', tutor?.feature_1, textStatus(tutor?.feature_1)),
-      row('feature_2', '특징 2', tutor?.feature_2, textStatus(tutor?.feature_2)),
-      row('feature_3', '특징 3', tutor?.feature_3, textStatus(tutor?.feature_3)),
-      row(
-        'intro_long',
-        '상세 소개',
-        tutor?.intro_long,
-        blank(tutor?.intro_long) ? 'filled' : 'empty',
-        { note: TRC_COPY.board.introNote },
-      ),
-      row(
-        'profile_image',
-        '프로필 사진',
-        tutor?.has_profile_image
-          ? Array.isArray(tutor?.profile_images) && tutor.profile_images.length
-            ? `${tutor.profile_images.length}장`
-            : '등록됨'
-          : '',
-        tutor?.has_profile_image ? 'filled' : 'empty',
-      ),
-      row('contact_time_note', '연락 가능 시간', tutor?.contact_time_note, textStatus(tutor?.contact_time_note)),
-    ],
+  const detailCareer = {
+    id: 'detail-career',
+    title: TUTOR_DETAIL_GROUP_CAREER,
+    rows: rowsFor('detail2', TUTOR_DETAIL_GROUP_CAREER),
+  };
+  const detailPromo = {
+    id: 'detail-promo',
+    title: TUTOR_DETAIL_GROUP_PROMO,
+    rows: rowsFor('detail2', TUTOR_DETAIL_GROUP_PROMO),
+  };
+  const detailPhoto = {
+    id: 'detail-photo',
+    title: TUTOR_DETAIL_GROUP_PHOTO,
+    rows: rowsFor('detail2', TUTOR_DETAIL_GROUP_PHOTO),
   };
 
   const detail = {
@@ -298,27 +262,27 @@ function buildBoard(tutor) {
     title: TRC_COPY.board.sections.detail,
     collapsedDefault: true,
     editSection: 'detail',
-    children: [detail1, detail2],
+    children: [detail1, detailCareer, detailPromo, detailPhoto],
   };
 
   return [basic, detail].map(withSummary);
 }
 
-function fillAction(tutorId, miss) {
-  return { id: miss.id, label: TRC_COPY.next.fill(miss.label), href: defHref(tutorId, miss) };
+function fillAction(tutor, miss) {
+  return { id: miss.id, label: TRC_COPY.next.fill(miss.label), href: defHref(tutor, miss) };
 }
 
 function nextAction(okMap, tutor, canPublish, basicIds) {
   const status = tutor?.profile_status;
   const publishMiss = canPublish ? null : firstMissing(okMap, basicIds);
   if (status === 'hidden') {
-    return publishMiss ? fillAction(tutor.id, publishMiss) : null;
+    return publishMiss ? fillAction(tutor, publishMiss) : null;
   }
-  if (publishMiss) return fillAction(tutor.id, publishMiss);
+  if (publishMiss) return fillAction(tutor, publishMiss);
   const pickMiss = firstMissing(okMap, TRC_PICK_FIELD_IDS);
-  if (pickMiss) return fillAction(tutor.id, pickMiss);
+  if (pickMiss) return fillAction(tutor, pickMiss);
   const primeMiss = firstMissing(okMap, TRC_PRIME_FIELD_IDS);
-  if (primeMiss) return fillAction(tutor.id, primeMiss);
+  if (primeMiss) return fillAction(tutor, primeMiss);
   if (status === 'published') {
     return { id: 'exposure', label: TRC_COPY.next.live, href: '' };
   }
@@ -378,8 +342,8 @@ export function buildTutorRegistrationCheckModel(tutor, readiness = {}) {
     },
     promo: {
       ...TRC_COPY.promo,
-      pickMissing: missingForTier(okMap, TRC_PICK_FIELD_IDS, t.id),
-      primeMissing: missingForTier(okMap, TRC_PRIME_FIELD_IDS, t.id),
+      pickMissing: missingForTier(okMap, TRC_PICK_FIELD_IDS, t),
+      primeMissing: missingForTier(okMap, TRC_PRIME_FIELD_IDS, t),
     },
     board,
     counts: { basicLeft, pickLeft, primeLeft, canPublish: publishReady },
