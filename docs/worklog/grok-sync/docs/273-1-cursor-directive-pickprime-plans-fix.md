@@ -184,3 +184,12 @@
 5. 빌드·검사 결과(5장 8·9번), `e6f8f08a`에서도 실패하던 목록 따로.
 6. 7장 멈춤 조건에 걸린 게 있었는지: 「없었다」 또는 걸린 항목과 멈춘 지점.
 7. 범위 확인 문장: 「6장 밖 파일, 서버 판정·주문 검사, 274 결제 막힘, Hub 저장소, 노출 로직, 카드 주교재 표시, 주교재 입력칸·DB 칸, DB 스키마는 건드리지 않았습니다. 실결제는 하지 않았습니다. force-push 하지 않았습니다.」
+
+---
+
+## 추가 허용 (2026-10-21 03:45, 우동공과2 — Cursor 멈춤 보고 반영)
+
+- 허용 파일 11번: `scripts/verify-tutor-registration-check-frame.mjs` **130행 한 줄만**. 고정된 픽 목록 문자열 `school_or_career,main_material_note,teaching_style_badges`를 `school_or_career,teaching_style_badges`로 바꾼다.
+- 그 밖의 줄, 다른 검사 내용은 바꾸지 않는다. `registration-check-copy.js`는 공용 목록을 따르므로 고치지 않는다.
+- 이 수정 뒤 `verify:tutor-registration-check-frame`은 통과해야 한다. 그 밖의 다른 곳이 새로 실패하면 다시 멈추고 보고한다.
+- 이 허용으로 서버 API, 구매 화면, 카드 개수, 주교재 `*` 제거를 포함한 273-1 전체를 진행한다.
