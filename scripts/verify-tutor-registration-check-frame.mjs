@@ -39,6 +39,10 @@ function read(rel) {
 }
 
 const screens = read('preview/home-ui/src/tutor-reg/screens.js');
+const embed = read('preview/home-ui/src/tutor-reg/embedded-panels.js');
+const stepLesson = read('preview/tutor-ui/src/screens/step-lesson.js');
+const stepContact = read('preview/tutor-ui/src/screens/step-contact.js');
+const detailFields = `${stepLesson}\n${stepContact}\n${embed}`;
 const render = read('preview/home-ui/src/tutor-reg/registration-check-render.js');
 const model = read('preview/home-ui/src/tutor-reg/registration-check-model.js');
 const copy = read('preview/home-ui/src/tutor-reg/registration-check-copy.js');
@@ -52,9 +56,9 @@ assert(!screens.includes('renderPublishPreviewModes'), 'screens: old preview mod
 assert(!screens.includes('공개 필수 체크리스트'), 'screens: old checklist title removed');
 assert(!screens.includes('Pick 필수'), 'screens: no Pick 필수 badge');
 assert(!screens.includes('Prime 필수'), 'screens: no Prime 필수 badge');
-assert(screens.includes('p19-required'), 'screens: 필수 mark like study-room');
+assert(stepLesson.includes('form-label--required'), 'lesson: 산정방식 필수 표시');
 assert(screens.includes('renderReturnToRegistrationCheckBanner'), 'screens: return banner');
-assert(screens.includes('data-trc-field'), 'screens: focus fields');
+assert(detailFields.includes('data-trc-field'), 'detail forms: focus fields');
 assert(screens.includes('scrollToTutorRcFocus'), 'screens: focus scroll');
 assert(screens.includes('isReturnToRegistrationCheck'), 'screens: save return to RC');
 
@@ -149,9 +153,12 @@ assert(
 );
 
 assert(!existsSync(resolve(root, 'preview/home-ui/src/tutor-reg/registration-check-sample.js')), 'sample: virtual tutor sample module removed');
-assert(screens.includes('data-trc-field="fee_description"'), 'screens: 가격 설명 focus');
-assert(screens.includes('data-trc-field="major_name"'), 'screens: 전공 focus');
-assert(screens.includes('data-trc-field="monthly_session_count"'), 'screens: 월 총 횟수 focus');
+assert(detailFields.includes('data-trc-field="fee_description"'), 'lesson: 가격 설명 focus');
+assert(detailFields.includes('data-trc-field="major_name"'), 'contact: 전공 focus');
+assert(detailFields.includes('data-trc-field="monthly_session_count"'), 'lesson: 월 총 횟수 focus');
+assert(detailFields.includes('data-trc-field="intro_long"'), 'contact: 상세 소개 focus');
+assert(detailFields.includes('data-trc-field="contact_time_note"'), 'contact: 연락 가능 시간 focus');
+assert(detailFields.includes('data-trc-field="profile_image"'), 'embed: 프로필 사진 focus');
 
 const html = renderTutorRegistrationCheck(
   buildTutorRegistrationCheckModel({ id: 1, tutor_display_name: '내프로필쌤' }, {}),
