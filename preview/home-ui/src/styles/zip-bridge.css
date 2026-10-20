@@ -106,6 +106,13 @@
   margin-top: 32px;
 }
 
+/* 271: 제목 → 자기 내용 16px (12px + section-head 아래 4px). 윗블럭 → 제목 32px(268)는 그대로 */
+.guide-app .guide-frame__body > .section-head + *,
+.concern-app .concern-frame__body > .section-head + *,
+.support-app .sup-frame__body > .section-head + * {
+  margin-top: 12px;
+}
+
 .guide-app .guide-frame__body > .pattern-band,
 .concern-app .concern-frame__body > .pattern-band,
 .support-app .sup-frame__body > .pattern-band {
