@@ -32,7 +32,13 @@ function radios(name, options, selected) {
     .join('');
 }
 
-export function renderContact() {
+/**
+ * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean }} [opts]
+ * includeStepNav 기본값 true — 상세등록 화면과 같은 HTML.
+ */
+export function renderContactFormHtml(opts = {}) {
+  const includeStepNav = opts.includeStepNav !== false;
+  const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
   const badges = TEACHING_STYLE_OPTIONS.map(
     (b) => `
@@ -84,8 +90,21 @@ export function renderContact() {
 
       ${renderSectionTitle('홍보 채널')}
       ${renderPromoChannelFields(s)}
-      ${renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })}
+      ${
+        includeStepNav
+          ? renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })
+          : includeFooterActions
+            ? `<div class="register-embed-actions">
+              <button type="button" class="btn btn--primary" data-action="save">저장</button>
+            </div>`
+            : ''
+      }
     </form>`;
+  return content;
+}
+
+export function renderContact() {
+  const content = renderContactFormHtml({ includeStepNav: true });
   return renderRegisterShell(content, {
     stepKey: 'contact',
     title: '학력 · 연락',
@@ -98,24 +117,28 @@ function bindUniversityNameReselect(root) {
   bindUniversityNameField(root);
 }
 
-export function bindContactEvents(root) {
-  bindGlobalEvents(root);
+/**
+ * @param {HTMLElement} root
+ * @param {{ embed?: boolean, onSaved?: () => void|Promise<void>, onRefresh?: () => void }} [opts]
+ */
+export function bindContactEvents(root, opts = {}) {
+  if (!opts.embed) bindGlobalEvents(root);
   bindUniversityNameReselect(root);
-  bindInputFill(root.querySelector('[data-form="contact"]'));
+  const contactForm = () => root.querySelector('[data-form="contact"]');
+  bindInputFill(contactForm());
   bindPromoChannelAdds(root, registerState, {
-    sync: () => {
-      const form = root.querySelector('[data-form="contact"]');
-      syncCareerFromForm(form, registerState);
-      syncContactFromForm(form, registerState);
+    sync: () => syncContactForm(contactForm(), opts.embed),
+    refresh: () => {
+      if (opts.embed && opts.onRefresh) opts.onRefresh();
+      else window.dispatchEvent(new Event('hashchange'));
     },
-    refresh: () => window.dispatchEvent(new Event('hashchange')),
   });
-  const nextBtn = root.querySelector('[data-action="next"]');
-  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
-  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
+  root.querySelector('[data-form="contact"] [data-action="prev"]')?.addEventListener('click', () => navigate('/register/lesson'));
+  root.querySelector('[data-form="contact"] [data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
+  const nextBtn = root.querySelector('[data-form="contact"] [data-action="next"]');
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
-      const form = root.querySelector('[data-form="contact"]');
+      const form = contactForm();
       syncCareerFromForm(form, registerState);
       syncContactFromForm(form, registerState);
       const urlErr = validatePromoUrls(registerState);
@@ -127,4 +150,30 @@ export function bindContactEvents(root) {
       await saveAndNavigate(registerState, 'contact', '/register/complete');
     });
   });
+  const saveBtn = root.querySelector('[data-form="contact"] [data-action="save"]');
+  saveBtn?.addEventListener('click', () => {
+    withSaving(saveBtn, async () => {
+      const form = contactForm();
+      syncContactForm(form, true);
+      const urlErr = validatePromoUrls(registerState);
+      if (urlErr) {
+        alert(urlErr);
+        return;
+      }
+      await saveAndNavigate(registerState, 'career', null);
+      await saveAndNavigate(registerState, 'contact', null);
+      if (opts.onSaved) await opts.onSaved();
+    });
+  });
+}
+
+/** 임베드만: 폼에 없는 칸은 빈 값으로 덮지 않는다. 상세등록 다음 버튼은 keepHidden=false. */
+function syncContactForm(form, keepHidden) {
+  const keepTime = registerState.contact_time_note;
+  const keepFeature3 = registerState.feature_3;
+  syncCareerFromForm(form, registerState);
+  syncContactFromForm(form, registerState);
+  if (!keepHidden || !form) return;
+  if (!form.querySelector('[name="contact_time_note"]')) registerState.contact_time_note = keepTime;
+  if (!form.querySelector('[name="feature_3"]')) registerState.feature_3 = keepFeature3;
 }

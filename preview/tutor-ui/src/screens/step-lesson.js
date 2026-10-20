@@ -53,7 +53,14 @@ function subjectRow(sub, idx) {
     </div>`;
 }
 
-export function renderLesson() {
+/**
+ * @param {{ includeStepNav?: boolean, includeFooterActions?: boolean }} [opts]
+ * includeStepNav 기본값 true — 상세등록 화면과 같은 HTML.
+ * 마이페이지는 단계 이동 대신 저장 바닥줄만 쓴다.
+ */
+export function renderLessonFormHtml(opts = {}) {
+  const includeStepNav = opts.includeStepNav !== false;
+  const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const s = registerState;
   const places = TUTOR_PLACE_OPTIONS.map(
     (p) => `
@@ -109,8 +116,21 @@ export function renderLesson() {
         <div class="register-check-grid">${places}</div>
       </div>
       <a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역·월 과외비·주 회수·1회 수업시간 등 기본정보는 마이페이지에서 수정</a>
-      ${renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '나중에 하기' })}
+      ${
+        includeStepNav
+          ? renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '나중에 하기' })
+          : includeFooterActions
+            ? `<div class="register-embed-actions">
+              <button type="button" class="btn btn--primary" data-action="save">저장</button>
+            </div>`
+            : ''
+      }
     </form>`;
+  return content;
+}
+
+export function renderLesson() {
+  const content = renderLessonFormHtml({ includeStepNav: true });
   return renderRegisterShell(content, {
     stepKey: 'lesson',
     title: '수업 · 가격',
@@ -118,29 +138,49 @@ export function renderLesson() {
   });
 }
 
-export function bindLessonEvents(root) {
+/**
+ * @param {HTMLElement} root
+ * @param {{ embed?: boolean, onSaved?: () => void|Promise<void>, onRefresh?: () => void }} [opts]
+ */
+export function bindLessonEvents(root, opts = {}) {
   bindSchoolGradePairs(root);
-  bindGlobalEvents(root);
-  bindInputFill(root.querySelector('[data-form="lesson"]'));
-  const nextBtn = root.querySelector('[data-action="next"]');
-  root.querySelector('[data-action="prev"]')?.addEventListener('click', () => {
-    syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
+  if (!opts.embed) bindGlobalEvents(root);
+  const lessonForm = () => root.querySelector('[data-form="lesson"]');
+  bindInputFill(lessonForm());
+  root.querySelector('[data-form="lesson"] [data-action="prev"]')?.addEventListener('click', () => {
+    syncLessonFromForm(lessonForm(), registerState);
     navigate(registerState.basicComplete ? '/register/basic' : '/register/regions');
   });
-  root.querySelector('[data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
-  root.querySelector('[data-action="add-subject"]')?.addEventListener('click', () => {
+  root.querySelector('[data-form="lesson"] [data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
+  root.querySelector('[data-form="lesson"] [data-action="add-subject"]')?.addEventListener('click', () => {
+    if (opts.embed) syncLessonFromForm(lessonForm(), registerState);
     registerState.subjects.push(emptySubject());
-    window.dispatchEvent(new Event('hashchange'));
+    if (opts.onRefresh) opts.onRefresh();
+    else window.dispatchEvent(new Event('hashchange'));
   });
+  const nextBtn = root.querySelector('[data-form="lesson"] [data-action="next"]');
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
-      syncLessonFromForm(root.querySelector('[data-form="lesson"]'), registerState);
+      syncLessonFromForm(lessonForm(), registerState);
       const err = validateLessonState(registerState);
       if (err) {
         alert(err);
         return;
       }
       await saveAndNavigate(registerState, 'lesson', '/register/contact');
+    });
+  });
+  const saveBtn = root.querySelector('[data-form="lesson"] [data-action="save"]');
+  saveBtn?.addEventListener('click', () => {
+    withSaving(saveBtn, async () => {
+      syncLessonFromForm(lessonForm(), registerState);
+      const err = validateLessonState(registerState);
+      if (err) {
+        alert(err);
+        return;
+      }
+      await saveAndNavigate(registerState, 'lesson', null);
+      if (opts.onSaved) await opts.onSaved();
     });
   });
 }
