@@ -41,6 +41,13 @@
   letter-spacing: -0.02em;
 }
 
+.register-flow .form-label--tier::after,
+.register-edit-dialog .form-label--tier::after {
+  content: ' *';
+  color: #0b2545;
+  font-weight: 700;
+}
+
 .register-flow .is-rc-focus,
 .register-edit-dialog .is-rc-focus {
   outline: 2px solid var(--brand-blue, #266bc4);

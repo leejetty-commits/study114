@@ -13,6 +13,7 @@ export const PAID_ENDPOINTS = {
   history: '/api/paid/history.php',
   catalog: '/api/paid/catalog.php',
   waitlist: '/api/paid/waitlist.php',
+  tierCheck: '/api/paid/tier-check.php',
 };
 
 async function parseJson(res) {
@@ -21,6 +22,11 @@ async function parseJson(res) {
     const err = new Error(data.message || `HTTP ${res.status}`);
     err.code = data.error;
     err.status = res.status;
+    err.missing = Array.isArray(data.missing) ? data.missing.map(String) : [];
+    if (data.error === 'tier_fields_missing' && err.missing.length) {
+      err.tierMessage = String(data.message || '');
+      err.message = `${data.message || err.message} (${err.missing.join(', ')})`;
+    }
     throw err;
   }
   return data;
@@ -60,6 +66,16 @@ export async function fetchPaidStatus(days = 7, region = {}) {
   }
   const qs = params.toString() ? `?${params.toString()}` : '';
   const res = await fetch(`${PAID_ENDPOINTS.status}${qs}`, { ...CREDENTIALS });
+  return parseJson(res);
+}
+
+/** 픽·프라임 빠진 항목. 구매 화면은 이 답만 보고 막는다. */
+export async function fetchTierCheck(providerType, providerId) {
+  const params = new URLSearchParams({
+    provider_type: String(providerType),
+    provider_id: String(providerId),
+  });
+  const res = await fetch(`${PAID_ENDPOINTS.tierCheck}?${params}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 

@@ -129,14 +129,14 @@ export function formatStudyRoomCapacity(capacity_per_time) {
 }
 
 export function formatTeachingStyleBadges(badges, max = 2) {
-  if (!badges?.length) return '—';
-  return (
-    badges
-      .slice(0, max)
-      .map((b) => TEACHING_STYLE_LABELS[b])
-      .filter(Boolean)
-      .join(' · ') || '—'
-  );
+  const labels = (Array.isArray(badges) ? badges : [])
+    .map((b) => TEACHING_STYLE_LABELS[b])
+    .filter(Boolean);
+  if (!labels.length) return '—';
+  const shown = labels.slice(0, max);
+  const rest = labels.length - shown.length;
+  const text = shown.join(' · ');
+  return rest > 0 ? `${text} 외 ${rest}` : text;
 }
 
 export function formatStudentBudgetCard(item) {

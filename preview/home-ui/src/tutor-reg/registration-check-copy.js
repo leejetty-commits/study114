@@ -4,6 +4,7 @@
  */
 
 import { TUTOR_BASIC_FIELDS, TUTOR_BASIC_FIELD_KEYS } from '../../../shared/tutor-basic-fields.js';
+import { TUTOR_PICK_IDS, TUTOR_PRIME_IDS, tutorTierPromoDefs } from '../../../shared/pickprime-requirements.js';
 
 export const TRC_COPY = {
   title: '등록점검',
@@ -72,11 +73,11 @@ export const TRC_COPY = {
 /** 기본카드 항목 = 기본정보 필수 — shared/tutor-basic-fields.js 한 목록. 다 채우면 카드 노출 (정본 73 0절) */
 export const TRC_BASIC_FIELD_IDS = TUTOR_BASIC_FIELD_KEYS;
 
-/** Pick 추가 — 기본카드 외에 픽 카드에 더 필요한 입력 */
-export const TRC_PICK_FIELD_IDS = ['feature_1', 'student_target'];
+/** Pick 구매 필수 — preview/shared/pickprime-requirements.js */
+export const TRC_PICK_FIELD_IDS = TUTOR_PICK_IDS;
 
-/** Prime 추가 — Pick/Basic 외에 프라임 카드에 더 필요한 입력 */
-export const TRC_PRIME_FIELD_IDS = ['intro_long', 'feature_2', 'feature_3'];
+/** Prime 구매 필수 — 픽 항목 포함 */
+export const TRC_PRIME_FIELD_IDS = TUTOR_PRIME_IDS;
 
 export const TRC_REQUIRED_FIELD_IDS = [
   ...new Set([...TRC_BASIC_FIELD_IDS, ...TRC_PICK_FIELD_IDS, ...TRC_PRIME_FIELD_IDS]),
@@ -140,9 +141,5 @@ export const TRC_PROMO_MISSING_DEFS = [
   { id: 'schedule', label: '주 회수/월 총 횟수', hint: '산정방식에 맞는 횟수가 필요합니다', section: 'detail' },
   { id: 'university', label: '대학/대학원', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
   { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },
-  { id: 'feature_1', label: '특징 1', hint: '픽 카드 강조 한 줄입니다', section: 'detail' },
-  { id: 'student_target', label: '지도 대상 성별 · 수업인원', hint: '지도 대상 성별·인원을 보여 줍니다', section: 'detail' },
-  { id: 'intro_long', label: '상세 소개', hint: '상세 소개를 입력하면 카드와 확대카드에 보입니다', section: 'detail' },
-  { id: 'feature_2', label: '특징 2', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
-  { id: 'feature_3', label: '특징 3', hint: '프라임 카드에 특징을 더 보여 줍니다', section: 'detail' },
+  ...tutorTierPromoDefs(),
 ];

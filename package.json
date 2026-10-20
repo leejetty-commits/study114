@@ -29,6 +29,7 @@
     "verify:paid-renewal": "node scripts/verify-paid-renewal.mjs",
     "verify:paid-pr-a": "node scripts/verify-paid-pr-a.mjs",
     "verify:paid-complete-gate": "vite-node scripts/verify-paid-complete-gate.mjs",
+    "verify:pickprime-purchase-gate": "vite-node --config preview/home-ui/vite.config.js scripts/verify-pickprime-purchase-gate.mjs",
     "verify:paid-pr-a-ci": "bash scripts/verify-paid-pr-a-ci.sh",
     "verify:paid-pr-b-ci": "bash scripts/verify-paid-pr-b-ci.sh",
     "verify:cur-006-email-sent-ui": "vite-node scripts/verify-cur-006-email-sent-ui.mjs",

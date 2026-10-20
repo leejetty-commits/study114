@@ -23,6 +23,7 @@ import {
 import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
 import { renderPromoPhotoGrid, promoPhotoHint, bindPromoPhotos, syncPromoPhotoMeta } from '../promo-photos.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { TIER_MARK_NOTE } from '../../../shared/pickprime-requirements.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -31,9 +32,9 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-function starLabel(forId, text) {
+function tierLabel(forId, text) {
   const forAttr = forId ? ` for="${forId}"` : '';
-  return `<label class="form-label form-label--required form-label--required-text"${forAttr}>${text}<em class="register-required-mark">필수</em></label>`;
+  return `<label class="form-label form-label--tier"${forAttr}>${text}</label>`;
 }
 
 function lessonSubjectOptions() {
@@ -196,9 +197,10 @@ export function renderLessonFormHtml(opts = {}) {
   const classes = Array.isArray(s.classes) ? s.classes : [];
   return `
     <form data-form="lesson">
+      <p class="form-hint">${TIER_MARK_NOTE}</p>
       ${renderSectionTitle('공부방·교습소 소개')}
       <div class="form-group">
-        ${starLabel('', '수업운영방식')}
+        <span class="form-label">수업운영방식</span>
         <div class="form-radio-group" role="radiogroup">
           ${LESSON_OPERATION_TYPES.map(
             (t) => `
@@ -211,7 +213,7 @@ export function renderLessonFormHtml(opts = {}) {
       </div>
       <div class="register-grid-3">
         <div class="form-group">
-          ${starLabel('capacity_per_time', '타임별 원생수')}
+          <label class="form-label" for="capacity_per_time">타임별 원생수</label>
           <select class="form-input" id="capacity_per_time" name="capacity_per_time">
             <option value="">선택</option>
             ${CAPACITY_PER_TIME_OPTIONS.map(
@@ -227,7 +229,7 @@ export function renderLessonFormHtml(opts = {}) {
           </select>
         </div>
         <div class="form-group" data-rc-field="lessons_per_week">
-          ${starLabel('lessons_per_week', '주 회수')}
+          ${tierLabel('lessons_per_week', '주 회수')}
           <select class="form-input" id="lessons_per_week" name="lessons_per_week">
             ${renderSelectOptions(lessonWeeklyOptions(s.lessons_per_week), lessonWeeklySelectValue(s.lessons_per_week), '선택')}
           </select>
@@ -235,7 +237,7 @@ export function renderLessonFormHtml(opts = {}) {
       </div>
       <div class="register-grid-2">
         <div class="form-group" data-rc-field="fee">
-          ${starLabel('monthly_fee_manwon', '월 평균 수업료')}
+          ${tierLabel('monthly_fee_manwon', '월 평균 수업료')}
           <div class="register-fee-manwon">
             <input class="form-input" id="monthly_fee_manwon" name="monthly_fee_manwon" value="${esc(s.monthly_fee_manwon)}" placeholder="숫자" inputmode="decimal" />
             <span class="register-fee-manwon__unit">천원</span>
@@ -256,11 +258,11 @@ export function renderLessonFormHtml(opts = {}) {
         </div>
       </div>
       <div class="form-group" data-rc-field="teaching_style">
-        ${starLabel('', '수업 스타일')}
+        ${tierLabel('', '수업 스타일')}
         <div class="register-check-grid">${renderStyleChecks(s.teaching_style_ids)}</div>
       </div>
       <div class="form-group" data-rc-field="teaching_style_note">
-        ${starLabel('teaching_style_note', '수업 스타일 추가설명')}
+        ${tierLabel('teaching_style_note', '수업 스타일 추가설명')}
         <textarea class="form-input form-textarea" id="teaching_style_note" name="teaching_style_note" rows="2" placeholder="추가로 전하고 싶은 지도 방식을 적어 주세요.">${esc(s.teaching_style_note)}</textarea>
       </div>
       <div class="form-group">
@@ -281,16 +283,16 @@ export function renderLessonFormHtml(opts = {}) {
         </div>
       </div>
       <div class="form-group" data-rc-field="intro_short">
-        ${starLabel('intro_short', '한 줄 소개')}
+        ${tierLabel('intro_short', '한 줄 소개')}
         <input class="form-input" id="intro_short" name="intro_short" maxlength="80" value="${esc(s.intro_short)}" placeholder="프라임 카드에 보이는 한 줄입니다." />
       </div>
       <div class="form-group" data-rc-field="intro_long">
-        ${starLabel('intro_long', '공부방·교습소 소개와 자랑')}
+        ${tierLabel('intro_long', '공부방·교습소 소개와 자랑')}
         <textarea class="form-input form-textarea register-intro-long" id="intro_long" name="intro_long" rows="8" placeholder="공부방·교습소를 소개하고 자랑해 주세요.">${esc(s.intro_long)}</textarea>
       </div>
 
       <div data-rc-field="cover">
-      ${starLabel('', '홍보사진')}
+      ${tierLabel('', '홍보사진')}
       <p class="register-hint">${promoPhotoHint()}</p>
       ${renderPromoPhotoGrid()}
       </div>

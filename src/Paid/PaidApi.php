@@ -82,14 +82,15 @@ final class PaidApi
      * JSON 오류. 활성 유료 묶음권 충돌은 409 conflict.
      * 검증 실패는 422 validation.
      */
-    public static function fail(int $status, string $error, string $message): never
+    /** @param array<string, mixed> $extra */
+    public static function fail(int $status, string $error, string $message, array $extra = []): never
     {
         http_response_code($status);
-        echo json_encode([
+        echo json_encode(array_merge([
             'ok' => false,
             'error' => $error,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
+        ], $extra), JSON_UNESCAPED_UNICODE);
         exit;
     }
 
@@ -104,6 +105,8 @@ final class PaidApi
             self::fail(403, 'paid_gate', $e->getMessage());
         } catch (PaidConflictException $e) {
             self::fail(409, 'conflict', $e->getMessage());
+        } catch (TierFieldsMissingException $e) {
+            self::fail(422, 'tier_fields_missing', $e->getMessage(), ['missing' => $e->labels()]);
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {

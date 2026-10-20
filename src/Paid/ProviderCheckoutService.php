@@ -205,6 +205,8 @@ final class ProviderCheckoutService
             ];
         }
 
+        $this->assertTierFieldsForOrder($kind, $productId, $providerType, $providerId);
+
         $orderRef = 'dev-' . bin2hex(random_bytes(8));
         $this->orders->insertPending(
             $userId,
@@ -262,6 +264,30 @@ final class ProviderCheckoutService
             'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
             'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
         ];
+    }
+
+    /**
+     * 픽·프라임 최초·연장 모두 주문 만들기 전에만 검사한다. 결제 완료·노출에는 넣지 않는다.
+     *
+     * @param 'study_room'|'tutor'|null $providerType
+     */
+    private function assertTierFieldsForOrder(string $kind, string $productId, ?string $providerType, ?int $providerId): void
+    {
+        if ($kind !== 'position' || ($productId !== 'pick' && $productId !== 'prime')) {
+            return;
+        }
+        if (($providerType !== 'tutor' && $providerType !== 'study_room') || $providerId === null || $providerId <= 0) {
+            return;
+        }
+        $missing = TierRequirement::missingFor($this->pdo, $providerType, $providerId, $productId);
+        if ($missing === []) {
+            return;
+        }
+        $labels = [];
+        foreach ($missing as $row) {
+            $labels[] = (string) ($row['label'] ?? '');
+        }
+        throw new TierFieldsMissingException($labels, TierRequirement::blockMessage($productId));
     }
 
     private function kindHint(string $productId): string
