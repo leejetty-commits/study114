@@ -48,7 +48,15 @@ export function syncLessonFromForm(form, state) {
     state.age_band = String(fd.get('age_band') ?? '');
   }
   state.fee_basis_type = String(fd.get('fee_basis_type') ?? '');
-  state.monthly_session_count = String(fd.get('monthly_session_count') ?? '');
+  const monthlyEl = form.querySelector('[name="monthly_session_count"]');
+  if (!(monthlyEl instanceof HTMLElement)) {
+    state._omitMonthly = true;
+  } else if (monthlyEl.getAttribute('data-monthly-omit') === '1') {
+    state._omitMonthly = true;
+  } else {
+    state.monthly_session_count = String(fd.get('monthly_session_count') ?? '');
+    state._omitMonthly = false;
+  }
   state.fee_description = String(fd.get('fee_description') ?? '');
   state.subjects = [];
   form.querySelectorAll('[data-subject-idx]').forEach((row) => {
@@ -90,9 +98,10 @@ export function validateLessonState(state) {
   if (!String(state.fee_basis_type || '').trim()) {
     return '산정방식을 선택해 주세요.';
   }
-  // UI 선택값: 공란이면 단계 이동 허용. 값이 있으면 양의 정수만.
-  const monthlyMsg = optionalPositiveIntMessage(state.monthly_session_count, '월 총 횟수');
-  if (monthlyMsg) return monthlyMsg;
+  if (state.fee_basis_type === 'monthly_by_total_sessions' && !state._omitMonthly) {
+    const monthlyMsg = optionalPositiveIntMessage(state.monthly_session_count, '월 총 횟수');
+    if (monthlyMsg) return monthlyMsg;
+  }
   for (const sub of state.subjects || []) {
     const name = String(sub.subject_name || '').trim();
     const grade = String(sub.grade_band || '').trim();
@@ -162,16 +171,19 @@ export function payloadForStep(step, state) {
     case 'lesson': {
       // 추가 과목 행만. 빈 과목 행은 제외. 대표 과목은 basic 단계.
       const subjects = (state.subjects || []).filter((s) => !s.is_primary && String(s.subject_name || '').trim());
-      return {
+      const lesson = {
         student_gender_group: state.student_gender_group,
         student_count_group: state.student_count_group,
         lesson_places: state.lesson_places,
         age_band: state.age_band,
         fee_basis_type: state.fee_basis_type,
-        monthly_session_count: state.monthly_session_count,
         fee_description: state.fee_description,
         subjects,
       };
+      if (state.fee_basis_type === 'monthly_by_total_sessions' && !state._omitMonthly) {
+        lesson.monthly_session_count = state.monthly_session_count;
+      }
+      return lesson;
     }
     case 'career':
       return {

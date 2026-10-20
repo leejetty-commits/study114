@@ -19,6 +19,7 @@ import {
 import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { TUTOR_DETAIL_GROUP_CAREER, TUTOR_DETAIL_GROUP_PROMO } from '../../../shared/tutor-detail-fields.js';
 
 function radios(name, options, selected) {
   return options
@@ -53,7 +54,7 @@ export function renderContactFormHtml(opts = {}) {
   const content = `
     ${embed ? '' : renderGuideNotice('상세등록 마지막 단계입니다. 학력·경력과 홍보 채널을 확인한 뒤 등록을 마쳐 주세요.')}
     <form data-form="contact" class="register-form-narrow">
-      ${renderSectionTitle('학력 · 경력 · 특징')}
+      ${renderSectionTitle(TUTOR_DETAIL_GROUP_CAREER)}
       <div class="register-grid-2 register-grid-2--tight">
         <div data-trc-field="university">
         ${renderUniversityNameField({
@@ -70,16 +71,17 @@ export function renderContactFormHtml(opts = {}) {
         <span class="form-label">학적상태</span>
         <div class="form-radio-group">${radios('university_status', UNIVERSITY_STATUS_OPTIONS, s.university_status)}</div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="career_year_band">
         <span class="form-label">경력구간</span>
         <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
       </div>
-      <div class="form-group"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
+      <div class="form-group" data-trc-field="main_material_note"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
       <div class="register-grid-2 register-grid-2--tight">
         <div class="form-group" data-trc-field="feature_1"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
         <div class="form-group" data-trc-field="feature_2"><label class="form-label">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="feature_3"><label class="form-label">특징 3</label><input class="form-input" name="feature_3" value="${s.feature_3 || ''}" /></div>
+      <div class="form-group" data-trc-field="proof_document_available">
         <label class="form-check">
           <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
           <span class="form-check__label">증빙서류 제출 가능</span>
@@ -87,7 +89,7 @@ export function renderContactFormHtml(opts = {}) {
         <p class="form-hint">파일은 마이페이지 제출함에서 올립니다. 픽·프라임 카드의 「제출자료 n개」가 여기서 나옵니다.</p>
         <a class="register-mypage-link" href="${mypageSubmissionBoardUrl()}">제출함 열기</a>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="teaching_style_badges">
         <span class="form-label">강의스타일</span>
         <div class="register-check-grid">${badges}</div>
       </div>
@@ -101,8 +103,10 @@ export function renderContactFormHtml(opts = {}) {
         <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note || ''}" />
       </div>
 
-      ${renderSectionTitle('홍보 채널')}
+      ${renderSectionTitle(TUTOR_DETAIL_GROUP_PROMO)}
+      <div data-trc-field="promo_channels">
       ${renderPromoChannelFields(s)}
+      </div>
       ${
         includeStepNav
           ? renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })

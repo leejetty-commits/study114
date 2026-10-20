@@ -9,6 +9,9 @@ import {
 } from '../state.js';
 import { syncLessonFromForm, validateLessonState } from '../form-collect.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
+import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
+import { lessonMonthlyOptions, lessonMonthlySelectValue, lessonMonthlyOmitUntilTouched } from '../../../shared/lesson-monthly-options.js';
+import { TUTOR_DETAIL_GROUP_LESSON } from '../../../shared/tutor-detail-fields.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
 import {
@@ -21,6 +24,29 @@ import {
   navigate,
   skipDetailRegistration,
 } from '../layout.js';
+
+function feeCountBox(s) {
+  const weeklyMode = s.fee_basis_type !== 'monthly_by_total_sessions';
+  if (weeklyMode) {
+    const shown = lessonWeeklyLabel(s.lessons_per_week) || '선택';
+    return `
+      <div class="form-group" data-trc-field="lessons_per_week">
+        <span class="form-label">주 회수</span>
+        <p class="form-input form-input--readonly" aria-readonly="true">${shown}</p>
+        <p class="form-hint">기본정보 탭에서 수정</p>
+      </div>`;
+  }
+  const selected = lessonMonthlySelectValue(s.monthly_session_count);
+  const omit = lessonMonthlyOmitUntilTouched(s.monthly_session_count) ? ' data-monthly-omit="1"' : '';
+  const options = lessonMonthlyOptions()
+    .map((o) => `<option value="${o.value}" ${o.value === selected ? 'selected' : ''}>${o.label}</option>`)
+    .join('');
+  return `
+    <div class="form-group" data-trc-field="monthly_session_count">
+      <label class="form-label" for="monthly_session_count">월 총 횟수</label>
+      <select class="form-input" id="monthly_session_count" name="monthly_session_count"${omit}>${options}</select>
+    </div>`;
+}
 
 function radios(name, options, selected) {
   return options
@@ -82,7 +108,7 @@ export function renderLessonFormHtml(opts = {}) {
   const content = `
     <form data-form="lesson" class="tutor-lesson-step">
       ${embed ? '' : renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
-      ${renderSectionTitle('수업 · 과목 · 가격')}
+      ${renderSectionTitle(TUTOR_DETAIL_GROUP_LESSON)}
       ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong>${embed ? ' · 기본정보 탭에서 수정' : ' · 마이페이지에서 수정'}</p>` : ''}
       <div class="register-grid-2">
         <div class="form-group" data-trc-field="student_target">
@@ -94,19 +120,21 @@ export function renderLessonFormHtml(opts = {}) {
           <div class="form-radio-group">${radios('student_count_group', STUDENT_COUNT_OPTIONS, s.student_count_group)}</div>
         </div>
       </div>
-      <div class="form-group">
+      <div class="form-group" data-trc-field="age_band">
         <span class="form-label">과외쌤 연령대</span>
         <div class="form-radio-group">${radios('age_band', AGE_BAND_OPTIONS, s.age_band)}</div>
       </div>
-      <p class="form-hint">추가 과목 (선택)</p>
-      <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
-      <button type="button" class="btn btn--secondary btn--sm" data-action="add-subject">+ 과목 추가</button>
+      <div data-trc-field="subjects">
+        <p class="form-hint">추가 과목 (선택)</p>
+        <div data-subjects-list>${s.subjects.map(subjectRow).join('')}</div>
+        <button type="button" class="btn btn--secondary btn--sm" data-action="add-subject">+ 과목 추가</button>
+      </div>
       <div class="register-grid-2" style="margin-top:var(--space-4);">
         <div class="form-group" data-trc-field="fee_basis">
           <span class="form-label form-label--required">산정방식</span>
           <div class="form-radio-group">${feeBasis}</div>
         </div>
-        <div class="form-group" data-trc-field="monthly_session_count"><label class="form-label">월 총 횟수</label><input class="form-input" name="monthly_session_count" value="${s.monthly_session_count}" /></div>
+        ${feeCountBox(s)}
       </div>
       <div class="form-group" data-trc-field="fee_description">
         <label class="form-label" for="fee_description">가격 설명</label>
@@ -153,6 +181,16 @@ export function bindLessonEvents(root, opts = {}) {
     navigate(registerState.basicComplete ? '/register/basic' : '/register/regions');
   });
   root.querySelector('[data-form="lesson"] [data-action="skip-detail"]')?.addEventListener('click', () => skipDetailRegistration());
+  lessonForm()?.querySelectorAll('[name="fee_basis_type"]').forEach((el) => {
+    el.addEventListener('change', () => {
+      syncLessonFromForm(lessonForm(), registerState);
+      if (opts.onRefresh) opts.onRefresh();
+      else window.dispatchEvent(new Event('hashchange'));
+    });
+  });
+  lessonForm()?.querySelector('[name="monthly_session_count"]')?.addEventListener('change', (ev) => {
+    if (ev.currentTarget instanceof HTMLSelectElement) ev.currentTarget.removeAttribute('data-monthly-omit');
+  });
   root.querySelector('[data-form="lesson"] [data-action="add-subject"]')?.addEventListener('click', () => {
     if (opts.embed) syncLessonFromForm(lessonForm(), registerState);
     registerState.subjects.push(emptySubject());
