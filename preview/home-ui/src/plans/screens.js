@@ -25,6 +25,9 @@ import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
+import { studyRoomSectionPath } from '../study-room-reg/router.js';
+import { tutorSectionPath } from '../tutor-reg/router.js';
+import { roomTierMissing, tutorTierMissing, tierBlockMessage } from '../../../shared/pickprime-requirements.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import {
   getCatalogByFamily,
@@ -465,44 +468,48 @@ function renderProfileBanner(profile, role) {
  * @param {string} productCode
  * @param {'position'|'access'} [family]
  */
-function getEligibility(profile, productCode, family = 'position') {
+export function getEligibility(profile, productCode, family = 'position') {
   /** @type {string[]} */
   const missing = [];
   let canBuy = true;
+  /** @type {string} */
+  let registerCheckHref = '';
 
   if (family === 'access') {
     if (profile.providerType !== 'tutor' && profile.providerType !== 'study_room') {
-      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'] };
+      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'], registerCheckHref: '' };
     }
     if (profile.providerType === 'tutor') {
       const tutor = getTutor(Number(profile.id));
       if (!tutor) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
       }
     } else {
       const room = getStudyRoom(Number(profile.id));
       if (!room) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
       }
     }
-    return { canBuy: true, missing: [] };
+    return { canBuy: true, missing: [], registerCheckHref: '' };
   }
+
+  const tier = productCode === 'prime' || productCode === 'pick' ? productCode : '';
 
   if (profile.providerType === 'study_room') {
     const room = getStudyRoom(Number(profile.id));
     if (!room) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
     }
     if (room.profile_status === 'hidden') {
       missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
       canBuy = false;
     }
-    // Pick/Prime 자격만 입력 완성도를 본다. 목록 노출·쪽지와 분리.
-    if (productCode === 'prime' || productCode === 'pick') {
-      if (room.detail_completion_status !== 'expanded_complete') {
-        missing.push(
-          `${productCode === 'prime' ? '프라임' : '픽'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
-        );
+    if (tier) {
+      const lacked = roomTierMissing(room, tier);
+      if (lacked.length) {
+        missing.push(tierBlockMessage(tier));
+        lacked.forEach((item) => missing.push(item.label));
+        registerCheckHref = studyRoomSectionPath(room.id, 'publish');
         canBuy = false;
       }
       const apply = getApplyTargetReadiness(profile, 'study_room');
@@ -514,16 +521,24 @@ function getEligibility(profile, productCode, family = 'position') {
   } else {
     const tutor = getTutor(Number(profile.id));
     if (!tutor) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'] };
+      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
     }
     if (tutor.profile_status === 'hidden') {
       missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
       canBuy = false;
     }
-    // 과외쌤 구매 차단은 노출축(시·주력과목)만. 소개문·카드 카피 완성도는 성과 불이익.
+    if (tier) {
+      const lacked = tutorTierMissing(tutor, tier);
+      if (lacked.length) {
+        missing.push(tierBlockMessage(tier));
+        lacked.forEach((item) => missing.push(item.label));
+        registerCheckHref = tutorSectionPath(tutor.id, 'publish');
+        canBuy = false;
+      }
+    }
   }
 
-  return { canBuy, missing: [...new Set(missing)] };
+  return { canBuy, missing: [...new Set(missing)], registerCheckHref };
 }
 
 /**
@@ -576,7 +591,11 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   }
   const missingHtml =
     canPurchaseUi && eligibility.missing.length
-      ? `<ul class="plans-eligibility plans-eligibility--soft">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>`
+      ? `<ul class="plans-eligibility plans-eligibility--soft">${eligibility.missing.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>${
+          eligibility.registerCheckHref
+            ? `<a href="#${esc(eligibility.registerCheckHref)}" style="display:inline-flex;align-items:center;box-sizing:border-box;height:30px;margin-top:8px;padding:0 10px;border-radius:6px;background:#729FD9;color:#0B2545;font-size:14px;font-weight:600;line-height:30px;text-decoration:none">등록점검</a>`
+            : ''
+        }`
       : '';
 
   const boardHtml = embedBoard && roomPrimeOnly && inv ? renderRoomPrimeBoard(inv.prime) : '';

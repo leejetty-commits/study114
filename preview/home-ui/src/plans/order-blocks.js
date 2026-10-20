@@ -7,6 +7,9 @@ import { applyRegionEmptyCopy } from './period-cards.js';
 import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
+import { studyRoomSectionPath } from '../study-room-reg/router.js';
+import { tutorSectionPath } from '../tutor-reg/router.js';
+import { roomTierMissing, tutorTierMissing, tierBlockMessage } from '../../../shared/pickprime-requirements.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
 import { providerPageName } from '../mypage/mypage-copy.js';
 
@@ -90,11 +93,13 @@ export function studyRoomRegionPurchaseState(region, ctx) {
     };
   }
   if (productCode === 'prime' || productCode === 'pick') {
-    if (room.detail_completion_status !== 'expanded_complete') {
+    const lacked = roomTierMissing(room, productCode);
+    if (lacked.length) {
       return {
         purchasable: false,
-        reason: productCode === 'prime' ? '프라임 정보 부족 · 등록점검에서 확인' : '픽 정보 부족 · 등록점검에서 확인',
+        reason: `${tierBlockMessage(productCode)} · ${lacked.map((item) => item.label).join(', ')}`,
         tone: 'warn',
+        registerCheckHref: studyRoomSectionPath(room.id, 'publish'),
       };
     }
   }
@@ -114,6 +119,38 @@ export function studyRoomRegionPurchaseState(region, ctx) {
           : `해당 행정동 Prime ${used}/${cap} 마감`;
       return { purchasable: false, reason: place, tone: 'soldout' };
     }
+  }
+  return { purchasable: true, reason: '구매 가능', tone: 'ok' };
+}
+
+/**
+ * 과외쌤 픽·프라임도 같은 필수 항목으로 막는다.
+ * @param {import('./profiles.js').ProviderProfile} profile
+ * @param {string} productCode
+ */
+function tutorRegionPurchaseState(profile, productCode) {
+  if (productCode !== 'prime' && productCode !== 'pick') {
+    return { purchasable: true, reason: '구매 가능', tone: 'ok' };
+  }
+  const tutor = getTutor(Number(profile.id));
+  if (!tutor) {
+    return { purchasable: false, reason: '프로필을 찾을 수 없습니다', tone: 'warn' };
+  }
+  if (tutor.profile_status === 'hidden') {
+    return {
+      purchasable: false,
+      reason: '숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.',
+      tone: 'warn',
+    };
+  }
+  const lacked = tutorTierMissing(tutor, productCode);
+  if (lacked.length) {
+    return {
+      purchasable: false,
+      reason: `${tierBlockMessage(productCode)} · ${lacked.map((item) => item.label).join(', ')}`,
+      tone: 'warn',
+      registerCheckHref: tutorSectionPath(tutor.id, 'publish'),
+    };
   }
   return { purchasable: true, reason: '구매 가능', tone: 'ok' };
 }
@@ -272,7 +309,9 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
             const state =
               profile.providerType === 'study_room' && room
                 ? studyRoomRegionPurchaseState(r, { room, productCode, primeScopes })
-                : { purchasable: true, reason: '구매 가능', tone: 'ok' };
+                : profile.providerType === 'tutor'
+                  ? tutorRegionPurchaseState(profile, productCode)
+                  : { purchasable: true, reason: '구매 가능', tone: 'ok' };
             const disabled = !state.purchasable;
             const queryMatch = r.city_id
               ? hasQueryCity && String(q.city_id) === String(r.city_id)
@@ -296,6 +335,11 @@ export function renderApplyTargetBlock(profile, role, page = 'positions', opts =
                 ${checked ? 'checked' : ''} />
               <span class="plans-region-chip__label">${esc(r.label)}</span>
               <span class="plans-region-chip__reason">${esc(state.reason)}</span>
+              ${
+                state.registerCheckHref
+                  ? `<a href="#${esc(state.registerCheckHref)}" style="display:inline-flex;align-items:center;box-sizing:border-box;height:30px;margin-left:8px;padding:0 10px;border-radius:6px;background:#729FD9;color:#0B2545;font-size:14px;font-weight:600;line-height:30px;text-decoration:none">등록점검</a>`
+                  : ''
+              }
             </label>`;
           })
           .join('')}

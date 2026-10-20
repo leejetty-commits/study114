@@ -21,6 +21,10 @@ async function parseJson(res) {
     const err = new Error(data.message || `HTTP ${res.status}`);
     err.code = data.error;
     err.status = res.status;
+    err.missing = Array.isArray(data.missing) ? data.missing.map(String) : [];
+    if (data.error === 'tier_fields_missing' && err.missing.length) {
+      err.message = `${data.message || err.message} (${err.missing.join(', ')})`;
+    }
     throw err;
   }
   return data;
