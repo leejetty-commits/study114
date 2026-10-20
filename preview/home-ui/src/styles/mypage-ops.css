@@ -1701,6 +1701,50 @@
   max-width: none !important;
   width: 100%;
   box-sizing: border-box;
+  min-width: 0;
+}
+.mp-room-embed.register-flow .tutor-lesson-step,
+.mp-room-embed.register-flow .register-form-narrow,
+.mp-room-embed.register-flow .register-grid-2,
+.mp-room-embed.register-flow .form-group {
+  max-width: 100%;
+  min-width: 0;
+}
+.mp-room-embed.register-flow .form-radio-group {
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.mp-room-embed.register-flow .form-radio {
+  flex: 0 1 auto;
+  min-width: max-content;
+  max-width: 100%;
+  padding: 0.35rem 0.6rem;
+}
+.mp-room-embed.register-flow .form-radio__label {
+  white-space: nowrap;
+}
+.mypage-layout .mp-room-embed.register-flow .register-embed-actions .btn--primary,
+.mp-room-embed.register-flow .register-embed-actions .btn--primary {
+  background: #266BC4 !important;
+  border-color: #266BC4 !important;
+  color: #fff !important;
+  height: 44px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0 16px;
+}
+.mp-room-embed.register-flow .register-embed-actions .btn--secondary {
+  background: #729FD9;
+  border-color: #729FD9;
+  color: #0B2545;
+  height: 30px;
+  min-height: 30px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 0 12px;
 }
 /* 임베드: 패널 안 본문 전폭 (register-body 가짜 10rem 칼럼 금지) */
 .mp-room-panel .register-body--embed,
