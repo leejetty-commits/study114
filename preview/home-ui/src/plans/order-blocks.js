@@ -7,9 +7,7 @@ import { applyRegionEmptyCopy } from './period-cards.js';
 import { formatKrw, resolveCheckoutAmount } from './runtime-config.js';
 import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
-import { studyRoomSectionPath } from '../study-room-reg/router.js';
-import { tutorSectionPath } from '../tutor-reg/router.js';
-import { roomTierMissing, tutorTierMissing, tierBlockMessage } from '../../../shared/pickprime-requirements.js';
+import { tierPurchaseGate } from './screens.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
 import { providerPageName } from '../mypage/mypage-copy.js';
 
@@ -93,13 +91,13 @@ export function studyRoomRegionPurchaseState(region, ctx) {
     };
   }
   if (productCode === 'prime' || productCode === 'pick') {
-    const lacked = roomTierMissing(room, productCode);
-    if (lacked.length) {
+    const gate = tierPurchaseGate('study_room', room.id, productCode);
+    if (gate.blocked) {
       return {
         purchasable: false,
-        reason: `${tierBlockMessage(productCode)} · ${lacked.map((item) => item.label).join(', ')}`,
+        reason: gate.reason,
         tone: 'warn',
-        registerCheckHref: studyRoomSectionPath(room.id, 'publish'),
+        registerCheckHref: gate.registerCheckHref,
       };
     }
   }
@@ -143,13 +141,13 @@ function tutorRegionPurchaseState(profile, productCode) {
       tone: 'warn',
     };
   }
-  const lacked = tutorTierMissing(tutor, productCode);
-  if (lacked.length) {
+  const gate = tierPurchaseGate('tutor', tutor.id, productCode);
+  if (gate.blocked) {
     return {
       purchasable: false,
-      reason: `${tierBlockMessage(productCode)} · ${lacked.map((item) => item.label).join(', ')}`,
+      reason: gate.reason,
       tone: 'warn',
-      registerCheckHref: tutorSectionPath(tutor.id, 'publish'),
+      registerCheckHref: gate.registerCheckHref,
     };
   }
   return { purchasable: true, reason: '구매 가능', tone: 'ok' };

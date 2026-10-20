@@ -11,6 +11,7 @@ import { renderProviderNoticeBanners, hydrateProviderNotices } from '../provider
 import {
   createPaidCheckout,
   completePaidCheckout,
+  fetchTierCheck,
   registerPrimeWaitlist,
   fetchPrimeWaitlist,
   cancelPrimeWaitlist,
@@ -27,7 +28,6 @@ import { getStudyRoom } from '../study-room-reg/store.js';
 import { getTutor } from '../tutor-reg/store.js';
 import { studyRoomSectionPath } from '../study-room-reg/router.js';
 import { tutorSectionPath } from '../tutor-reg/router.js';
-import { roomTierMissing, tutorTierMissing, tierBlockMessage } from '../../../shared/pickprime-requirements.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import {
   getCatalogByFamily,
@@ -209,9 +209,19 @@ function scheduleCheckoutServerQuote(rerender) {
       });
       rerender();
     })
-    .catch(() => {
+    .catch((err) => {
       checkoutQuoteKey = '';
       checkoutQuotePhase = 'idle';
+      if (err && err.code === 'tier_fields_missing') {
+        applyTierOrderMissing(
+          draft.providerType,
+          draft.providerId,
+          draft.productCode,
+          err.missing,
+          err.tierMessage || '',
+        );
+        rerender();
+      }
     });
 }
 
@@ -464,6 +474,132 @@ function renderProfileBanner(profile, role) {
 }
 
 /**
+ * 픽·프라임 구매 판정 캐시. 화면은 서버 tier-check 답만 읽는다.
+ * @type {Record<string, { phase: 'loading'|'ready'|'error', pick: { can_buy?: boolean, missing?: { id?: string, label?: string }[]|string[], message?: string }|null, prime: { can_buy?: boolean, missing?: { id?: string, label?: string }[]|string[], message?: string }|null, loadedAt: number }>}
+ */
+const tierCheckCache = {};
+let tierHydratedHash = '';
+
+function tierCacheKey(providerType, providerId) {
+  return `${providerType}:${providerId}`;
+}
+
+/** @param {'tutor'|'study_room'|string} providerType @param {string|number} providerId */
+export function readTierCheck(providerType, providerId) {
+  return tierCheckCache[tierCacheKey(providerType, providerId)] || null;
+}
+
+/** @param {'tutor'|'study_room'|string} providerType @param {string|number} providerId */
+export function rememberTierCheck(providerType, providerId, payload) {
+  tierCheckCache[tierCacheKey(providerType, providerId)] = {
+    phase: 'ready',
+    pick: payload?.pick || null,
+    prime: payload?.prime || null,
+    loadedAt: Date.now(),
+  };
+}
+
+function tierLabels(missing) {
+  if (!Array.isArray(missing)) return [];
+  return missing
+    .map((item) => (item && typeof item === 'object' ? String(item.label || '') : String(item || '')))
+    .filter(Boolean);
+}
+
+/**
+ * @param {'tutor'|'study_room'|string} providerType
+ * @param {string|number} providerId
+ * @param {'pick'|'prime'|string} tier
+ */
+export function tierPurchaseGate(providerType, providerId, tier) {
+  const id = Number(providerId);
+  const href = providerType === 'study_room' ? studyRoomSectionPath(id, 'publish') : tutorSectionPath(id, 'publish');
+  const entry = readTierCheck(providerType, id);
+  const side = entry && tier === 'prime' ? entry.prime : entry ? entry.pick : null;
+  if (!entry || entry.phase === 'loading' || (entry.phase === 'ready' && !side)) {
+    return {
+      blocked: true,
+      phase: 'loading',
+      lines: ['구매 조건을 확인하고 있어요'],
+      reason: '구매 조건을 확인하고 있어요',
+      registerCheckHref: '',
+    };
+  }
+  if (entry.phase === 'error') {
+    return {
+      blocked: true,
+      phase: 'error',
+      lines: ['구매 조건을 확인하지 못했어요 · 다시 시도'],
+      reason: '구매 조건을 확인하지 못했어요 · 다시 시도',
+      registerCheckHref: '',
+    };
+  }
+  const labels = tierLabels(side.missing);
+  if (side.can_buy !== false && labels.length === 0) {
+    return { blocked: false, phase: 'ready', lines: [], reason: '구매 가능', registerCheckHref: '' };
+  }
+  const message = String(side.message || '');
+  const lines = message ? [message, ...labels] : [...labels];
+  const reason = message && labels.length ? `${message} · ${labels.join(', ')}` : lines[0] || message;
+  return { blocked: true, phase: 'ready', lines, reason, registerCheckHref: href };
+}
+
+/** 주문 422의 missing으로 해당 등급 캐시만 바꾼다. */
+export function applyTierOrderMissing(providerType, providerId, tier, missing, message) {
+  if (tier !== 'pick' && tier !== 'prime') return;
+  const key = tierCacheKey(providerType, providerId);
+  const prev = tierCheckCache[key] || { phase: 'ready', pick: null, prime: null, loadedAt: 0 };
+  const rows = tierLabels(missing).map((label) => ({ id: '', label }));
+  const side = {
+    can_buy: rows.length === 0,
+    missing: rows,
+    message: rows.length ? String(message || '') : '',
+  };
+  tierCheckCache[key] = {
+    phase: 'ready',
+    pick: tier === 'pick' ? side : prev.pick,
+    prime: tier === 'prime' ? side : prev.prime,
+    loadedAt: Date.now(),
+  };
+  tierHydratedHash = typeof window !== 'undefined' ? window.location.hash : '';
+}
+
+/**
+ * @param {import('./profiles.js').ProviderProfile | null} profile
+ * @param {() => void} rerender
+ * @param {{ force?: boolean }} [opts]
+ */
+export function scheduleTierCheckHydrate(profile, rerender, opts = {}) {
+  if (!profile || (profile.providerType !== 'tutor' && profile.providerType !== 'study_room')) return;
+  const key = tierCacheKey(profile.providerType, profile.id);
+  const hash = window.location.hash;
+  const force = opts.force === true;
+  const cur = tierCheckCache[key];
+  if (!force && cur?.phase === 'loading') return;
+  if (!force && cur?.phase === 'ready' && tierHydratedHash === hash) return;
+  if (!force && cur?.phase === 'error' && tierHydratedHash === hash) return;
+  tierCheckCache[key] = {
+    phase: 'loading',
+    pick: cur?.pick || null,
+    prime: cur?.prime || null,
+    loadedAt: 0,
+  };
+  rerender();
+  fetchTierCheck(profile.providerType, profile.id)
+    .then((data) => {
+      if (tierCheckCache[key]?.phase !== 'loading' && !force) return;
+      rememberTierCheck(profile.providerType, profile.id, data);
+      tierHydratedHash = window.location.hash;
+      rerender();
+    })
+    .catch(() => {
+      tierCheckCache[key] = { phase: 'error', pick: null, prime: null, loadedAt: Date.now() };
+      tierHydratedHash = window.location.hash;
+      rerender();
+    });
+}
+
+/**
  * @param {import('./profiles.js').ProviderProfile} profile
  * @param {string} productCode
  * @param {'position'|'access'} [family]
@@ -474,23 +610,25 @@ export function getEligibility(profile, productCode, family = 'position') {
   let canBuy = true;
   /** @type {string} */
   let registerCheckHref = '';
+  /** @type {''|'loading'|'error'|'ready'} */
+  let tierPhase = '';
 
   if (family === 'access') {
     if (profile.providerType !== 'tutor' && profile.providerType !== 'study_room') {
-      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'], registerCheckHref: '' };
+      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'], registerCheckHref: '', tierPhase: '' };
     }
     if (profile.providerType === 'tutor') {
       const tutor = getTutor(Number(profile.id));
       if (!tutor) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
       }
     } else {
       const room = getStudyRoom(Number(profile.id));
       if (!room) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
+        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
       }
     }
-    return { canBuy: true, missing: [], registerCheckHref: '' };
+    return { canBuy: true, missing: [], registerCheckHref: '', tierPhase: '' };
   }
 
   const tier = productCode === 'prime' || productCode === 'pick' ? productCode : '';
@@ -498,18 +636,18 @@ export function getEligibility(profile, productCode, family = 'position') {
   if (profile.providerType === 'study_room') {
     const room = getStudyRoom(Number(profile.id));
     if (!room) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
+      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
     }
     if (room.profile_status === 'hidden') {
       missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
       canBuy = false;
     }
     if (tier) {
-      const lacked = roomTierMissing(room, tier);
-      if (lacked.length) {
-        missing.push(tierBlockMessage(tier));
-        lacked.forEach((item) => missing.push(item.label));
-        registerCheckHref = studyRoomSectionPath(room.id, 'publish');
+      const gate = tierPurchaseGate('study_room', room.id, tier);
+      tierPhase = gate.phase;
+      if (gate.blocked) {
+        gate.lines.forEach((line) => missing.push(line));
+        if (gate.registerCheckHref) registerCheckHref = gate.registerCheckHref;
         canBuy = false;
       }
       const apply = getApplyTargetReadiness(profile, 'study_room');
@@ -521,24 +659,24 @@ export function getEligibility(profile, productCode, family = 'position') {
   } else {
     const tutor = getTutor(Number(profile.id));
     if (!tutor) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '' };
+      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
     }
     if (tutor.profile_status === 'hidden') {
       missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
       canBuy = false;
     }
     if (tier) {
-      const lacked = tutorTierMissing(tutor, tier);
-      if (lacked.length) {
-        missing.push(tierBlockMessage(tier));
-        lacked.forEach((item) => missing.push(item.label));
-        registerCheckHref = tutorSectionPath(tutor.id, 'publish');
+      const gate = tierPurchaseGate('tutor', tutor.id, tier);
+      tierPhase = gate.phase;
+      if (gate.blocked) {
+        gate.lines.forEach((line) => missing.push(line));
+        if (gate.registerCheckHref) registerCheckHref = gate.registerCheckHref;
         canBuy = false;
       }
     }
   }
 
-  return { canBuy, missing: [...new Set(missing)], registerCheckHref };
+  return { canBuy, missing: [...new Set(missing)], registerCheckHref, tierPhase };
 }
 
 /**
@@ -581,7 +719,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const options = product.options || [];
   const eligibility = profile
     ? getEligibility(profile, product.productCode)
-    : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'] };
+    : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'], tierPhase: '' };
   if (soldOut) {
     eligibility.canBuy = false;
     eligibility.missing = [
@@ -595,7 +733,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
           eligibility.registerCheckHref
             ? `<a href="#${esc(eligibility.registerCheckHref)}" style="display:inline-flex;align-items:center;box-sizing:border-box;height:30px;margin-top:8px;padding:0 10px;border-radius:6px;background:#729FD9;color:#0B2545;font-size:14px;font-weight:600;line-height:30px;text-decoration:none">등록점검</a>`
             : ''
-        }`
+        }${eligibility.tierPhase === 'error' ? `<button type="button" class="btn btn--secondary" data-plans-tier-retry style="margin-top:8px">다시 시도</button>` : ''}`
       : '';
 
   const boardHtml = embedBoard && roomPrimeOnly && inv ? renderRoomPrimeBoard(inv.prime) : '';
@@ -1486,6 +1624,10 @@ export function renderPlansCheckout() {
         { label: '표시가', value: formatKrw(amt.displayKrw) },
         { label: '자동연장', value: '없음' },
       ];
+  const tierGate = isPosition
+    ? tierPurchaseGate(draft.providerType, draft.providerId, draft.productCode)
+    : null;
+  const tierBlocked = Boolean(tierGate?.blocked);
   const cancelHref = isPosition
     ? buildPlansHref(
         '/plans/positions',
@@ -1560,10 +1702,11 @@ export function renderPlansCheckout() {
           <strong>6. 결제 진행</strong>
           <p class="mypage-muted">현재는 시험 결제 화면이며 실제 결제 연동은 준비 중입니다.</p>
           <div class="mypage-actions-row">
-            <button type="button" class="btn btn--primary" data-plans-pay>결제하기</button>
+            <button type="button" class="btn btn--primary" data-plans-pay ${tierBlocked ? 'disabled' : ''}>결제하기</button>
             <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
           </div>
-          <p class="plans-checkout-error mypage-muted" data-plans-checkout-error hidden></p>
+          <p class="plans-checkout-error mypage-muted" data-plans-checkout-error ${tierBlocked ? '' : 'hidden'}>${tierBlocked ? esc(tierGate.reason) : ''}</p>
+          ${tierGate?.phase === 'error' ? `<button type="button" class="btn btn--secondary" data-plans-tier-retry>다시 시도</button>` : ''}
         </li>
       </ol>
     </section>`;
@@ -1654,12 +1797,21 @@ export function bindPlansScreenEvents(root, rerender) {
   if (path !== '/plans/access' && path !== '/mypage/plans/my' && path !== '/plans/my' && path !== '/plans/positions') {
     lastPlansHydratedHash = '';
   }
+  if (path !== '/plans/positions' && path !== '/plans/checkout') {
+    tierHydratedHash = '';
+  }
   if (path === '/plans/positions') {
     const role = getPlansEffectiveRole();
     const query = parsePlansQuery();
     const profile =
       role === 'tutor' || role === 'study_room' ? resolveSelectedProfile(query, role) : null;
     schedulePlansStatusHydrate(profile, rerender, path);
+    scheduleTierCheckHydrate(profile, rerender);
+    root.querySelectorAll('[data-plans-tier-retry]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        scheduleTierCheckHydrate(profile, rerender, { force: true });
+      });
+    });
     root.querySelectorAll('[data-plans-apply-region]').forEach((el) => {
       el.addEventListener('change', () => {
         const region = readSelectedPrimeRegion(root);
@@ -2020,6 +2172,15 @@ export function bindPlansScreenEvents(root, rerender) {
   });
 
   if (path === '/plans/checkout') {
+    const draft = getCheckoutDraft();
+    const checkoutProfile =
+      draft && (draft.providerType === 'tutor' || draft.providerType === 'study_room')
+        ? { providerType: draft.providerType, id: draft.providerId }
+        : null;
+    scheduleTierCheckHydrate(checkoutProfile, rerender);
+    root.querySelector('[data-plans-tier-retry]')?.addEventListener('click', () => {
+      scheduleTierCheckHydrate(checkoutProfile, rerender, { force: true });
+    });
     scheduleCheckoutServerQuote(rerender);
   }
 
@@ -2127,6 +2288,15 @@ export function bindPlansScreenEvents(root, rerender) {
         clearCheckoutDraft();
         window.location.hash = '#/plans/result';
       } catch (err) {
+        if (err && err.code === 'tier_fields_missing') {
+          applyTierOrderMissing(
+            draft.providerType,
+            draft.providerId,
+            draft.productCode,
+            err.missing,
+            err.tierMessage || '',
+          );
+        }
         if (err instanceof Error && err.code === 'payment_not_available') {
           setCheckoutResult({
             status: 'unavailable',
