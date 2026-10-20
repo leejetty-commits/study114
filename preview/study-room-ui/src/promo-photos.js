@@ -76,6 +76,7 @@ export function renderPromoPhotoGrid() {
             </div>`
           : `<p class="register-photo-block__count">홍보사진은 최대 ${PROMO_IMAGE_SPEC.maxCount}장입니다.</p>`
       }
+      <p class="form-hint">1·2번 사진은 마이샵 맨 위, 3~5번은 맨 아래에 보여요</p>
     </div>
   `;
 }
