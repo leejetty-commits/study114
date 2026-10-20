@@ -10,7 +10,7 @@ export const TIER_MARK_NOTE = '* 표시는 픽·프라임 카드 구매 때 필�
 export const STYLE_LIMIT_NOTE = '강의스타일은 4개까지 고를 수 있어요';
 export const TUTOR_STYLE_MAX = 4;
 
-export const TUTOR_PICK_IDS = ['school_or_career', 'main_material_note', 'teaching_style_badges'];
+export const TUTOR_PICK_IDS = ['school_or_career', 'teaching_style_badges'];
 export const TUTOR_PRIME_IDS = [...TUTOR_PICK_IDS, 'intro_long', 'feature_2', 'feature_3'];
 
 /** 등록점검 RC_PICK/PRIME 순서 그대로 */

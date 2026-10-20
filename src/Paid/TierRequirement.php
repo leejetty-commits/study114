@@ -13,12 +13,11 @@ use PDOException;
 final class TierRequirement
 {
     /** @var list<string> */
-    public const TUTOR_PICK_IDS = ['school_or_career', 'main_material_note', 'teaching_style_badges'];
+    public const TUTOR_PICK_IDS = ['school_or_career', 'teaching_style_badges'];
 
     /** @var list<string> */
     public const TUTOR_PRIME_IDS = [
         'school_or_career',
-        'main_material_note',
         'teaching_style_badges',
         'intro_long',
         'feature_2',

@@ -81,7 +81,7 @@ export function renderContactFormHtml(opts = {}) {
         <span class="form-hint">둘 중 하나</span>
         <div class="form-radio-group">${radios('career_year_band', CAREER_YEAR_BAND_OPTIONS, s.career_year_band)}</div>
       </div>
-      <div class="form-group" data-trc-field="main_material_note"><label class="form-label form-label--tier">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
+      <div class="form-group" data-trc-field="main_material_note"><label class="form-label">주교재</label><input class="form-input" name="main_material_note" value="${s.main_material_note}" /></div>
       <div class="register-grid-2 register-grid-2--tight">
         <div class="form-group" data-trc-field="feature_1"><label class="form-label">특징 1</label><input class="form-input" name="feature_1" value="${s.feature_1}" /></div>
         <div class="form-group" data-trc-field="feature_2"><label class="form-label form-label--tier">특징 2</label><input class="form-input" name="feature_2" value="${s.feature_2}" /></div>
