@@ -687,6 +687,14 @@ form[data-form="basic"] .register-region-slot__fields,
   grid-template-columns: minmax(0, 1fr);
 }
 
+.tutor-lesson-step .register-nav button.btn.btn--primary[data-action="next"],
+.tutor-lesson-step .register-nav button.btn.btn--primary[data-action="next"]:hover,
+.mypage-layout [data-p21-form="basic"] button.btn.btn--primary[type="submit"],
+.mypage-layout [data-p21-form="basic"] button.btn.btn--primary[type="submit"]:hover {
+  background: var(--btn-tone-bg, #729fd9) !important;
+  border-color: var(--btn-tone-bg, #729fd9) !important;
+  color: var(--btn-tone-fg, #0b2545) !important;
+}
 .tutor-lesson-step .register-nav [data-action="next"],
 .tutor-lesson-step [data-action="add-subject"],
 form[data-form="contact"] .register-plus-btn,

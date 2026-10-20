@@ -228,8 +228,10 @@ function buildBoard(tutor) {
 
   const detailRow = (field) => {
     const value = field.value(tutor);
-    const focus = tutorDetailFieldFocus(field, tutor);
-    const extra = { editHref: tutorRegistrationCheckTabHref(tutor.id, field.tab, focus) };
+    const weeklySchedule = field.id === 'schedule' && tutor?.fee_basis_type !== 'monthly_by_total_sessions';
+    const focus = weeklySchedule ? 'lessons_per_week' : tutorDetailFieldFocus(field, tutor);
+    const section = weeklySchedule ? 'basic' : field.tab;
+    const extra = { editHref: tutorRegistrationCheckTabHref(tutor.id, section, focus) };
     if (field.id === 'intro_long') extra.note = TRC_COPY.board.introNote;
     return row(field.id, tutorDetailFieldText(field, tutor), value, field.filled(tutor) ? 'filled' : 'empty', extra);
   };

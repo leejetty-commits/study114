@@ -1704,10 +1704,13 @@
   min-width: 0;
 }
 .mp-room-embed.register-flow .tutor-lesson-step,
-.mp-room-embed.register-flow .register-form-narrow,
 .mp-room-embed.register-flow .register-grid-2,
 .mp-room-embed.register-flow .form-group {
   max-width: 100%;
+  min-width: 0;
+}
+.mp-room-embed.register-flow .register-form-narrow {
+  max-width: 40rem;
   min-width: 0;
 }
 .mp-room-embed.register-flow .form-radio-group {
@@ -1718,7 +1721,7 @@
   flex: 0 1 auto;
   min-width: max-content;
   max-width: 100%;
-  padding: 0.35rem 0.6rem;
+  padding: var(--input-padding-y, 0.75rem) var(--input-padding-x, 1rem);
 }
 .mp-room-embed.register-flow .form-radio__label {
   white-space: nowrap;
@@ -1768,7 +1771,25 @@
   height: var(--btn-tone-hit);
   transform: translateY(-50%);
 }
-[data-trc-page] .rc-fold-btn,
+[data-trc-page] .rc-section__tools button.rc-fold-btn,
+[data-trc-page] .rc-section__tools button.rc-fold-btn:hover,
+[data-trc-page] .rc-section__tools button.rc-fold-btn:focus-visible,
+[data-trc-page] .rc-section__tools button.rc-fold-btn[aria-expanded='false'] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-tone-bg);
+  border: 1px solid var(--btn-tone-bg);
+  color: var(--btn-tone-fg);
+  height: var(--btn-tone-h-sm);
+  min-height: var(--btn-tone-h-sm);
+  font-size: var(--btn-tone-fs);
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--btn-tone-radius);
+  padding: 0 var(--btn-tone-pad-sm);
+  position: relative;
+}
 [data-trc-page] .rc-link,
 [data-trc-page] .rc-row__edit {
   display: inline-flex;

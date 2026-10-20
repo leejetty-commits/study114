@@ -199,11 +199,13 @@ export function renderTutorRegScreen(path) {
 
   let detailTab = route.section === 'detail2' ? 'detail2' : 'detail';
   if ((route.section === 'detail' || route.section === 'detail2') && route.tutorId) {
-    const focus = tutorHashSearchParams(path).get('focus');
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : String(path || '');
+    const focus = tutorHashSearchParams(hash).get('focus');
     const tab = focus ? tutorDetailTabForFocus(focus) : route.section;
     if (focus && tab !== route.section) {
       detailTab = tab;
-      const q = path.includes('?') ? path.slice(path.indexOf('?')) : '';
+      const qIndex = hash.indexOf('?');
+      const q = qIndex >= 0 ? hash.slice(qIndex) : '';
       const dest = `${tutorSectionPath(route.tutorId, tab)}${q}`;
       queueMicrotask(() => {
         if ((window.location.hash.slice(1) || '') !== dest) window.location.replace(`#${dest}`);
