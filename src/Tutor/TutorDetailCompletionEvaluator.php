@@ -75,7 +75,6 @@ final class TutorDetailCompletionEvaluator
                 || $feeBasis === 'monthly_by_total_sessions',
             'schedule_count' => $hasSchedule,
             'minutes_per_lesson' => $minutes > 0,
-            'intro' => $hasIntro,
             'university_name' => $university !== '',
         ];
 
@@ -88,7 +87,6 @@ final class TutorDetailCompletionEvaluator
             'fee_basis_type' => '과외비 산정방식',
             'schedule_count' => '주 횟수/월 총 횟수',
             'minutes_per_lesson' => '1회 수업 시간',
-            'intro' => '소개문',
             'university_name' => '대학/대학원',
         ];
 

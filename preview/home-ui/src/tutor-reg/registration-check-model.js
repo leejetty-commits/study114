@@ -65,10 +65,6 @@ function minutesOk(tutor) {
   return Number(tutor?.minutes_per_lesson) > 0;
 }
 
-function introOk(tutor) {
-  return !!(blank(tutor?.intro_short) || blank(tutor?.intro_long));
-}
-
 function feeBasisLabel(tutor) {
   if (blank(tutor?.fee_basis_type) === 'monthly_by_total_sessions') return '월 총 횟수 기준';
   if (blank(tutor?.fee_basis_type) === 'monthly_by_weekly_schedule') return '주 회수 기준';
@@ -82,7 +78,6 @@ export function tutorFieldOkMap(tutor) {
   return {
     fee_basis: feeBasisOk(t),
     schedule: scheduleOk(t),
-    intro: introOk(t),
     university: !!blank(t.university_name),
     lesson_places: !!t.has_lesson_places || (Array.isArray(t.lesson_places) && t.lesson_places.length > 0),
     profile_image: !!t.has_profile_image,
@@ -103,6 +98,8 @@ function basicIdsForTutor() {
 /** 등록점검 항목 id → 입력 화면 data-trc-field (항목이 칸 하나가 아닐 때만) */
 const TRC_FOCUS_FIELD = {
   schedule: 'monthly_session_count',
+  intro: 'intro_long',
+  student_gender_group: 'student_target',
 };
 
 /** @param {{ id: string, section?: string }} def */
@@ -276,10 +273,10 @@ function buildBoard(tutor) {
       row('feature_2', '특징 2', tutor?.feature_2, textStatus(tutor?.feature_2)),
       row('feature_3', '특징 3', tutor?.feature_3, textStatus(tutor?.feature_3)),
       row(
-        'intro',
-        '소개',
-        blank(tutor?.intro_long) ? tutor.intro_long : tutor?.intro_short,
-        introOk(tutor) ? 'filled' : 'empty',
+        'intro_long',
+        '상세 소개',
+        tutor?.intro_long,
+        blank(tutor?.intro_long) ? 'filled' : 'empty',
         { note: TRC_COPY.board.introNote },
       ),
       row(
