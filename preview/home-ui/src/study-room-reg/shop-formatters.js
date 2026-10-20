@@ -186,7 +186,7 @@ export function resolveFacilityNames(s) {
 
 function imgSrc(img) {
   if (!img || typeof img !== 'object') return '';
-  return blank(img.basic_720_path || img.prime_1280_path || img.image_path || img.name || img.src);
+  return blank(img.prime_1280_path || img.image_path || img.name || img.src || img.basic_720_path);
 }
 
 function isSystemDefaultImage(img) {
@@ -195,28 +195,35 @@ function isSystemDefaultImage(img) {
 
 export function collectShopPhotos(s) {
   const list = Array.isArray(s?.images) ? s.images : [];
-  return list
-    .map((img) => ({
-      src: imgSrc(img),
-      type: blank(img.image_type) || 'other',
-      title: blank(img.title || img.caption || ''),
-      system: isSystemDefaultImage(img),
-    }))
-    .filter((x) => x.src && !x.system);
+  const photos = [];
+  list.forEach((img, i) => {
+    const src = imgSrc(img);
+    if (!src || isSystemDefaultImage(img)) return;
+    const order = img?.sort_order;
+    const hasOrder = order !== undefined && order !== null && order !== '';
+    photos.push({
+      src,
+      blurSrc: blank(img?.basic_720_path) || src,
+      type: blank(img?.image_type) || 'other',
+      title: blank(img?.title || img?.caption || ''),
+      _order: hasOrder ? Number(order) : null,
+      _i: i,
+    });
+  });
+  if (photos.some((p) => p._order !== null && Number.isFinite(p._order))) {
+    photos.sort((a, b) => {
+      const ao = a._order === null || !Number.isFinite(a._order) ? Number.MAX_SAFE_INTEGER : a._order;
+      const bo = b._order === null || !Number.isFinite(b._order) ? Number.MAX_SAFE_INTEGER : b._order;
+      return ao - bo || a._i - b._i;
+    });
+  }
+  return photos.slice(0, 5).map(({ src, blurSrc, type, title }) => ({ src, blurSrc, type, title }));
 }
 
-/**
- * 대표(cover) → Hero
- * Gallery: 내부시설(interior) → 시설(facility) → 기타(other)
- */
-export function splitHeroAndGallery(photos) {
-  const list = Array.isArray(photos) ? [...photos] : [];
-  const coverIdx = list.findIndex((p) => p.type === 'cover');
-  const hero = coverIdx >= 0 ? list[coverIdx] : list[0] || null;
-  const rest = list.filter((p) => p !== hero);
-  const rank = (t) => (t === 'interior' ? 0 : t === 'facility' ? 1 : 2);
-  rest.sort((a, b) => rank(a.type) - rank(b.type));
-  return { hero, gallery: rest };
+/** 올린 순서 그대로. 윗단 최대 2장, 아랫단 최대 3장. */
+export function splitPhotoSlots(photos) {
+  const list = Array.isArray(photos) ? photos.slice(0, 5) : [];
+  return { top: list.slice(0, 2), bottom: list.slice(2, 5) };
 }
 
 /** 섹션 가드 — 내용 없으면 빈 문자열 (wrapper 미출력) */

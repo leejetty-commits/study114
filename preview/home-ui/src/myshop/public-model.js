@@ -22,57 +22,62 @@ function normalizeImages(item) {
   const seen = new Set();
 
   const pushObj = (img) => {
+    if (out.length >= 5) return;
     if (!img || typeof img !== 'object') return;
     if (img.is_system_default) return;
-    const path = blank(
-      img.basic_720_path || img.prime_1280_path || img.image_path || img.src || img.name,
-    );
+    const prime = blank(img.prime_1280_path);
+    const basic = blank(img.basic_720_path);
+    const path = blank(img.image_path || img.src || img.name || prime || basic);
     if (!path || seen.has(path)) return;
     seen.add(path);
+    if (prime) seen.add(prime);
+    if (basic) seen.add(basic);
     out.push({
       image_path: path,
-      basic_720_path: blank(img.basic_720_path) || path,
-      prime_1280_path: blank(img.prime_1280_path) || path,
+      basic_720_path: basic,
+      prime_1280_path: prime,
       image_type: img.image_type || 'other',
       title: blank(img.title || img.caption),
       caption: blank(img.caption || img.title),
+      sort_order: img.sort_order,
       is_system_default: false,
     });
   };
 
-  if (Array.isArray(item.images)) {
-    for (const img of item.images) {
-      if (typeof img === 'string') {
-        const path = blank(img);
-        if (!path || seen.has(path)) continue;
-        seen.add(path);
-        out.push({ image_path: path, basic_720_path: path, image_type: 'other' });
-      } else {
-        pushObj(img);
-      }
-    }
-  }
-  if (Array.isArray(item.gallery)) {
-    for (const g of item.gallery) {
-      if (typeof g === 'string') {
-        const path = blank(g);
-        if (!path || seen.has(path)) continue;
-        seen.add(path);
-        out.push({ image_path: path, basic_720_path: path, image_type: 'other' });
-      } else {
-        pushObj(g);
-      }
-    }
-  }
-  for (const key of ['image_path_prime', 'image_path', 'image_path_basic']) {
-    const path = blank(item[key]);
-    if (!path || seen.has(path)) continue;
+  const pushString = (raw, imageType) => {
+    if (out.length >= 5) return;
+    const path = blank(raw);
+    if (!path || seen.has(path)) return;
     seen.add(path);
     out.push({
       image_path: path,
-      basic_720_path: path,
-      image_type: key === 'image_path_prime' ? 'cover' : 'other',
+      basic_720_path: '',
+      prime_1280_path: '',
+      image_type: imageType || 'other',
+      is_system_default: false,
     });
+  };
+
+  const images = Array.isArray(item?.images) ? item.images : [];
+  if (images.length) {
+    for (const img of images) {
+      if (out.length >= 5) break;
+      if (typeof img === 'string') pushString(img, 'other');
+      else pushObj(img);
+    }
+    return out;
+  }
+
+  if (Array.isArray(item?.gallery)) {
+    for (const g of item.gallery) {
+      if (out.length >= 5) break;
+      if (typeof g === 'string') pushString(g, 'other');
+      else pushObj(g);
+    }
+  }
+  for (const key of ['image_path_prime', 'image_path', 'image_path_basic']) {
+    if (out.length >= 5) break;
+    pushString(item?.[key], key === 'image_path_prime' ? 'cover' : 'other');
   }
   return out;
 }
