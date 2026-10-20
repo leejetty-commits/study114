@@ -79,8 +79,9 @@ assert(render.includes('rc-fold-btn'), 'render: explicit fold button');
 assert(render.includes('data-trc-fold'), 'render: fold control');
 assert(!render.includes('rc-section--accordion'), 'render: detail1/2 not sibling accordion');
 assert(copy.includes("detail: '상세정보'"), 'copy: 상세정보 parent section');
-assert(copy.includes("detail1: '수업 · 가격'"), 'copy: detail1 = 수업 · 가격');
-assert(copy.includes("detail2: '학력 · 소개 · 연락'"), 'copy: detail2 = 학력 · 소개 · 연락');
+assert(copy.includes("detail1: '수업 · 과목 · 가격'"), 'copy: detail1 = 수업 · 과목 · 가격');
+assert(copy.includes("detail2: '학력 · 경력 · 특징'"), 'copy: detail2 = 학력 · 경력 · 특징');
+assert(!copy.includes('intro_short'), 'copy: intro_short removed');
 // 72f0e40·회원 공개 제거: 등록점검에 공개 버튼 영역이 없다(기본등록 완료 = 카드 노출).
 assert(!render.includes('rc-publish'), 'render: no publish wrap');
 assert(render.includes('rc-next'), 'render: next action');
@@ -107,13 +108,12 @@ assert(model.includes('missingForTier(okMap, TRC_PICK_FIELD_IDS'), 'model: pick 
 assert(model.includes('missingForTier(okMap, TRC_PRIME_FIELD_IDS'), 'model: prime extras only');
 assert(model.includes('tutor && typeof tutor === \'object\''), 'model: null-safe tutor');
 assert(model.includes("id: 'detail'"), 'model: 상세정보 parent');
-assert(model.includes('children: [detail1, detail2]'), 'model: 상세정보1/2 as children');
+assert(model.includes('children: [detail1, detailCareer, detailPromo, detailPhoto]'), 'model: 상세 그룹 children');
+assert(model.includes('TUTOR_DETAIL_FIELDS'), 'model: shared detail fields');
 assert(!model.includes("row('teaching_style'"), 'model: no teaching_style ghost row');
 assert(!model.includes("row('education_doc'"), 'model: no education_doc ghost row');
 assert(!model.includes("row('grade_band'"), 'model: grade_band not on basic form');
-assert(model.includes("row('fee_description'"), 'model: 가격 설명');
-assert(model.includes("row('major_name'"), 'model: 전공 단독');
-assert(model.includes("'monthly_session_count'"), 'model: 월 총 횟수 단독');
+assert(model.includes("'monthly_session_count'"), 'model: 월 총 횟수 focus');
 assert(!copy.includes('basicKicker'), 'copy: sample kicker removed');
 assert(copy.includes("pickMissingTitle: '픽 노출까지 추가 입력'"), 'copy: pick title');
 assert(copy.includes("primeMissingTitle: '프라임 노출까지 추가 입력'"), 'copy: prime title');
@@ -143,14 +143,15 @@ assert(
 );
 assert(
   TRC_BOARD_DETAIL1_FIELDS.map((f) => f.id).join(',') ===
-    'fee_basis,monthly_session_count,student_gender_group,student_count_group,lesson_places,fee_description',
-  'detail1 = 수업 · 가격 1:1',
+    'student_gender_group,student_count_group,age_band,subjects,fee_basis,schedule,fee_description,lesson_places',
+  'detail1 = 수업 · 과목 · 가격 1:1',
 );
 assert(
   TRC_BOARD_DETAIL2_FIELDS.map((f) => f.id).join(',') ===
-    'university_name,major_name,university_status,feature_1,feature_2,feature_3,intro_short,profile_image,intro_long,contact_time_note',
-  'detail2 = 학력 · 소개 · 연락 1:1',
+    'university_name,major_name,university_status,career_year_band,main_material_note,feature_1,feature_2,feature_3,proof_document_available,teaching_style_badges,intro_long,contact_time_note,promo_channels,profile_image',
+  'detail2 = 학력 · 경력 · 특징 / 홍보 / 사진 1:1',
 );
+assert(!boardIds.includes('intro_short'), 'board: no intro_short');
 
 assert(!existsSync(resolve(root, 'preview/home-ui/src/tutor-reg/registration-check-sample.js')), 'sample: virtual tutor sample module removed');
 assert(detailFields.includes('data-trc-field="fee_description"'), 'lesson: 가격 설명 focus');
@@ -165,10 +166,13 @@ const html = renderTutorRegistrationCheck(
 );
 assert(html.includes('data-rc-section="basic"'), 'html: 기본정보 section');
 assert(html.includes('data-rc-section="detail"'), 'html: 상세정보 same-level section');
-assert(html.includes('data-rc-subsection="detail1"'), 'html: 수업 · 가격 subsection');
-assert(html.includes('data-rc-subsection="detail2"'), 'html: 학력 · 소개 · 연락 subsection');
-assert(html.includes('수업 · 가격'), 'html: detail1 label');
-assert(html.includes('학력 · 소개 · 연락'), 'html: detail2 label');
+assert(html.includes('data-rc-subsection="detail1"'), 'html: 수업 · 과목 · 가격 subsection');
+assert(html.includes('data-rc-subsection="detail-career"'), 'html: 학력 · 경력 · 특징 subsection');
+assert(html.includes('data-rc-subsection="detail-promo"'), 'html: 홍보 채널 subsection');
+assert(html.includes('수업 · 과목 · 가격'), 'html: detail1 label');
+assert(html.includes('학력 · 경력 · 특징'), 'html: career group label');
+assert(!html.includes('학력 · 소개 · 연락'), 'html: old detail2 title gone');
+assert(html.includes('>수정</a>'), 'html: row edit link');
 assert(html.includes('펼치기'), 'html: detail fold button');
 assert(html.includes('접기'), 'html: basic fold button');
 assert(!html.includes('김하린'), 'html: no virtual sample name');

@@ -101,11 +101,12 @@ assert(contactIdx > lastWishIdx && contactIdx < plansIdx, 'nav order: 내 문의
 const expectedTabs = [
   { key: 'hub', label: '마이프로필', screenId: 'P21-02', pathOf: (id) => tutorHubPath(id) },
   { key: 'basic', label: '기본정보', screenId: 'P21-03a', pathOf: (id) => tutorSectionPath(id, 'basic') },
-  { key: 'detail', label: '상세정보', screenId: 'P21-03b', pathOf: (id) => tutorSectionPath(id, 'detail') },
+  { key: 'detail', label: '상세정보1', screenId: 'P21-03b', pathOf: (id) => tutorSectionPath(id, 'detail') },
+  { key: 'detail2', label: '상세정보2', screenId: 'P21-03b', pathOf: (id) => tutorSectionPath(id, 'detail2') },
   { key: 'inquiries', label: '쪽지설정', screenId: 'P21-05', pathOf: (id) => tutorSectionPath(id, 'inquiries') },
   { key: 'publish', label: '등록점검', screenId: 'P21-04', pathOf: (id) => tutorSectionPath(id, 'publish') },
 ];
-assert(TUTOR_REG_TOP_TABS.length === expectedTabs.length, 'top tabs count = 5');
+assert(TUTOR_REG_TOP_TABS.length === expectedTabs.length, 'top tabs count = 6');
 for (let i = 0; i < expectedTabs.length; i += 1) {
   const exp = expectedTabs[i];
   const got = TUTOR_REG_TOP_TABS[i];

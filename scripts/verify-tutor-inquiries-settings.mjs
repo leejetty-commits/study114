@@ -211,10 +211,11 @@ const expectedTabs = [
   { key: 'hub', path: tutorHubPath(7), screenId: 'P21-02', section: 'hub' },
   { key: 'basic', path: tutorSectionPath(7, 'basic'), screenId: 'P21-03a', section: 'basic' },
   { key: 'detail', path: tutorSectionPath(7, 'detail'), screenId: 'P21-03b', section: 'detail' },
+  { key: 'detail2', path: tutorSectionPath(7, 'detail2'), screenId: 'P21-03b', section: 'detail2' },
   { key: 'inquiries', path: tutorSectionPath(7, 'inquiries'), screenId: 'P21-05', section: 'inquiries' },
   { key: 'publish', path: tutorSectionPath(7, 'publish'), screenId: 'P21-04', section: 'publish' },
 ];
-assert(TUTOR_REG_TOP_TABS.map((t) => t.key).join(',') === 'hub,basic,detail,inquiries,publish', 'route C active key: tab order');
+assert(TUTOR_REG_TOP_TABS.map((t) => t.key).join(',') === 'hub,basic,detail,detail2,inquiries,publish', 'route C active key: tab order');
 for (const exp of expectedTabs) {
   const route = parseTutorRegPath(exp.path);
   assert(route?.screenId === exp.screenId && route?.section === exp.section, `route C active key: ${exp.key}`);
