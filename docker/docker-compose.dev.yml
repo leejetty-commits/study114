@@ -43,6 +43,7 @@ services:
       STUDY114_DB_USER: root
       STUDY114_DB_PASS: study114dev
       STUDY114_API_BASE: http://127.0.0.1:8080
+      STUDY114_PAID_MOCK_COMPLETE: "1"
       STUDY114_HOME_UI: http://127.0.0.1:5174
       STUDY114_AUTH_UI: http://127.0.0.1:5173
       # 소셜 로그인 — config/oauth.env.example 참고 후 값 설정

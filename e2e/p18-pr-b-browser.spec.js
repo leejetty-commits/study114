@@ -1,6 +1,7 @@
 /**
  * PR-B — 로그인 브라우저 기능 경로 (Chromium · workers=1)
  * home-ui :5174 + API :8080 프록시 필요.
+ * 완료·지급은 API 프로세스의 STUDY114_PAID_MOCK_COMPLETE=1 에서만 된다. 이 검사의 기대는 바꾸지 않는다.
  * page.request로 세션 쿠키를 브라우저 컨텍스트에 심고, 라우트·버튼 상태를 확인한다.
  */
 import { test, expect } from '@playwright/test';

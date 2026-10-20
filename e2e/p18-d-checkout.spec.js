@@ -1,5 +1,6 @@
 /**
  * P18 18d — dev mock PG checkout
+ * 완료·지급은 API 프로세스의 STUDY114_PAID_MOCK_COMPLETE=1 에서만 된다. 이 검사의 기대는 바꾸지 않는다.
  */
 import { test, expect } from '@playwright/test';
 import { loginAs, logout, restoreMemoGateE2e } from './helpers/admin-api.js';

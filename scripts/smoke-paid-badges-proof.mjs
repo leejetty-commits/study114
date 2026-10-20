@@ -93,6 +93,7 @@ const apiTutor = {
 const roomLayers = resolveCardVisualLayers('study_room', apiRoom);
 const tutorLayers = resolveCardVisualLayers('tutor', apiTutor);
 
+// completeOrder·지급은 API의 STUDY114_PAID_MOCK_COMPLETE=1 일 때만. 이 스모크는 그 경로를 호출하지 않는다.
 const evidence = {
   note: '본 스모크는 DB 행 shape → API paid_badges[] → card-visual 관통 증명. 운영 INSERT는 checkout fulfill + 055 적용 후 smoke-paid-badges-live.php',
   db_rows: [roomDbRow, tutorDbRow],

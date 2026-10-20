@@ -28,6 +28,7 @@
     "verify:paid-pricing": "php scripts/verify-paid-pricing.php && node scripts/verify-paid-pricing.mjs",
     "verify:paid-renewal": "node scripts/verify-paid-renewal.mjs",
     "verify:paid-pr-a": "node scripts/verify-paid-pr-a.mjs",
+    "verify:paid-complete-gate": "vite-node scripts/verify-paid-complete-gate.mjs",
     "verify:paid-pr-a-ci": "bash scripts/verify-paid-pr-a-ci.sh",
     "verify:paid-pr-b-ci": "bash scripts/verify-paid-pr-b-ci.sh",
     "verify:cur-006-email-sent-ui": "vite-node scripts/verify-cur-006-email-sent-ui.mjs",

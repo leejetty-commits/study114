@@ -39,6 +39,7 @@ jobs:
       STUDY114_DB_NAME: study114
       STUDY114_DB_USER: study114
       STUDY114_DB_PASS: test
+      STUDY114_PAID_MOCK_COMPLETE: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
