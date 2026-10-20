@@ -90,6 +90,15 @@ export function renderContactFormHtml(opts = {}) {
         <div class="register-check-grid">${badges}</div>
       </div>
 
+      <div class="form-group" data-trc-field="intro_long">
+        <label class="form-label" for="intro_long">상세 소개</label>
+        <textarea class="form-input form-textarea" id="intro_long" name="intro_long" rows="4">${s.intro_long || ''}</textarea>
+      </div>
+      <div class="form-group" data-trc-field="contact_time_note">
+        <label class="form-label" for="contact_time_note">연락 가능 시간</label>
+        <input class="form-input" id="contact_time_note" name="contact_time_note" value="${s.contact_time_note || ''}" />
+      </div>
+
       ${renderSectionTitle('홍보 채널')}
       ${renderPromoChannelFields(s)}
       ${
@@ -173,9 +182,11 @@ export function bindContactEvents(root, opts = {}) {
 function syncContactForm(form, keepHidden) {
   const keepTime = registerState.contact_time_note;
   const keepFeature3 = registerState.feature_3;
+  const keepIntroLong = registerState.intro_long;
   syncCareerFromForm(form, registerState);
   syncContactFromForm(form, registerState);
   if (!keepHidden || !form) return;
   if (!form.querySelector('[name="contact_time_note"]')) registerState.contact_time_note = keepTime;
   if (!form.querySelector('[name="feature_3"]')) registerState.feature_3 = keepFeature3;
+  if (!form.querySelector('[name="intro_long"]')) registerState.intro_long = keepIntroLong;
 }

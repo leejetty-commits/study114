@@ -135,7 +135,12 @@ export function syncCareerFromForm(form, state) {
 export function syncContactFromForm(form, state) {
   if (!form) return;
   const fd = new FormData(form);
-  state.contact_time_note = String(fd.get('contact_time_note') ?? '');
+  if (form.querySelector('[name="contact_time_note"]')) {
+    state.contact_time_note = String(fd.get('contact_time_note') ?? '');
+  }
+  if (form.querySelector('[name="intro_long"]')) {
+    state.intro_long = String(fd.get('intro_long') ?? '');
+  }
   syncPromoFieldsFromForm(form, state);
 }
 
@@ -184,6 +189,7 @@ export function payloadForStep(step, state) {
     case 'contact':
       return {
         contact_time_note: state.contact_time_note,
+        intro_long: state.intro_long,
         ...promoChannelPayload(state),
       };
     default:
