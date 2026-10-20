@@ -3,6 +3,8 @@
  * 마이샵/쇼케이스 문구와 섞지 않는다.
  */
 
+import { ROOM_PICK_IDS, ROOM_PRIME_IDS } from '../../../shared/pickprime-requirements.js';
+
 export const RC_COPY = {
   title: '등록점검',
   lead: '입력한 값은 있는 그대로 카드에 보입니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요.',
@@ -78,20 +80,11 @@ export const RC_COPY = {
   },
 };
 
-/** Pick 핵심 — 남은 수 배지용 */
-export const RC_PICK_FIELD_IDS = ['cover', 'intro_short', 'fee', 'teaching_style'];
+/** Pick 핵심 — preview/shared/pickprime-requirements.js */
+export const RC_PICK_FIELD_IDS = ROOM_PICK_IDS;
 
-/** Prime 핵심 — Pick + 보강 (수업상세 classes 는 필수 아님) */
-export const RC_PRIME_FIELD_IDS = [
-  'cover',
-  'intro_short',
-  'intro_long',
-  'teaching_style',
-  'teaching_style_note',
-  'fee',
-  'lessons_per_week',
-  'feature_1',
-];
+/** Prime 핵심 — 같은 정의. 수업상세 classes 는 필수 아님 */
+export const RC_PRIME_FIELD_IDS = ROOM_PRIME_IDS;
 
 /** 현황판·폼 필수 마크 — Pick ∪ Prime */
 export const RC_REQUIRED_FIELD_IDS = [...new Set([...RC_PICK_FIELD_IDS, ...RC_PRIME_FIELD_IDS])];

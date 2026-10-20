@@ -31,6 +31,7 @@ import {
   RC_REQUIRED_FIELD_IDS,
   RC_PROMO_MISSING_DEFS,
 } from './registration-check-copy.js';
+import { ROOM_PRIME_IDS, roomTierMissing } from '../../../shared/pickprime-requirements.js';
 
 const DEFAULT_BASIC = '/assets/brand/room-card-default-basic.svg';
 const DEFAULT_PICK = '/assets/brand/room-card-default-pick.svg';
@@ -164,20 +165,32 @@ function franchise(s) {
 }
 
 function fieldOkMap(s, room, photos) {
-  const styles = formatTeachingStyles(s?.teaching_style_ids, s?.teaching_style);
-  const fee = formatMonthlyFeeBand(s?.monthly_fee_manwon, room?.price_amount || s?.price_amount);
+  const tierRoom = {
+    images: Array.isArray(s?.images) ? s.images : [],
+    intro_short: blank(s?.intro_short) ? s.intro_short : room?.intro_short,
+    intro_long: s?.intro_long,
+    teaching_style_ids: s?.teaching_style_ids,
+    teaching_style: s?.teaching_style,
+    teaching_style_note: s?.teaching_style_note,
+    monthly_fee_manwon: s?.monthly_fee_manwon,
+    price_amount: room?.price_amount || s?.price_amount,
+    lessons_per_week: s?.lessons_per_week,
+    feature_1: blank(s?.feature_1) ? s.feature_1 : room?.feature_1,
+  };
+  if (photos?.hasCover === true) {
+    tierRoom.images = [
+      { image_type: 'cover', image_path: photos.coverSrc || 'cover' },
+      ...(Array.isArray(tierRoom.images) ? tierRoom.images : []),
+    ];
+  }
+  const missing = new Set(roomTierMissing(tierRoom, 'prime').map((item) => item.id));
+  /** @type {Record<string, boolean>} */
+  const tierOk = {};
+  for (const id of ROOM_PRIME_IDS) tierOk[id] = !missing.has(id);
   const classes = classSummary(s);
   return {
-    /** 실사진 cover만 — room.has_representative_image(시스템 기본 포함 가능)는 쓰지 않음 */
-    cover: photos.hasCover === true,
-    intro_short: !!blank(s?.intro_short || room?.intro_short),
-    intro_long: !!blank(s?.intro_long),
-    teaching_style: styles.length > 0,
-    teaching_style_note: !!blank(s?.teaching_style_note),
+    ...tierOk,
     classes: classes.count > 0,
-    fee: !!fee,
-    lessons_per_week: !!formatWeeklyCount(s?.lessons_per_week),
-    feature_1: !!blank(s?.feature_1 || room?.feature_1),
   };
 }
 

@@ -29,6 +29,7 @@ import {
   tutorDetailFieldText,
   tutorDetailTabForFocus,
 } from '../../../shared/tutor-detail-fields.js';
+import { TUTOR_PRIME_IDS, tutorTierMissing } from '../../../shared/pickprime-requirements.js';
 
 function blank(v) {
   return String(v ?? '').trim();
@@ -63,10 +64,14 @@ function minutesOk(tutor) {
   return Number(tutor?.minutes_per_lesson) > 0;
 }
 
-/** 기본정보 항목은 shared/tutor-basic-fields.js, 나머지는 상세·픽·프라임 항목. */
+/** 기본정보 항목은 shared/tutor-basic-fields.js, 픽·프라임은 pickprime-requirements.js. */
 /** @param {import('./store.js').TutorRecord} tutor */
 export function tutorFieldOkMap(tutor) {
   const t = tutor && typeof tutor === 'object' ? tutor : {};
+  const missing = new Set(tutorTierMissing(t, 'prime').map((item) => item.id));
+  /** @type {Record<string, boolean>} */
+  const tierOk = {};
+  for (const id of TUTOR_PRIME_IDS) tierOk[id] = !missing.has(id);
   return {
     fee_basis: feeBasisOk(t),
     schedule: scheduleOk(t),
@@ -75,9 +80,7 @@ export function tutorFieldOkMap(tutor) {
     profile_image: !!t.has_profile_image,
     feature_1: !!blank(t.feature_1),
     student_target: !!(blank(t.student_gender_group) || blank(t.student_count_group)),
-    intro_long: !!blank(t.intro_long),
-    feature_2: !!blank(t.feature_2),
-    feature_3: !!blank(t.feature_3),
+    ...tierOk,
     ...tutorBasicOkMap(tutorBasicValuesFromRecord(t)),
   };
 }
