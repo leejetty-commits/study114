@@ -1564,6 +1564,19 @@ export function renderPlansResult() {
       </section>`;
   }
 
+  if (result.status === 'unavailable') {
+    return `
+      <section class="mypage-panel">
+        <p class="mypage-lead">결제 안내</p>
+        <div class="mypage-info-box">
+          <p>결제 기능을 준비하고 있어요. 곧 열릴 예정이에요</p>
+        </div>
+        <div class="mypage-actions-row">
+          <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">유료상품으로 돌아가기</a>
+        </div>
+      </section>`;
+  }
+
   const ok = result.status === 'success';
   const backOp =
     result.providerType === 'tutor'
@@ -2095,6 +2108,14 @@ export function bindPlansScreenEvents(root, rerender) {
         clearCheckoutDraft();
         window.location.hash = '#/plans/result';
       } catch (err) {
+        if (err instanceof Error && err.code === 'payment_not_available') {
+          setCheckoutResult({
+            status: 'unavailable',
+            message: '결제 기능을 준비하고 있어요. 곧 열릴 예정이에요',
+          });
+          window.location.hash = '#/plans/result';
+          return;
+        }
         const msg = err instanceof Error ? err.message : '결제에 실패했습니다.';
         setCheckoutResult({
           status: 'failed',

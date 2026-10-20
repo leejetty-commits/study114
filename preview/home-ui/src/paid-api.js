@@ -137,7 +137,14 @@ export async function completePaidCheckout(orderRef) {
     ...CREDENTIALS,
     body: JSON.stringify({ action: 'complete', order_ref: orderRef }),
   });
-  return parseJson(res);
+  try {
+    return await parseJson(res);
+  } catch (err) {
+    if (err instanceof Error && err.code === 'payment_not_available') {
+      err.code = 'payment_not_available';
+    }
+    throw err;
+  }
 }
 
 /** @param {number} [limit] */
