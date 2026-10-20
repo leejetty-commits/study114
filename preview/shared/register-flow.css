@@ -686,3 +686,55 @@ form[data-form="basic"] .register-region-slot__fields,
 [data-p21-form="basic"] .register-region-slot__fields {
   grid-template-columns: minmax(0, 1fr);
 }
+
+.tutor-lesson-step .register-nav [data-action="next"],
+.tutor-lesson-step [data-action="add-subject"],
+form[data-form="contact"] .register-plus-btn,
+[data-p21-form="basic"] button[type="submit"] {
+  background: var(--btn-tone-bg, #729fd9);
+  border-color: var(--btn-tone-bg, #729fd9);
+  color: var(--btn-tone-fg, #0b2545);
+  border-radius: var(--btn-tone-radius, 6px);
+  font-size: var(--btn-tone-fs, 14px);
+  font-weight: 600;
+  position: relative;
+}
+.tutor-lesson-step .register-nav [data-action="next"],
+[data-p21-form="basic"] button[type="submit"] {
+  height: var(--btn-tone-h, 30px);
+  min-height: var(--btn-tone-h, 30px);
+  padding: 0 var(--btn-tone-pad, 14px);
+}
+.tutor-lesson-step [data-action="add-subject"],
+form[data-form="contact"] .register-plus-btn {
+  height: var(--btn-tone-h-sm, 26px);
+  min-height: var(--btn-tone-h-sm, 26px);
+  padding: 0 var(--btn-tone-pad-sm, 12px);
+}
+.tutor-lesson-step .register-nav [data-action="prev"],
+.tutor-lesson-step .register-nav [data-action="skip-detail"],
+form[data-form="contact"] .register-nav [data-action="prev"],
+form[data-form="contact"] .register-nav [data-action="skip-detail"],
+[data-p21-form="basic"] [data-p21-retry-cities] {
+  height: var(--btn-tone-h, 30px);
+  min-height: var(--btn-tone-h, 30px);
+  font-size: var(--btn-tone-fs, 14px);
+  padding: 0 var(--btn-tone-pad, 14px);
+  position: relative;
+}
+.tutor-lesson-step .register-nav [data-action="next"]::after,
+.tutor-lesson-step [data-action="add-subject"]::after,
+form[data-form="contact"] .register-plus-btn::after,
+[data-p21-form="basic"] button[type="submit"]::after,
+.tutor-lesson-step .register-nav [data-action="prev"]::after,
+.tutor-lesson-step .register-nav [data-action="skip-detail"]::after,
+form[data-form="contact"] .register-nav [data-action="prev"]::after,
+form[data-form="contact"] .register-nav [data-action="skip-detail"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: var(--btn-tone-hit, 44px);
+  transform: translateY(-50%);
+}
