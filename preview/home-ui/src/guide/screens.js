@@ -243,7 +243,7 @@ function renderGuideStart() {
       {
         icon: `${A}/step-pick.svg`,
         title: '찾는 대상 고르기',
-        body: '공부방인지, 과외쌤인지 먼저 정해요. 메뉴의 「공부방찾기」「과외쌤찾기」로 들어가면 됩니다.',
+        body: '찾는 대상에 맞게 「공부방찾기」「과외쌤찾기」「학생찾기」 중에서 골라 들어가요. 메뉴는 내 계정에 맞는 것만 보여요.',
       },
       {
         icon: `${A}/step-filter.svg`,
@@ -618,14 +618,14 @@ function renderGuideSafe() {
         <a class="help-link" href="#/support/policies/reporting" data-guide-nav="/support/policies/reporting">
           <span>
             <strong>신고·도움 안내</strong>
-            <span>정본 라우트 · 신고·분쟁 접수</span>
+            <span>신고·분쟁 접수</span>
           </span>
           <span class="help-link__arrow" aria-hidden="true">→</span>
         </a>
         <a class="help-link" href="#/support/policies/safety" data-guide-nav="/support/policies/safety">
           <span>
             <strong>안전과외 정책 보기</strong>
-            <span>고객센터 정책 · 공식 기준 (가이드와 별도 유지)</span>
+            <span>고객센터 정책·공식 기준</span>
           </span>
           <span class="help-link__arrow" aria-hidden="true">→</span>
         </a>

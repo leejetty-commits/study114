@@ -309,7 +309,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
       </div>
       <div class="form-group">
         <span class="form-label form-label--required">원장성별</span>
-        <p class="form-hint">계정 프로필 성별과 같습니다. 여기서 바꾸면 과외쌤·마이페이지 표시도 함께 바뀝니다.</p>
+        <p class="form-hint">계정 프로필 성별과 같습니다. 여기서 바꾸면 내 계정의 다른 화면 성별 표시도 함께 바뀝니다.</p>
         ${renderGender(genderOptions, v.gender || '')}
       </div>
       <div class="form-group form-group--full">

@@ -272,10 +272,14 @@ function renderCommunityHub(navRole) {
         })
         .join('')}
     </div>
-    <aside class="tip-card">
+    ${
+      navRole === 'guest'
+        ? `<aside class="tip-card">
       <h3>게스트 안내</h3>
       <p>로그인 전에는 글 제목만 볼 수 있어요. 본문과 댓글은 로그인 후 역할에 맞는 게시판에서 열립니다.</p>
-    </aside>`;
+    </aside>`
+        : ''
+    }`;
 }
 
 /* ── 게스트 벽 ── */
@@ -506,7 +510,9 @@ function renderList(board, query) {
   const isTitlesOnly = access === 'titles';
   const emptyText = q.type
     ? `아직 「${typeLabel(q.type)}」 글이 없습니다.`
-    : '아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.';
+    : localAccess.canCompose
+      ? '아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.'
+      : '아직 올라온 글이 없습니다.';
 
   const writeBtn = !isTitlesOnly && localAccess.canCompose
     ? `<a class="btn btn--primary" href="#${esc(board.path)}/new" data-concern-nav="${esc(board.path)}/new">글쓰기</a>`
