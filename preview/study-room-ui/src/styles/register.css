@@ -845,11 +845,11 @@ form[data-form="facility"] > .register-guide {
 
 .promo-crop-frame--prime {
   aspect-ratio: 16 / 9;
-  cursor: crosshair;
 }
 
 .promo-crop-frame--basic {
   aspect-ratio: 1 / 1;
+  cursor: crosshair;
 }
 
 .promo-crop-frame img {
@@ -861,6 +861,15 @@ form[data-form="facility"] > .register-guide {
   object-position: center;
   display: block;
   pointer-events: none;
+}
+
+.promo-crop-frame--prime .promo-crop-blur {
+  filter: blur(14px);
+  transform: scale(1.12);
+}
+
+.promo-crop-frame--prime .promo-crop-contain {
+  object-fit: contain;
 }
 
 .promo-crop-spot {

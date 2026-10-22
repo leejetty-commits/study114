@@ -87,15 +87,16 @@ export function openPromoCropDialog(host, opts) {
     overlay.innerHTML = `
       <div class="promo-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="promo-crop-title">
         <h3 id="promo-crop-title" class="promo-crop-dialog__title">썸네일 위치 조정</h3>
-        <p class="promo-crop-dialog__hint">사진을 눌러 잘릴 중심을 고르세요. 프라임(16:9)과 베이직(1:1)에 함께 적용됩니다. 이번 한 번만 맞추면 됩니다.</p>
+        <p class="promo-crop-dialog__hint">프라임(16:9)은 사진 전체가 들어갑니다. 베이직(1:1) 정사각에 보일 가운데만 사진을 눌러 골라 주세요.</p>
         <div class="promo-crop-dialog__previews">
           <div class="promo-crop-frame promo-crop-frame--prime" data-crop-prime>
-            <img alt="" src="${url}" draggable="false" />
-            <span class="promo-crop-spot" data-crop-spot></span>
+            <img class="promo-crop-blur" alt="" src="${url}" draggable="false" />
+            <img class="promo-crop-contain" alt="" src="${url}" draggable="false" />
             <span class="promo-crop-frame__label">프라임 16:9</span>
           </div>
           <div class="promo-crop-frame promo-crop-frame--basic" data-crop-basic>
             <img alt="" src="${url}" draggable="false" />
+            <span class="promo-crop-spot" data-crop-spot></span>
             <span class="promo-crop-frame__label">베이직 1:1</span>
           </div>
         </div>
@@ -112,15 +113,12 @@ export function openPromoCropDialog(host, opts) {
       overlay.querySelector('.promo-crop-dialog__title'),
     );
 
-    const prime = overlay.querySelector('[data-crop-prime]');
     const basic = overlay.querySelector('[data-crop-basic]');
     const spot = overlay.querySelector('[data-crop-spot]');
-    const primeImg = prime?.querySelector('img');
     const basicImg = basic?.querySelector('img');
 
     const applyPos = () => {
       const pos = `${Math.round(cropX * 100)}% ${Math.round(cropY * 100)}%`;
-      if (primeImg) primeImg.style.objectPosition = pos;
       if (basicImg) basicImg.style.objectPosition = pos;
       if (spot) {
         spot.style.left = `${cropX * 100}%`;
@@ -130,15 +128,16 @@ export function openPromoCropDialog(host, opts) {
     applyPos();
 
     const onPoint = (ev) => {
-      const rect = prime.getBoundingClientRect();
+      if (!basic) return;
+      const rect = basic.getBoundingClientRect();
       const x = ('clientX' in ev ? ev.clientX : ev.touches?.[0]?.clientX) - rect.left;
       const y = ('clientY' in ev ? ev.clientY : ev.touches?.[0]?.clientY) - rect.top;
       cropX = Math.min(1, Math.max(0, x / rect.width));
       cropY = Math.min(1, Math.max(0, y / rect.height));
       applyPos();
     };
-    prime?.addEventListener('click', onPoint);
-    prime?.addEventListener('pointerdown', onPoint);
+    basic?.addEventListener('click', onPoint);
+    basic?.addEventListener('pointerdown', onPoint);
 
     const finish = (result) => {
       URL.revokeObjectURL(url);

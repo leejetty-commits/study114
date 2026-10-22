@@ -120,14 +120,18 @@ final class PromoImageProcessor
                 if ($tw < 1 || $th < 1) {
                     continue;
                 }
-                [$sx, $sy, $cw, $ch] = $this->cropRect($sw, $sh, $cropX, $cropY, $tw, $th);
-                $canvas = imagecreatetruecolor($tw, $th);
-                if ($canvas === false) {
-                    throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+                if (in_array($variant, PromoImageSpec::CONTAIN_VARIANTS, true)) {
+                    $canvas = $this->containOnBlur($src, $tw, $th);
+                } else {
+                    [$sx, $sy, $cw, $ch] = $this->cropRect($sw, $sh, $cropX, $cropY, $tw, $th);
+                    $canvas = imagecreatetruecolor($tw, $th);
+                    if ($canvas === false) {
+                        throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+                    }
+                    imagealphablending($canvas, false);
+                    imagesavealpha($canvas, true);
+                    imagecopyresampled($canvas, $src, 0, 0, $sx, $sy, $tw, $th, $cw, $ch);
                 }
-                imagealphablending($canvas, false);
-                imagesavealpha($canvas, true);
-                imagecopyresampled($canvas, $src, 0, 0, $sx, $sy, $tw, $th, $cw, $ch);
                 $this->saveWebpOrJpeg($canvas, $dest);
                 imagedestroy($canvas);
                 $saved[$variant] = $dest;
@@ -248,6 +252,56 @@ final class PromoImageProcessor
         $cy = max(0, min($h - $ch, $cy));
 
         return [$cx, $cy, $cw, $ch];
+    }
+
+    /**
+     * 16:9 틀. 앞은 사진 전체(원본보다 키우지 않음), 빈 곳은 같은 사진을 흐리게.
+     *
+     * @param \GdImage $src
+     * @return \GdImage
+     */
+    private function containOnBlur($src, int $tw, int $th)
+    {
+        $sw = max(1, imagesx($src));
+        $sh = max(1, imagesy($src));
+        $canvas = imagecreatetruecolor($tw, $th);
+        if ($canvas === false) {
+            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+        }
+        $bw = max(8, intdiv($tw, 8));
+        $bh = max(8, intdiv($th, 8));
+        $blur = imagecreatetruecolor($bw, $bh);
+        if ($blur === false) {
+            imagedestroy($canvas);
+            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+        }
+        $cover = $bw / $bh;
+        $srcRatio = $sw / $sh;
+        if ($srcRatio > $cover) {
+            $cropH = $sh;
+            $cropW = max(1, min($sw, (int) round($sh * $cover)));
+        } else {
+            $cropW = $sw;
+            $cropH = max(1, min($sh, (int) round($sw / $cover)));
+        }
+        $sx = intdiv($sw - $cropW, 2);
+        $sy = intdiv($sh - $cropH, 2);
+        imagecopyresampled($blur, $src, 0, 0, $sx, $sy, $bw, $bh, $cropW, $cropH);
+        for ($i = 0; $i < 3; $i++) {
+            @imagefilter($blur, IMG_FILTER_GAUSSIAN_BLUR);
+        }
+        imagecopyresampled($canvas, $blur, 0, 0, 0, 0, $tw, $th, $bw, $bh);
+        imagedestroy($blur);
+
+        $scale = min($tw / $sw, $th / $sh, 1.0);
+        $fw = max(1, (int) round($sw * $scale));
+        $fh = max(1, (int) round($sh * $scale));
+        $fx = intdiv($tw - $fw, 2);
+        $fy = intdiv($th - $fh, 2);
+        imagealphablending($canvas, true);
+        imagecopyresampled($canvas, $src, $fx, $fy, 0, 0, $fw, $fh, $sw, $sh);
+
+        return $canvas;
     }
 
     /**
