@@ -53,6 +53,55 @@ final class PromoImageProcessor
     }
 
     /**
+     * 웹 폴더에 저장하기 전에 임시 파일만 검사한다.
+     * 확장자는 읽어 낸 MIME으로 정한다. 사용자 파일 이름은 쓰지 않는다.
+     *
+     * @return array{width: int, height: int, mime: string, ext: string}
+     */
+    public function assertUploadTmp(string $tmp, int $sizeBytes): array
+    {
+        $onDisk = $tmp !== '' && is_file($tmp) ? @filesize($tmp) : false;
+        if (
+            $sizeBytes < 1
+            || $sizeBytes > PromoImageSpec::MAX_BYTES
+            || ($onDisk !== false && $onDisk > PromoImageSpec::MAX_BYTES)
+        ) {
+            throw new InvalidArgumentException('파일 용량은 4MB 이하여야 합니다.');
+        }
+        $info = $this->inspect($tmp);
+        $mime = $info['mime'];
+        $ext = match ($mime) {
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => '',
+        };
+        if ($ext === '' || !in_array($mime, PromoImageSpec::ALLOWED_MIME, true)) {
+            throw new InvalidArgumentException('JPG, PNG, WebP 파일만 올릴 수 있습니다.');
+        }
+        $width = $info['width'];
+        $height = $info['height'];
+        if (
+            max($width, $height) > 12000
+            || ($width > 0 && $height > intdiv(40000000, $width))
+        ) {
+            throw new InvalidArgumentException('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
+        }
+        if ($width < PromoImageSpec::MIN_WIDTH || $height < PromoImageSpec::MIN_HEIGHT) {
+            throw new InvalidArgumentException(
+                '최소 ' . PromoImageSpec::MIN_WIDTH . '×' . PromoImageSpec::MIN_HEIGHT . ' 픽셀 이상이어야 합니다.'
+            );
+        }
+
+        return [
+            'width' => $width,
+            'height' => $height,
+            'mime' => $mime === 'image/jpg' ? 'image/jpeg' : $mime,
+            'ext' => $ext,
+        ];
+    }
+
+    /**
      * @param array<string, string> $destAbsoluteByVariant  variant => path
      * @return array<string, string> variant => saved path
      */

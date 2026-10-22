@@ -24,7 +24,8 @@ preview/*/.env.production.local
 
 # Storage
 /storage/
-/public/uploads/
+/public/uploads/*
+!/public/uploads/.htaccess
 
 # IDE
 .idea/
