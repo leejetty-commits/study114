@@ -293,7 +293,7 @@ for (const kind of /** @type {const} */ (['tutor', 'study_room'])) {
       .map(([label, v]) => `${label}≠${v}(${strip(rows.get(label) || '칸 없음')})`);
     ok(`${KIND_KO[kind]} ${tier}: 확대카드 칸 값 = 미니카드와 같은 필드`, wrongVal.length === 0, wrongVal.join(', '));
     if (rows.has('사진')) {
-      const src = kind === 'tutor' ? item.image_path : item.image_path_prime;
+      const src = kind === 'tutor' ? item.image_path : item.image_path_basic;
       ok(`${KIND_KO[kind]} ${tier}: 확대카드 사진 = 등록 사진`, rows.get('사진').includes(`src="${src}"`), rows.get('사진').slice(0, 120));
     }
     const badges = miniBadges(mini);

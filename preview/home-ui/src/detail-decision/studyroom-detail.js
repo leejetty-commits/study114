@@ -4,7 +4,6 @@ import {
   formatLessonPlace,
   formatStudyRoomCapacity,
 } from '../exposure-format.js';
-import { listingImage } from '../exposure-render.js';
 import { esc, renderUncroppedPhoto, studyRoomParentInquiryLine } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
@@ -29,15 +28,24 @@ export function renderStudyRoomDetailBody(item, viewer) {
       </div>
     </details>`;
 
+  const photoFit = String(item.image_path_fit || '').trim();
+  const photoBasic = String(item.image_path_basic_720 || item.image_path_basic_360 || item.image_path_basic || '').trim();
+  const photoLast = String(item.image_path_prime || '').trim();
+  const photoBlur = String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim();
+
   return `
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>사진</dt><dd>${renderUncroppedPhoto(
-          String(item.image_path_fit || '').trim() || listingImage(item, 'pick'),
-          String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim(),
+          photoFit || photoBasic || photoLast,
+          photoBlur,
           item.study_room_name,
-          { logo: '/assets/brand/room-card-default-pick.svg', eager: true },
+          {
+            logo: '/assets/brand/room-card-default-pick.svg',
+            eager: true,
+            square: !photoFit && Boolean(photoBasic),
+          },
         )}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
         <dt>대상</dt><dd>${esc(item.grade_band || '—')}</dd>

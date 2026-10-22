@@ -76,8 +76,8 @@ function readAt(ref, rel) {
 }
 /** 288에서 image_path_fit 을 넣은 searchRooms. 본문만 이 기준. */
 const ROOM_BODY_REF = 'f41408da4d7a5c19b9265788aabc710c196ab240';
-/** 288에서 펼친 카드 사진을 fit으로 바꾼 tutor-detail.js. 다른 파일은 BASE_REF. */
-const TUTOR_DETAIL_REF = 'f41408da4d7a5c19b9265788aabc710c196ab240';
+/** 290에서 fit 없을 때 정사각 basic을 넣은 tutor-detail.js. 다른 파일은 BASE_REF. */
+const TUTOR_DETAIL_REF = '7579012da235e34b696aa1bccfc9771ddc87eef1';
 function fnBody(src, name, kind = 'private') {
   const at = src.indexOf(`${kind} function ${name}(`);
   if (at < 0) return '';

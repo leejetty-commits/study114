@@ -26,16 +26,20 @@ export function renderTutorDetailBody(item, viewer) {
   // 학교란은 학부 대학명·학과만 — university_note 대체 금지 (미니카드 오버레이와 동일)
   const school = [item.university_name, item.major_name].filter(Boolean).join(' ') || '—';
   const docCount = item.verification_doc_count ?? (item.proof_document_available ? 1 : 0);
+  const photoFit = String(item.image_path_fit || '').trim();
+  const photoBasic = String(item.image_path_basic_720 || item.image_path_basic_360 || item.image_path_basic || '').trim();
+  const photoLast = String(item.image_path || '').trim();
+  const photoBlur = String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim();
 
   return `
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>사진</dt><dd>${renderUncroppedPhoto(
-          String(item.image_path_fit || item.image_path || '').trim(),
-          String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim(),
+          photoFit || photoBasic || photoLast,
+          photoBlur,
           item.tutor_display_name,
-          { eager: true },
+          { eager: true, square: !photoFit && Boolean(photoBasic) },
         )}</dd>
         <dt>과외쌤 성별</dt><dd>${esc(formatGender(item.gender))}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
