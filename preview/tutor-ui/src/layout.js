@@ -181,15 +181,17 @@ export function bindGlobalEvents(root) {
 /**
  * @param {string|null} prevPath
  * @param {string} nextLabel
- * @param {{ showSkip?: boolean, skipLabel?: string }} [opts]
+ * @param {{ showSkip?: boolean, skipLabel?: string, showSave?: boolean }} [opts]
  */
 export function renderNavButtons(prevPath, nextLabel = '다음', opts = {}) {
   const showSkip = opts.showSkip !== false;
-  const skipLabel = opts.skipLabel || '나중에 하기';
+  const skipLabel = opts.skipLabel || '다음에 하기';
+  const showSave = opts.showSave === true;
   return `
     <div class="register-nav">
       <div class="register-nav__start">
         ${prevPath ? `<button type="button" class="btn btn--secondary" data-action="prev">이전</button>` : ''}
+        ${showSave ? `<button type="button" class="btn btn--secondary" data-action="save">저장</button>` : ''}
         ${showSkip ? `<button type="button" class="btn btn--ghost" data-action="skip-detail">${skipLabel}</button>` : ''}
       </div>
       <button type="button" class="btn btn--primary" data-action="next">${nextLabel}</button>
