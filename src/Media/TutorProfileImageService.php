@@ -27,6 +27,8 @@ final class TutorProfileImageService
      */
     public function upload(int $userId, int $tutorId, array $file, float $cropX, float $cropY): array
     {
+        $cropX = PromoImageSpec::normalizeCropOffset($cropX);
+        $cropY = PromoImageSpec::normalizeCropOffset($cropY);
         $pdo = Connection::get();
         $this->assertTutorOwner($pdo, $userId, $tutorId);
 
