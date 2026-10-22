@@ -257,7 +257,7 @@ function renderStudentTierResults(items, opts = {}, sectionTag = '', mode = 'sea
       (opts.viewerRole === 'study_room' || opts.viewerRole === 'tutor') && place && mode === 'region'
         ? renderStateCard({
             title: `${place}에 공개 중인 학생이 없습니다`,
-            body: '조건을 바꾸려면 학생찾기에서 검색해 보세요.',
+            body: '위 검색창에서 지역·과목을 바꿔 보세요.',
             variant: 'empty',
             screenId: 'P13-zero',
           })

@@ -234,7 +234,7 @@ function renderStudentDemandSnapshot(role = 'study_room', findState = null) {
     <header class="parent-home-head student-demand-snap">
       <p class="parent-home-head__desc">우리동네 학생 수요</p>
       <h1 class="parent-home-head__title">${escSnap(dong)} 학생</h1>
-      <p class="parent-home-head__desc">${escSnap(place)}에서 지금 공개 중인 학생입니다. 조건을 바꾸려면 학생찾기에서 검색하세요.</p>
+      <p class="parent-home-head__desc">${escSnap(place)}에서 지금 공개 중인 학생입니다. 조건을 바꾸려면 위 메뉴의 「학생찾기」에서 검색하세요.</p>
       <p class="provider-home-search-link">
         <a href="${findUrl}" class="btn btn--primary btn--sm" data-same-tab-href="${findUrl}">학생찾기에서 더 찾아보기</a>
       </p>
