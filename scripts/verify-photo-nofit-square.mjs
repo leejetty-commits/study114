@@ -11,7 +11,7 @@ import { renderTutorDetailBody } from '../preview/home-ui/src/detail-decision/tu
 import { collectShopPhotos } from '../preview/home-ui/src/study-room-reg/shop-formatters.js';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const BASE = '3a39df06';
+const BASE = 'cec16f85';
 let failed = 0;
 
 function ok(name, cond, detail = '') {
