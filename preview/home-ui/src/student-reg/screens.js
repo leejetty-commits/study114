@@ -38,6 +38,7 @@ import { STUDENT_BRANCH_COPY, STUDENT_COUNT_HALT_COPY } from './student-reg-copy
 import { getAuthUser } from '../auth-session.js';
 import { basicRegisterPathForMe } from '../../../shared/auth-redirect.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
+import { STUDENT_MEMO_SETTINGS_COPY, studentMemoSettingsBadge } from '../student-memo-status.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 
 const SUPPORT_CONTACT_PATH = '/support/contact';
@@ -467,11 +468,14 @@ function renderDetailForm(student) {
 /** @param {import('./store.js').StudentRecord} student */
 function renderSettings(student) {
   const status = student.memo_status === 'paused' ? 'paused' : 'open';
+  const badge = studentMemoSettingsBadge(student.memo_status);
   const body = `
     <form class="p19-form" data-p19-form="settings" data-p19-memo-shell data-p19-student-id="${student.id}">
       <section class="p19-form-section">
         <header class="p19-form-section__head">
           <h3 class="p19-form-section__title">쪽지 수신</h3>
+          <p class="p19-form-section__lead">${esc(STUDENT_MEMO_SETTINGS_COPY.lead)}</p>
+          <p class="p19-memo-status" data-p19-memo-status="${badge.on ? 'open' : 'paused'}"><span class="p21-inq-badge p21-inq-badge--${badge.on ? 'on' : 'off'}">${esc(badge.label)}</span></p>
         </header>
         <div class="p19-form-section__body">
           <div class="p21-inq">
