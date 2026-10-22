@@ -264,12 +264,12 @@ function renderCardBadgeLayers(kind, item) {
   return `${renderPromoBadgeRow(layers.promoBadges, esc)}${trust}`;
 }
 
-/** 이미지 없을 때 브랜드 기본 카드 (가입 시 DB 자동삽입과 동일 자산) */
-const ROOM_DEFAULT_BASIC = '/assets/brand/room-card-default-basic.svg';
+/** 기본카드(공부방·과외쌤·학생)가 같이 쓰는 로고. 프라임·픽만 크기별 로고를 쓴다. */
+const CARD_DEFAULT_BASIC = '/assets/brand/room-card-default-basic.svg';
 const ROOM_DEFAULT_PRIME = '/assets/brand/room-card-default-prime.svg';
 const ROOM_DEFAULT_PICK = '/assets/brand/room-card-default-pick.svg';
 
-/** 이미지 없을 때 브랜드형 이니셜 플레이스홀더 (내부 문구 비노출) — 공부방은 기본 SVG 사용 */
+/** 이미지 없을 때 브랜드형 이니셜. 기본카드(list)는 쓰지 않는다. */
 function placeholderInitial(alt) {
   const raw = String(alt || '').trim();
   if (!raw) return '우';
@@ -277,21 +277,40 @@ function placeholderInitial(alt) {
   return ch;
 }
 
-/** @param {'prime'|'pick'|'list'} ratio */
+/** @param {'prime'|'pick'|'list'} ratio @param {{ roomDefault?: boolean }} opts */
+function mediaLogo(ratio, opts) {
+  if (ratio === 'list') return CARD_DEFAULT_BASIC;
+  if (!opts.roomDefault) return '';
+  if (ratio === 'prime') return ROOM_DEFAULT_PRIME;
+  if (ratio === 'pick') return ROOM_DEFAULT_PICK;
+  return CARD_DEFAULT_BASIC;
+}
+
+/**
+ * 사진 없으면 로고. 사진이 깨지면 같은 로고로 한 번만 바꾼다.
+ * opts.srcLarge 가 있으면 1x=작은 파일, 2x=큰 파일.
+ * @param {'prime'|'pick'|'list'} ratio
+ * @param {{ roomDefault?: boolean, srcLarge?: string }} [opts]
+ */
 export function renderMedia(image_path, alt, ratio, opts = {}) {
   const cls = `expo-media expo-media--${ratio}`;
-  if (image_path) {
-    return `<div class="${cls}"><img src="${esc(image_path)}" alt="${esc(alt)}" loading="lazy" /></div>`;
-  }
-  if (opts.roomDefault) {
-    const src =
-      ratio === 'prime' ? ROOM_DEFAULT_PRIME : ratio === 'pick' ? ROOM_DEFAULT_PICK : ROOM_DEFAULT_BASIC;
-    return `<div class="${cls}"><img src="${esc(src)}" alt="${esc(alt || '우동공과')}" loading="lazy" /></div>`;
-  }
-  const initial = placeholderInitial(alt);
-  return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
+  const logo = mediaLogo(ratio, opts);
+  const src = String(image_path || '').trim();
+  const large = String(opts.srcLarge || '').trim();
+  if (!src) {
+    if (logo) {
+      return `<div class="${cls}"><img src="${esc(logo)}" alt="${esc(alt || '우동공과')}" loading="lazy" /></div>`;
+    }
+    const initial = placeholderInitial(alt);
+    return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
     <span class="expo-media__ph-initial" aria-hidden="true">${esc(initial)}</span>
   </div>`;
+  }
+  const srcset = large && large !== src ? ` srcset="${esc(src)} 1x, ${esc(large)} 2x"` : '';
+  const onerror = logo
+    ? ` onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(logo)}'"`
+    : '';
+  return `<div class="${cls}"><img src="${esc(src)}"${srcset} alt="${esc(alt)}" loading="lazy"${onerror} /></div>`;
 }
 
 /**
@@ -318,7 +337,14 @@ export function listingImage(item, ratio) {
   if (ratio === 'prime' || ratio === 'pick') {
     return item.image_path_prime || item.image_path || '';
   }
-  return item.image_path_basic || item.image_path || '';
+  return item.image_path_basic_360 || item.image_path_basic || item.image_path || '';
+}
+
+/** 기본카드 선명한 화면용 720. 360과 같으면 비운다. */
+function listingImageLarge(item) {
+  const large = String(item?.image_path_basic_720 || '').trim();
+  const small = String(item?.image_path_basic_360 || item?.image_path_basic || '').trim();
+  return large && large !== small ? large : '';
 }
 
 function cardIdentityAttrs(item, kind) {
@@ -762,7 +788,7 @@ function renderBasicStudyRoomRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true })}
+        ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true, srcLarge: listingImageLarge(item) })}
         ${badgeLayers}
       </div>
       <div class="expo-hcard__body">
@@ -841,7 +867,7 @@ function renderBasicTutorRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, item.tutor_display_name, 'list')}
+        ${renderMedia(listingImage(item, 'list') || item.image_path, item.tutor_display_name, 'list', { srcLarge: listingImageLarge(item) })}
         <span class="expo-hcard__badge">${esc(slotDash(item.grade_band))}</span>
         ${badgeLayers}
       </div>
@@ -962,7 +988,7 @@ function renderBasicStudentRow(item, opts) {
     return `
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, t.name || '학생', 'list')}
+        ${renderMedia(item.image_path, t.name || '학생', 'list', { srcLarge: listingImageLarge(item) })}
         ${t.band ? `<span class="expo-hcard__badge">${esc(t.band)}</span>` : ''}
       </div>
       <div class="expo-hcard__body">
@@ -1011,7 +1037,7 @@ function renderBasicStudentRow(item, opts) {
   return `
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}"${selfView ? '' : ' data-action="open-student-detail"'}>
       <div class="expo-hcard__media-wrap">
-        ${renderMedia(item.image_path, maskedName || '학생', 'list')}
+        ${renderMedia(item.image_path, maskedName || '학생', 'list', { srcLarge: listingImageLarge(item) })}
         <span class="expo-hcard__badge">${esc(slotDash(item.grade_level))}</span>
       </div>
       <div class="expo-hcard__body">
