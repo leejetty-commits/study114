@@ -1,0 +1,22 @@
+# 285: 올린 파일 폴더에서는 PHP를 실행하지 않는다. 사진은 그대로 보인다.
+<IfModule mod_php.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+  php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+  php_flag engine off
+</IfModule>
+RemoveHandler .php .phtml .phar .php3 .php4 .php5 .php7 .php8 .pht .phps
+RemoveType .php .phtml .phar .php3 .php4 .php5 .php7 .php8 .pht .phps
+<FilesMatch "(?i)\.(php\d?|phtml|phar|pht|phps)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+Options -ExecCGI -Indexes

@@ -438,8 +438,8 @@ function sqlFilesAddingColumnOrTable() {
 }
 const sqlAdding = sqlFilesAddingColumnOrTable();
 assert(sqlAdding !== null && !sqlAdding.some((rel) => sqlAddsTutorColumnOrTable(read(rel))), 'sql/ 과외쌤 표에 새 컬럼·새 표 없음');
-/** 276에서 새 업로드에 360 파일을 넣은 뒤의 사진 업로드 서버. 그 이후 변경은 그대로 잡는다. */
-const PHOTO_UPLOAD_REF = 'dd174e19';
+/** 276(360 파일) + 285(검사 뒤 저장·실패 시 지우기) 뒤의 사진 업로드 서버. 그 이후 변경은 그대로 잡는다. */
+const PHOTO_UPLOAD_REF = 'fbf76450e9e762c1f31cdc4fee5ae7cb88688cac';
 function readCommit(ref, rel) {
   try {
     return execFileSync('git', ['show', `${ref}:${rel}`], {

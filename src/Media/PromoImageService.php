@@ -48,12 +48,10 @@ final class PromoImageService
             throw new InvalidArgumentException('홍보사진은 최대 5장까지입니다.');
         }
 
-        [$tmp, $origName, $size, $clientMime] = $this->parseFile($file);
+        [$tmp, $origName, $size] = $this->parseFile($file);
+        $checked = $this->processor->assertUploadTmp($tmp, $size);
         $token = bin2hex(random_bytes(8));
-        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION)) ?: 'jpg';
-        if ($ext === 'jpeg') {
-            $ext = 'jpg';
-        }
+        $ext = $checked['ext'];
         $relDir = 'uploads/promo/rooms/' . $roomId;
         $absDir = $this->publicRoot() . '/' . $relDir;
         if (!is_dir($absDir) && !mkdir($absDir, 0775, true) && !is_dir($absDir)) {
@@ -64,34 +62,43 @@ final class PromoImageService
         $originalAbs = $this->publicRoot() . '/' . $originalRel;
         if (!@move_uploaded_file($tmp, $originalAbs) && !@rename($tmp, $originalAbs)) {
             if (!@copy($tmp, $originalAbs)) {
+                if (is_file($originalAbs)) {
+                    @unlink($originalAbs);
+                }
                 throw new RuntimeException('원본 사진을 저장하지 못했습니다.');
             }
+            @unlink($tmp);
         }
 
-        $info = $this->processor->assertUpload($originalAbs, $size, $origName, $clientMime);
+        $info = [
+            'width' => $checked['width'],
+            'height' => $checked['height'],
+            'mime' => $checked['mime'],
+        ];
         $dests = [];
         foreach (array_keys(PromoImageSpec::VARIANTS) as $variant) {
             $dests[$variant] = $this->publicRoot() . '/' . $relDir . '/' . $token . '_' . $variant . '.webp';
         }
-        $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
+        try {
+            $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
 
-        $paths = [];
-        foreach ($dests as $variant => $abs) {
-            $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', $abs);
-            $paths[$variant] = $this->publicUrlFromAbs((string) $use);
-        }
-        $imageType = $this->normalizeType($imageType);
-        $caption = $this->clipCaption($caption);
+            $paths = [];
+            foreach ($dests as $variant => $abs) {
+                $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', $abs);
+                $paths[$variant] = $this->publicUrlFromAbs((string) $use);
+            }
+            $imageType = $this->normalizeType($imageType);
+            $caption = $this->clipCaption($caption);
 
-        $stmt = $pdo->prepare(
-            'INSERT INTO study_room_images
-                (study_room_id, image_type, image_path, sort_order, original_filename, caption,
-                 original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
-                 crop_offset_x, crop_offset_y, original_width, original_height, original_bytes, original_mime)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        );
-        $coverPath = $paths['prime_1600'] ?? $paths['prime_1280'] ?? '/' . $originalRel;
-        $stmt->execute([
+            $stmt = $pdo->prepare(
+                'INSERT INTO study_room_images
+                    (study_room_id, image_type, image_path, sort_order, original_filename, caption,
+                     original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
+                     crop_offset_x, crop_offset_y, original_width, original_height, original_bytes, original_mime)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            );
+            $coverPath = $paths['prime_1600'] ?? $paths['prime_1280'] ?? '/' . $originalRel;
+            $stmt->execute([
             $roomId,
             $imageType,
             $coverPath,
@@ -110,6 +117,20 @@ final class PromoImageService
             $size,
             $info['mime'],
         ]);
+        } catch (\Throwable $e) {
+            @unlink($originalAbs);
+            foreach ($dests as $abs) {
+                @unlink((string) $abs);
+                $jpg = preg_replace('/\.webp$/i', '.jpg', (string) $abs);
+                if (is_string($jpg) && $jpg !== (string) $abs) {
+                    @unlink($jpg);
+                }
+            }
+            if (is_file($tmp)) {
+                @unlink($tmp);
+            }
+            throw $e;
+        }
 
         return $this->mapRow([
             'id' => (int) $pdo->lastInsertId(),

@@ -41,12 +41,10 @@ final class TutorProfileImageService
         $sortStmt->execute([$tutorId]);
         $sortOrder = (int) $sortStmt->fetchColumn() + 1;
 
-        [$tmp, $origName, $size, $clientMime] = $this->parseFile($file);
+        [$tmp, $origName, $size] = $this->parseFile($file);
+        $checked = $this->processor->assertUploadTmp($tmp, $size);
         $token = bin2hex(random_bytes(8));
-        $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION)) ?: 'jpg';
-        if ($ext === 'jpeg') {
-            $ext = 'jpg';
-        }
+        $ext = $checked['ext'];
         // 공부방 홍보사진과 같은 uploads/promo 트리 사용 (닷홈 쓰기 권한·경로 검증 통과)
         $relDir = 'uploads/promo/tutors/' . $tutorId;
         $absDir = $this->publicRoot() . '/' . $relDir;
@@ -61,37 +59,60 @@ final class TutorProfileImageService
         $originalAbs = $this->publicRoot() . '/' . $originalRel;
         if (!@move_uploaded_file($tmp, $originalAbs) && !@rename($tmp, $originalAbs)) {
             if (!@copy($tmp, $originalAbs)) {
+                if (is_file($originalAbs)) {
+                    @unlink($originalAbs);
+                }
                 throw new RuntimeException('원본 사진을 저장하지 못했습니다.');
             }
+            @unlink($tmp);
         }
 
-        $info = $this->processor->assertUpload($originalAbs, $size, $origName, $clientMime);
+        $info = [
+            'width' => $checked['width'],
+            'height' => $checked['height'],
+            'mime' => $checked['mime'],
+        ];
         // PromoImageSpec 최소(800×600)만 적용 — 이미 리사이즈된 JPEG도 허용
         $dests = [
             'basic_360' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_360.webp',
             'basic_720' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_720.webp',
             'prime_1280' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_prime_1280.webp',
         ];
-        $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
+        try {
+            $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
 
-        $paths = [];
-        foreach ($dests as $variant => $abs) {
-            $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', (string) $abs);
-            if (!is_file((string) $use)) {
-                throw new RuntimeException('파생 이미지 생성에 실패했습니다 (' . $variant . ').');
+            $paths = [];
+            foreach ($dests as $variant => $abs) {
+                $use = is_file($abs) ? $abs : preg_replace('/\.webp$/i', '.jpg', (string) $abs);
+                if (!is_file((string) $use)) {
+                    throw new RuntimeException('파생 이미지 생성에 실패했습니다 (' . $variant . ').');
+                }
+                $paths[$variant] = $this->publicUrlFromAbs((string) $use);
             }
-            $paths[$variant] = $this->publicUrlFromAbs((string) $use);
+
+            $basicPath = $paths['basic_720'] ?? ('/' . $originalRel);
+            $basic360Path = $paths['basic_360'] ?? '';
+            $imageType = $count === 0 ? 'profile' : 'intro';
+
+            $stmt = $pdo->prepare(
+                'INSERT INTO tutor_images (tutor_id, image_type, image_path, basic_360_path, basic_720_path, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
+            );
+            $stmt->execute([$tutorId, $imageType, $basicPath, $basic360Path, $basicPath, $sortOrder]);
+            $id = (int) $pdo->lastInsertId();
+        } catch (\Throwable $e) {
+            @unlink($originalAbs);
+            foreach ($dests as $abs) {
+                @unlink((string) $abs);
+                $jpg = preg_replace('/\.webp$/i', '.jpg', (string) $abs);
+                if (is_string($jpg) && $jpg !== (string) $abs) {
+                    @unlink($jpg);
+                }
+            }
+            if (is_file($tmp)) {
+                @unlink($tmp);
+            }
+            throw $e;
         }
-
-        $basicPath = $paths['basic_720'] ?? ('/' . $originalRel);
-        $basic360Path = $paths['basic_360'] ?? '';
-        $imageType = $count === 0 ? 'profile' : 'intro';
-
-        $stmt = $pdo->prepare(
-            'INSERT INTO tutor_images (tutor_id, image_type, image_path, basic_360_path, basic_720_path, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
-        );
-        $stmt->execute([$tutorId, $imageType, $basicPath, $basic360Path, $basicPath, $sortOrder]);
-        $id = (int) $pdo->lastInsertId();
 
         return [
             'id' => $id,
