@@ -76,7 +76,6 @@ export function buildStudentProfileReadSections(student) {
         { label: '희망 강의스타일', value: display(labelTeachingStyles(s.teaching_style_badges)) },
         { label: '희망 과외쌤 성별', value: TUTOR_GENDER_LABELS[s.preferred_tutor_gender] || '' },
         { label: '학생 성별', value: STUDENT_GENDER_LABELS[s.gender] || '' },
-        { label: '출생연도', value: s.birth_year ? String(s.birth_year) : '' },
         { label: '특이요청사항', value: display(s.special_request_note) },
       ],
     },

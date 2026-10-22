@@ -143,7 +143,6 @@
 | `guardian_user_id` | 학부모 1 : 자녀 N · **카드 소유** |
 | `exposure_status` | draft / published / hidden / deleted |
 | `gender` | 학생 성별 · 기본등록 축 |
-| `birth_year` | 출생연도 · 기본·관리 화면 |
 | `public_display_name` | 블라인드 공개명 · 검색·쪽지 |
 | `preferred_tutor_gender` | **기본등록 ✕** · **상세등록(노출 전)** (13§5 · Notion 6-4) |
 
@@ -171,7 +170,6 @@
 |------|-----|
 | 희망 유형 | `preferred_lesson_type` |
 | 학생 성별 | `gender` |
-| 출생연도 | `birth_year` |
 | 학교급/학년 | `grade_level` |
 | 희망 지역 | regions + note |
 | 희망 과목 | `student_subject_targets` |

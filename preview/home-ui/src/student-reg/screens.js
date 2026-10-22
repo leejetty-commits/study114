@@ -449,16 +449,6 @@ function renderDetailForm(student) {
             )}
           </div>
           ${renderDetailField(
-            '출생연도',
-            '태어난 해 네 자리를 적습니다.',
-            renderTextInput('birth_year', student.birth_year || '', {
-              type: 'number',
-              min: 1900,
-              max: 2100,
-              placeholder: '2012',
-            }),
-          )}
-          ${renderDetailField(
             '특이요청사항',
             '매칭에 도움 되는 요청입니다.',
             renderTextarea('special_request_note', student.special_request_note || '', {
