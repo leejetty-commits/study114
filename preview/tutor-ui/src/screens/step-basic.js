@@ -31,6 +31,8 @@ import { bindDraggableDialog } from '../../../shared/draggable-dialog.js';
 let basicEditOpen = false;
 /** @type {string} */
 let basicEditFocus = '';
+/** @type {{ reset: () => void, destroy: () => void } | null} */
+let basicEditDrag = null;
 
 function esc(s) {
   return String(s ?? '')
@@ -235,6 +237,8 @@ function onEditEscape(e) {
 }
 
 function closeBasicEdit() {
+  basicEditDrag?.destroy();
+  basicEditDrag = null;
   document.removeEventListener('keydown', onEditEscape);
   basicEditOpen = false;
   basicEditFocus = '';
@@ -302,6 +306,8 @@ export function bindBasicEvents(root) {
   });
 
   const overlay = root.querySelector('[data-basic-edit-overlay]');
+  basicEditDrag?.destroy();
+  basicEditDrag = null;
   if (!overlay) return;
 
   overlay.addEventListener('click', (e) => {
@@ -310,10 +316,11 @@ export function bindBasicEvents(root) {
   overlay.querySelectorAll('[data-action="cancel-edit"]').forEach((btn) => {
     btn.addEventListener('click', () => closeBasicEdit());
   });
-  bindDraggableDialog(
+  basicEditDrag = bindDraggableDialog(
     overlay.querySelector('.register-edit-dialog'),
     overlay.querySelector('.register-edit-dialog__head'),
   );
+  basicEditDrag.reset();
   document.removeEventListener('keydown', onEditEscape);
   document.addEventListener('keydown', onEditEscape);
   if (basicEditFocus === 'tutor-region-0') {

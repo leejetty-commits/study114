@@ -30,6 +30,9 @@ import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrati
 import { studyRoomSectionPath } from './router.js';
 import { RC_COPY } from './registration-check-copy.js';
 
+/** @type {{ reset: () => void, destroy: () => void } | null} */
+let embedBasicDrag = null;
+
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
@@ -426,6 +429,8 @@ export function renderEmbeddedPanel(room, section) {
  * @param {() => void} rerender
  */
 export function bindEmbeddedPanelEvents(root, rerender) {
+  embedBasicDrag?.destroy();
+  embedBasicDrag = null;
   const wrap = root.querySelector('[data-embed-section]');
   if (!wrap) return;
   const section = /** @type {'basic'|'detail'|'detail2'} */ (wrap.getAttribute('data-embed-section'));
@@ -463,10 +468,11 @@ export function bindEmbeddedPanelEvents(root, rerender) {
     });
 
     const form = overlay?.querySelector('[data-form="basic-all"]');
-    bindDraggableDialog(
+    embedBasicDrag = bindDraggableDialog(
       overlay?.querySelector('.register-edit-dialog'),
       overlay?.querySelector('.register-edit-dialog__head'),
     );
+    embedBasicDrag.reset();
     bindStudyRoomBasicFields(form || overlay, {
       getRegions,
       onRegion(region) {
