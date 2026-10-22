@@ -211,9 +211,14 @@ export function resolveCardVisualLayers(kind, item, opts = {}) {
  * @param {{ id: string, label: string }[]} badges
  * @param {(s: string) => string} esc
  */
-export function renderPromoBadgeRow(badges, esc) {
+export function renderPromoBadgeRow(badges, esc, options = {}) {
   if (!badges?.length) return '';
-  return `<div class="card-visual__promo" aria-label="주목·신규 배지">${badges
+  const ordered = [
+    ...badges.filter((b) => b?.id === 'new'),
+    ...badges.filter((b) => b?.id !== 'new'),
+  ];
+  const extra = options.split ? ' card-visual__promo--split' : '';
+  return `<div class="card-visual__promo${extra}" aria-label="주목·신규 배지">${ordered
     .map(
       (b) =>
         `<span class="card-visual__promo-badge card-visual__promo-badge--${esc(b.id)}">${esc(b.label)}</span>`,
@@ -226,9 +231,10 @@ export function renderPromoBadgeRow(badges, esc) {
  * @param {string[]} labels
  * @param {(s: string) => string} esc
  */
-export function renderTrustBadgeRow(labels, esc) {
+export function renderTrustBadgeRow(labels, esc, options = {}) {
   if (!labels?.length) return '';
-  return `<div class="card-visual__trust" aria-label="신뢰 배지">${labels
+  const extra = options.rail ? ' card-visual__trust--rail' : '';
+  return `<div class="card-visual__trust${extra}" aria-label="신뢰 배지">${labels
     .map((b) => `<span class="card-visual__trust-badge">${esc(b)}</span>`)
     .join('')}</div>`;
 }

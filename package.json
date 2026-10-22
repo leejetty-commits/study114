@@ -64,6 +64,7 @@
     "verify:detail-card-all-fields": "cd preview/home-ui && vite-node ../../scripts/verify-detail-card-all-fields.mjs",
     "verify:remove-publish": "cd preview/home-ui && vite-node ../../scripts/verify-remove-publish.mjs",
     "verify:photo-nofit-square": "cd preview/home-ui && vite-node ../../scripts/verify-photo-nofit-square.mjs",
+    "verify:card-badge-layout": "cd preview/home-ui && vite-node ../../scripts/verify-card-badge-layout.mjs",
     "verify:prime-contain-blur": "php scripts/verify-prime-contain-blur.php",
     "verify:photo-exif-nocrop": "php scripts/verify-photo-exif-nocrop.php",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"

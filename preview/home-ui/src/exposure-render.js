@@ -55,6 +55,7 @@ import {
   sortListItems,
 } from '../../shared/list-sort.js';
 import {
+  resolveAutoNewBadge,
   resolveCardVisualLayers,
   renderPromoBadgeRow,
   renderTrustBadgeRow,
@@ -255,13 +256,59 @@ export function renderItemActions(opts = {}) {
 /** @param {'study_room'|'tutor'} kind @param {object} item */
 function renderCardBadgeLayers(kind, item) {
   const layers = resolveCardVisualLayers(kind, item);
-  const trust =
-    layers.trustBadges.length > 0
-      ? renderTrustBadgeRow(layers.trustBadges, esc)
-      : item.badges?.length
-        ? renderTrustBadgeRow(item.badges, esc)
-        : '';
-  return `${renderPromoBadgeRow(layers.promoBadges, esc)}${trust}`;
+  const trustLabels = layers.trustBadges.length > 0
+    ? layers.trustBadges
+    : Array.isArray(item.badges) ? item.badges : [];
+  return {
+    promo: renderPromoBadgeRow(layers.promoBadges, esc, { split: true }),
+    trust: trustLabels.length ? renderTrustBadgeRow(trustLabels, esc, { rail: true }) : '',
+  };
+}
+
+/** 학생 베이직 — is_new가 있으면 그것을, 없으면 7일 창. 유료·신뢰 배지는 없다. */
+function renderStudentNewPromo(item) {
+  const badge = resolveAutoNewBadge(item);
+  return badge ? renderPromoBadgeRow([badge], esc, { split: true }) : '';
+}
+
+/**
+ * 반응 줄 왼쪽 신뢰 배지가 넘치면 뒤에서부터 숨기고 +N을 단다.
+ * @param {ParentNode} [root]
+ */
+export function fitCardTrustRails(root = document) {
+  if (!root?.querySelectorAll) return;
+  root.querySelectorAll('.card-visual__trust--rail').forEach((rail) => {
+    const badges = [...rail.querySelectorAll('.card-visual__trust-badge')];
+    badges.forEach((badge) => {
+      badge.hidden = false;
+    });
+    rail.querySelector('.card-visual__trust-more')?.remove();
+    const overflow = () => rail.scrollWidth > rail.clientWidth + 1;
+    if (!overflow()) return;
+    let hidden = 0;
+    for (let i = badges.length - 1; i >= 0; i -= 1) {
+      badges[i].hidden = true;
+      hidden += 1;
+      let more = rail.querySelector('.card-visual__trust-more');
+      if (!more) {
+        more = document.createElement('span');
+        more.className = 'card-visual__trust-more';
+        rail.appendChild(more);
+      }
+      more.textContent = `+${hidden}`;
+      if (!overflow()) break;
+    }
+  });
+}
+
+let trustRailResizeBound = false;
+
+/** 카드를 그린 뒤와 창 크기 변경 때 신뢰 배지 줄을 맞춘다. */
+export function bindCardTrustRailFit(root = document) {
+  fitCardTrustRails(root);
+  if (trustRailResizeBound || typeof window === 'undefined') return;
+  trustRailResizeBound = true;
+  window.addEventListener('resize', () => fitCardTrustRails(document));
 }
 
 /** 기본카드(공부방·과외쌤·학생)가 같이 쓰는 로고. 프라임·픽만 크기별 로고를 쓴다. */
@@ -789,7 +836,7 @@ function renderBasicStudyRoomRow(item, opts) {
     <article class="expo-basic expo-basic--study_room expo-hcard" data-provider-id="${item.id}" data-provider-kind="study_room">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(listingImage(item, 'list'), item.study_room_name, 'list', { roomDefault: true, srcLarge: listingImageLarge(item) })}
-        ${badgeLayers}
+        ${badgeLayers.promo}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -809,6 +856,7 @@ function renderBasicStudyRoomRow(item, opts) {
         ${renderHcardSlogan(item.slogan)}
       </div>
       <div class="expo-hcard__side">
+        ${badgeLayers.trust}
         <div class="expo-hcard__actions">${actions}</div>
       </div>
     </article>`;
@@ -868,8 +916,7 @@ function renderBasicTutorRow(item, opts) {
     <article class="expo-basic expo-basic--tutor expo-hcard" data-provider-id="${item.id}" data-provider-kind="tutor">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(listingImage(item, 'list') || item.image_path, item.tutor_display_name, 'list', { srcLarge: listingImageLarge(item) })}
-        <span class="expo-hcard__badge">${esc(slotDash(item.grade_band))}</span>
-        ${badgeLayers}
+        ${badgeLayers.promo}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -880,6 +927,7 @@ function renderBasicTutorRow(item, opts) {
           <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
         </div>
         <ul class="expo-hcard__meta">
+          ${renderHcardSlot('대상', item.grade_band)}
           ${renderHcardSlot('과목', item.main_subject_note)}
           ${renderHcardSlot('원생수', formatTutorStudentTarget(item))}
           ${renderHcardSlot('수업장소', optionalTutorPlaces(item.lesson_places))}
@@ -889,6 +937,7 @@ function renderBasicTutorRow(item, opts) {
         ${renderHcardSlogan(item.slogan)}
       </div>
       <div class="expo-hcard__side">
+        ${badgeLayers.trust}
         <div class="expo-hcard__actions">${actions}</div>
       </div>
     </article>`;
@@ -989,7 +1038,7 @@ function renderBasicStudentRow(item, opts) {
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}" data-action="open-student-detail">
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, t.name || '학생', 'list', { srcLarge: listingImageLarge(item) })}
-        ${t.band ? `<span class="expo-hcard__badge">${esc(t.band)}</span>` : ''}
+        ${renderStudentNewPromo(item)}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -1000,6 +1049,7 @@ function renderBasicStudentRow(item, opts) {
           <p class="expo-hcard__price">${esc(t.budget || '—')}</p>
         </div>
         <ul class="expo-hcard__meta">
+          ${renderHcardSlot('학년', t.band)}
           ${renderHcardMetaItem('과목', t.subject)}
           ${hopeLine ? renderHcardMetaItem('희망', hopeLine) : ''}
         </ul>
@@ -1038,7 +1088,7 @@ function renderBasicStudentRow(item, opts) {
     <article class="expo-basic expo-basic--student expo-hcard" data-student-id="${item.id}"${selfView ? '' : ' data-action="open-student-detail"'}>
       <div class="expo-hcard__media-wrap">
         ${renderMedia(item.image_path, maskedName || '학생', 'list', { srcLarge: listingImageLarge(item) })}
-        <span class="expo-hcard__badge">${esc(slotDash(item.grade_level))}</span>
+        ${renderStudentNewPromo(item)}
       </div>
       <div class="expo-hcard__body">
         <div class="expo-hcard__top">
@@ -1049,6 +1099,7 @@ function renderBasicStudentRow(item, opts) {
           <p class="expo-hcard__price">${esc(formatStudentBudgetCard(item))}</p>
         </div>
         <ul class="expo-hcard__meta">
+          ${renderHcardSlot('학년', item.grade_level)}
           ${renderHcardSlot('과목', item.subject_label)}
           ${renderHcardSlot('수업장소', formatStudentPlaces(item.lesson_places))}
           ${renderHcardSlot('원생수', formatStudentLessonTarget(item))}
