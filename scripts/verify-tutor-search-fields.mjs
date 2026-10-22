@@ -74,8 +74,10 @@ function readAt(ref, rel) {
   if (r.status !== 0) throw new Error(`git show ${ref}:${rel} — ${r.stderr}`);
   return r.stdout.replace(/\r\n/g, '\n');
 }
-/** 276에서 공부방 응답에 image_path_basic_360·720 을 더한 커밋. searchRooms 본문만 이 기준. */
-const ROOM_BODY_REF = 'dd174e19';
+/** 288에서 image_path_fit 을 넣은 searchRooms. 본문만 이 기준. */
+const ROOM_BODY_REF = 'f41408da4d7a5c19b9265788aabc710c196ab240';
+/** 288에서 펼친 카드 사진을 fit으로 바꾼 tutor-detail.js. 다른 파일은 BASE_REF. */
+const TUTOR_DETAIL_REF = 'f41408da4d7a5c19b9265788aabc710c196ab240';
 function fnBody(src, name, kind = 'private') {
   const at = src.indexOf(`${kind} function ${name}(`);
   if (at < 0) return '';
@@ -150,7 +152,7 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
     && fnBody(cur, 'guestScopedFilters', 'public') === fnBody(base, 'guestScopedFilters', 'public'));
   ok('search.php(손님 지역 제한 · 학생 요청문 게이트) = 기준 커밋', read('public/api/search/search.php') === readBase('public/api/search/search.php'));
   const detail = read('preview/home-ui/src/detail-decision/tutor-detail.js');
-  const detailAt269 = readBase('preview/home-ui/src/detail-decision/tutor-detail.js')
+  const detailAt269 = readAt(TUTOR_DETAIL_REF, 'preview/home-ui/src/detail-decision/tutor-detail.js')
     .replace('<dt>성별</dt>', '<dt>과외쌤 성별</dt>')
     .replace('<dt>원생수</dt>', '<dt>학생구성</dt>');
   ok('확대카드 손님 「로그인 후 확인」 4칸(일정·강의스타일·학적상태·학교·학과) 유지 · 파일 = 기준 커밋',
