@@ -1654,6 +1654,12 @@ final class StudyRoomRegisterService
 
                 'basic_720_path' => (string) ($img['basic_720_path'] ?? ''),
 
+                'fit_1280_path' => \Study114\Media\PromoImageSpec::existingFitUrl(
+                    (string) (($img['prime_1280_path'] ?? '') !== ''
+                        ? $img['prime_1280_path']
+                        : (($img['basic_720_path'] ?? '') !== '' ? $img['basic_720_path'] : ($img['image_path'] ?? '')))
+                ),
+
             ];
 
         }

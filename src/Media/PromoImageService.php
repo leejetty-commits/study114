@@ -79,8 +79,10 @@ final class PromoImageService
         foreach (array_keys(PromoImageSpec::VARIANTS) as $variant) {
             $dests[$variant] = $this->publicRoot() . '/' . $relDir . '/' . $token . '_' . $variant . '.webp';
         }
+        $fitAbs = $this->publicRoot() . '/' . $relDir . '/' . $token . '_fit_1280.webp';
         try {
             $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
+            $this->writeFitQuiet($originalAbs, $fitAbs);
 
             $paths = [];
             foreach ($dests as $variant => $abs) {
@@ -125,6 +127,9 @@ final class PromoImageService
                 if (is_string($jpg) && $jpg !== (string) $abs) {
                     @unlink($jpg);
                 }
+            }
+            if (isset($fitAbs) && is_file($fitAbs)) {
+                @unlink($fitAbs);
             }
             if (is_file($tmp)) {
                 @unlink($tmp);
@@ -231,6 +236,13 @@ final class PromoImageService
             $abs = $this->publicRoot() . '/' . $rel;
             if (is_file($abs)) {
                 @unlink($abs);
+            }
+            $fitRel = ltrim(PromoImageSpec::fitPathFor('/' . $rel), '/');
+            if ($fitRel !== '' && !str_contains($fitRel, '..')) {
+                $fitFile = $this->publicRoot() . '/' . $fitRel;
+                if (is_file($fitFile)) {
+                    @unlink($fitFile);
+                }
             }
         }
     }
@@ -353,6 +365,37 @@ final class PromoImageService
         return '/' . ltrim($path, '/');
     }
 
+    private function writeFitQuiet(string $originalAbs, string $fitAbs): void
+    {
+        try {
+            $this->processor->shrinkLongEdgeWebp(
+                $originalAbs,
+                $fitAbs,
+                PromoImageSpec::FIT_LONG_EDGE,
+                82,
+                PromoImageSpec::FIT_TARGET_BYTES,
+            );
+        } catch (\Throwable $e) {
+            error_log('[fit_1280] ' . $e->getMessage());
+            if (is_file($fitAbs)) {
+                @unlink($fitAbs);
+            }
+        }
+    }
+
+    /** @param array<string, mixed> $row */
+    private function fitUrlFromRow(array $row): string
+    {
+        foreach (['prime_1280_path', 'prime_1600_path', 'basic_720_path', 'basic_360_path', 'image_path'] as $key) {
+            $url = PromoImageSpec::existingFitUrl((string) ($row[$key] ?? ''), $this->publicRoot());
+            if ($url !== '') {
+                return $url;
+            }
+        }
+
+        return '';
+    }
+
     /** @param array<string, mixed> $row */
     private function mapRow(array $row): array
     {
@@ -369,6 +412,7 @@ final class PromoImageService
             'prime_1600_path' => (string) ($row['prime_1600_path'] ?? ''),
             'basic_360_path' => (string) ($row['basic_360_path'] ?? ''),
             'basic_720_path' => (string) ($row['basic_720_path'] ?? ''),
+            'fit_1280_path' => $this->fitUrlFromRow($row),
             'crop_offset_x' => (float) ($row['crop_offset_x'] ?? 0.5),
             'crop_offset_y' => (float) ($row['crop_offset_y'] ?? 0.5),
             'is_system_default' => (int) ($row['is_system_default'] ?? 0) === 1,

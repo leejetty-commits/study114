@@ -7,8 +7,7 @@ import {
   formatTutorStudentTarget,
   formatGender,
 } from '../exposure-format.js';
-import { renderMedia } from '../exposure-render.js';
-import { esc } from './detail-utils.js';
+import { esc, renderUncroppedPhoto } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
 import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
@@ -32,7 +31,12 @@ export function renderTutorDetailBody(item, viewer) {
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
-        <dt>사진</dt><dd>${renderMedia(item.image_path, item.tutor_display_name, 'pick')}</dd>
+        <dt>사진</dt><dd>${renderUncroppedPhoto(
+          String(item.image_path_fit || item.image_path || '').trim(),
+          String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim(),
+          item.tutor_display_name,
+          { eager: true },
+        )}</dd>
         <dt>과외쌤 성별</dt><dd>${esc(formatGender(item.gender))}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
         <dt>과외지역</dt><dd>${esc(locationLabel)}</dd>

@@ -42,14 +42,16 @@ function esc(s) {
 export function normalizeTutorProfileImages(tutor) {
   const raw = Array.isArray(tutor?.profile_images) ? tutor.profile_images : [];
   return raw
-    .filter((img) => img && (img.basic_720_path || img.image_path || img.prime_1280_path))
+    .filter((img) => img && (img.fit_1280_path || img.basic_720_path || img.image_path || img.prime_1280_path))
     .slice(0, TUTOR_PROFILE_PHOTO_SPEC.maxCount)
     .map((img, i) => ({
       id: img.id ?? `local-${i + 1}`,
       name: img.name || img.original_filename || '',
       image_path: img.image_path || img.basic_720_path || '',
+      basic_360_path: img.basic_360_path || '',
       basic_720_path: img.basic_720_path || img.image_path || '',
       prime_1280_path: img.prime_1280_path || img.image_path || '',
+      fit_1280_path: img.fit_1280_path || '',
       crop_x: Number.isFinite(Number(img.crop_x ?? img.crop_offset_x))
         ? Number(img.crop_x ?? img.crop_offset_x)
         : 0.5,
@@ -63,7 +65,20 @@ export function normalizeTutorProfileImages(tutor) {
 
 /** @param {ReturnType<typeof normalizeTutorProfileImages>[number]|null|undefined} img */
 export function tutorPhotoPreviewSrc(img) {
-  return img?.basic_720_path || img?.image_path || img?.prime_1280_path || '';
+  return img?.fit_1280_path || img?.basic_720_path || img?.image_path || img?.prime_1280_path || '';
+}
+
+/** 흐린 배경용. 가벼운 파일 우선. */
+export function tutorPhotoBlurSrc(img) {
+  return img?.basic_360_path || img?.basic_720_path || img?.image_path || '';
+}
+
+function cssUrl(raw) {
+  const safe = String(raw || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/[()]/g, (ch) => `\\${ch}`);
+  return `url('${safe}')`;
 }
 
 /** 카드 노출용 — 1번 사진 */
@@ -384,11 +399,13 @@ export function renderTutorProfilePhotoEditor(tutor) {
   const cards = images
     .map((img, idx) => {
       const src = tutorPhotoPreviewSrc(img);
+      const blur = tutorPhotoBlurSrc(img);
       const isCover = idx === 0;
+      const frameStyle = blur ? ` style="--p21-photo-blur:${esc(cssUrl(blur))}"` : '';
       return `
       <article class="p21-photos__card${isCover ? ' is-cover' : ''}" data-photo-id="${esc(img.id)}" data-photo-idx="${idx}">
-        <div class="p21-photos__frame">
-          ${src ? `<img src="${esc(src)}" alt="프로필 사진 ${idx + 1}" />` : '<span class="p21-photos__empty">미리보기</span>'}
+        <div class="p21-photos__frame"${frameStyle}>
+          ${src ? `<img src="${esc(src)}" alt="프로필 사진 ${idx + 1}" loading="${idx === 0 ? 'eager' : 'lazy'}" decoding="async" />` : '<span class="p21-photos__empty">미리보기</span>'}
           ${isCover ? '<span class="p21-photos__badge">대표</span>' : `<span class="p21-photos__badge p21-photos__badge--muted">${idx + 1}</span>`}
         </div>
         <div class="p21-photos__meta">

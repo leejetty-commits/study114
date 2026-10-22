@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use PDO;
+use Study114\Media\PromoImageSpec;
 use Study114\Region\TutorRegionUnit;
 use Study114\Tutor\TutorDetailCompletionEvaluator;
 
@@ -307,6 +308,7 @@ final class TutorHubRepository
                 'basic_360_path' => $basic360,
                 'basic_720_path' => $basic720,
                 'prime_1280_path' => $prime,
+                'fit_1280_path' => PromoImageSpec::existingFitUrl($basic720 !== '' ? $basic720 : $basic),
                 'sort_order' => (int) ($row['sort_order'] ?? $i + 1),
                 'name' => basename($basic) ?: '',
             ];

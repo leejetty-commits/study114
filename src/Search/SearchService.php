@@ -7,6 +7,7 @@ namespace Study114\Search;
 use InvalidArgumentException;
 use PDO;
 use Study114\Database\Connection;
+use Study114\Media\PromoImageSpec;
 use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
@@ -803,6 +804,12 @@ final class SearchService
                 'image_path'                 => $exposureTier === 'prime'
                     ? (string) ($row['image_path_prime'] ?? $row['image_path_basic'] ?? '')
                     : (string) ($row['image_path_basic'] ?? $row['image_path_prime'] ?? ''),
+                'image_path_fit'             => $this->imageFitUrl(
+                    (string) ($row['image_path_prime'] ?? ''),
+                    (string) ($row['image_path_basic_720'] ?? ''),
+                    (string) ($row['image_path_basic_360'] ?? ''),
+                    (string) ($row['image_path_basic'] ?? ''),
+                ),
             ];
 
             $items[] = $item;
@@ -1058,6 +1065,7 @@ final class SearchService
                 'image_path_basic_720'   => $image720,
                 'image_path_basic'       => $imageBasic,
                 'image_path'             => $exposureTier === 'prime' ? $imagePrime : $imageBasic,
+                'image_path_fit'         => $this->imageFitUrl($imagePrime, $image720, $image360, $imageBasic),
             ];
 
             $items[] = $item;
@@ -1812,6 +1820,18 @@ final class SearchService
         $resolved = ($sku === 'prime' || $sku === 'pick') ? $sku : null;
 
         return $this->positionSkuCache[$cacheKey] = $resolved;
+    }
+
+    private function imageFitUrl(string ...$candidates): string
+    {
+        foreach ($candidates as $path) {
+            $url = PromoImageSpec::existingFitUrl($path);
+            if ($url !== '') {
+                return $url;
+            }
+        }
+
+        return '';
     }
 
     /**

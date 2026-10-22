@@ -27,15 +27,18 @@ function normalizeImages(item) {
     if (img.is_system_default) return;
     const prime = blank(img.prime_1280_path);
     const basic = blank(img.basic_720_path);
+    const fit = blank(img.fit_1280_path);
     const path = blank(img.image_path || img.src || img.name || prime || basic);
     if (!path || seen.has(path)) return;
     seen.add(path);
     if (prime) seen.add(prime);
     if (basic) seen.add(basic);
+    if (fit) seen.add(fit);
     out.push({
       image_path: path,
       basic_720_path: basic,
       prime_1280_path: prime,
+      fit_1280_path: fit,
       image_type: img.image_type || 'other',
       title: blank(img.title || img.caption),
       caption: blank(img.caption || img.title),

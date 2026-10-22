@@ -10,7 +10,7 @@ import { tutorBlankPath, tutorSectionPath } from './router.js';
 import { lessonDurationLabel } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../../shared/lesson-weekly-options.js';
 import { lessonMonthlyLabel } from '../../../shared/lesson-monthly-options.js';
-import { normalizeTutorProfileImages, tutorPhotoPreviewSrc } from './profile-photos.js';
+import { normalizeTutorProfileImages, tutorPhotoBlurSrc, tutorPhotoPreviewSrc } from './profile-photos.js';
 
 const GENDER_GROUP_LABELS = { male: '남학생', female: '여학생', mixed: '혼성' };
 const STUDENT_COUNT_LABELS = { solo: '단독', two: '2명', three: '3명', four_plus: '4명 이상' };
@@ -20,6 +20,14 @@ function esc(s) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/"/g, '&quot;');
+}
+
+function cssUrl(raw) {
+  const safe = String(raw || '')
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/[()]/g, (ch) => `\\${ch}`);
+  return `url('${safe}')`;
 }
 
 function blank(v) {
@@ -153,9 +161,11 @@ function renderProfileGallery(tutor) {
     .map((img, idx) => {
       const src = tutorPhotoPreviewSrc(img);
       if (!src) return '';
+      const blur = tutorPhotoBlurSrc(img);
+      const itemStyle = blur ? ` style="--p21-photo-blur:${esc(cssUrl(blur))}"` : '';
       return `
-      <div class="p21-profile__gallery-item${idx === 0 ? ' is-cover' : ''}">
-        <img src="${esc(src)}" alt="프로필 사진 ${idx + 1}" />
+      <div class="p21-profile__gallery-item${idx === 0 ? ' is-cover' : ''}"${itemStyle}>
+        <img src="${esc(src)}" alt="프로필 사진 ${idx + 1}" loading="${idx === 0 ? 'eager' : 'lazy'}" decoding="async" />
         ${idx === 0 ? '<span class="p21-profile__gallery-badge">대표</span>' : ''}
       </div>`;
     })
