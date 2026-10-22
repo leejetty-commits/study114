@@ -232,6 +232,15 @@ export function mypageRegistrationsUrl() {
   return `${HOME_UI_BASE}/#/mypage/registrations`;
 }
 
+/** 상세등록 나중에 — 기본등록만으로도 가입·이용 가능 */
+export function skipDetailRegistration() {
+  const ok = window.confirm(
+    '상세등록을 나중에 할까요?\n기본등록만으로도 가입은 완료된 상태입니다. 마이페이지에서 언제든 이어서 작성할 수 있습니다.',
+  );
+  if (!ok) return;
+  window.location.assign(mypageRegistrationsUrl());
+}
+
 export function bindGlobalEvents(root) {
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -272,7 +281,7 @@ export function renderNavButtons(prevPath, nextLabel = '다음') {
 }
 
 /**
- * 상세정보 단계 — 저장 / 이전 / 다음
+ * 상세정보 단계 — 이전 / 저장 / 다음에 하기 / 다음
  * @param {{ prevPath: string, nextLabel: string, nextEnabled?: boolean }} opts
  */
 export function renderDetailStepNav(opts) {
@@ -282,6 +291,7 @@ export function renderDetailStepNav(opts) {
       <div class="register-nav__start">
         <button type="button" class="btn btn--secondary" data-action="prev">이전</button>
         <button type="button" class="btn btn--secondary" data-action="save">저장</button>
+        <button type="button" class="btn btn--ghost" data-action="skip-detail">다음에 하기</button>
       </div>
       <button type="button" class="btn btn--primary" data-action="next" ${nextEnabled ? '' : 'disabled'}>${opts.nextLabel}</button>
     </div>
