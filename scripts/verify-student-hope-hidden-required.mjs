@@ -579,7 +579,8 @@ console.log('##### 3. 공부방 찾기 · 희망지역 비움 → JS 안내(aler
   fillCommon(form);
   setValue(form, '#preferred_studyroom_fee_amount', '300');
   const r = await clickNext(form);
-  ok('희망지역 비움: submit 은 나고 JS 검사 alert 로 멈춤 · 저장 안 함', r.fired && apiCalls.length === 0 && alerts.some((a) => a.includes('행정동')), JSON.stringify(alerts));
+  const regionErr = form.querySelectorAll('[data-field-error="preferred_region"]').find((el) => !el.hidden && !hiddenAncestor(el) && el.textContent.trim() !== '');
+  ok('희망지역 비움: submit 은 남 · 저장 API 0번 · 희망지역(preferred_region) 오류 칸이 보이고 문구가 비어 있지 않음', r.fired && apiCalls.length === 0 && !!regionErr, regionErr ? regionErr.textContent : JSON.stringify(alerts));
 }
 
 console.log('##### 4. 과외 찾기 회귀 #####');
