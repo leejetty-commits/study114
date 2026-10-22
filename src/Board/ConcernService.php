@@ -365,7 +365,7 @@ final class ConcernService
     }
 
     /**
-     * 본인 댓글 삭제.
+     * 본인 댓글 삭제(관리자는 남의 댓글도).
      *
      * @param array{user_id: int|string, role_type: string} $auth
      */

@@ -714,20 +714,20 @@ function renderPostReactions(post, boardKey, canReact, isOwner) {
 
 /* ── 댓글 트리 렌더링 ── */
 
-function renderCommentsTree(comments, access, currentUserId, numericPostId, boardKey) {
+function renderCommentsTree(comments, access, currentUserId, numericPostId, boardKey, isAdmin = false) {
   if (!comments.length) {
     return '<p class="concern-empty">아직 댓글이 없습니다.</p>';
   }
   return `<ul class="concern-comments__list">
-    ${comments.map((c) => renderCommentItem(c, access, currentUserId, numericPostId, boardKey)).join('')}
+    ${comments.map((c) => renderCommentItem(c, access, currentUserId, numericPostId, boardKey, isAdmin)).join('')}
   </ul>`;
 }
 
-function renderCommentItem(comment, access, currentUserId, numericPostId, boardKey) {
+function renderCommentItem(comment, access, currentUserId, numericPostId, boardKey, isAdmin = false) {
   const isDeleted = comment.status === 'deleted';
   const isHidden = comment.status === 'hidden';
   const isOwner = currentUserId && Number(comment.authorUserId) === currentUserId;
-  const canDeleteComment = isOwner && !isDeleted && !isHidden;
+  const canDeleteComment = (isOwner || isAdmin) && !isDeleted && !isHidden;
 
   const deleteBtn = canDeleteComment
     ? ` <button type="button" class="concern-comment__delete" data-concern-delete-comment="${comment.id}">삭제</button>`
@@ -745,7 +745,7 @@ function renderCommentItem(comment, access, currentUserId, numericPostId, boardK
     : '';
 
   const replies = (comment.replies || [])
-    .map((r) => renderCommentItem(r, access, currentUserId, numericPostId, boardKey))
+    .map((r) => renderCommentItem(r, access, currentUserId, numericPostId, boardKey, isAdmin))
     .join('');
 
   const replyBtn = access.canComment && !isDeleted && !isHidden && !comment.parentCommentId
@@ -1112,7 +1112,7 @@ export function bindConcernScreenEvents(root, rerender) {
         const total = countAllComments(comments);
         if (title) title.textContent = `댓글 ${total}`;
 
-        body.innerHTML = renderCommentsTree(comments, access, currentUserId, numericId, boardKey);
+        body.innerHTML = renderCommentsTree(comments, access, currentUserId, numericId, boardKey, isAdminUser(user));
 
         if (access.canComment) {
           body.insertAdjacentHTML('beforeend', renderCommentForm(numericId));
@@ -1386,7 +1386,7 @@ function bindCommentEvents(zone, numericPostId, boardKey, access, currentUserId,
     });
   });
 
-  // 댓글 삭제 (본인 댓글, 화면 안 확인)
+  // 댓글 삭제 (본인 댓글(관리자는 남의 댓글도), 화면 안 확인)
   zone.querySelectorAll('[data-concern-delete-comment]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const commentId = Number(btn.getAttribute('data-concern-delete-comment'));
