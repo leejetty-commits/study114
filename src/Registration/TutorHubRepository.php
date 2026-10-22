@@ -285,21 +285,27 @@ final class TutorHubRepository
     private function profileImages(int $tutorId): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, image_type, image_path, sort_order
+            'SELECT id, image_type, image_path, basic_360_path, basic_720_path, sort_order
              FROM tutor_images WHERE tutor_id = ? ORDER BY sort_order ASC, id ASC LIMIT 3'
         );
         $stmt->execute([$tutorId]);
         $out = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $i => $row) {
             $basic = (string) ($row['image_path'] ?? '');
-            $prime = str_contains($basic, '_basic_720')
-                ? str_replace('_basic_720', '_prime_1280', $basic)
-                : $basic;
+            $basic360 = (string) ($row['basic_360_path'] ?? '');
+            $basic720 = (string) ($row['basic_720_path'] ?? '');
+            if ($basic720 === '') {
+                $basic720 = $basic;
+            }
+            $prime = str_contains($basic720, '_basic_720')
+                ? str_replace('_basic_720', '_prime_1280', $basic720)
+                : $basic720;
             $out[] = [
                 'id' => (int) ($row['id'] ?? 0),
                 'image_type' => (string) ($row['image_type'] ?? 'other'),
                 'image_path' => $basic,
-                'basic_720_path' => $basic,
+                'basic_360_path' => $basic360,
+                'basic_720_path' => $basic720,
                 'prime_1280_path' => $prime,
                 'sort_order' => (int) ($row['sort_order'] ?? $i + 1),
                 'name' => basename($basic) ?: '',

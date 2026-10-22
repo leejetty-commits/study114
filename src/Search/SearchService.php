@@ -674,6 +674,8 @@ final class SearchService
                FROM study_room_primary_audiences srpa WHERE srpa.study_room_id = sr.id)"
             : 'NULL';
         $primeImgExpr = $this->roomCoverImageExpr($pdo, 'prime');
+        $basic360Expr = $this->roomCoverImageExpr($pdo, 'basic_360');
+        $basic720Expr = $this->roomCoverImageExpr($pdo, 'basic_720');
         $basicImgExpr = $this->roomCoverImageExpr($pdo, 'basic');
         $careerExpr = $this->columnCache($pdo, 'study_rooms', 'career_years') ? 'sr.career_years' : 'NULL';
         $bizExpr = $this->columnCache($pdo, 'study_rooms', 'business_registration_available')
@@ -698,6 +700,8 @@ final class SearchService
                    pr.dong_name AS promo_dong_name, pr.sigungu_name AS promo_sigungu_name,
                    pc.name AS promo_complex_name, srr.region_basis_type AS promo_basis,
                    {$primeImgExpr} AS image_path_prime,
+                   {$basic360Expr} AS image_path_basic_360,
+                   {$basic720Expr} AS image_path_basic_720,
                    {$basicImgExpr} AS image_path_basic
             FROM study_rooms sr
             LEFT JOIN regions r ON sr.region_id = r.id
@@ -793,6 +797,8 @@ final class SearchService
                     (int) $row['id'],
                 ),
                 'image_path_prime'           => (string) ($row['image_path_prime'] ?? ''),
+                'image_path_basic_360'       => (string) ($row['image_path_basic_360'] ?? ''),
+                'image_path_basic_720'       => (string) ($row['image_path_basic_720'] ?? ''),
                 'image_path_basic'           => (string) ($row['image_path_basic'] ?? ''),
                 'image_path'                 => $exposureTier === 'prime'
                     ? (string) ($row['image_path_prime'] ?? $row['image_path_basic'] ?? '')
@@ -918,7 +924,9 @@ final class SearchService
         $schoolLevelExpr = '(SELECT tst_lv.school_level FROM tutor_subject_targets tst_lv
                  WHERE tst_lv.tutor_id = t.id AND tst_lv.is_primary = 1
                  ORDER BY tst_lv.id ASC LIMIT 1)';
-        $tutorImgExpr = $this->tutorCoverImageExpr();
+        $tutor360Expr = $this->tutorCoverImageExpr($pdo, 'basic_360');
+        $tutor720Expr = $this->tutorCoverImageExpr($pdo, 'basic_720');
+        $tutorImgExpr = $this->tutorCoverImageExpr($pdo, 'basic');
 
         $sql = "
             SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
@@ -930,6 +938,8 @@ final class SearchService
                    t.main_material_note, t.student_gender_group, t.student_count_group,
                    {$genderExpr} AS tutor_gender,
                    {$schoolLevelExpr} AS primary_school_level,
+                   {$tutor360Expr} AS image_path_basic_360,
+                   {$tutor720Expr} AS image_path_basic_720,
                    {$tutorImgExpr} AS image_path_basic,
                    {$recommendExpr} AS recommend_count,
                    {$reviewExpr} AS review_count,
@@ -993,10 +1003,13 @@ final class SearchService
             $right .= "\n" . strtoupper($exposureTier);
 
             $gender = (string) ($row['tutor_gender'] ?? '');
-            $imageBasic = trim((string) ($row['image_path_basic'] ?? ''));
-            $imagePrime = str_contains($imageBasic, '_basic_720')
-                ? str_replace('_basic_720', '_prime_1280', $imageBasic)
-                : $imageBasic;
+            $image360 = trim((string) ($row['image_path_basic_360'] ?? ''));
+            $image720 = trim((string) ($row['image_path_basic_720'] ?? ''));
+            $imageBasic = $image360 !== '' ? $image360 : ($image720 !== '' ? $image720 : trim((string) ($row['image_path_basic'] ?? '')));
+            $primeSource = $image720 !== '' ? $image720 : trim((string) ($row['image_path_basic'] ?? ''));
+            $imagePrime = str_contains($primeSource, '_basic_720')
+                ? str_replace('_basic_720', '_prime_1280', $primeSource)
+                : $primeSource;
 
             $item = [
                 'id'                     => (int) $row['id'],
@@ -1041,6 +1054,8 @@ final class SearchService
                     (int) $row['id'],
                 ),
                 'image_path_prime'       => $imagePrime,
+                'image_path_basic_360'   => $image360,
+                'image_path_basic_720'   => $image720,
                 'image_path_basic'       => $imageBasic,
                 'image_path'             => $exposureTier === 'prime' ? $imagePrime : $imageBasic,
             ];
@@ -1799,7 +1814,10 @@ final class SearchService
         return $this->positionSkuCache[$cacheKey] = $resolved;
     }
 
-    /** 전화번호·이메일은 검색 SELECT에 넣지 않는다. 홍보사진 파생본만. */
+    /**
+     * 전화번호·이메일은 검색 SELECT에 넣지 않는다. 홍보사진 파생본만.
+     * 대표 행 순서는 cover → sort_order → id. 기본카드 값만 360, 없으면 720.
+     */
     private function roomCoverImageExpr(PDO $pdo, string $kind): string
     {
         if (!$this->tableExists($pdo, 'study_room_images')) {
@@ -1809,20 +1827,27 @@ final class SearchService
         $prime1280 = $this->columnCache($pdo, 'study_room_images', 'prime_1280_path');
         $basic720 = $this->columnCache($pdo, 'study_room_images', 'basic_720_path');
         $basic360 = $this->columnCache($pdo, 'study_room_images', 'basic_360_path');
-        $parts = $kind === 'prime'
-            ? array_values(array_filter([
+        if ($kind === 'basic_360') {
+            $select = $basic360 ? "NULLIF(sri.basic_360_path,'')" : 'NULL';
+        } elseif ($kind === 'basic_720') {
+            $select = $basic720 ? "NULLIF(sri.basic_720_path,'')" : 'NULL';
+        } elseif ($kind === 'prime') {
+            $parts = array_values(array_filter([
                 $prime1600 ? "NULLIF(sri.prime_1600_path,'')" : null,
                 $prime1280 ? "NULLIF(sri.prime_1280_path,'')" : null,
                 'NULLIF(sri.image_path,\'\')',
-            ]))
-            : array_values(array_filter([
-                $basic720 ? "NULLIF(sri.basic_720_path,'')" : null,
+            ]));
+            $select = 'COALESCE(' . implode(', ', $parts) . ')';
+        } else {
+            $parts = array_values(array_filter([
                 $basic360 ? "NULLIF(sri.basic_360_path,'')" : null,
+                $basic720 ? "NULLIF(sri.basic_720_path,'')" : null,
                 'NULLIF(sri.image_path,\'\')',
             ]));
-        $coalesce = 'COALESCE(' . implode(', ', $parts) . ')';
+            $select = 'COALESCE(' . implode(', ', $parts) . ')';
+        }
 
-        return "(SELECT {$coalesce}
+        return "(SELECT {$select}
                   FROM study_room_images sri
                  WHERE sri.study_room_id = sr.id
                  ORDER BY (sri.image_type = 'cover') DESC, sri.sort_order ASC, sri.id ASC
@@ -1896,10 +1921,27 @@ final class SearchService
     /**
      * 과외쌤 카드 사진 = 프로필 사진 1번(sort_order·id 순, TutorHubRepository::profileImages 와 같은 순서).
      * 증빙 보조(proof_aux)와 업로드 공개 경로(/uploads/)가 아닌 값(파일 이름만 있는 행 등)은 쓰지 않는다.
+     * basic: basic_360_path, 없으면 image_path. 프라임 치환은 720(또는 기존 image_path)만 쓴다.
      */
-    private function tutorCoverImageExpr(): string
+    private function tutorCoverImageExpr(PDO $pdo, string $kind = 'basic'): string
     {
-        return "(SELECT ti.image_path
+        $has360 = $this->columnCache($pdo, 'tutor_images', 'basic_360_path');
+        $has720 = $this->columnCache($pdo, 'tutor_images', 'basic_720_path');
+        if ($kind === 'basic_360') {
+            $select = $has360 ? "NULLIF(ti.basic_360_path,'')" : 'NULL';
+        } elseif ($kind === 'basic_720') {
+            $select = $has720
+                ? "COALESCE(NULLIF(ti.basic_720_path,''), NULLIF(ti.image_path,''))"
+                : "NULLIF(ti.image_path,'')";
+        } else {
+            $parts = array_values(array_filter([
+                $has360 ? "NULLIF(ti.basic_360_path,'')" : null,
+                "NULLIF(ti.image_path,'')",
+            ]));
+            $select = 'COALESCE(' . implode(', ', $parts) . ')';
+        }
+
+        return "(SELECT {$select}
                   FROM tutor_images ti
                  WHERE ti.tutor_id = t.id
                    AND ti.image_type <> 'proof_aux'
