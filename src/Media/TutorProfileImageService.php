@@ -68,6 +68,7 @@ final class TutorProfileImageService
         $info = $this->processor->assertUpload($originalAbs, $size, $origName, $clientMime);
         // PromoImageSpec 최소(800×600)만 적용 — 이미 리사이즈된 JPEG도 허용
         $dests = [
+            'basic_360' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_360.webp',
             'basic_720' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_720.webp',
             'prime_1280' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_prime_1280.webp',
         ];
@@ -83,12 +84,13 @@ final class TutorProfileImageService
         }
 
         $basicPath = $paths['basic_720'] ?? ('/' . $originalRel);
+        $basic360Path = $paths['basic_360'] ?? '';
         $imageType = $count === 0 ? 'profile' : 'intro';
 
         $stmt = $pdo->prepare(
-            'INSERT INTO tutor_images (tutor_id, image_type, image_path, sort_order) VALUES (?, ?, ?, ?)'
+            'INSERT INTO tutor_images (tutor_id, image_type, image_path, basic_360_path, basic_720_path, sort_order) VALUES (?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$tutorId, $imageType, $basicPath, $sortOrder]);
+        $stmt->execute([$tutorId, $imageType, $basicPath, $basic360Path, $basicPath, $sortOrder]);
         $id = (int) $pdo->lastInsertId();
 
         return [
@@ -98,6 +100,7 @@ final class TutorProfileImageService
             'name' => $origName,
             'original_filename' => $origName,
             'image_path' => $basicPath,
+            'basic_360_path' => $basic360Path,
             'basic_720_path' => $basicPath,
             'prime_1280_path' => $paths['prime_1280'] ?? $basicPath,
             'crop_offset_x' => $cropX,
@@ -183,7 +186,7 @@ final class TutorProfileImageService
     private function listImages(PDO $pdo, int $tutorId): array
     {
         $stmt = $pdo->prepare(
-            'SELECT id, tutor_id, image_type, image_path, sort_order
+            'SELECT id, tutor_id, image_type, image_path, basic_360_path, basic_720_path, sort_order
              FROM tutor_images WHERE tutor_id = ? ORDER BY sort_order ASC, id ASC'
         );
         $stmt->execute([$tutorId]);
@@ -206,7 +209,12 @@ final class TutorProfileImageService
     private function mapRow(array $row): array
     {
         $basic = (string) ($row['image_path'] ?? '');
-        $prime = $this->derivePrimePath($basic);
+        $basic360 = (string) ($row['basic_360_path'] ?? '');
+        $basic720 = (string) ($row['basic_720_path'] ?? '');
+        if ($basic720 === '') {
+            $basic720 = $basic;
+        }
+        $prime = $this->derivePrimePath($basic720);
 
         return [
             'id' => (int) ($row['id'] ?? 0),
@@ -215,7 +223,8 @@ final class TutorProfileImageService
             'name' => basename($basic) ?: '',
             'original_filename' => basename($basic) ?: '',
             'image_path' => $basic,
-            'basic_720_path' => $basic,
+            'basic_360_path' => $basic360,
+            'basic_720_path' => $basic720,
             'prime_1280_path' => $prime,
             'crop_offset_x' => 0.5,
             'crop_offset_y' => 0.5,
@@ -242,6 +251,7 @@ final class TutorProfileImageService
         }
         $candidates = [$rel];
         if (str_contains($rel, '_basic_720')) {
+            $candidates[] = str_replace('_basic_720', '_basic_360', $rel);
             $candidates[] = str_replace('_basic_720', '_prime_1280', $rel);
             $candidates[] = preg_replace('/_basic_720\.(webp|jpg|jpeg|png)$/i', '_orig.$1', $rel) ?: '';
             $candidates[] = preg_replace('/_basic_720\.(webp|jpg|jpeg|png)$/i', '_orig.jpg', $rel) ?: '';

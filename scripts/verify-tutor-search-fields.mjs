@@ -5,7 +5,8 @@
  * (1) PHP: searchTutors 응답에 카드 칸(사진·성별·대상·주회·분·수업장소·원생수·특징·슬로건·소개·주교재·강의스타일)이 있고
  *     값이 없으면 빈값, 비공개 칸(실명·연락처·주소·이메일 등) 없음, 숨김·탈퇴·지역1 없음 미노출
  *     → scripts/verify-tutor-search-fields.php (가짜 PDO)
- * (2) 정적: searchTutors 의 WHERE·COUNT·FROM~LIMIT(정렬) 글자 = 기준 커밋, searchRooms 본문 = 기준 커밋,
+ * (2) 정적: searchTutors 의 WHERE·COUNT·FROM~LIMIT(정렬) 글자 = 기준 커밋,
+ *     searchRooms 본문 = 276 커밋(image_path_basic_360·720 포함),
  *     search.php(손님 지역 제한·학생 요청문 게이트) = 기준 커밋, 확대카드 손님 「로그인 후 확인」 유지,
  *     홈·찾기·노출 브리지 매퍼가 summary 줄로 소개·과목을 대신 채우지 않음
  * (3) 화면 매퍼(vite-node, preview/home-ui): (1)의 실제 응답을 홈 mapTutor·찾기 mapToExposureItem 에 넣으면
@@ -66,10 +67,15 @@ function summary(out, tag) {
 
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8').replace(/\r\n/g, '\n');
 function readBase(rel) {
-  const r = spawnSync('git', ['show', `${BASE_REF}:${rel}`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
-  if (r.status !== 0) throw new Error(`git show ${BASE_REF}:${rel} — ${r.stderr}`);
+  return readAt(BASE_REF, rel);
+}
+function readAt(ref, rel) {
+  const r = spawnSync('git', ['show', `${ref}:${rel}`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+  if (r.status !== 0) throw new Error(`git show ${ref}:${rel} — ${r.stderr}`);
   return r.stdout.replace(/\r\n/g, '\n');
 }
+/** 276에서 공부방 응답에 image_path_basic_360·720 을 더한 커밋. searchRooms 본문만 이 기준. */
+const ROOM_BODY_REF = 'dd174e19';
 function fnBody(src, name, kind = 'private') {
   const at = src.indexOf(`${kind} function ${name}(`);
   if (at < 0) return '';
@@ -135,7 +141,11 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
     const b = between(baseT, ...seg);
     return a !== null && a === b;
   })());
-  ok('searchRooms 본문 = 기준 커밋(공부방 응답 무변경)', fnBody(cur, 'searchRooms') !== '' && fnBody(cur, 'searchRooms') === fnBody(base, 'searchRooms'));
+  ok('searchRooms 본문 = 276 커밋(image_path_basic_360·720 포함)', () => {
+    const body = fnBody(cur, 'searchRooms');
+    const at276 = fnBody(readAt(ROOM_BODY_REF, 'src/Search/SearchService.php'), 'searchRooms');
+    return body !== '' && body === at276;
+  });
   ok('guestScopedFilters 본문 = 기준 커밋', fnBody(cur, 'guestScopedFilters', 'public') !== ''
     && fnBody(cur, 'guestScopedFilters', 'public') === fnBody(base, 'guestScopedFilters', 'public'));
   ok('search.php(손님 지역 제한 · 학생 요청문 게이트) = 기준 커밋', read('public/api/search/search.php') === readBase('public/api/search/search.php'));
@@ -264,7 +274,7 @@ async function runMapperPart(items) {
   ok('프라임 카드: 사진·대상·수업장소·주교재·특징3·강의스타일·소개·슬로건·주회·분이 그려짐', primeMiss.length === 0, primeMiss.join(' | '));
   const pickMiss = expectIn(pick, [t7.grade_band, placeLabel, t7.main_material_note, t7.feature_1, t7.slogan]);
   ok('픽 카드: 대상·수업장소·주교재·특징·슬로건이 그려짐', pickMiss.length === 0, pickMiss.join(' | '));
-  const basicMiss = expectIn(basic, [t7.image_path, t7.grade_band, placeLabel, '주2·90분', t7.feature_1, t7.slogan]);
+  const basicMiss = expectIn(basic, [t7.image_path_basic, t7.grade_band, placeLabel, '주2·90분', t7.feature_1, t7.slogan]);
   ok('베이직 가로카드: 사진·대상·수업장소·주○·○분·특징·슬로건이 그려짐', basicMiss.length === 0, basicMiss.join(' | '));
   const tableMiss = expectIn(basicTable, [t7.grade_band, placeLabel, '주2·90분', t7.feature_1, t7.slogan]);
   ok('베이직 표: 대상·수업장소·주○·○분·특징·슬로건이 그려짐', tableMiss.length === 0, tableMiss.join(' | '));
