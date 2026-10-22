@@ -140,9 +140,12 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
     && fnBody(cur, 'guestScopedFilters', 'public') === fnBody(base, 'guestScopedFilters', 'public'));
   ok('search.php(손님 지역 제한 · 학생 요청문 게이트) = 기준 커밋', read('public/api/search/search.php') === readBase('public/api/search/search.php'));
   const detail = read('preview/home-ui/src/detail-decision/tutor-detail.js');
+  const detailAt269 = readBase('preview/home-ui/src/detail-decision/tutor-detail.js')
+    .replace('<dt>성별</dt>', '<dt>과외쌤 성별</dt>')
+    .replace('<dt>원생수</dt>', '<dt>학생구성</dt>');
   ok('확대카드 손님 「로그인 후 확인」 4칸(일정·강의스타일·학적상태·학교·학과) 유지 · 파일 = 기준 커밋',
     (detail.match(/isGuest \? '로그인 후 확인'/g) || []).length === 4
-      && detail === readBase('preview/home-ui/src/detail-decision/tutor-detail.js'));
+      && detail === detailAt269);
 
   const live = read('preview/home-ui/src/home-basic-live.js');
   const mapTutorSrc = jsFn(live, 'mapTutor');
