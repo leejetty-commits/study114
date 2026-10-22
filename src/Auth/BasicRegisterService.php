@@ -1344,19 +1344,6 @@ final class BasicRegisterService
     }
 
     /** @param array<string, mixed> $input */
-    private function requireBirthYear(array $input): int
-    {
-        if (!isset($input['birth_year']) || $input['birth_year'] === '') {
-            throw new InvalidArgumentException('birth_year: 필수 입력입니다.');
-        }
-        $year = (int) $input['birth_year'];
-        if ($year < 1990 || $year > (int) date('Y')) {
-            throw new InvalidArgumentException('birth_year: 1990~현재 연도 사이로 입력해 주세요.');
-        }
-        return $year;
-    }
-
-    /** @param array<string, mixed> $input */
     private function requirePositiveInt(array $input, string $key): int
     {
         if (!isset($input[$key]) || $input[$key] === '') {
