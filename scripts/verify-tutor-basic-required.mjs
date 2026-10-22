@@ -152,7 +152,7 @@ const screensOf = {
   '가입 renderTutorBasic': fnBody(files.signup, 'renderTutorBasic'),
   '가입 renderMainSubjectOne': fnBody(files.signup, 'renderMainSubjectOne'),
   '마이페이지 renderBasicForm': fnBody(files.screens, 'renderBasicForm'),
-  'tutor-ui renderBasic': fnBody(files.stepBasic, 'renderBasic'),
+  'tutor-ui renderBasic': fnBody(files.stepBasic, 'renderBasic') + fnBody(files.stepBasic, 'renderBasicFields'),
 };
 const detailOf = {
   '마이페이지 renderDetailForm': read('preview/home-ui/src/tutor-reg/embedded-panels.js')
@@ -314,6 +314,9 @@ try {
       addEventListener() {},
       removeEventListener() {},
     };
+  }
+  if (typeof globalThis.document === 'undefined') {
+    globalThis.document = { body: { classList: { toggle() {}, add() {}, remove() {}, contains() { return false; } } } };
   }
   const { renderBasic } = await import('../preview/tutor-ui/src/screens/step-basic.js');
   renderedBasic = renderBasic();
