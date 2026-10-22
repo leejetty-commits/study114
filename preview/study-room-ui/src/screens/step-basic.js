@@ -67,6 +67,8 @@ function exposureLines(s) {
 }
 
 let basicEditOpen = false;
+/** @type {{ reset: () => void, destroy: () => void } | null} */
+let basicEditDrag = null;
 
 function isBasicEditRequested() {
   if (!isRegisterEditMode()) return false;
@@ -194,6 +196,8 @@ function onEditEscape(e) {
 }
 
 function closeBasicEdit() {
+  basicEditDrag?.destroy();
+  basicEditDrag = null;
   document.removeEventListener('keydown', onEditEscape);
   basicEditOpen = false;
   if (isBasicEditRequested()) {
@@ -258,6 +262,8 @@ export function bindBasicEvents(root) {
   });
 
   const overlay = root.querySelector('[data-basic-edit-overlay]');
+  basicEditDrag?.destroy();
+  basicEditDrag = null;
   if (!overlay) return;
 
   overlay.addEventListener('click', (e) => {
@@ -269,10 +275,11 @@ export function bindBasicEvents(root) {
   });
 
   const form = overlay.querySelector('[data-form="basic-all"]');
-  bindDraggableDialog(
+  basicEditDrag = bindDraggableDialog(
     overlay.querySelector('.register-edit-dialog'),
     overlay.querySelector('.register-edit-dialog__head'),
   );
+  basicEditDrag.reset();
   bindStudyRoomBasicFields(form || overlay, {
     getRegions,
     onRegion(region) {
