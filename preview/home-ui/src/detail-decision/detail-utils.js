@@ -35,12 +35,12 @@ function cssUrl(raw) {
 }
 
 /**
- * 펼친 카드 사진. fit이 있으면 그 파일, 없으면 지금 파일.
+ * 펼친 카드 사진. fit이면 16:9, 정사각 대체면 square.
  * 흐린 배경은 가벼운 파생본. 카드 목록 renderMedia 는 쓰지 않는다.
  * @param {string} src
  * @param {string} blurSrc
  * @param {string} alt
- * @param {{ logo?: string, eager?: boolean }} [opts]
+ * @param {{ logo?: string, eager?: boolean, square?: boolean }} [opts]
  */
 export function renderUncroppedPhoto(src, blurSrc, alt, opts = {}) {
   const photo = String(src || '').trim();
@@ -56,7 +56,8 @@ export function renderUncroppedPhoto(src, blurSrc, alt, opts = {}) {
   }
   const style = blur ? ` style="--p24-fit-blur:${esc(cssUrl(blur))}"` : '';
   const onerror = logo ? ` onerror="this.onerror=null;this.src='${esc(logo)}'"` : '';
-  return `<div class="p24-fit-photo"${style}><img src="${esc(photo)}" alt="${esc(alt || '')}" loading="${loading}" decoding="async"${onerror} /></div>`;
+  const klass = opts.square ? 'p24-fit-photo p24-fit-photo--square' : 'p24-fit-photo';
+  return `<div class="${klass}"${style}><img src="${esc(photo)}" alt="${esc(alt || '')}" loading="${loading}" decoding="async"${onerror} /></div>`;
 }
 
 export function inquiryStatusLabel(status) {
