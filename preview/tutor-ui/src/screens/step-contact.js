@@ -117,7 +117,7 @@ export function renderContactFormHtml(opts = {}) {
       </div>
       ${
         includeStepNav
-          ? renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '나중에 하기' })
+          ? renderNavButtons('/register/lesson', '등록 완료', { skipLabel: '다음에 하기', showSave: true })
           : includeFooterActions
             ? `<div class="register-embed-actions">
               <button type="button" class="btn btn--primary" data-action="save">저장</button>

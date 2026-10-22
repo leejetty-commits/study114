@@ -19,6 +19,7 @@ import {
   bindGlobalEvents,
   navigate,
   basicOverviewPath,
+  skipDetailRegistration,
 } from '../layout.js';
 import { MAIN_SUBJECT_OPTIONS } from '../../../shared/main-subjects.js';
 import { renderPromoPhotoGrid, promoPhotoHint, bindPromoPhotos, syncPromoPhotoMeta } from '../promo-photos.js';
@@ -354,6 +355,7 @@ export function bindLessonEvents(root, opts = {}) {
   const nextBtn = root.querySelector('[data-action="next"]');
   const prevBtn = root.querySelector('[data-action="prev"]');
   const saveBtn = root.querySelector('[data-action="save"]');
+  const skipBtn = root.querySelector('[data-action="skip-detail"]');
   const refresh = () => {
     if (typeof opts.onRefresh === 'function') opts.onRefresh();
     else window.dispatchEvent(new Event('hashchange'));
@@ -369,6 +371,7 @@ export function bindLessonEvents(root, opts = {}) {
   bindInputFill(form);
 
   prevBtn?.addEventListener('click', () => navigate(basicOverviewPath()));
+  skipBtn?.addEventListener('click', () => skipDetailRegistration());
 
   root.querySelector('[data-action="cancel-edit"]')?.addEventListener('click', () => {
     if (typeof opts.onCancel === 'function') opts.onCancel();

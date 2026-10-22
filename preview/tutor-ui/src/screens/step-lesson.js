@@ -148,7 +148,7 @@ export function renderLessonFormHtml(opts = {}) {
       ${embed ? '' : `<a class="register-mypage-link" href="${mypageRegistrationsUrl()}">표시명·과외지역·월 과외비·주 회수·1회 수업시간 등 기본정보는 마이페이지에서 수정</a>`}
       ${
         includeStepNav
-          ? renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '나중에 하기' })
+          ? renderNavButtons(prevPath, '다음: 학력·연락', { skipLabel: '다음에 하기', showSave: true })
           : includeFooterActions
             ? `<div class="register-embed-actions">
               <button type="button" class="btn btn--primary" data-action="save">저장</button>

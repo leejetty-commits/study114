@@ -14,6 +14,7 @@ import {
   bindGlobalEvents,
   navigate,
   withRoomId,
+  skipDetailRegistration,
 } from '../layout.js';
 
 function esc(s) {
@@ -219,12 +220,14 @@ export function bindFacilityEvents(root, opts = {}) {
   const prevBtn = root.querySelector('[data-action="prev"]');
   const nextBtn = root.querySelector('[data-action="next"]');
   const saveBtn = root.querySelector('[data-action="save"]');
+  const skipBtn = root.querySelector('[data-action="skip-detail"]');
   const refresh = () => {
     if (typeof opts.onRefresh === 'function') opts.onRefresh();
     else window.dispatchEvent(new Event('hashchange'));
   };
 
   prevBtn?.addEventListener('click', () => navigate(withRoomId('/register/lesson')));
+  skipBtn?.addEventListener('click', () => skipDetailRegistration());
 
   root.querySelector('[data-action="cancel-edit"]')?.addEventListener('click', () => {
     if (typeof opts.onCancel === 'function') opts.onCancel();
