@@ -151,7 +151,78 @@ final class PromoImageProcessor
             throw new InvalidArgumentException('지원하지 않는 이미지 형식입니다.');
         }
 
-        return $img;
+        return $this->applyExifOrientation($img, $path);
+    }
+
+    /** JPEG EXIF가 있으면 바로 세운다. 확장이 없거나 값이 깨져도 업로드는 계속한다. */
+    private function applyExifOrientation($img, string $path)
+    {
+        if (!function_exists('exif_read_data')) {
+            return $img;
+        }
+        $orientation = 1;
+        try {
+            $exif = @exif_read_data($path);
+            if (is_array($exif)) {
+                $orientation = (int) ($exif['Orientation'] ?? 1);
+            }
+        } catch (\Throwable) {
+            return $img;
+        }
+        if ($orientation < 2 || $orientation > 8) {
+            return $img;
+        }
+        $next = $this->orientGdImage($img, $orientation);
+        if ($next === false) {
+            return $img;
+        }
+        if ($next !== $img) {
+            imagedestroy($img);
+        }
+
+        return $next;
+    }
+
+    /**
+     * @param \GdImage $img
+     * @return \GdImage|false
+     */
+    private function orientGdImage($img, int $orientation)
+    {
+        switch ($orientation) {
+            case 2:
+                imageflip($img, IMG_FLIP_HORIZONTAL);
+
+                return $img;
+            case 3:
+                return imagerotate($img, 180, 0);
+            case 4:
+                imageflip($img, IMG_FLIP_VERTICAL);
+
+                return $img;
+            case 5:
+                $rot = imagerotate($img, 90, 0);
+                if ($rot === false) {
+                    return false;
+                }
+                imageflip($rot, IMG_FLIP_HORIZONTAL);
+
+                return $rot;
+            case 6:
+                return imagerotate($img, -90, 0);
+            case 7:
+                $rot = imagerotate($img, -90, 0);
+                if ($rot === false) {
+                    return false;
+                }
+                imageflip($rot, IMG_FLIP_HORIZONTAL);
+
+                return $rot;
+            case 8:
+                return imagerotate($img, 90, 0);
+            default:
+                return $img;
+        }
     }
 
     /**
@@ -170,8 +241,9 @@ final class PromoImageProcessor
         }
         $cw = max(1, min($w, $cw));
         $ch = max(1, min($h, $ch));
-        $cx = (int) round($fx * $w - $cw / 2);
-        $cy = (int) round($fy * $h - $ch / 2);
+        // 미리보기 object-position·cropResizeToCanvas 와 같음. 0.5는 가운데 식과 같다.
+        $cx = (int) round(($w - $cw) * $fx);
+        $cy = (int) round(($h - $ch) * $fy);
         $cx = max(0, min($w - $cw, $cx));
         $cy = max(0, min($h - $ch, $cy));
 

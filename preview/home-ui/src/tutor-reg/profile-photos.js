@@ -22,8 +22,8 @@ export const TUTOR_PROFILE_PHOTO_SPEC = {
   minHeight: 800,
   recommended: '1200×1200 이상',
   basicSize: 720,
-  /** 서버 업로드용 (원본 대신 보내 닷홈 메모리·용량 부담 감소) */
-  uploadSize: 1200,
+  /** 이보다 긴 변은 자르지 않고 이 길이로만 줄여 보낸다. */
+  uploadLongEdge: 1600,
   primeWidth: 1280,
   primeHeight: 720,
   jpegQuality: 0.82,
@@ -245,15 +245,6 @@ export async function processTutorProfilePhoto(file, cropX, cropY) {
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
     );
-    const upload = cropResizeToCanvas(
-      img,
-      sw,
-      sh,
-      cx,
-      cy,
-      TUTOR_PROFILE_PHOTO_SPEC.uploadSize,
-      TUTOR_PROFILE_PHOTO_SPEC.uploadSize,
-    );
     const prime = cropResizeToCanvas(
       img,
       sw,
@@ -264,13 +255,11 @@ export async function processTutorProfilePhoto(file, cropX, cropY) {
       TUTOR_PROFILE_PHOTO_SPEC.primeHeight,
     );
     const basicUrl = canvasToJpegDataUrl(basic, q);
-    const uploadUrl = canvasToJpegDataUrl(upload, q);
     const primeUrl = canvasToJpegDataUrl(prime, q);
     return {
       name: file.name || 'profile.jpg',
       basic_720_path: basicUrl,
       prime_1280_path: primeUrl,
-      upload_1200_path: uploadUrl,
       image_path: basicUrl,
       crop_x: cx,
       crop_y: cy,
@@ -318,10 +307,46 @@ async function readApiError(res) {
 }
 
 /**
- * @param {number} tutorId
+ * 서버로 보낼 파일. 4MB 이하이고 긴 변이 1600 이하면 원본.
+ * 넘으면 자르지 않고 긴 변 1600 JPEG.
  * @param {File} file
- * @param {{ cropX: number, cropY: number }} crop
+ * @returns {Promise<File>}
  */
+export async function fileForTutorProfileUpload(file) {
+  const maxBytes = TUTOR_PROFILE_PHOTO_SPEC.maxBytes;
+  const longEdge = TUTOR_PROFILE_PHOTO_SPEC.uploadLongEdge;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
+      el.src = url;
+    });
+    const sw = img.naturalWidth || img.width;
+    const sh = img.naturalHeight || img.height;
+    const long = Math.max(sw, sh);
+    if (file.size <= maxBytes && long <= longEdge) {
+      return file;
+    }
+    const scale = long > longEdge ? longEdge / long : 1;
+    const tw = Math.max(1, Math.round(sw * scale));
+    const th = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw;
+    canvas.height = th;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('이미지 캔버스를 만들 수 없습니다.');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, tw, th);
+    const dataUrl = canvasToJpegDataUrl(canvas, TUTOR_PROFILE_PHOTO_SPEC.jpegQuality);
+    return dataUrlToJpegFile(dataUrl, file.name || 'profile.jpg');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 async function uploadTutorProfilePhotoApi(tutorId, file, crop) {
   const fd = new FormData();
   fd.append('action', 'upload');
@@ -517,11 +542,7 @@ export function bindTutorProfilePhotos(root, opts) {
       const local = await processTutorProfilePhoto(prepared, crop.cropX, crop.cropY);
       let uploaded = null;
       if (isRegistrationsApiMode()) {
-        // 원본 2~4MB 대신 1200px JPEG만 올려 서버 GD 메모리·용량 부담을 줄인다.
-        const uploadFile = await dataUrlToJpegFile(
-          local.upload_1200_path || local.basic_720_path,
-          local.name || 'profile.jpg',
-        );
+        const uploadFile = await fileForTutorProfileUpload(prepared);
         uploaded = await uploadTutorProfilePhotoApi(tutorId, uploadFile, crop);
       }
       const merged = [

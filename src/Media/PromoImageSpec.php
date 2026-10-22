@@ -40,6 +40,25 @@ final class PromoImageSpec
     public const FIT_TARGET_BYTES = 409600;
 
     /**
+     * crop 값. 숫자이고 유한하며 0~1이면 그대로, 아니면 가운데(0.5).
+     */
+    public static function normalizeCropOffset(mixed $value): float
+    {
+        if (is_string($value)) {
+            $value = trim($value);
+        }
+        if ($value === null || $value === '' || is_bool($value) || !is_numeric($value)) {
+            return 0.5;
+        }
+        $n = (float) $value;
+        if (!is_finite($n) || $n < 0.0 || $n > 1.0) {
+            return 0.5;
+        }
+
+        return $n;
+    }
+
+    /**
      * 같은 토큰의 파생 경로를 fit_1280.webp 경로로 바꾼다.
      * _orig 나 이미 fit 인 경로는 빈 문자열.
      */

@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\AuthSession;
 use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
+use Study114\Media\PromoImageSpec;
 use Study114\Media\TutorProfileImageService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -90,8 +91,8 @@ try {
             $userId,
             $tutorId,
             $_FILES['file'],
-            (float) ($input['crop_x'] ?? 0.5),
-            (float) ($input['crop_y'] ?? 0.5),
+            PromoImageSpec::normalizeCropOffset($input['crop_x'] ?? null),
+            PromoImageSpec::normalizeCropOffset($input['crop_y'] ?? null),
         );
         tutor_profile_image_json(['ok' => true, 'image' => $image]);
     }
