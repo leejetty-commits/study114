@@ -672,6 +672,22 @@
     padding: 0.1rem 0.25rem;
     letter-spacing: -0.02em;
   }
+
+  .expo-basic--tutor.expo-hcard {
+    position: relative;
+  }
+  .expo-basic--tutor .expo-hcard__side .card-visual__trust--rail {
+    position: absolute;
+    left: 0.6rem;
+    top: calc(0.55rem + 5.75rem + 0.2rem);
+    width: 5.75rem;
+    margin: 0;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    overflow: visible;
+    z-index: 1;
+  }
 }
 
 @media (max-width: 420px) {

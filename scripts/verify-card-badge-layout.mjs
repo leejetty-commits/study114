@@ -205,6 +205,17 @@ const stress = `
     </div>
   </article>`;
 
+function withTutorTrust(html) {
+  const marker = 'data-provider-id="2924"';
+  const start = html.indexOf(marker);
+  const end = html.indexOf('</article>', start);
+  if (start < 0 || end < 0) return html;
+  let slice = html.slice(start, end).replace(marker, `${marker} data-many="tutor"`);
+  const rail = '<div class="card-visual__trust card-visual__trust--rail" aria-label="신뢰 배지">';
+  slice = slice.replace(rail, `${rail}<span class="card-visual__trust-badge">교육청등록</span>`);
+  return html.slice(0, start) + slice + html.slice(end);
+}
+
 const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <link rel="stylesheet" href="/preview/home-ui/src/styles/tokens.css">
 <link rel="stylesheet" href="/preview/home-ui/src/styles/design-system.css">
@@ -212,7 +223,7 @@ const html = `<!doctype html><html lang="ko"><head><meta charset="utf-8">
 <link rel="stylesheet" href="/preview/search-ui/src/styles/search-visily.css">
 <style>
   body { margin: 0; background: #f8fafc; }
-  .col { max-width: 40rem; padding: 12px; }
+  .col { padding: 12px; }
   h2 { margin: 0 0 8px; font: 600 14px/1.4 sans-serif; }
 </style></head><body>
 <section id="normal" class="col"><h2>보통</h2>
@@ -223,7 +234,7 @@ ${renderBrowseList('student', [student(older, 2927)], { guest: false, viewerRole
 </section>
 <section id="many" class="col"><h2>배지 많음</h2>
 ${renderBrowseList('study_room', [roomMany], { guest: false })}
-${renderBrowseList('tutor', [tutorMany], { guest: false })}
+${withTutorTrust(renderBrowseList('tutor', [tutorMany], { guest: false }))}
 ${stress}
 </section>
 <section id="pick" class="col"><h2>픽 과외쌤</h2>
@@ -277,7 +288,7 @@ function serve(pageHtml) {
 function audit(fitSrc) {
   const fit = (0, eval)('(' + fitSrc + ')');
   fit(document);
-  const sel = '.card-visual__promo-badge, .card-visual__trust-badge, .expo-overlay-val, .expo-overlay-bl-grid__cell, .card-stats, .item-actions, .expo-hcard__badge, .card-visual__trust-more, .expo-hcard__slogan, .expo-hcard__meta';
+  const sel = '.card-visual__promo-badge, .card-visual__trust-badge, .expo-overlay-val, .expo-overlay-bl-grid__cell, .card-stats, .item-actions, .expo-hcard__badge, .card-visual__trust-more, .expo-hcard__slogan, .expo-hcard__meta, .expo-hcard__name, .expo-hcard__price, .expo-hcard__loc, .expo-hcard__tags';
   const visibleBox = (el) => {
     if (el.hidden || getComputedStyle(el).display === 'none') return null;
     let rect = el.getBoundingClientRect();
@@ -326,7 +337,8 @@ function audit(fitSrc) {
     const first = promo?.firstElementChild;
     const neu = card.querySelector('.card-visual__promo-badge--new');
     const neuBox = neu ? visibleBox(neu) : null;
-    const paid = [...card.querySelectorAll('.card-visual__promo-badge:not(.card-visual__promo-badge--new)')]
+    const paidAll = [...card.querySelectorAll('.card-visual__promo-badge:not(.card-visual__promo-badge--new)')];
+    const paid = paidAll
       .map((el) => ({ el, box: visibleBox(el) }))
       .filter((row) => row.box && row.box.height >= 8);
     const tops = [...new Set(paid.map((row) => Math.round(row.box.top)))];
@@ -338,15 +350,36 @@ function audit(fitSrc) {
     const more = rail?.querySelector('.card-visual__trust-more');
     return {
       many: card.dataset.many || '',
+      normal: Boolean(card.closest('#normal')),
       photoBadges: card.querySelectorAll('.expo-hcard__media-wrap .expo-hcard__badge').length,
       newFirst: Boolean(first && first.classList.contains('card-visual__promo-badge--new')),
       newGold: neu ? getComputedStyle(neu).backgroundColor : '',
       newLeft: neuBox ? (neuBox.left + neuBox.right) / 2 < mediaBox.left + mediaBox.width / 2 && neuBox.top < mediaBox.top + mediaBox.height / 2 : null,
       paidRight: paid.every((row) => (row.box.left + row.box.right) / 2 >= mediaBox.left + mediaBox.width / 2 && row.box.top < mediaBox.top + mediaBox.height / 2),
       paidLines: tops.length,
+      paidInside: paid.every((row) => {
+        const raw = row.el.getBoundingClientRect();
+        return raw.height >= 8
+          && raw.left >= mediaBox.left - 1
+          && raw.right <= mediaBox.right + 1
+          && raw.top >= mediaBox.top - 1
+          && raw.bottom <= mediaBox.bottom + 1;
+      }),
+      paidHidden: paidAll.length - paid.length,
+      paidMissing: paidAll.filter((el) => {
+        const box = visibleBox(el);
+        return !(box && box.height >= 8);
+      }).map((el) => el.textContent),
+      trustCount: trust.length,
       trustInSide: trustVisible.every((el) => el.closest('.expo-hcard__side')),
       trustInPhoto: card.querySelectorAll('.expo-hcard__media-wrap .card-visual__trust-badge').length,
       trustLines: trustTops.length,
+      trustUnderPhoto: trustVisible.length > 0 && trustVisible.every((el) => {
+        const raw = el.getBoundingClientRect();
+        return raw.top >= mediaBox.bottom - 1
+          && raw.left >= mediaBox.left - 2
+          && raw.right <= mediaBox.right + 2;
+      }),
       hiddenTrust,
       more: more ? more.textContent : '',
       railClip: rail ? rail.scrollWidth > rail.clientWidth + 1 : false,
@@ -385,8 +418,12 @@ try {
     ok(`${width} 잘림 0`, report.clip.length === 0, report.clip.slice(0, 6).join(' / '));
     ok(`${width} 사진 배지 0`, report.cards.every((card) => card.photoBadges === 0));
     ok(`${width} New는 첫 자식·왼쪽 위·금색`, report.cards.filter((card) => card.newGold).every((card) => card.newFirst && card.newLeft && card.newGold === 'rgb(232, 185, 49)'));
-    ok(`${width} 유료 배지 오른쪽 위·2줄 이하`, report.cards.filter((card) => card.paidLines > 0).every((card) => card.paidRight && card.paidLines <= 2));
-    ok(`${width} 신뢰 배지는 반응 줄·한 줄·사진 밖`, report.cards.every((card) => card.trustInPhoto === 0 && (card.trustLines === 0 || (card.trustInSide && card.trustLines === 1 && !card.railClip))));
+    ok(`${width} 보통 카드 유료 배지 2줄 이하`, report.cards.filter((card) => card.normal).every((card) => card.paidLines <= 2));
+    ok(`${width} 유료 배지 3줄 이하·사진 칸 안`, report.cards.filter((card) => card.paidLines > 0).every((card) => card.paidLines <= 3 && card.paidInside));
+    ok(`${width} 유료 배지 숨김 0개`, report.cards.every((card) => card.paidHidden === 0), report.cards.filter((card) => card.paidHidden).map((card) => `${card.many || 'card'}:${card.paidMissing.join('+')}`).join(', '));
+    const tutorCard = report.cards.find((card) => card.many === 'tutor');
+    ok(`${width} 과외쌤 믿음배지 4개 이상·+N 없음`, Boolean(tutorCard) && tutorCard.trustCount >= 4 && tutorCard.hiddenTrust === 0 && tutorCard.more === '' && tutorCard.railClip === false, JSON.stringify(tutorCard));
+    ok(`${width} 신뢰 배지는 사진 밖`, report.cards.every((card) => card.trustInPhoto === 0 && (card.trustLines <= 1 || card.trustUnderPhoto) && !card.railClip));
     const many = report.cards.find((card) => card.many === 'all');
     ok(`${width} 많은 카드 +N은 숨긴 개수와 같음`, Boolean(many) && (many.hiddenTrust === 0 ? many.more === '' : many.more === `+${many.hiddenTrust}`), JSON.stringify(many));
     await page.locator('#normal').screenshot({ path: join(SHOTS, `${width}-normal.png`) });
