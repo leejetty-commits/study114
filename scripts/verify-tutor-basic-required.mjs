@@ -438,7 +438,25 @@ function sqlFilesAddingColumnOrTable() {
 }
 const sqlAdding = sqlFilesAddingColumnOrTable();
 assert(sqlAdding !== null && !sqlAdding.some((rel) => sqlAddsTutorColumnOrTable(read(rel))), 'sql/ 과외쌤 표에 새 컬럼·새 표 없음');
-assert(same('src/Media/TutorProfileImageService.php'), '사진 업로드 서버 그대로');
+/** 276에서 새 업로드에 360 파일을 넣은 뒤의 사진 업로드 서버. 그 이후 변경은 그대로 잡는다. */
+const PHOTO_UPLOAD_REF = 'dd174e19';
+function readCommit(ref, rel) {
+  try {
+    return execFileSync('git', ['show', `${ref}:${rel}`], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      maxBuffer: 64 * 1024 * 1024,
+    }).replace(/\r\n/g, '\n');
+  } catch {
+    return '';
+  }
+}
+assert(
+  read('src/Media/TutorProfileImageService.php') !== ''
+    && read('src/Media/TutorProfileImageService.php') === readCommit(PHOTO_UPLOAD_REF, 'src/Media/TutorProfileImageService.php'),
+  '사진 업로드 서버 그대로',
+);
 assert(
   !Object.values(files).some((s) => s.includes('room-card-default')),
   '과외쌤 기본등록 코드가 공부방 기본 이미지(room-card-default) 안 씀',

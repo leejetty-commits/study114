@@ -1816,7 +1816,7 @@ final class SearchService
 
     /**
      * 전화번호·이메일은 검색 SELECT에 넣지 않는다. 홍보사진 파생본만.
-     * 대표 행 순서는 cover → sort_order → id. 기본카드 값만 360, 없으면 720.
+     * 대표 행 순서는 cover → sort_order → id. 기본카드 값은 720, 없으면 360, 없으면 원본.
      */
     private function roomCoverImageExpr(PDO $pdo, string $kind): string
     {
@@ -1840,8 +1840,8 @@ final class SearchService
             $select = 'COALESCE(' . implode(', ', $parts) . ')';
         } else {
             $parts = array_values(array_filter([
-                $basic360 ? "NULLIF(sri.basic_360_path,'')" : null,
                 $basic720 ? "NULLIF(sri.basic_720_path,'')" : null,
+                $basic360 ? "NULLIF(sri.basic_360_path,'')" : null,
                 'NULLIF(sri.image_path,\'\')',
             ]));
             $select = 'COALESCE(' . implode(', ', $parts) . ')';
