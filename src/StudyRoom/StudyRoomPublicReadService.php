@@ -111,7 +111,7 @@ final class StudyRoomPublicReadService
         $facilityNames = $this->facilityNames($roomId);
         $facilityNote = trim((string) ($row['facility_note'] ?? ''));
         $images = $this->publicImages($roomId);
-        $cover = $images[0]['image_path'] ?? '';
+        $cover = (string) ((($c = array_values(array_filter($images, static fn (array $img): bool => ($img['image_type'] ?? '') === 'cover'))[0] ?? [])['image_path'] ?? '') ?: ($images[0]['image_path'] ?? ''));
         $promoRegions = $this->promoRegions($roomId);
         $locationLabel = $promoRegions[0] ?? $this->fallbackRegionLabel($row);
 
@@ -329,8 +329,8 @@ final class StudyRoomPublicReadService
                         COALESCE(is_system_default, 0) AS is_system_default
                    FROM study_room_images
                   WHERE study_room_id = ?
-                  ORDER BY (image_type = 'cover') DESC, sort_order ASC, id ASC
-                  LIMIT 12"
+                  ORDER BY sort_order ASC, id ASC
+                  LIMIT 5"
             );
             $stmt->execute([$roomId]);
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -340,8 +340,8 @@ final class StudyRoomPublicReadService
                     "SELECT image_type, image_path, sort_order, original_filename, {$captionCol}
                        FROM study_room_images
                       WHERE study_room_id = ?
-                      ORDER BY (image_type = 'cover') DESC, sort_order ASC, id ASC
-                      LIMIT 12"
+                      ORDER BY sort_order ASC, id ASC
+                      LIMIT 5"
                 );
                 $stmt->execute([$roomId]);
                 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -369,10 +369,12 @@ final class StudyRoomPublicReadService
                 continue;
             }
             $out[] = [
-                'image_type'  => (string) ($img['image_type'] ?? 'other'),
-                'image_path'  => $path,
-                'sort_order'  => (int) ($img['sort_order'] ?? 0),
-                'title'       => trim((string) ($img['caption'] ?? '')),
+                'image_type'       => (string) ($img['image_type'] ?? 'other'),
+                'image_path'       => $path,
+                'prime_1280_path'  => trim((string) ($img['prime_1280_path'] ?? '')),
+                'basic_720_path'   => trim((string) ($img['basic_720_path'] ?? '')),
+                'sort_order'       => (int) ($img['sort_order'] ?? 0),
+                'title'            => trim((string) ($img['caption'] ?? '')),
             ];
         }
 

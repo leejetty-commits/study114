@@ -6,7 +6,7 @@
 import { renderMyshopShowcase, buildShopViewModel, SHOP_SECTION_ORDER, SHOP_FALLBACK_MATRIX } from '../preview/home-ui/src/study-room-reg/myshop-render.js';
 import { toMyshopShowcaseInputs } from '../preview/home-ui/src/myshop/public-model.js';
 import {
-  splitHeroAndGallery,
+  splitPhotoSlots,
   collectShopPhotos,
   formatCapacity,
   formatMonthlyFeeBand,
@@ -17,7 +17,7 @@ import {
   SHOP_FORBIDDEN_KEYS,
 } from '../preview/home-ui/src/study-room-reg/shop-formatters.js';
 import {
-  resolveHeroGalleryWithFallback,
+  resolvePhotoSlots,
   resolveHeroCopy,
   visibleShopSections,
 } from '../preview/home-ui/src/study-room-reg/shop-view-model.js';
@@ -163,18 +163,19 @@ ok('fmt_생활권', formatLivingAreaSentence(['대치동', '은마']) === '대�
 ok('VM_섹션키수', SHOP_SECTION_ORDER.length === 12);
 ok('VM_fallback문서', Boolean(SHOP_FALLBACK_MATRIX.heroImage?.length && SHOP_FALLBACK_MATRIX.classes?.length));
 {
-  const emptyPhoto = resolveHeroGalleryWithFallback([]);
-  ok('FB_사진없음', emptyPhoto.ruleId === 'no_photos' && !emptyPhoto.hero);
-  const noCover = resolveHeroGalleryWithFallback([
+  const emptyPhoto = resolvePhotoSlots([]);
+  ok('FB_사진없음', emptyPhoto.ruleId === 'no_photos' && emptyPhoto.top.length === 0 && emptyPhoto.bottom.length === 0);
+  const two = resolvePhotoSlots([
     { src: '/a.jpg', type: 'interior' },
     { src: '/b.jpg', type: 'other' },
   ]);
-  ok('FB_cover없음_첫장Hero', noCover.ruleId === 'no_cover_first_photo' && noCover.hero?.src === '/a.jpg');
-  const withCover = resolveHeroGalleryWithFallback([
-    { src: '/c.jpg', type: 'cover' },
-    { src: '/i.jpg', type: 'interior' },
+  ok('FB_1to2_윗단만', two.ruleId === 'top_only' && two.top.map((p) => p.src).join(',') === '/a.jpg,/b.jpg' && two.bottom.length === 0);
+  const coverThird = resolvePhotoSlots([
+    { src: '/1.jpg', type: 'interior' },
+    { src: '/2.jpg', type: 'facility' },
+    { src: '/3.jpg', type: 'cover' },
   ]);
-  ok('FB_cover우선', withCover.ruleId === 'cover' && withCover.hero?.src === '/c.jpg');
+  ok('FB_cover가3번', coverThird.ruleId === 'top_and_bottom' && coverThird.top[0]?.src === '/1.jpg' && coverThird.bottom[0]?.src === '/3.jpg');
   ok('FB_슬로건만', resolveHeroCopy('슬로건', '').ruleId === 'slogan_only');
   ok('FB_한줄만', resolveHeroCopy('', '한줄').ruleId === 'intro_only' && resolveHeroCopy('', '한줄').lead === '한줄');
   ok('FB_동일문구', resolveHeroCopy('같음', '같음').ruleId === 'same' && !resolveHeroCopy('같음', '같음').lead);
@@ -194,7 +195,7 @@ ok('VM_fallback문서', Boolean(SHOP_FALLBACK_MATRIX.heroImage?.length && SHOP_F
   ok('FB_한줄_HeroLead', vm.hero.lead === '한줄만' && !vm.hero.slogan);
   ok('FB_수업없음_가격타일', vm.classes.items.length === 0 && vm.facts.tiles.some((t) => t.label === '가격대'));
   ok('FB_지역1_문장', vm.livingArea.labels.length === 1 && vm.hero.livingLine.includes('생활권'));
-  ok('FB_meta규칙', vm.meta.fallbacks.heroImage === 'no_cover_first_photo' && vm.meta.fallbacks.classes === 'no_classes_fee_tile');
+  ok('FB_meta규칙', vm.meta.fallbacks.heroImage === 'top_only' && vm.meta.fallbacks.classes === 'no_classes_fee_tile');
   ok('VM_visible에hero', visibleShopSections(vm).includes('hero') && visibleShopSections(vm).includes('facts'));
   ok('VM_offerings여지', vm.meta.offeringsAlias === 'classes');
 }
@@ -297,53 +298,117 @@ ok('VM_fallback문서', Boolean(SHOP_FALLBACK_MATRIX.heroImage?.length && SHOP_F
   ok('수업카드_2개', countClassCards(ownerHtml) === 2);
   ok('raw_enum_없음', !ownerHtml.includes('one_to_four') && !ownerHtml.includes('group_by_time_slot'));
   ok('원생수_변환', ownerHtml.includes('1~4명'));
-  ok('Gallery_내부우선', /shop-gallery__hero[\s\S]*room-2\.jpg/.test(ownerHtml));
+  ok('사진순서_올린대로', ownerHtml.indexOf('room-1.jpg') < ownerHtml.indexOf('room-2.jpg') && ownerHtml.indexOf('room-2.jpg') < ownerHtml.indexOf('room-3.jpg'));
   ok('준비중문구_없음', !ownerHtml.includes('준비중') && !ownerHtml.includes('정보 없음'));
 }
 
-// —— 사진 1/3/5 ——
+// —— 사진 0~5 고정 칸 ——
+function sliceBalancedDiv(html, marker) {
+  const at = html.indexOf(marker);
+  if (at < 0) return '';
+  const start = html.lastIndexOf('<div', at);
+  const re = /<\/?div\b[^>]*>/gi;
+  re.lastIndex = start;
+  let depth = 0;
+  let m;
+  while ((m = re.exec(html))) {
+    depth += m[0].startsWith('</') ? -1 : 1;
+    if (depth === 0) return html.slice(start, m.index + m[0].length);
+  }
+  return '';
+}
+function countCells(html, marker) {
+  const block = sliceBalancedDiv(html, marker);
+  if (!block) return { box: false, photos: 0, empty: 0 };
+  return {
+    box: true,
+    photos: (block.match(/data-shop-thumb=/g) || []).length,
+    empty: (block.match(/shop-photo--empty/g) || []).length,
+  };
+}
+function countTopCells(html) {
+  return countCells(html, 'data-shop-photos="top"');
+}
+function countBottomCells(html) {
+  return countCells(html, 'data-shop-photos="bottom"');
+}
+
 {
-  const one = collectShopPhotos(
-    baseState({ images: [{ image_type: 'cover', image_path: '/p1.jpg' }] }),
-  );
-  const split1 = splitHeroAndGallery(one);
-  ok('사진1_Hero만', Boolean(split1.hero) && split1.gallery.length === 0);
+  const html0 = stripRoot(renderMyshopShowcase(baseState({ images: [] }), roomOf(baseState())));
+  ok('사진0_칸없음', !html0.includes('data-shop-photos') && !html0.includes('room-card-default'));
+  ok('사진0_이름카드', html0.includes('shop-hero__card') && html0.includes('shop-hero__name'));
+}
+
+{
+  const one = collectShopPhotos(baseState({ images: [{ image_type: 'cover', image_path: '/p1.jpg' }] }));
+  const split1 = splitPhotoSlots(one);
+  ok('사진1_윗단만', split1.top.length === 1 && split1.bottom.length === 0);
   const html1 = stripRoot(
     renderMyshopShowcase(baseState({ images: [{ image_type: 'cover', image_path: '/p1.jpg' }] }), roomOf(baseState())),
   );
+  const top1 = countTopCells(html1);
+  ok('사진1_칸2_빈1', top1.box && top1.photos === 1 && top1.empty === 1 && !countBottomCells(html1).box);
   ok('사진1_Gallery섹션숨김', !sectionIds(html1).includes('gallery'));
   ok('사진1_레이아웃유지', html1.includes('shop-hero') && html1.includes('data-shop-root'));
+  ok('사진1_액자', html1.includes('shop-photo--framed') && html1.includes('shop-photo__area'));
 }
 
 {
   const imgs = [
-    { image_type: 'cover', image_path: '/c.jpg' },
-    { image_type: 'other', image_path: '/o.jpg' },
-    { image_type: 'interior', image_path: '/i.jpg' },
+    { image_type: 'interior', image_path: '/1.jpg', sort_order: 1, basic_720_path: '/1-basic.jpg', prime_1280_path: '/1-prime.jpg' },
+    { image_type: 'facility', image_path: '/2.jpg', sort_order: 2, basic_720_path: '/2-basic.jpg', prime_1280_path: '/2-prime.jpg' },
+    { image_type: 'cover', image_path: '/3.jpg', sort_order: 3, basic_720_path: '/3-basic.jpg', prime_1280_path: '/3-prime.jpg' },
   ];
-  const split = splitHeroAndGallery(collectShopPhotos(baseState({ images: imgs })));
-  ok('사진3_Hero커버', split.hero?.src === '/c.jpg');
-  ok('사진3_Gallery내부우선', split.gallery[0]?.src === '/i.jpg' && split.gallery[1]?.src === '/o.jpg');
+  const split = splitPhotoSlots(collectShopPhotos(baseState({ images: imgs })));
+  ok('사진3_순서유지', split.top.map((p) => p.src).join(',') === '/1-prime.jpg,/2-prime.jpg' && split.bottom[0]?.src === '/3-prime.jpg');
+  ok('사진3_blur_basic', split.bottom[0]?.blurSrc === '/3-basic.jpg');
   const html = stripRoot(renderMyshopShowcase(baseState({ images: imgs }), roomOf(baseState())));
-  ok('사진3_Gallery렌더', sectionIds(html).includes('gallery') && (html.match(/data-shop-thumb/g) || []).length === 2);
+  const bottom = countBottomCells(html);
+  ok('사진3_아랫단3칸_빈2', sectionIds(html).includes('gallery') && bottom.photos === 1 && bottom.empty === 2);
+  ok('사진3_cover는3번칸', /data-shop-photo-index="3"[^>]*data-shop-thumb="\/3-prime\.jpg"|data-shop-thumb="\/3-prime\.jpg"[^>]*data-shop-photo-index="3"/.test(html));
+  ok('사진3_blur스타일', html.includes("--shop-photo-blur:url('/3-basic.jpg')") || html.includes('--shop-photo-blur:url(&#39;/3-basic.jpg&#39;)') || html.includes("/3-basic.jpg"));
 }
 
 {
   const imgs = [
-    { image_type: 'cover', image_path: '/1.jpg' },
-    { image_type: 'interior', image_path: '/2.jpg' },
-    { image_type: 'facility', image_path: '/3.jpg' },
-    { image_type: 'other', image_path: '/4.jpg' },
-    { image_type: 'other', image_path: '/5.jpg' },
+    { image_type: 'cover', image_path: '/1.jpg', sort_order: 3 },
+    { image_type: 'interior', image_path: '/2.jpg', sort_order: 1 },
+    { image_type: 'facility', image_path: '/3.jpg', sort_order: 2 },
+    { image_type: 'other', image_path: '/4.jpg', sort_order: 4 },
+    { image_type: 'other', image_path: '/5.jpg', sort_order: 5 },
+    { image_type: 'other', image_path: '/6.jpg', sort_order: 6 },
   ];
-  const split = splitHeroAndGallery(collectShopPhotos(baseState({ images: imgs })));
-  ok('사진5_Gallery4장', split.gallery.length === 4);
-  ok(
-    '사진5_정렬',
-    split.gallery.map((g) => g.type).join(',') === 'interior,facility,other,other',
-  );
+  const five = collectShopPhotos(baseState({ images: imgs }));
+  ok('사진6_5장', five.length === 5 && !five.some((p) => p.src === '/6.jpg'));
+  const split = splitPhotoSlots(five);
+  ok('사진5_정렬은올린순서', split.top.map((p) => p.src).join(',') === '/2.jpg,/3.jpg' && split.bottom.map((p) => p.src).join(',') === '/1.jpg,/4.jpg,/5.jpg');
   const html = stripRoot(renderMyshopShowcase(baseState({ images: imgs }), roomOf(baseState())));
-  ok('사진5_붕괴없음', html.includes('shop-gallery__thumbs') && html.includes('shop-hero'));
+  const top = countTopCells(html);
+  const bottom = countBottomCells(html);
+  ok('사진5_칸고정', top.photos === 2 && top.empty === 0 && bottom.photos === 3 && bottom.empty === 0);
+  ok('사진5_contain클래스', html.includes('shop-photos--top') && html.includes('shop-photos--bottom'));
+}
+
+{
+  const css = fs.readFileSync(path.join(__dirname, '../preview/home-ui/src/styles/myshop.css'), 'utf8');
+  ok('CSS_contain', css.includes('object-fit: contain'));
+  ok('CSS_윗단2', /shop-photos--top\s*\{[^}]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(css));
+  ok('CSS_아랫단3', /shop-photos--bottom\s*\{[^}]*repeat\(3,\s*minmax\(0,\s*1fr\)\)/.test(css));
+  ok('CSS_모바일아랫단2', /max-width:\s*720px[\s\S]*shop-photos--bottom\s*\{[^}]*repeat\(2,\s*minmax\(0,\s*1fr\)\)/.test(css));
+}
+
+{
+  const dup = toMyshopShowcaseInputs({
+    images: [
+      { image_path: '/orig.jpg', prime_1280_path: '/p.jpg', basic_720_path: '/b.jpg', image_type: 'interior', sort_order: 1 },
+    ],
+    image_path_prime: '/p.jpg',
+    image_path: '/orig.jpg',
+    image_path_basic: '/b.jpg',
+    gallery: ['/p.jpg'],
+    study_room_name: '중복검사',
+  });
+  ok('같은사진_한번', dup.state.images.length === 1 && dup.state.images[0].basic_720_path === '/b.jpg' && dup.state.images[0].prime_1280_path === '/p.jpg');
 }
 
 // —— 수업 1/2/3 ——
@@ -398,7 +463,7 @@ const htmlB = stripRoot(renderMyshopShowcase(caseB, roomOf(caseB)));
 fs.writeFileSync(path.join(outDir, 'case-B.html'), htmlB, 'utf8');
 const idsB = sectionIds(htmlB);
 ok('케이스B_수업2', countClassCards(htmlB) === 2);
-ok('케이스B_시설신뢰Gallery', idsB.includes('facilities') && idsB.includes('trust') && idsB.includes('gallery'));
+ok('케이스B_시설신뢰_사진2는아랫단없음', idsB.includes('facilities') && idsB.includes('trust') && !idsB.includes('gallery'));
 
 const caseC = baseState({
   images: [
@@ -462,6 +527,7 @@ ok(
   }
   ok('섹션순서_고정', mono, idsC.join('>'));
   ok('섹션순서_상수일치', JSON.stringify(order) === JSON.stringify(SHOP_SECTION_ORDER));
+  ok('아랫단_맨끝', order[order.length - 1] === 'gallery' && idsC.indexOf('gallery') > idsC.indexOf('inquiry'));
 }
 
 // 비교 페이지 (스크린샷용 산출물)
