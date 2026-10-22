@@ -321,9 +321,10 @@
 .expo-hcard__media-wrap {
   position: relative;
   grid-row: 1 / span 2;
-  width: 100%;
-  min-height: 0;
-  align-self: stretch;
+  width: 6.75rem;
+  height: 6.75rem;
+  aspect-ratio: 1 / 1;
+  align-self: start;
   border-radius: 0.4rem;
   overflow: hidden;
   background: #e8eef7;
@@ -555,9 +556,10 @@
 .expo-basic--tutor .expo-hcard__media-wrap,
 .expo-basic--student .expo-hcard__media-wrap,
 .expo-basic--study_room .expo-hcard__media-wrap {
-  width: 100%;
-  min-height: 0;
-  align-self: stretch;
+  width: 6.75rem;
+  height: 6.75rem;
+  aspect-ratio: 1 / 1;
+  align-self: start;
 }
 
 /* 그리드 안 학생 티저 — 컴팩트 동일 톤 (마스킹/문구 JS 불변) */
@@ -610,9 +612,10 @@
   .expo-basic--study_room .expo-hcard__media-wrap,
   .expo-basic--tutor .expo-hcard__media-wrap,
   .expo-basic--student .expo-hcard__media-wrap {
-    width: 100%;
-    min-height: 0;
-    align-self: stretch;
+    width: 5.75rem;
+    height: 5.75rem;
+    aspect-ratio: 1 / 1;
+    align-self: start;
   }
 
   .expo-basic--study_room.expo-hcard,
