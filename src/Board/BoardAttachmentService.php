@@ -345,6 +345,14 @@ final class BoardAttachmentService
         } catch (InvalidArgumentException) {
             throw new InvalidArgumentException('사진만 올릴 수 있어요. JPG, PNG, WebP 중에서 골라 주세요.');
         }
+        $width = (int) ($info['width'] ?? 0);
+        $height = (int) ($info['height'] ?? 0);
+        if (
+            max($width, $height) > 12000
+            || ($width > 0 && $height > intdiv(40000000, $width))
+        ) {
+            throw new InvalidArgumentException('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
+        }
         $mime = (string) ($info['mime'] ?? '');
         /** @var list<string> $allowedMimes */
         $allowedMimes = $rules['allowed_mimes'] ?? ['image/jpeg', 'image/png', 'image/webp'];
