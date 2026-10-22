@@ -78,8 +78,10 @@ final class TutorProfileImageService
             'basic_720' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_720.webp',
             'prime_1280' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_prime_1280.webp',
         ];
+        $fitAbs = $this->publicRoot() . '/' . $relDir . '/' . $token . '_fit_1280.webp';
         try {
             $this->processor->writeVariants($originalAbs, $cropX, $cropY, $dests);
+            $this->writeFitQuiet($originalAbs, $fitAbs);
 
             $paths = [];
             foreach ($dests as $variant => $abs) {
@@ -108,6 +110,9 @@ final class TutorProfileImageService
                     @unlink($jpg);
                 }
             }
+            if (is_file($fitAbs)) {
+                @unlink($fitAbs);
+            }
             if (is_file($tmp)) {
                 @unlink($tmp);
             }
@@ -124,6 +129,7 @@ final class TutorProfileImageService
             'basic_360_path' => $basic360Path,
             'basic_720_path' => $basicPath,
             'prime_1280_path' => $paths['prime_1280'] ?? $basicPath,
+            'fit_1280_path' => PromoImageSpec::existingFitUrl((string) ($paths['prime_1280'] ?? $basicPath), $this->publicRoot()),
             'crop_offset_x' => $cropX,
             'crop_offset_y' => $cropY,
             'original_width' => $info['width'],
@@ -247,9 +253,28 @@ final class TutorProfileImageService
             'basic_360_path' => $basic360,
             'basic_720_path' => $basic720,
             'prime_1280_path' => $prime,
+            'fit_1280_path' => PromoImageSpec::existingFitUrl($basic720 !== '' ? $basic720 : $basic, $this->publicRoot()),
             'crop_offset_x' => 0.5,
             'crop_offset_y' => 0.5,
         ];
+    }
+
+    private function writeFitQuiet(string $originalAbs, string $fitAbs): void
+    {
+        try {
+            $this->processor->shrinkLongEdgeWebp(
+                $originalAbs,
+                $fitAbs,
+                PromoImageSpec::FIT_LONG_EDGE,
+                82,
+                PromoImageSpec::FIT_TARGET_BYTES,
+            );
+        } catch (\Throwable $e) {
+            error_log('[fit_1280] ' . $e->getMessage());
+            if (is_file($fitAbs)) {
+                @unlink($fitAbs);
+            }
+        }
     }
 
     private function derivePrimePath(string $basicPath): string
@@ -271,6 +296,10 @@ final class TutorProfileImageService
             return;
         }
         $candidates = [$rel];
+        $fitRel = ltrim(PromoImageSpec::fitPathFor('/' . $rel), '/');
+        if ($fitRel !== '') {
+            $candidates[] = $fitRel;
+        }
         if (str_contains($rel, '_basic_720')) {
             $candidates[] = str_replace('_basic_720', '_basic_360', $rel);
             $candidates[] = str_replace('_basic_720', '_prime_1280', $rel);

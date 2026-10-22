@@ -186,7 +186,7 @@ export function resolveFacilityNames(s) {
 
 function imgSrc(img) {
   if (!img || typeof img !== 'object') return '';
-  return blank(img.prime_1280_path || img.image_path || img.name || img.src || img.basic_720_path);
+  return blank(img.fit_1280_path || img.prime_1280_path || img.image_path || img.name || img.src || img.basic_720_path);
 }
 
 function isSystemDefaultImage(img) {

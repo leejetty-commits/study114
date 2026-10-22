@@ -424,17 +424,20 @@ function withoutWishlistCardIds(body) {
   if (counts.some((n) => n !== 1)) return null;
   return body.replace(ROOM_CARD_IDS_ARG, '): array\n').replace(ROOM_CARD_IDS_BLOCK, '').replace(NEXT_DOC_CARD_IDS, '');
 }
-const mainSearch = spawnSync('git', ['show', `${BASE_REF}:src/Search/SearchService.php`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
+/** 288 searchRooms. region-cascade·찾기 화면 비교는 BASE_REF 그대로. */
+const SEARCH_ROOMS_REF = 'f41408da4d7a5c19b9265788aabc710c196ab240';
+const mainSearch = spawnSync('git', ['show', `${SEARCH_ROOMS_REF}:src/Search/SearchService.php`], { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
 if (mainSearch.status === 0) {
-  const a = fnBody(mainSearch.stdout.replace(/\r\n/g, '\n'), 'searchRooms');
+  const aRaw = fnBody(mainSearch.stdout.replace(/\r\n/g, '\n'), 'searchRooms');
   const b = fnBody(searchPhp.replace(/\r\n/g, '\n'), 'searchRooms');
+  const a = withoutWishlistCardIds(aRaw);
   const bBase = withoutWishlistCardIds(b);
   ok(
     '공부방 검색: 찜 카드 번호 조건은 번호를 줄 때만 붙음',
     bBase !== null && !bBase.includes('cardIds'),
     bBase === null ? '찜 전용 조각 모양이 다름' : '',
   );
-  ok('공부방 검색 searchRooms 본문 = 변경 전 main 과 같음 (찜 카드 번호 조건만 빼고)', a !== '' && bBase === a, `${a.length}/${bBase?.length ?? 'null'}`);
+  ok('공부방 검색 searchRooms 본문 = 변경 전 main 과 같음 (찜 카드 번호 조건만 빼고)', a !== null && a !== '' && bBase === a, `${a?.length ?? 'null'}/${bBase?.length ?? 'null'}`);
 } else {
   ok('변경 전 main SearchService 읽기', false, mainSearch.stderr);
 }

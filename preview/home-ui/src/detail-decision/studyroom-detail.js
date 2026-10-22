@@ -4,8 +4,8 @@ import {
   formatLessonPlace,
   formatStudyRoomCapacity,
 } from '../exposure-format.js';
-import { renderMedia, listingImage } from '../exposure-render.js';
-import { esc, studyRoomParentInquiryLine } from './detail-utils.js';
+import { listingImage } from '../exposure-render.js';
+import { esc, renderUncroppedPhoto, studyRoomParentInquiryLine } from './detail-utils.js';
 import { coarseRegionForGuest } from '../student-blind-teaser.js';
 import { renderPromoLinksSection } from '../../../shared/promo-links.js';
 import { reviewSectionPlaceholder } from '../provider-reviews/ui.js';
@@ -33,7 +33,12 @@ export function renderStudyRoomDetailBody(item, viewer) {
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
-        <dt>사진</dt><dd>${renderMedia(listingImage(item, 'pick'), item.study_room_name, 'pick', { roomDefault: true })}</dd>
+        <dt>사진</dt><dd>${renderUncroppedPhoto(
+          String(item.image_path_fit || '').trim() || listingImage(item, 'pick'),
+          String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim(),
+          item.study_room_name,
+          { logo: '/assets/brand/room-card-default-pick.svg', eager: true },
+        )}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>
         <dt>대상</dt><dd>${esc(item.grade_band || '—')}</dd>
         <dt>위치</dt><dd>${esc(locationLabel)}</dd>

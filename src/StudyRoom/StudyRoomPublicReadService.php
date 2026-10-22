@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\StudyRoom;
 
 use PDO;
+use Study114\Media\PromoImageSpec;
 use Study114\Media\StudyRoomDefaultImageService;
 use Study114\Visibility\WithdrawnOwnerSql;
 
@@ -368,11 +369,14 @@ final class StudyRoomPublicReadService
             if ($path === '') {
                 continue;
             }
+            $prime = trim((string) ($img['prime_1280_path'] ?? ''));
+            $basic720 = trim((string) ($img['basic_720_path'] ?? ''));
             $out[] = [
                 'image_type'       => (string) ($img['image_type'] ?? 'other'),
                 'image_path'       => $path,
-                'prime_1280_path'  => trim((string) ($img['prime_1280_path'] ?? '')),
-                'basic_720_path'   => trim((string) ($img['basic_720_path'] ?? '')),
+                'prime_1280_path'  => $prime,
+                'basic_720_path'   => $basic720,
+                'fit_1280_path'    => PromoImageSpec::existingFitUrl($prime !== '' ? $prime : ($basic720 !== '' ? $basic720 : $path)),
                 'sort_order'       => (int) ($img['sort_order'] ?? 0),
                 'title'            => trim((string) ($img['caption'] ?? '')),
             ];

@@ -411,6 +411,28 @@ function countBottomCells(html) {
   ok('같은사진_한번', dup.state.images.length === 1 && dup.state.images[0].basic_720_path === '/b.jpg' && dup.state.images[0].prime_1280_path === '/p.jpg');
 }
 
+{
+  const imgs = [
+    { image_type: 'cover', image_path: '/1.jpg', sort_order: 1, basic_720_path: '/1-basic.jpg', prime_1280_path: '/1-prime.jpg', fit_1280_path: '/1-fit.webp' },
+  ];
+  const photos = collectShopPhotos(baseState({ images: imgs }));
+  ok('사진_fit먼저', photos.length === 1 && photos[0].src === '/1-fit.webp' && photos[0].blurSrc === '/1-basic.jpg');
+  const shown = toMyshopShowcaseInputs({
+    images: imgs,
+    image_path_prime: '/1-prime.jpg',
+    image_path: '/1.jpg',
+    image_path_basic: '/1-basic.jpg',
+    gallery: ['/1-fit.webp'],
+    study_room_name: 'fit',
+  });
+  ok(
+    '같은사진_fit전달',
+    shown.state.images.length === 1
+      && shown.state.images[0].fit_1280_path === '/1-fit.webp'
+      && shown.state.images[0].prime_1280_path === '/1-prime.jpg',
+  );
+}
+
 // —— 수업 1/2/3 ——
 for (const n of [1, 2, 3]) {
   const classes = Array.from({ length: n }, (_, i) => ({
