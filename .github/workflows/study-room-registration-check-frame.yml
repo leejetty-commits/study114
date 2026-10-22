@@ -40,5 +40,8 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install root deps
+        run: npm ci
+
       - name: Guard — study-room registration-check frame
         run: npm run verify:study-room-registration-check-frame

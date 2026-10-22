@@ -42,5 +42,8 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install root deps
+        run: npm ci
+
       - name: Guard — tutor register same-tab
         run: npm run verify:tutor-register-same-tab
