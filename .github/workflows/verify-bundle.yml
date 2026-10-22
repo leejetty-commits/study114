@@ -55,6 +55,9 @@ jobs:
         working-directory: preview/home-ui
         run: npm ci
 
+      - name: Install root deps
+        run: npm ci
+
       - name: Basic exposure gate
         if: ${{ !cancelled() }}
         run: node scripts/verify-basic-exposure-gate.mjs
@@ -62,9 +65,6 @@ jobs:
       - name: Remove publish
         if: ${{ !cancelled() }}
         run: npm run verify:remove-publish
-
-      - name: Install root deps
-        run: npm ci
 
       - name: Hide inquiry bundle
         if: ${{ !cancelled() }}
