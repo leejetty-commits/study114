@@ -303,6 +303,11 @@ final class ConcernService
             $this->assertPostOwnership($existing, $userId);
         }
 
+        (new BoardAttachmentService())->deleteConcernPhotosForPost(
+            (string) $existing['board_key'],
+            (string) $existing['post_key'],
+        );
+
         $this->postRepo->updateAdminReview(
             (string) $existing['board_key'],
             (string) $existing['post_key'],

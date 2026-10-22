@@ -87,4 +87,78 @@ final class BoardAttachmentRepository
 
         return (string) $row['storage_path'];
     }
+
+    /**
+     * 고민방 사진 키(photo-1~3)만. submission primary 는 건드리지 않는다.
+     *
+     * @param list<string> $keys
+     * @return list<array<string, mixed>>
+     */
+    public function listByKeys(string $boardKey, string $postKey, array $keys): array
+    {
+        if ($keys === []) {
+            return [];
+        }
+        $marks = implode(',', array_fill(0, count($keys), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT id, board_key, post_key, attachment_key, original_name, storage_path,
+                    mime_type, size_bytes, created_at, updated_at
+             FROM board_post_attachments
+             WHERE board_key = ? AND post_key = ? AND attachment_key IN ($marks)
+             ORDER BY attachment_key ASC"
+        );
+        $stmt->execute(array_merge([$boardKey, $postKey], $keys));
+        $rows = $stmt->fetchAll();
+
+        return $rows === false ? [] : $rows;
+    }
+
+    /** @return array<string, mixed> */
+    public function insertKeyed(
+        string $boardKey,
+        string $postKey,
+        string $attachmentKey,
+        string $originalName,
+        string $storagePath,
+        string $mimeType,
+        int $sizeBytes,
+    ): array {
+        if (!str_starts_with($attachmentKey, 'photo-')) {
+            throw new \InvalidArgumentException('고민방 사진 키가 아닙니다.');
+        }
+        $stmt = $this->pdo->prepare(
+            'INSERT INTO board_post_attachments
+             (board_key, post_key, attachment_key, original_name, storage_path, mime_type, size_bytes)
+             VALUES (?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([
+            $boardKey,
+            $postKey,
+            $attachmentKey,
+            $originalName,
+            $storagePath,
+            $mimeType,
+            $sizeBytes,
+        ]);
+        $rows = $this->listByKeys($boardKey, $postKey, [$attachmentKey]);
+
+        return $rows[0];
+    }
+
+    public function deleteKeyed(string $boardKey, string $postKey, string $attachmentKey): ?string
+    {
+        if (!str_starts_with($attachmentKey, 'photo-')) {
+            throw new \InvalidArgumentException('고민방 사진 키가 아닙니다.');
+        }
+        $rows = $this->listByKeys($boardKey, $postKey, [$attachmentKey]);
+        if ($rows === []) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare(
+            'DELETE FROM board_post_attachments WHERE board_key = ? AND post_key = ? AND attachment_key = ?'
+        );
+        $stmt->execute([$boardKey, $postKey, $attachmentKey]);
+
+        return (string) $rows[0]['storage_path'];
+    }
 }
