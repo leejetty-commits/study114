@@ -34,6 +34,9 @@ final class PromoImageSpec
         'basic_720'  => '1:1',
     ];
 
+    /** 16:9는 자르지 않고 담고, 빈 곳은 같은 사진을 흐리게 채운다. */
+    public const CONTAIN_VARIANTS = ['prime_1280', 'prime_1600'];
+
     /** 자르지 않은 긴 변 파일. VARIANTS에 넣지 않는다. */
     public const FIT_KEY = 'fit_1280';
     public const FIT_LONG_EDGE = 1280;

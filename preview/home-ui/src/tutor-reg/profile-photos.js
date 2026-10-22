@@ -217,6 +217,32 @@ function cropResizeToCanvas(img, sw, sh, cropX, cropY, tw, th) {
   return canvas;
 }
 
+/** 프라임 미리보기. 전체를 담고 빈 곳은 같은 사진을 흐리게. 원본보다 키우지 않는다. */
+function containBlurToCanvas(img, sw, sh, tw, th) {
+  const canvas = document.createElement('canvas');
+  canvas.width = tw;
+  canvas.height = th;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('이미지 캔버스를 만들 수 없습니다.');
+  const bw = Math.max(8, Math.floor(tw / 8));
+  const bh = Math.max(8, Math.floor(th / 8));
+  const small = document.createElement('canvas');
+  small.width = bw;
+  small.height = bh;
+  const sctx = small.getContext('2d');
+  if (!sctx) throw new Error('이미지 캔버스를 만들 수 없습니다.');
+  const cover = Math.max(bw / sw, bh / sh);
+  sctx.drawImage(img, (bw - sw * cover) / 2, (bh - sh * cover) / 2, sw * cover, sh * cover);
+  ctx.filter = 'blur(10px)';
+  ctx.drawImage(small, tw * -0.06, th * -0.06, tw * 1.12, th * 1.12);
+  ctx.filter = 'none';
+  const scale = Math.min(tw / sw, th / sh, 1);
+  const fw = sw * scale;
+  const fh = sh * scale;
+  ctx.drawImage(img, (tw - fw) / 2, (th - fh) / 2, fw, fh);
+  return canvas;
+}
+
 /**
  * @param {File} file
  * @param {number} cropX
@@ -245,12 +271,10 @@ export async function processTutorProfilePhoto(file, cropX, cropY) {
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
       TUTOR_PROFILE_PHOTO_SPEC.basicSize,
     );
-    const prime = cropResizeToCanvas(
+    const prime = containBlurToCanvas(
       img,
       sw,
       sh,
-      cx,
-      cy,
       TUTOR_PROFILE_PHOTO_SPEC.primeWidth,
       TUTOR_PROFILE_PHOTO_SPEC.primeHeight,
     );
