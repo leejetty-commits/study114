@@ -68,7 +68,7 @@ jobs:
 
       - name: Hide inquiry bundle
         if: ${{ !cancelled() }}
-        run: npx --yes vite-node scripts/verify-hide-inquiry-bundle.mjs
+        run: npx --yes vite-node --config preview/home-ui/vite.hide-inquiry.config.js scripts/verify-hide-inquiry-bundle.mjs
 
       - name: Tutor search fields
         if: ${{ !cancelled() }}
