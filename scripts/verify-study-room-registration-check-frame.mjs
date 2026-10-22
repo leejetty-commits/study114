@@ -139,7 +139,7 @@ assert(!store.includes("id: 'contact', label: '문의·쪽지 방식'"), 'store:
 
 assert(tutorRender.includes('renderTutorRegistrationCheck'), 'tutor render untouched marker');
 assert(tutorModel.includes('buildTutorRegistrationCheckModel'), 'tutor model untouched marker');
-assert(tutorCopy.includes("detail1: '수업 · 가격'"), 'tutor copy labels untouched');
+assert(tutorCopy.includes("detail1: '수업 · 과목 · 가격'"), 'tutor copy labels untouched');
 assert(!tutorEdit.includes('data-trc-expand'), 'tutor edit: no expand sample');
 assert(!tutorModel.includes('study-room-reg'), 'tutor model not mixed with study-room copy');
 assert(!tutorRender.includes('data-rc-page'), 'tutor render stays on data-trc-page');
