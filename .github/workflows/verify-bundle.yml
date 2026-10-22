@@ -55,6 +55,9 @@ jobs:
         working-directory: preview/home-ui
         run: npm ci
 
+      - name: Install root deps
+        run: npm ci
+
       - name: Basic exposure gate
         if: ${{ !cancelled() }}
         run: node scripts/verify-basic-exposure-gate.mjs
@@ -65,7 +68,7 @@ jobs:
 
       - name: Hide inquiry bundle
         if: ${{ !cancelled() }}
-        run: npx --yes vite-node scripts/verify-hide-inquiry-bundle.mjs
+        run: npx --yes vite-node --config preview/home-ui/vite.hide-inquiry.config.js scripts/verify-hide-inquiry-bundle.mjs
 
       - name: Tutor search fields
         if: ${{ !cancelled() }}

@@ -43,6 +43,9 @@ jobs:
         working-directory: preview/tutor-ui
         run: npm ci
 
+      - name: Install root deps
+        run: npm ci
+
       - name: Guard — tutor lesson optional step
         run: npm run verify:tutor-lesson-optional-step
 

@@ -158,6 +158,29 @@ boolProp('disabled');
 boolProp('required');
 boolProp('readOnly', 'readonly');
 
+function dataAttrName(key) {
+  return `data-${String(key).replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`)}`;
+}
+Object.defineProperty(FakeElement.prototype, 'dataset', {
+  get() {
+    const el = this;
+    return new Proxy(
+      {},
+      {
+        get(_target, key) {
+          if (typeof key !== 'string') return undefined;
+          const value = el.getAttribute(dataAttrName(key));
+          return value == null ? undefined : value;
+        },
+        set(_target, key, value) {
+          el.setAttribute(dataAttrName(key), value);
+          return true;
+        },
+      },
+    );
+  },
+});
+
 class HTMLElementShim extends FakeElement {}
 class HTMLFormElementShim extends HTMLElementShim {}
 class HTMLButtonElementShim extends HTMLElementShim {}
