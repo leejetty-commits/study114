@@ -7,7 +7,7 @@ import { ROOM_PICK_IDS, ROOM_PRIME_IDS } from '../../../shared/pickprime-require
 
 export const RC_COPY = {
   title: '등록점검',
-  lead: '입력한 값은 있는 그대로 카드에 보입니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요.',
+  lead: '입력한 값은 있는 그대로 카드에 보입니다. 프라임·픽에 더 필요한 항목만 아래에서 확인하세요.',
   badges: {
     pickOk: '픽 추가 충족',
     pickNeed: (n) => `픽 추가 ${n}개`,
