@@ -772,8 +772,8 @@ function openRailGuidePeek(kind, title, homeBase, leave) {
   overlay.setAttribute('aria-labelledby', 'rail-guide-peek-title');
   overlay.innerHTML = `
     <div class="guest-deep-gate-overlay__backdrop" data-rail-guide-peek-dismiss></div>
-    <div class="guest-gate guest-gate--deep">
-      <h2 id="rail-guide-peek-title" class="guest-gate__title">${esc(title || spec.title)}</h2>
+    <div class="guest-gate guest-gate--deep" data-drag-box>
+      <h2 id="rail-guide-peek-title" class="guest-gate__title" data-drag-handle>${esc(title || spec.title)}</h2>
       <p class="guest-gate__lead">${esc(spec.lead)}</p>
       ${more}
       <div class="guest-gate__actions">

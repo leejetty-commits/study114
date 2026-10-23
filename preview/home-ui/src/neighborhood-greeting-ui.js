@@ -393,8 +393,8 @@ function openGreetingFeed(opts) {
       ? `<ul class="ng-feed__list">${items}</ul>`
       : `<p class="ng-feed__state" role="status">${esc(greetingStateCopy(opts.viewer))}</p>`;
     el.innerHTML = `
-      <div class="ng-feed__card" role="document">
-        <h2 id="ng-feed-title" class="ng-feed__title">${esc(COPY.greetingTitle)}</h2>
+      <div class="ng-feed__card" role="document" data-drag-box>
+        <h2 id="ng-feed-title" class="ng-feed__title" data-drag-handle>${esc(COPY.greetingTitle)}</h2>
         ${list}
         ${pager}
         <button type="button" class="btn btn--secondary" data-ng-feed-close>닫기</button>
@@ -795,8 +795,8 @@ function openGreetingLoginGate() {
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.innerHTML = `
-    <div class="ng-unavailable__card">
-      <p>로그인하면 카드를 볼 수 있어요</p>
+    <div class="ng-unavailable__card" data-drag-box>
+      <p data-drag-handle>로그인하면 카드를 볼 수 있어요</p>
     </div>`;
   const close = () => el.remove();
   el.addEventListener('click', (event) => {
@@ -859,8 +859,8 @@ function showNotice(message) {
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
   el.innerHTML = `
-    <div class="ng-unavailable__card">
-      <p>${esc(message)}</p>
+    <div class="ng-unavailable__card" data-drag-box>
+      <p data-drag-handle>${esc(message)}</p>
       <button type="button" class="btn btn--secondary" data-ng-unavailable-close>닫기</button>
     </div>`;
   el.querySelector('[data-ng-unavailable-close]')?.addEventListener('click', () => el.remove());
