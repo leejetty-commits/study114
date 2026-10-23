@@ -54,7 +54,8 @@ function findHandle(box) {
 function coversViewport(el) {
   const rect = el.getBoundingClientRect();
   if (rect.width < 1 || rect.height < 1) return false;
-  return rect.width >= window.innerWidth - 2 && rect.height >= window.innerHeight - 2;
+  const view = document.documentElement;
+  return rect.width >= view.clientWidth - 2 && rect.height >= view.clientHeight - 2;
 }
 
 /**
