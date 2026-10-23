@@ -35,6 +35,7 @@ import './styles/udx-std-apply.css';
 import './styles/student-detail.css';
 /* 홍보랜딩·공부방 쪽지설정 본문만. 전역 헤더/다른 탭에는 선택자가 닿지 않음 */
 import './styles/promo-catalog.css';
+import './styles/promo-v2.css';
 import './styles/inquiry-settings-catalog.css';
 /* 학생 마이페이지·내 등록만. 홈·타역할 선택자는 없음 */
 import './styles/student-mypage-stage5b.css';
