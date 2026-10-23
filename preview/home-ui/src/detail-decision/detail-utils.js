@@ -229,9 +229,9 @@ export function confirmLeaveDetailCard() {
     host.setAttribute('aria-modal', 'true');
     host.setAttribute('aria-labelledby', 'p24-leave-title');
     host.innerHTML = `
-      <div class="p24-leave-confirm__panel">
+      <div class="p24-leave-confirm__panel" data-drag-box>
         <p class="p24-leave-confirm__eyebrow">안내</p>
-        <h3 id="p24-leave-title" class="p24-leave-confirm__title">이 카드를 벗어납니다</h3>
+        <h3 id="p24-leave-title" class="p24-leave-confirm__title" data-drag-handle>이 카드를 벗어납니다</h3>
         <p class="p24-leave-confirm__lead">확대카드를 닫고 선택한 화면으로 이동합니다.</p>
         <div class="p24-leave-confirm__actions">
           <button type="button" class="btn btn--secondary btn--sm" data-p24-leave="stay">머무르기</button>

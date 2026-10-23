@@ -108,8 +108,8 @@ function renderPopupLayer(popup) {
   return `
     <div class="ops-chrome__popup" role="dialog" aria-modal="true" aria-labelledby="ops-popup-title" data-ops-popup="${esc(popup.id)}">
       <div class="ops-chrome__popup-backdrop" data-ops-popup-dismiss="${esc(popup.id)}" data-ops-popup-hours="${hours}"></div>
-      <div class="ops-chrome__popup-panel">
-        <h2 id="ops-popup-title" class="ops-chrome__popup-title">${esc(popup.title)}</h2>
+      <div class="ops-chrome__popup-panel" data-drag-box>
+        <h2 id="ops-popup-title" class="ops-chrome__popup-title" data-drag-handle>${esc(popup.title)}</h2>
         <div class="ops-chrome__popup-body">${esc(popup.body).replace(/\n/g, '<br>')}</div>
         <div class="ops-chrome__popup-actions">
           <button type="button" class="btn btn--secondary btn--sm" data-ops-popup-dismiss="${esc(popup.id)}" data-ops-popup-hours="${hours}">
