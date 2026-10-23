@@ -142,15 +142,20 @@ export function getStudyRoom(id) {
 }
 
 /** @param {StudyRoomRecord} room */
-export function getPublishReadiness(room) {
+/**
+ * @param {StudyRoomRecord} room
+ * @param {{ phase?: string, pick?: { can_buy?: boolean }|null }|null} [tierCheck] plans tier-check 캐시
+ */
+export function getPublishReadiness(room, tierCheck = null) {
   const items = getPublishChecklistItems(room);
   const qualityMissing = items.filter((i) => !i.ok).map((i) => i.label);
   const doneCount = items.filter((i) => i.ok).length;
 
   /** @type {string[]} */
   const qualityHints = [];
-  if (room.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세정보 완료 시 프라임/픽 노출 후보');
+  const pickCanBuy = tierCheck?.phase === 'ready' && tierCheck?.pick?.can_buy === true;
+  if (!pickCanBuy) {
+    qualityHints.push('픽·프라임에 필요한 항목은 등록점검에서 확인하세요');
   }
   if (!room.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
   if (!room.slogan?.trim()) qualityHints.push('슬로건 추가 권장');
@@ -159,7 +164,7 @@ export function getPublishReadiness(room) {
     // 카드 노출은 기본등록 완료(홍보지역 1)로 정해지고 상세 완성도와 무관하다.
     canPublish: true,
     detailRecommended: room.detail_completion_status !== 'expanded_complete',
-    exposureBoostReady: room.detail_completion_status === 'expanded_complete',
+    exposureBoostReady: pickCanBuy,
     doneCount,
     totalCount: items.length,
     missing: [],

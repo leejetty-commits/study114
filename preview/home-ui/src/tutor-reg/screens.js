@@ -57,6 +57,7 @@ import {
   bindNeighborhoodGreetingEditor,
   renderNeighborhoodGreetingEditor,
 } from '../neighborhood-greeting-ui.js';
+import { readTierCheck, scheduleTierCheckHydrate } from '../plans/screens.js';
 
 function lessonSelectHtml(options, selected) {
   const current = String(selected ?? '');
@@ -301,6 +302,13 @@ function renderExposureMatrixRows(rows) {
     .join('');
 }
 
+function scheduleProviderTierHydrate(providerType, providerId) {
+  if (!providerId) return;
+  scheduleTierCheckHydrate({ providerType, id: providerId }, () => {
+    window.dispatchEvent(new Event('hashchange'));
+  });
+}
+
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHub(tutor) {
   const greeting = renderNeighborhoodGreetingEditor({
@@ -512,8 +520,10 @@ function renderInquiries(tutor) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderExposure(tutor) {
-  const readiness = getPublishReadiness(tutor);
-  const matrix = getExposureMatrix(tutor, readiness);
+  scheduleProviderTierHydrate('tutor', tutor.id);
+  const tierCheck = readTierCheck('tutor', tutor.id);
+  const readiness = getPublishReadiness(tutor, tierCheck);
+  const matrix = getExposureMatrix(tutor, readiness, tierCheck);
   const pickRow = matrix.find((m) => m.key === 'pick');
   const primeRow = matrix.find((m) => m.key === 'prime');
 
@@ -524,11 +534,11 @@ function renderExposure(tutor) {
         <div class="p20-matrix">${renderExposureMatrixRows(matrix)}</div>
       </section>
       <section class="p20-exposure-section p20-plans-cta">
-        <h3>추천·대표 노출</h3>
-        <p class="p19-form-section__lead">대표·추천 노출은 기간형 상품 · 쪽지권은 횟수형 상품</p>
+        <h3>픽·프라임 카드</h3>
+        <p class="p19-form-section__lead">픽·프라임은 기간형 상품 · 쪽지권은 횟수형 상품</p>
         <div class="p19-form-actions">
-          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '추천 노출')}</button>
-          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '대표 노출')}</button>
+          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '픽 카드')}</button>
+          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '프라임 카드')}</button>
           <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--primary" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료상품 · 노출</a>
         </div>
       </section>
