@@ -237,7 +237,7 @@ function paint(host, summary, view, extra = {}) {
   const footer = view === 'consume' && !summary.load_failed ? `<div class="review-sheet__cta">${renderCta(summary)}</div>` : '';
   host.innerHTML = `
     <div class="review-sheet" role="dialog" aria-modal="true" aria-labelledby="review-sheet-title">
-      <div class="review-sheet__panel">
+      <div class="review-sheet__panel" data-drag-box>
         <header class="review-sheet__head">
           <div>
             <h2 id="review-sheet-title">후기${summary.load_failed ? '' : ` ${count}`}</h2>

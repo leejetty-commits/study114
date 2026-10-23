@@ -244,7 +244,7 @@ export function renderShopViewModel(vm) {
       ${SHOP_SECTION_ORDER.map((k) => byKey[k] || '').join('\n')}
     </article>
 
-    <div class="shop-lightbox" data-myshop-lightbox data-shop-lightbox hidden>
+    <div class="shop-lightbox" data-myshop-lightbox data-shop-lightbox data-no-drag hidden>
       <button type="button" class="shop-lightbox__close" data-myshop-lightbox-close aria-label="닫기">×</button>
       <img src="" alt="" data-myshop-lightbox-img data-shop-lightbox-img />
     </div>`;

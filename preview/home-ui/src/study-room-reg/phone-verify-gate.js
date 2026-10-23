@@ -68,8 +68,8 @@ export function showPhoneVerifyGateModal(opts) {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.innerHTML = `
-    <div class="p20-phone-verify-modal__panel">
-      <h2 class="p20-phone-verify-modal__title">${P20_INQUIRY_COPY.phoneGateTitle}</h2>
+    <div class="p20-phone-verify-modal__panel" data-drag-box>
+      <h2 class="p20-phone-verify-modal__title" data-drag-handle>${P20_INQUIRY_COPY.phoneGateTitle}</h2>
       <p class="p20-phone-verify-modal__body">${P20_INQUIRY_COPY.phoneGateBody}</p>
       <p class="p20-phone-verify-modal__phone is-hidden" data-p20-phone-mask></p>
       <p class="p20-phone-verify-modal__error is-hidden" data-p20-phone-error role="alert"></p>
