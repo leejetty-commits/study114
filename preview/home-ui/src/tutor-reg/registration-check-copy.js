@@ -139,7 +139,7 @@ export const TRC_PROMO_MISSING_DEFS = [
   { id: 'lesson_places', label: '강의장소', hint: '방문·공공장소 등 수업 방식을 보여 줍니다', section: 'detail' },
   { id: 'fee_basis', label: '과외비 산정방식', hint: '주 회수 또는 월 총 횟수 기준을 정합니다', section: 'detail' },
   { id: 'schedule', label: '주 회수/월 총 횟수', hint: '산정방식에 맞는 횟수가 필요합니다', section: 'detail' },
-  { id: 'university', label: '대학/대학원', hint: '상세등록 완료·검색 노출 조건입니다', section: 'detail' },
+  { id: 'university', label: '대학/대학원', hint: '픽 카드 조건이에요. 경력이 있으면 경력으로 대신할 수 있어요.', section: 'detail' },
   { id: 'profile_image', label: '프로필 사진', hint: '검색 카드 신뢰에 필요합니다', section: 'detail' },
   ...tutorTierPromoDefs(),
 ];
