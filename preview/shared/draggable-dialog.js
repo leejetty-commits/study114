@@ -50,8 +50,8 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
   const place = (left, top) => {
     const width = dialog.offsetWidth;
     const height = dialog.offsetHeight;
-    const viewWidth = window.innerWidth;
-    const viewHeight = window.innerHeight;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
     const nextLeft = width + EDGE * 2 > viewWidth
       ? EDGE
       : Math.min(Math.max(EDGE, left), viewWidth - width - EDGE);
