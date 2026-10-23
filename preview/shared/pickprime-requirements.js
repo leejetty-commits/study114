@@ -176,6 +176,8 @@ function roomFieldFilled(room, id) {
   if (id === 'fee') return roomFeeFilled(room);
   if (id === 'lessons_per_week') return lessonWeeklyLabel(room?.lessons_per_week) !== '';
   if (id === 'feature_1') return text(room?.feature_1) !== '';
+  if (id === 'feature_2') return text(room?.feature_2) !== '';
+  if (id === 'feature_3') return text(room?.feature_3) !== '';
   return false;
 }
 

@@ -187,7 +187,7 @@ final class TierRequirement
     {
         return match ($fieldId) {
             'cover' => self::roomCoverFilled($record),
-            'intro_short', 'intro_long', 'teaching_style_note', 'feature_1' => self::text($record[$fieldId] ?? '') !== '',
+            'intro_short', 'intro_long', 'teaching_style_note', 'feature_1', 'feature_2', 'feature_3' => self::text($record[$fieldId] ?? '') !== '',
             'teaching_style' => self::roomStyles($record) !== [],
             'fee' => self::roomFeeFilled($record),
             'lessons_per_week' => self::weeklyLabel($record['lessons_per_week'] ?? '') !== '',
