@@ -136,10 +136,11 @@
 .pv2--room .pv2-room p{font-size:14px;color:#4B5563;margin-top:4px}
 
 /* A 홍보채널 */
-.pv2--room .pv2-chan{display:grid;grid-template-columns:520px 1fr;gap:60px;align-items:center}
+.pv2--room .pv2-chan{display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center}
 .pv2--room .pv2-chan .pv2-ph{height:380px;border-radius:12px;background:url('/assets/promo/seoul-alley.webp') center/cover}
 .pv2--room .pv2-ch{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
 .pv2--room .pv2-ch span{font-size:14px;border:1px solid #F2B84B;color:#F2B84B;border-radius:6px;padding:6px 10px}
+.pv2--room .pv2-mapw .pv2-wwb,.pv2--room .pv2-chan .pv2-wwb{grid-template-columns:1fr;gap:8px}
 
 /* A FAQ·END */
 .pv2--room .pv2-faqw{display:grid;grid-template-columns:360px 1fr;gap:60px}
