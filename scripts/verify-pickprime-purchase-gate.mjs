@@ -57,7 +57,7 @@ assert(sameIds(phpIds('ROOM_PRIME_IDS'), ROOM_PRIME_IDS), 'php room prime ids');
 const tutorCopy = read('preview/home-ui/src/tutor-reg/registration-check-copy.js');
 const roomCopy = read('preview/home-ui/src/study-room-reg/registration-check-copy.js');
 assert(tutorCopy.includes('TUTOR_PICK_IDS') && !tutorCopy.includes("['feature_1', 'student_target']"), 'trc uses shared pick ids');
-assert(roomCopy.includes('ROOM_PICK_IDS') && !roomCopy.includes("['cover', 'intro_short', 'fee', 'teaching_style']"), 'rc uses shared pick ids');
+assert(roomCopy.includes('ROOM_PICK_IDS') && !roomCopy.includes("['cover', 'intro_long', 'fee', 'teaching_style', 'feature_1']"), 'rc uses shared pick ids');
 assert(sameIds(TRC_PICK_FIELD_IDS, TUTOR_PICK_IDS) && sameIds(TRC_PRIME_FIELD_IDS, TUTOR_PRIME_IDS), 'trc id values');
 assert(sameIds(RC_PICK_FIELD_IDS, ROOM_PICK_IDS) && sameIds(RC_PRIME_FIELD_IDS, ROOM_PRIME_IDS), 'rc id values');
 
