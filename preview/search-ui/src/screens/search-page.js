@@ -282,6 +282,20 @@ function findSearchStudentItem(id) {
   );
 }
 
+/** 찾기 화면 공부방·과외쌤 검색 결과 풀에서 먼저 찾는다. */
+function findSearchProviderItem(kind, id) {
+  const tab = getCurrentTab();
+  if (tab === 'room' && kind !== 'study_room') return null;
+  if (tab === 'tutor' && kind !== 'tutor') return null;
+  if (tab !== 'room' && tab !== 'tutor') return null;
+  const n = Number(id);
+  return (
+    previewState.activeResultItems?.find((x) => Number(x.id) === n) ||
+    previewState.searchExposureItems?.find((x) => Number(x.id) === n) ||
+    null
+  );
+}
+
 /**
  * 비로그인 찾기: 목록 클릭은 기존 상세 가드, 검색·필터·정렬·학생 카드는 로그인 팝업.
  * 검색 API를 부르는 bindFindSurfaceEvents / afterSearchPageMount 는 붙이지 않는다.
@@ -297,6 +311,7 @@ function bindGuestFindBrowse(root, rerender) {
     viewer: 'guest',
     sourceRoute: 'search',
     getStudentItem: findSearchStudentItem,
+    getProviderItem: findSearchProviderItem,
   });
   bindProtectedGuestActions(root);
   bindGuestEmptyCardLoginGate(root);
@@ -415,6 +430,7 @@ export function bindSearchPageEvents(root, rerender, opts = {}) {
     viewer: sessionLoggedIn ? viewer : 'guest',
     sourceRoute: 'search',
     getStudentItem: findSearchStudentItem,
+    getProviderItem: findSearchProviderItem,
   });
 
   if (!sessionLoggedIn) {
