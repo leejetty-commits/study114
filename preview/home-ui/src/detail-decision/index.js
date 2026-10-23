@@ -85,8 +85,8 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
   });
 }
 
-/** @param {HTMLElement} root @param {{ onRerender?: () => void, viewer?: string, getStudentItem?: (id: number) => object|undefined, sourceRoute?: string }} [opts] */
-export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentItem, sourceRoute = 'search' } = {}) {
+/** @param {HTMLElement} root @param {{ onRerender?: () => void, viewer?: string, getStudentItem?: (id: number) => object|undefined, getProviderItem?: (kind: string, id: number) => object|undefined, sourceRoute?: string }} [opts] */
+export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentItem, getProviderItem, sourceRoute = 'search' } = {}) {
   const role = resolveViewerRole(viewer);
   bindStudentReviewEvents(root, onRerender, {
     providerRole: role,
@@ -118,7 +118,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const kind = btn.getAttribute('data-item-kind');
       const id = Number(btn.getAttribute('data-item-id'));
       if (kind !== 'study_room' && kind !== 'tutor') return;
-      const item = resolveDetailItem(kind, id);
+      const item = getProviderItem?.(kind, id) || resolveDetailItem(kind, id);
       openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
@@ -130,7 +130,7 @@ export function bindDetailDecisionEvents(root, { onRerender, viewer, getStudentI
       const kind = article.dataset.providerKind;
       const id = Number(article.dataset.providerId);
       if (kind !== 'study_room' && kind !== 'tutor') return;
-      const item = resolveDetailItem(kind, id);
+      const item = getProviderItem?.(kind, id) || resolveDetailItem(kind, id);
       openDetailDecision({ kind, id, viewer: role, onRerender, sourceRoute, item: item || undefined });
     });
   });
