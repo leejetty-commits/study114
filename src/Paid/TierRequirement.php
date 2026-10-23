@@ -25,18 +25,19 @@ final class TierRequirement
     ];
 
     /** @var list<string> */
-    public const ROOM_PICK_IDS = ['cover', 'intro_short', 'fee', 'teaching_style'];
+    public const ROOM_PICK_IDS = ['cover', 'intro_long', 'fee', 'teaching_style', 'feature_1'];
 
     /** @var list<string> */
     public const ROOM_PRIME_IDS = [
         'cover',
-        'intro_short',
         'intro_long',
         'teaching_style',
         'teaching_style_note',
         'fee',
         'lessons_per_week',
         'feature_1',
+        'feature_2',
+        'feature_3',
     ];
 
     /** @var array<string, string> */
@@ -52,13 +53,14 @@ final class TierRequirement
     /** @var array<string, string> */
     private const ROOM_LABELS = [
         'cover' => '대표사진',
-        'intro_short' => '한 줄 소개',
+        'intro_long' => '공부방 소개 / 자랑',
         'fee' => '월 평균 수업료',
         'teaching_style' => '수업 스타일',
-        'intro_long' => '공부방 소개 / 자랑',
         'teaching_style_note' => '수업 스타일 추가설명',
         'lessons_per_week' => '주 회수',
         'feature_1' => '경력특징 1',
+        'feature_2' => '경력특징 2',
+        'feature_3' => '경력특징 3',
     ];
 
     /** @var array<string, string> */

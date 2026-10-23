@@ -92,14 +92,15 @@ export const RC_REQUIRED_FIELD_IDS = [...new Set([...RC_PICK_FIELD_IDS, ...RC_PR
 /** 상단 누락 리스트 우선순위 (광고 연결) */
 export const RC_PROMO_MISSING_DEFS = [
   { id: 'cover', label: '대표사진', hint: '첫 노출과 상세 진입에 중요합니다', section: 'detail' },
-  { id: 'intro_short', label: '한 줄 소개', hint: '카드와 프로필 상단에 쓰입니다', section: 'detail' },
   { id: 'intro_long', label: '공부방 소개 / 자랑', hint: '상세 페이지에서 공부방을 설명합니다', section: 'detail' },
   { id: 'teaching_style', label: '수업 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },
   { id: 'teaching_style_note', label: '수업 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
   { id: 'classes', label: '수업상세', hint: '있으면 프로필에 표시됩니다 (선택)', section: 'detail' },
   { id: 'fee', label: '월 평균 수업료', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
   { id: 'lessons_per_week', label: '주 회수', hint: '수업 밀도를 가늠하는 값입니다', section: 'detail' },
-  { id: 'feature_1', label: '경력특징 1', hint: '카드 강조 한 줄. 상세정보2「경력특징 1」과 같은 값입니다', section: 'detail2' },
+  { id: 'feature_1', label: '경력특징 1', hint: '픽·프라임 카드 강조 한 줄. 상세정보2에서 입력합니다', section: 'detail2' },
+  { id: 'feature_2', label: '경력특징 2', hint: '프라임 카드에 추가로 표시됩니다', section: 'detail2' },
+  { id: 'feature_3', label: '경력특징 3', hint: '프라임 카드에 추가로 표시됩니다', section: 'detail2' },
 ];
 
 /**
