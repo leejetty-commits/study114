@@ -17,12 +17,13 @@ import { bindInputFill } from '../../../shared/input-fill.js';
 import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
-import { getExposureMatrix } from './format.js';
+import { getExposureMatrix, formatTierMissingReason } from './format.js';
 import {
   getTutors,
   getTutor,
   getPublishReadiness,
 } from './store.js';
+import { getPaidOperationalStatus } from '../paid-backend.js';
 import { saveTutorBasicInline } from './inline-save.js';
 import {
   buildTutorRegistrationCheckModel,
@@ -309,8 +310,44 @@ function scheduleProviderTierHydrate(providerType, providerId) {
   });
 }
 
+/** 구매 뒤 필수 비면 경고 띠 하나. 이용 중 값은 plans가 쓰는 status 캐시만. */
+function renderPaidTierMissingBanner(providerType, providerId) {
+  const ops = getPaidOperationalStatus();
+  const positions = ops?.exposure?.positions;
+  if (!Array.isArray(positions) || !positions.length) return '';
+  const mine = positions.filter(
+    (p) =>
+      (p.sku === 'pick' || p.sku === 'prime') &&
+      p.provider_type === providerType &&
+      String(p.provider_id) === String(providerId),
+  );
+  if (!mine.length) return '';
+  const entry = readTierCheck(providerType, providerId);
+  if (!entry || entry.phase !== 'ready') return '';
+  /** @type {string[]} */
+  const names = [];
+  /** @type {Array<{ id?: string, label?: string }|string>} */
+  const missing = [];
+  if (mine.some((p) => p.sku === 'pick') && entry.pick?.can_buy === false) {
+    names.push('픽');
+    if (Array.isArray(entry.pick.missing)) missing.push(...entry.pick.missing);
+  }
+  if (mine.some((p) => p.sku === 'prime') && entry.prime?.can_buy === false) {
+    names.push('프라임');
+    if (Array.isArray(entry.prime.missing)) missing.push(...entry.prime.missing);
+  }
+  const reason = formatTierMissingReason(missing);
+  if (!names.length || !reason) return '';
+  const product = names.length === 2 ? '픽·프라임' : names[0];
+  const text = `${product} 카드에 필요한 항목이 비어 있어요: ${reason}. 채우지 않으면 카드가 덜 채워져 보여요.`;
+  return `<div class="mp-room__shop-nudge" data-tier-missing-warn role="status">
+    <p class="mp-room__shop-nudge__text">${esc(text)}</p>
+  </div>`;
+}
+
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHub(tutor) {
+  scheduleProviderTierHydrate('tutor', tutor.id);
   const greeting = renderNeighborhoodGreetingEditor({
     providerType: 'tutor',
     registrationId: Number(tutor.id),
@@ -318,7 +355,8 @@ function renderHub(tutor) {
     displayName: tutor.tutor_display_name || '과외쌤',
   });
   const hideLine = renderAdminHideOwnerLine(tutor.profile_status === 'hidden');
-  const body = `${hideLine}${greeting}${renderTutorProfileRead(tutor)}`;
+  const warn = renderPaidTierMissingBanner('tutor', tutor.id);
+  const body = `${hideLine}${warn}${greeting}${renderTutorProfileRead(tutor)}`;
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
