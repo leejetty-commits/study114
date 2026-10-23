@@ -25,6 +25,7 @@ import { renderSignupComplete, bindSignupCompleteEvents } from './screens/signup
 import { renderFindId, bindFindIdEvents } from './screens/find-id.js';
 import { renderFindPassword, bindFindPasswordEvents } from './screens/find-password.js';
 import { renderResetPassword, bindResetPasswordEvents } from './screens/reset-password.js';
+import '../../shared/dialog-drag-auto.js';
 
 const SCREENS = {
   login: { render: renderLogin, bind: bindLoginEvents },

@@ -41,6 +41,7 @@ import { renderComplete, bindCompleteEvents } from './screens/step-complete.js';
 import { apiMasters, registerState, isRoomBasicComplete } from './state.js';
 import { fetchMasters, loadRoom } from './register-api.js';
 import { applyRoomToState } from './form-collect.js';
+import '../../shared/dialog-drag-auto.js';
 
 const SCREENS = {
   basic: { render: renderBasic, bind: bindBasicEvents },

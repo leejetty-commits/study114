@@ -26,6 +26,7 @@ import { hydrateExposureBridge } from '@home-ui/exposure-bridge.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
+import '../../shared/dialog-drag-auto.js';
 
 /**
  * 세션 확정 후에만 GPS·복원 검색을 1회 돌린다. 첫 셸은 me.php를 기다리지 않는다.

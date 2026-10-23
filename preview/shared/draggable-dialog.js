@@ -23,6 +23,7 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
   }
 
   bar.classList.add('is-dialog-drag-handle');
+  dialog.dataset.dragBound = '1';
 
   let dragging = false;
   let positioned = false;
@@ -49,8 +50,8 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
   const place = (left, top) => {
     const width = dialog.offsetWidth;
     const height = dialog.offsetHeight;
-    const viewWidth = window.innerWidth;
-    const viewHeight = window.innerHeight;
+    const viewWidth = document.documentElement.clientWidth;
+    const viewHeight = document.documentElement.clientHeight;
     const nextLeft = width + EDGE * 2 > viewWidth
       ? EDGE
       : Math.min(Math.max(EDGE, left), viewWidth - width - EDGE);
@@ -140,6 +141,7 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
     window.removeEventListener('resize', onResize);
     observer.disconnect();
     bar.classList.remove('is-dialog-drag-handle');
+    delete dialog.dataset.dragBound;
   }
 
   return { reset, destroy };

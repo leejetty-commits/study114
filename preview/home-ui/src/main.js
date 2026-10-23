@@ -124,6 +124,7 @@ import { mountHomePopup } from './home-popup/mount.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
+import '../../shared/dialog-drag-auto.js';
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
