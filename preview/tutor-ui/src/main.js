@@ -42,6 +42,7 @@ import { renderLesson, bindLessonEvents } from './screens/step-lesson.js';
 import { renderContact, bindContactEvents } from './screens/step-contact.js';
 import { renderDetail, bindDetailEvents } from './screens/step-detail.js';
 import { renderComplete, bindCompleteEvents } from './screens/step-complete.js';
+import '../../shared/dialog-drag-auto.js';
 
 const SCREENS = {
   basic: { render: renderBasic, bind: bindBasicEvents },
