@@ -1,0 +1,26 @@
+<!doctype html><meta charset="utf-8"><title>작성폼</title>
+    <form class="p24-review-form" data-review-form>
+      <h4>후기 남기기</h4>
+      <p class="p24-review-form__hint">이 대상에는 후기를 최대 3회까지 남길 수 있어요. 삭제한 후기도 횟수에 포함됩니다.</p>
+      <fieldset class="p24-review-form__field">
+        <legend>어떤 경험이었나요?</legend>
+        <label><input type="radio" name="origin" value="consultation" checked /> 상담만 했어요</label>
+        <label><input type="radio" name="origin" value="experience" /> 이용/수업 경험이 있어요</label>
+      </fieldset>
+      <fieldset class="p24-review-form__field">
+        <legend>좋았던 점을 골라주세요 (1~3개)</legend>
+        <div class="p24-review-form__tags">
+          <label class="p24-review-chip"><input type="checkbox" name="tag" value="공간이 깔끔해요" /> <span>공간이 깔끔해요</span></label><label class="p24-review-chip"><input type="checkbox" name="tag" value="분위기가 편안해요" /> <span>분위기가 편안해요</span></label><label class="p24-review-chip"><input type="checkbox" name="tag" value="상담이 친절해요" /> <span>상담이 친절해요</span></label><label class="p24-review-chip"><input type="checkbox" name="tag" value="답변이 빨라요" /> <span>답변이 빨라요</span></label><label class="p24-review-chip"><input type="checkbox" name="tag" value="정보가 실제와 비슷해요" /> <span>정보가 실제와 비슷해요</span></label><label class="p24-review-chip"><input type="checkbox" name="tag" value="동네 접근이 편해요" /> <span>동네 접근이 편해요</span></label>
+        </div>
+      </fieldset>
+      <label class="p24-review-form__field">
+        <span>후기 본문 (20~300자)</span>
+        <textarea name="body" rows="4" maxlength="300" placeholder="상담이나 이용 경험에서 좋았던 점을 짧게 적어주세요." required></textarea>
+      </label>
+      <label class="p24-review-form__consent"><input type="checkbox" name="public_consent" required /> 이 후기를 공개하는 데 동의합니다</label>
+      <p class="p24-review-form__error" data-review-error hidden></p>
+      <div class="p24-review-form__actions">
+        <button type="button" class="btn btn--secondary btn--sm" data-review-sheet-act="back">뒤로</button>
+        <button type="submit" class="btn btn--primary btn--sm">후기 등록</button>
+      </div>
+    </form>
