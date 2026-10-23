@@ -17,7 +17,7 @@
 |---|---|
 | `c5687deb` | 281 fix(exposure): tutor/room format·store·tutor screens 노출 탭, preview-data `prime_eligible` |
 | `432af82e` | 281 fix(copy): 등록점검 대학 hint |
-| `e3363779` | 281 feat(hub): 이용 중 픽/프라임 + missing 시 허브 노란 띠 + 작업기록·스크린샷 |
+| `6bd7b6fa` | 281 feat(hub): 이용 중 픽/프라임 + missing 시 허브 노란 띠 + 작업기록·스크린샷 |
 
 Search/`prime_eligible` PHP는 손대지 않음.
 
