@@ -336,7 +336,16 @@ function renderPaidTierMissingBanner(providerType, providerId) {
     names.push('프라임');
     if (Array.isArray(entry.prime.missing)) missing.push(...entry.prime.missing);
   }
-  const reason = formatTierMissingReason(missing);
+  // 픽·프라임 missing 라벨 중복 제거(이름 기준). 문구·띠 조건은 그대로.
+  const seenLabels = new Set();
+  const uniqueMissing = [];
+  for (const item of missing) {
+    const label = item && typeof item === 'object' ? String(item.label || '') : String(item || '');
+    if (!label || seenLabels.has(label)) continue;
+    seenLabels.add(label);
+    uniqueMissing.push(item);
+  }
+  const reason = formatTierMissingReason(uniqueMissing);
   if (!names.length || !reason) return '';
   const product = names.length === 2 ? '픽·프라임' : names[0];
   const text = `${product} 카드에 필요한 항목이 비어 있어요: ${reason}. 채우지 않으면 카드가 덜 채워져 보여요.`;
