@@ -1,0 +1,83 @@
+{
+  "viewer": {
+    "role": "parent",
+    "userId": 6,
+    "isOwner": false
+  },
+  "thread_seed": {
+    "contextKind": "study_room",
+    "contextId": 77
+  },
+  "before": {
+    "can_write": true,
+    "write_blocked_reason": null,
+    "cta_kind": "write",
+    "review_count": 0
+  },
+  "after_save": {
+    "review_count": 1,
+    "created_id": 1,
+    "cta_kind": "manage",
+    "remaining_creates": 2,
+    "body_preview": "상담 후 실제 분위기와 안내가 잘 맞았습니다. 자격충족 학부모 작성 경로"
+  },
+  "results": [
+    {
+      "ok": true,
+      "id": "P1_expand_rail_review_count",
+      "detail": "확대카드와 동일 레일 후기수 버튼(open-review-sheet) 존재"
+    },
+    {
+      "ok": true,
+      "id": "P2_expand_footer_write_cta",
+      "detail": "학부모 확대카드 푸터 「후기 남기기」 노출"
+    },
+    {
+      "ok": true,
+      "id": "P2b_provider_footer_no_write",
+      "detail": "공급자 확대카드 푸터에는 작성 CTA 없음(대조)"
+    },
+    {
+      "ok": true,
+      "id": "P3_eligible_can_write",
+      "detail": "can_write=true reason=null cta_kind=write"
+    },
+    {
+      "ok": true,
+      "id": "P4_canOfferWriteCta",
+      "detail": "true"
+    },
+    {
+      "ok": true,
+      "id": "P5_sheet_opens_form_not_gate",
+      "detail": "resolveRequestedView(write)=write"
+    },
+    {
+      "ok": true,
+      "id": "P6_sheet_write_cta",
+      "detail": "<button type=\"button\" class=\"btn btn--primary\" data-review-sheet-act=\"write\">후기 남기기</button>"
+    },
+    {
+      "ok": true,
+      "id": "P7_section_write_cta",
+      "detail": "확대카드 후기 섹션에 후기 남기기 CTA"
+    },
+    {
+      "ok": true,
+      "id": "P8_write_form_open",
+      "detail": "작성폼: 본문·태그·공개동의·후기 등록"
+    },
+    {
+      "ok": true,
+      "id": "P9_save_success",
+      "detail": "review_count 0→1 created_id=1 cta_kind=manage"
+    },
+    {
+      "ok": true,
+      "id": "P10_quota_after_save",
+      "detail": "has_written=true remaining=2 can_write=true"
+    }
+  ],
+  "pass": 11,
+  "fail": 0
+}
