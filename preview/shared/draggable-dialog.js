@@ -65,10 +65,13 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
 
   const pin = () => {
     const rect = dialog.getBoundingClientRect();
+    const cap = Math.max(160, window.innerHeight - EDGE * 2);
+    const computedMax = Number.parseFloat(getComputedStyle(dialog).maxHeight);
+    const nextMax = Number.isFinite(computedMax) ? Math.min(computedMax, cap) : cap;
     dialog.style.position = 'fixed';
     dialog.style.margin = '0';
     dialog.style.width = `${rect.width}px`;
-    dialog.style.maxHeight = `${Math.max(160, window.innerHeight - EDGE * 2)}px`;
+    dialog.style.maxHeight = `${nextMax}px`;
     dialog.style.zIndex = zIndex;
     dialog.style.transform = '';
     positioned = true;
