@@ -202,8 +202,8 @@ export function openDeepAccessLoginGate(sourceOrOpts = 'detail') {
   overlay.setAttribute('aria-labelledby', 'guest-deep-gate-title');
   overlay.innerHTML = `
     <div class="guest-deep-gate-overlay__backdrop" data-deep-gate-dismiss></div>
-    <div class="guest-gate guest-gate--deep">
-      <h2 id="guest-deep-gate-title" class="guest-gate__title">${esc(title)}</h2>
+    <div class="guest-gate guest-gate--deep" data-drag-box>
+      <h2 id="guest-deep-gate-title" class="guest-gate__title" data-drag-handle>${esc(title)}</h2>
       <p class="guest-gate__lead">${esc(lead)}</p>
       <ul class="guest-gate__list">${bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
       <div class="guest-gate__actions">

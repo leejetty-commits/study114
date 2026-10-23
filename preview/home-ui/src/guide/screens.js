@@ -517,8 +517,8 @@ function openGuideMemberPeek(kind) {
   overlay.setAttribute('aria-labelledby', 'guide-peek-title');
   overlay.innerHTML = `
     <div class="guest-deep-gate-overlay__backdrop" data-guide-peek-dismiss></div>
-    <div class="guest-gate guest-gate--deep">
-      <h2 id="guide-peek-title" class="guest-gate__title">${esc(title)}</h2>
+    <div class="guest-gate guest-gate--deep" data-drag-box>
+      <h2 id="guide-peek-title" class="guest-gate__title" data-drag-handle>${esc(title)}</h2>
       <p class="guest-gate__lead">${esc(lead)}</p>
       ${list}
       <div class="guest-gate__actions">
