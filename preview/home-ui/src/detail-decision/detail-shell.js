@@ -300,7 +300,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   wrap.setAttribute('role', 'dialog');
   wrap.setAttribute('aria-modal', floating ? 'false' : 'true');
   wrap.innerHTML = `
-    <div class="modal p24-modal${floating ? ' p24-modal--floating p24-modal--emphasis' : ' p24-modal--emphasis'}">
+    <div class="modal p24-modal${floating ? ' p24-modal--floating p24-modal--emphasis' : ' p24-modal--emphasis'}"${floating ? '' : ' data-drag-box'}>
       ${
         floating
           ? `<div class="p24-modal__dragbar" data-p24-drag-handle title="끌어서 이동">
@@ -310,7 +310,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
             </div>`
           : ''
       }
-      <header class="modal__head p24-modal__head"${floating ? ' data-p24-drag-handle' : ''}>
+      <header class="modal__head p24-modal__head"${floating ? ' data-p24-drag-handle' : ' data-drag-handle'}>
         <div>
           <p class="p24-modal__kind">${esc(subtitle)}</p>
           <h2 class="p24-modal__title">${esc(title)}</h2>
@@ -391,8 +391,12 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     btn.addEventListener('click', closeDetailModal);
   });
   if (!floating) {
+    let pointerDownOnWrap = false;
+    wrap.addEventListener('pointerdown', (e) => {
+      pointerDownOnWrap = e.target === wrap;
+    });
     wrap.addEventListener('click', (e) => {
-      if (e.target === wrap) closeDetailModal();
+      if (pointerDownOnWrap && e.target === wrap) closeDetailModal();
     });
   }
 
