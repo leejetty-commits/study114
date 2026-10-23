@@ -1,0 +1,50 @@
+{
+  "note": "본 스모크는 DB 행 shape → API paid_badges[] → card-visual 관통 증명. 운영 INSERT는 checkout fulfill + 055 적용 후 smoke-paid-badges-live.php",
+  "db_rows": [
+    {
+      "id": 1,
+      "provider_type": "study_room",
+      "badge_code": "hot",
+      "status": "active",
+      "starts_on": "2026-08-01",
+      "end_exclusive_on": "2026-09-01"
+    },
+    {
+      "id": 2,
+      "provider_type": "tutor",
+      "badge_code": "jjokjipge",
+      "status": "active",
+      "starts_on": "2026-08-01",
+      "end_exclusive_on": "2026-09-01"
+    }
+  ],
+  "api_response_examples": {
+    "study_room": {
+      "id": 101,
+      "paid_badges": [
+        "hot"
+      ],
+      "recommend_count": 3
+    },
+    "tutor": {
+      "id": 12,
+      "paid_badges": [
+        "jjokjipge"
+      ],
+      "recommend_count": 1
+    }
+  },
+  "card_visual": {
+    "room_promo": [
+      "hot"
+    ],
+    "tutor_promo": [
+      "jjokjipge"
+    ]
+  },
+  "fulfill_path": {
+    "service": "ProviderCheckoutService::completeOrder → fulfillBadgeAddon",
+    "insert": "PaidBadgeRepository::grantFromOrder → provider_paid_badges",
+    "read": "PaidBadgeResolver::forProvider → SearchService items[].paid_badges"
+  }
+}
