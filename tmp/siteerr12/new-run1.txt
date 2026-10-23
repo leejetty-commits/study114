@@ -1,0 +1,65 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help
+ npmrc` for supported config options.
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+##### 1遺 ?뺤쟻 #####
+PASS  (a) tutor-home-seed: ?쒕룞吏??id 濡?/search ?숈깮 議고쉶(??API ?놁쓬)
+PASS  (a) tutor-home-seed: getTutorStudentLiveItems 쨌 getTutorStudentFeedStatus 쨌 bootTutorStudentDemand export
+FAIL  (a) tutor-home-seed: ?섑뵆쨌mock쨌seed 濡??숈깮 移대뱶瑜?梨꾩슦吏 ?딆쓬(?ㅽ뙣쨌吏??뾾?뚯? null)
+PASS  (a) screens/tutor.js: ?숈깮 ??뿉??bootTutorStudentDemand(?좏깮 ?쒕룞吏??
+PASS  (a) regionFeedContext: 怨쇱쇅???숈깮 ????ctx.liveStudentItems = getTutorStudentLiveItems()
+PASS  (a) getRegionFeed: liveStudentItems 諛곗뿴?대㈃ ?숈깮 ?몄텧 移대뱶濡?留ㅽ븨, ?놁쑝硫?pending
+PASS  ?쒕쾭: ?숈깮 ??씠 preferred_lesson_type 瑜?洹몃?濡?嫄곕Ⅸ??PASS  ?쒕쾭: preferred_region_id = selectableRegionId(援?룹떆쨌援? ??preferred_tutor_region_id 鍮꾧탳
+PASS  ?쒕쾭: ?좏깮 ?⑥쐞 湲곗???媛숇떎 ??tutor_regions.region_id ? preferred_tutor_region_id 紐⑤몢 assertSelectable
+PASS  PHP쨌SQL 蹂寃??놁쓬(議고쉶 ?꾩슜) ??SearchService ?????꾪꽣 ?ㅻ? ?ｌ? ?딆븯??PASS  (b) 臾멸뎄??student-reg-copy ??TUTOR_HOME_STUDENT_COPY ?쒓납
+PASS  (b) search-find-surface ?덉뿉 怨쇱쇅???숈깮 ??臾멸뎄 ?섎뱶肄붾뵫 ?놁쓬
+PASS  (c) ?쒕룞吏??3??씠 ?숈깮 ??吏??컮??洹몃젮吏꾨떎(怨쇱쇅????낵 媛숈? renderTutorRegionTabs)
+PASS  (c) data-tutor-region ?몃뱾?ш? ?숈깮 ??뿉?쒕뒗 tutorStudentRegionIndex 瑜?諛붽씔??PASS  (c) ??쓣 ?꾨Ⅴ湲???湲곕낯媛믪? ????쒕룞吏??PASS  (d) 怨듬?諛????숈깮 ??議고쉶 洹몃?濡?preferred_studyroom_region_id 쨌 study_room 遺꾧린)
+PASS  (d) 怨듬?諛????숈깮 ??濡쒕뵫 臾멸뎄 洹몃?濡?PASS  (d) ?숈깮(parent) ??寃쎈줈 洹몃?濡???studentFeedEntry 쨌 studentFeedStatus 遺꾧린 ?좎?
+PASS  (d) 寃뚯뒪??寃쎈줈 洹몃?濡???guestFeedStatus 遺꾧린 ?좎?
+PASS  (d) 怨쇱쇅???????怨좎젙? 怨쇱쇅????쭔(?숈깮 ??? 怨좊Ⅸ ??쓣 ?곕Ⅸ??
+PASS  (d) 怨쇱쇅??????諛뺤뒪쨌?쒕룞吏??遺꾪룷 UI 蹂寃??놁쓬
+PASS  (d) ?숈깮李얘린 留곹겕諛곗? ?좎?
+
+##### 2遺 ?ㅽ뻾 #####
+file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc
+92/node_modules/vite-node/dist/client.mjs:235
+				const error = new Error(`Cannot find ${isBareImport(id) ? "package" : "module"} '${id}'${importer ? ` imported from
+ '${importer}'` : ""}`, { cause });
+				              ^
+
+Error: Cannot find package '@search-ui/search-api.js' imported from 'D:/work/study114/preview/home-ui/src/tutor-home-se
+ed.js'
+    at ViteNodeRunner._fetchModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa
+15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:235:19)
+    at ViteNodeRunner.directRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930ca
+a15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:255:44)
+    at ViteNodeRunner.cachedRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930ca
+a15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:181:11)
+    at ViteNodeRunner.dependencyRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a9
+30caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:228:10)
+    at D:\work\study114\preview\home-ui\src\tutor-home-seed.js:7:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c
+8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+    at ViteNodeRunner.directRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930ca
+a15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:348:3)
+    at ViteNodeRunner.cachedRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930ca
+a15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:181:11)
+    at ViteNodeRunner.dependencyRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a9
+30caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:228:10)
+    at D:\work\study114\scripts\verify-tutor-home-student-tab.mjs:262:14 {
+  code: 'ERR_MODULE_NOT_FOUND',
+  [cause]: Error: Failed to load url @search-ui/search-api.js (resolved id: @search-ui/search-api.js) in D:/work/study1
+14/preview/home-ui/src/tutor-home-seed.js. Does the file exist?
+      at loadAndTransform (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed416
+48e/npm/_npx/f2342a4b64a2bc92/node_modules/vite/dist/node/chunks/node.js:19977:31) {
+    code: 'ERR_LOAD_URL'
+  }
+}
+
+Node.js v24.16.0

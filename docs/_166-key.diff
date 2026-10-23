@@ -1,0 +1,862 @@
+﻿diff --git a/preview/auth-ui/src/register-enums.js b/preview/auth-ui/src/register-enums.js
+index ef26c99..060529e 100644
+--- a/preview/auth-ui/src/register-enums.js
++++ b/preview/auth-ui/src/register-enums.js
+@@ -33,7 +33,7 @@ export const SCHOOL_LEVEL_OPTIONS = [
+   { value: 'elementary', label: '초등' },
+   { value: 'middle', label: '중등' },
+   { value: 'high', label: '고등' },
+-  { value: 'n_su', label: 'N수' },
++  { value: 'n_su', label: '대입 준비(재수 이상)' },
+ ];
+ 
+ export const VISIBILITY_OPTIONS = [
+diff --git a/preview/home-ui/src/concern/copy.js b/preview/home-ui/src/concern/copy.js
+index 0171fcb..1d98a43 100644
+--- a/preview/home-ui/src/concern/copy.js
++++ b/preview/home-ui/src/concern/copy.js
+@@ -56,7 +56,7 @@ export const SEED_COMMUNITY_BOARDS = [
+ 
+ export const COMMUNITY_BOARD_VISUAL = {
+   director: {
+-    kicker: 'Room',
++    kicker: '공부방',
+     icon: '/assets/info-refresh/motif-room.svg',
+     desc: '운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.',
+     cta: '입장하기',
+@@ -67,7 +67,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: '',
+   },
+   tutor: {
+-    kicker: 'Tutor',
++    kicker: '과외쌤',
+     icon: '/assets/info-refresh/motif-tutor.svg',
+     desc: '수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.',
+     cta: '입장하기',
+@@ -78,7 +78,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: 'var(--role-tutor)',
+   },
+   parent: {
+-    kicker: 'Parent',
++    kicker: '학생·학부모',
+     icon: '/assets/info-refresh/motif-parent.svg',
+     desc: '학습 계획·과외 선택·공부방 이용 경험을 구체적으로 나눠 보세요.',
+     cta: '입장하기',
+@@ -89,7 +89,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: 'var(--role-student)',
+   },
+   solved: {
+-    kicker: 'Solved',
++    kicker: '해결됨',
+     icon: '/assets/info-refresh/motif-solved.svg',
+     desc: '고민이 풀린 과정을 짧게 남겨, 다음 사람에게 단서를 전합니다.',
+     cta: '후기 보기',
+diff --git a/preview/home-ui/src/empty-state-copy.js b/preview/home-ui/src/empty-state-copy.js
+index f283acb..f1a895f 100644
+--- a/preview/home-ui/src/empty-state-copy.js
++++ b/preview/home-ui/src/empty-state-copy.js
+@@ -145,7 +145,7 @@ export const EMPTY_COPY = {
+   studentReview: {
+     screenId: 'P25-S10',
+     title: '검토 중인 학생이 없습니다',
+-    body: '마음에 드는 학생 의뢰를 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
++    body: '마음에 드는 등록을 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.',
+     cta: null,
+   },
+   contactHistory: {
+@@ -399,7 +399,14 @@ export function renderStateCard(opts) {
+     String(s ?? '')
+       .replace(/&/g, '&amp;')
+       .replace(/</g, '&lt;');
++  const ctaHref = String(opts.ctaHref || '');
++  const ctaLabel = String(opts.cta || '');
+   const links = (opts.links || [])
++    .filter((l) => {
++      if (!l?.href) return false;
++      if (ctaHref && l.href === ctaHref && (!ctaLabel || l.label === ctaLabel)) return false;
++      return true;
++    })
+     .map((l) => `<a href="${esc(l.href)}" class="state-card__link">${esc(l.label)}</a>`)
+     .join('');
+   const cta =
+diff --git a/preview/home-ui/src/exposure-render.js b/preview/home-ui/src/exposure-render.js
+index 3adf57f..dccc76f 100644
+--- a/preview/home-ui/src/exposure-render.js
++++ b/preview/home-ui/src/exposure-render.js
+@@ -116,12 +116,14 @@ function joinFeatures(item, max = 3) {
+ }
+ 
+ /** 11장 §2-0 / 상위기획 §18 — 통계·기능 분리 (추천·후기≠액션배지) */
+-function actionCountBtn(icon, count, { title, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
++function actionCountBtn(icon, count, { title, aria, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
+   const n = Number(count) || 0;
+   if (hideWhenZero && n <= 0) return '';
+   const dis = disabled ? ' disabled aria-disabled="true"' : '';
+-  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" ${attrs}${dis}>
+-    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${n}</span>
++  const label = aria || title;
++  const countHtml = n > 0 ? String(n) : '<span class="item-actions__count-empty">없음</span>';
++  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" aria-label="${esc(label)}" ${attrs}${dis}>
++    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${countHtml}</span>
+   </button>`;
+ }
+ 
+@@ -161,7 +163,7 @@ export function renderItemActions(opts = {}) {
+     const rail = ['👍', '💬', '♡', '⇄', '✉']
+       .map(
+         (icon) =>
+-          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">0</span></button>`,
++          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1" title="예시"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count"><span class="item-actions__count-empty">없음</span></span></button>`,
+       )
+       .join('');
+     return `<div class="card-visual__rail" data-expo-sample-rail="1" aria-hidden="true"><div class="card-stats">${rail}</div></div>`;
+@@ -183,13 +185,15 @@ export function renderItemActions(opts = {}) {
+       ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
+       : '';
+   const recommendStat = actionCountBtn('👍', rec, {
+-    title: `추천 ${rec}`,
++    title: '추천하기',
++    aria: '추천',
+     cls: 'item-actions__btn--stat',
+     attrs: recommendAttrs,
+     disabled: !guest && itemId == null,
+   });
+   const reviewStat = actionCountBtn('💬', rev, {
+-    title: `후기 ${rev}`,
++    title: '후기 보기',
++    aria: '후기',
+     cls: 'item-actions__btn--stat',
+     attrs: guest
+       ? `data-action="login-gate" data-gate="review" data-gate-label="후기" data-item-kind="${kind}" data-item-id="${itemId}"`
+@@ -205,7 +209,8 @@ export function renderItemActions(opts = {}) {
+     !showWish
+       ? ''
+       : actionCountBtn(wished ? '♥' : '♡', wish_count, {
+-          title: `찜 ${wish_count}`,
++          title: '찜하기',
++          aria: '찜',
+           cls: wished ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
+           attrs: wishAttrs,
+         });
+@@ -214,12 +219,14 @@ export function renderItemActions(opts = {}) {
+     ? ''
+     : guest
+       ? actionCountBtn('⇄', compare_count, {
+-          title: `비교 ${compare_count}`,
++          title: '비교하기',
++          aria: '비교',
+           cls: 'item-actions__btn--action',
+           attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"`,
+         })
+       : actionCountBtn('⇄', compare_count, {
+-          title: `비교 ${compare_count}`,
++          title: '비교하기',
++          aria: '비교',
+           cls: inCompare ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
+           attrs: `data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`,
+         });
+@@ -228,7 +235,8 @@ export function renderItemActions(opts = {}) {
+     ? `data-action="login-gate" data-gate="inquire" data-gate-label="쪽지" data-item-kind="${kind}" data-item-id="${itemId}"`
+     : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
+   const messageBtn = actionCountBtn('✉', message_count, {
+-    title: `쪽지 ${message_count}`,
++    title: '쪽지 보내기',
++    aria: '쪽지',
+     cls: 'item-actions__btn--action',
+     attrs: msgAttrs,
+   });
+@@ -404,7 +412,10 @@ function optionalStudentPlaces(lesson_places) {
+ }
+ 
+ function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) {
+-  rows.push([labeled('슬로건', item.slogan || '—', { col: 2, cls: 'expo-tbl__cell--slogan' })]);
++  const slogan = distinctSlogan(item);
++  if (slogan || !String(item?.slogan || '').trim()) {
++    rows.push([labeled('슬로건', slogan || '—', { col: 2, cls: 'expo-tbl__cell--slogan' })]);
++  }
+   rows.push([{ html: actions, col: 2, cls: 'expo-tbl__cell--actions' }]);
+   return rows;
+ }
+@@ -726,6 +737,14 @@ function featureTagList(item, max = 3) {
+   return [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).slice(0, max);
+ }
+ 
++/** 특징 칩과 같은 문구(예: IELTS)를 슬로건에 한 번 더 붙이지 않는다. */
++function distinctSlogan(item) {
++  const slogan = String(item?.slogan || '').trim();
++  if (!slogan) return '';
++  const features = [item.feature_1, item.feature_2, item.feature_3].map((v) => String(v || '').trim());
++  return features.includes(slogan) ? '' : slogan;
++}
++
+ function renderHcardMetaItem(label, value) {
+   const v = blankDash(value || '');
+   if (!v) return '';
+@@ -841,7 +860,7 @@ function renderBasicTutorRow(item, opts) {
+             valOnly(schedule),
+             labeled('특징', item.feature_1 || '—'),
+           ],
+-          [labeled('슬로건', item.slogan || item.feature_1 || '—', { col: 5 })],
++          ...(distinctSlogan(item) ? [[labeled('슬로건', distinctSlogan(item), { col: 5 })]] : []),
+           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
+         ],
+         'expo-tbl--basic expo-tbl--card',
+@@ -852,7 +871,7 @@ function renderBasicTutorRow(item, opts) {
+   const tags = featureTagList(item)
+     .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
+     .join('');
+-  const slogan = item.slogan || item.feature_1 || '';
++  const slogan = distinctSlogan(item);
+   const gender = item.gender && item.gender !== '—' ? formatGender(item.gender) : '';
+   const nameLine = gender
+     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
+diff --git a/preview/home-ui/src/guide/screens.js b/preview/home-ui/src/guide/screens.js
+index 55b3e93..dfa893b 100644
+--- a/preview/home-ui/src/guide/screens.js
++++ b/preview/home-ui/src/guide/screens.js
+@@ -94,7 +94,7 @@ function renderGuideHome() {
+       p2: '이용 중 막히는 부분이 있다면 고객센터에서 공지, FAQ, 운영문의를 이어서 확인할 수 있어요.',
+       art: `${A}/motif-guide.svg`,
+     })}
+-    ${sectionHead('Start here', '어디에 해당하나요?')}
++    ${sectionHead('여기에서 시작', '어디에 해당하나요?')}
+     <div class="situation-grid">
+       <a class="situation-card card card--accent" href="#/guide/start" data-guide-nav="/guide/start">
+         <span class="icon-halo"><span class="icon-tile" aria-hidden="true"><img src="${A}/tile-search.svg" alt="" width="56" height="56" /></span></span>
+@@ -123,7 +123,7 @@ function renderGuideHome() {
+       <span class="aux-links__sep" aria-hidden="true">·</span>
+       <a href="#/support" data-guide-nav="/support">고객센터 보기</a>
+     </div>
+-    ${sectionHead('FAQ', '자주 묻는 질문')}
++    ${sectionHead('질문', '자주 묻는 질문')}
+     ${faqBlock([
+       {
+         q: '이용안내와 고객센터는 같은 곳인가요?',
+@@ -142,7 +142,7 @@ function renderGuideHome() {
+         a: '아니요. 쪽지는 회원끼리 첫 연락이고, 운영문의는 운영자에게 보내는 문의입니다.',
+       },
+     ])}
+-    ${sectionHead('Go use', '바로 이용하기')}
++    ${sectionHead('바로 이용해 보기', '바로 이용하기')}
+     <div class="slim-cta">
+       <span class="slim-cta__label">실이용으로</span>
+       ${extLink(searchHref('room'), 'btn btn--primary', '공부방 찾기 시작')}
+@@ -159,7 +159,7 @@ function renderGuideStart() {
+       p2: '찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가 보세요. 비교는 필요할 때 쓰면 됩니다.',
+       art: `${A}/motif-search.svg`,
+     })}
+-    ${sectionHead('Playbook', '이용 순서')}
++    ${sectionHead('순서', '이용 순서')}
+     <p class="section-lead">한 번에 다 외울 필요 없어요. 찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가면 됩니다.</p>
+     <p class="section-lead">목록·상세는 로그인 전에도 볼 수 있고, 찜·쪽지는 로그인 후입니다.</p>
+     ${stepList([
+@@ -199,12 +199,12 @@ function renderGuideStart() {
+         body: '쪽지는 로그인 후 회원끼리 첫 연락을 하는 통로예요. 운영팀에 보내는 운영문의와는 다릅니다.',
+       },
+     ])}
+-    ${sectionHead('Students', '학생찾기 (공부방·과외쌤용)')}
++    ${sectionHead('학생', '학생찾기 (공부방·과외쌤용)')}
+     <p class="section-lead">학생찾기는 공부방·과외쌤이 근처에 올라온 학생·학부모 요청을 찾아보는 화면입니다.</p>
+     <p class="section-lead">학부모가 공부방·과외쌤을 찾는 「공부방찾기」「과외쌤찾기」와는 방향이 반대예요.</p>
+     <p class="section-lead">기본으로 내 홍보 지역의 요청이 보이고, 조건을 바꿔 더 넓게 검색할 수 있습니다.</p>
+     <p class="section-lead">홈의 「우리동네 학생」은 잠깐 훑는 동네 미리보기이고, 자세히 찾으려면 학생찾기로 가면 됩니다.</p>
+-    ${sectionHead('FAQ', '자주 묻는 질문')}
++    ${sectionHead('질문', '자주 묻는 질문')}
+     ${faqBlock([
+       {
+         q: '학생찾기는 누구를 위한 화면인가요?',
+@@ -223,7 +223,7 @@ function renderGuideStart() {
+         a: '찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지입니다. 후보를 고른 뒤에는 찜 → 비교 → 쪽지 순서가 좋습니다.',
+       },
+     ])}
+-    ${sectionHead('Next', '다음으로')}
++    ${sectionHead('다음', '다음으로')}
+     <div class="cta-row">
+       ${extLink(searchHref('room'), 'btn btn--primary', '공부방 찾기 시작')}
+       ${extLink(searchHref('tutor'), 'btn btn--secondary', '과외쌤 찾기 시작')}
+@@ -240,7 +240,7 @@ function renderGuideRegister() {
+       p2: '노출을 위한 운영자 심사·승인 절차는 없습니다.',
+       art: `${A}/motif-register.svg`,
+     })}
+-    ${sectionHead('Playbook', '등록 순서')}
++    ${sectionHead('순서', '등록 순서')}
+     <p class="section-lead">회원가입(계정 만들기) 뒤 필수정보를 입력하면 기본 노출이 시작됩니다. 증빙자료는 심사하거나 보증하지 않습니다. 신뢰정보는 회원이 올려 둔 참고 표시이며, 플랫폼의 인증·보증이 아닙니다.</p>
+     ${stepList([
+       { icon: `${A}/step-login.svg`, title: '회원가입(계정 만들기)', body: '공통가입은 계정을 만드는 단계예요. 계정을 만든 뒤 로그인해 주세요.' },
+@@ -253,7 +253,7 @@ function renderGuideRegister() {
+         body: '기본 노출이 시작된 뒤, 더 눈에 띄게 하고 싶다면 유료상품을 살펴볼 수 있어요. 필수는 아니며 자동 결제되지 않습니다.',
+       },
+     ])}
+-    ${sectionHead('Checklist', '역할별 체크')}
++    ${sectionHead('점검', '역할별 체크')}
+     <p class="section-lead">공부방과 과외쌤은 세부 항목이 조금 달라요. 탭을 바꿔 확인해 보세요.</p>
+     <div class="role-tabs" role="tablist" aria-label="역할 선택">
+       <button type="button" class="role-tab" role="tab" id="tab-room" aria-selected="true" aria-controls="panel-room">공부방</button>
+@@ -279,12 +279,12 @@ function renderGuideRegister() {
+       <li>대표 사진 — 대표 사진이 있으면 프로필을 더 쉽게 이해할 수 있어요</li>
+       <li>가입 필수정보가 입력되어 기본 노출 중인지 확인</li>
+     </ul>
+-    ${sectionHead('Students', '학생 등록')}
++    ${sectionHead('학생', '학생 등록')}
+     <p class="section-lead">학생·학부모도 회원가입 후 기본 정보를 입력하면, 요청이 학생찾기 등에 기본으로 노출될 수 있습니다.</p>
+     <p class="section-lead">운영자 심사·승인을 기다리지 않습니다.</p>
+     <p class="section-lead">상세 정보는 나중에 보완해도 됩니다. (저장을 눌러야 이어집니다 — 창만 닫으면 저장되지 않아요.)</p>
+     <p class="section-lead">한 줄 요청문·희망 지역·과목 등 찾는 분이 바로 이해하는 정보를 먼저 채우면 좋습니다.</p>
+-    ${sectionHead('FAQ', '자주 묻는 질문')}
++    ${sectionHead('질문', '자주 묻는 질문')}
+     ${faqBlock([
+       {
+         q: '기본 정보를 입력하면 바로 노출되나요?',
+@@ -303,7 +303,7 @@ function renderGuideRegister() {
+         a: '별도입니다. 학생·학부모도 회원가입 후 기본 정보를 입력하면, 요청이 학생찾기 등에 기본으로 노출될 수 있습니다. 운영자 심사·승인을 기다리지 않습니다. 학생은 찜·비교 대상이 아닙니다.',
+       },
+     ])}
+-    ${sectionHead('After', '기본 노출 이후 선택')}
++    ${sectionHead('이후', '기본 노출 이후 선택')}
+     <div class="cta-row">
+       ${extLink(STUDY_ROOM_REGISTER_URL, 'btn btn--primary', '공부방 등록')}
+       ${extLink(TUTOR_REGISTER_URL, 'btn btn--secondary', '과외쌤 등록')}
+@@ -325,7 +325,7 @@ function renderGuideCompare() {
+     <div class="note-callout" role="note">
+       <strong>채널 구분:</strong> 쪽지 = 회원끼리 첫 연락 · 운영문의 = 운영자에게 보내는 문의(폼/메일). 같은 “문의”로 묶지 마세요.
+     </div>
+-    ${sectionHead('Features', '세 가지 기능')}
++    ${sectionHead('기능', '세 가지 기능')}
+     <div class="chip-row" aria-label="찜 · 비교 · 쪽지">
+       <div class="feat-chip">
+         <span class="feat-chip__icon feat-chip__icon--teal" aria-hidden="true"><img src="${A}/step-bookmark.svg" alt="" width="40" height="40" /></span>
+@@ -349,7 +349,7 @@ function renderGuideCompare() {
+         </div>
+       </div>
+     </div>
+-    ${sectionHead('Playbook', '이용 순서')}
++    ${sectionHead('순서', '이용 순서')}
+     <p class="section-lead">찜 → 비교 → 쪽지 순으로 한 번만 따라가 보세요.</p>
+     ${stepList([
+       { icon: `${A}/step-pick.svg`, title: '검색 결과에서 후보 고르기', body: '공부방·과외쌤 목록에서 관심 있는 곳을 골라 둡니다.' },
+@@ -358,7 +358,7 @@ function renderGuideCompare() {
+       { icon: `${A}/step-message.svg`, title: '상세 페이지를 읽은 뒤 쪽지 보내기', body: '짧은 인사와 궁금한 점만 적어서 보내 보세요. 쪽지는 회원끼리 첫 연락을 하는 통로입니다.' },
+       { icon: `${A}/step-inbox.svg`, title: '쪽지함에서 이어가기', body: '받은·보낸 쪽지는 쪽지함에서 확인할 수 있어요. (로그인 필요)' },
+     ])}
+-    ${sectionHead('FAQ', '자주 묻는 질문')}
++    ${sectionHead('질문', '자주 묻는 질문')}
+     ${faqBlock([
+       {
+         q: '비교는 최대 몇 개인가요?',
+@@ -373,7 +373,7 @@ function renderGuideCompare() {
+         a: '찜 → 비교 → 쪽지 순으로 따라가 보세요. 비교는 판단을 돕는 단계예요. 상세 페이지를 본 다음, 쪽지로 회원끼리 첫 연락을 이어가세요.',
+       },
+     ])}
+-    ${sectionHead('Tip', '쪽지 보내기 전')}
++    ${sectionHead('참고', '쪽지 보내기 전')}
+     <ul class="checklist">
+       <li>상대 상세 소개를 한 번 더 읽어 보세요</li>
+       <li>첫 쪽지에서는 긴 자기소개보다, 궁금한 조건을 짧게 정리해 물어보세요.</li>
+@@ -395,7 +395,7 @@ function renderGuideSafe() {
+       p2: '공식 기준과 신고·분쟁은 고객센터 정책에서 확인할 수 있어요.',
+       art: `${A}/motif-safe.svg`,
+     })}
+-    ${sectionHead('Do & Don\'t', '이렇게 하세요 · 하지 마세요')}
++    ${sectionHead('안내', '이렇게 하세요 · 하지 마세요')}
+     <p class="section-lead">가이드는 행동 수칙입니다. 정책 전문·신고 접수는 고객센터에 있습니다.</p>
+     <p class="section-lead">노출된 신뢰정보는 상대가 프로필에 보여 둔 소개·자료이며, 플랫폼이 확인·인증했다는 뜻이 아닙니다.</p>
+     <p class="section-lead">학생·학부모도 첫 연락, 개인정보, 선입금에서 같은 주의를 따르세요.</p>
+@@ -419,7 +419,7 @@ function renderGuideSafe() {
+         </ul>
+       </div>
+     </div>
+-    ${sectionHead('FAQ', '자주 묻는 질문')}
++    ${sectionHead('질문', '자주 묻는 질문')}
+     ${faqBlock([
+       {
+         q: '노출된 신뢰정보는 인증인가요?',
+@@ -434,7 +434,7 @@ function renderGuideSafe() {
+         a: '네. 학생·학부모도 첫 연락, 개인정보, 선입금에서 같은 주의를 따르세요.',
+       },
+     ])}
+-    ${sectionHead('Help', '도움이 필요할 때')}
++    ${sectionHead('도움', '도움이 필요할 때')}
+     <div class="help-block">
+       <h3><img src="${A}/icon-help.svg" alt="" width="32" height="32" aria-hidden="true" /> 고객센터로 이어가기</h3>
+       <p>안내 본문에 정책·FAQ를 반복하지 않습니다. 필요한 지점에서만 연결합니다.</p>
+diff --git a/preview/home-ui/src/mypage/plans-catalog.js b/preview/home-ui/src/mypage/plans-catalog.js
+index 0be16be..c28329d 100644
+--- a/preview/home-ui/src/mypage/plans-catalog.js
++++ b/preview/home-ui/src/mypage/plans-catalog.js
+@@ -47,7 +47,7 @@ function toCatalogProduct(p) {
+ const FALLBACK_COPY = {
+   prime: {
+     id: 'prime',
+-    name: 'Prime 노출',
++    name: '프라임',
+     tagline: '선택한 지역·과목의 대표 노출',
+     kind: /** @type {CatalogKind} */ ('position'),
+     bullets: ['기간형 단건 결제', '자동연장 없음'],
+@@ -55,7 +55,7 @@ const FALLBACK_COPY = {
+   },
+   pick: {
+     id: 'pick',
+-    name: 'Pick 노출',
++    name: '픽',
+     tagline: '페이지 순환형 추천 노출',
+     kind: /** @type {CatalogKind} */ ('position'),
+     bullets: ['기간형 단건 결제', '자동연장 없음'],
+@@ -71,7 +71,7 @@ const FALLBACK_COPY = {
+   },
+   hot: {
+     id: 'hot',
+-    name: 'Hot',
++    name: '주목',
+     tagline: '추천·대표 노출 이용 기간에 함께 적용',
+     kind: /** @type {CatalogKind} */ ('badge_addon'),
+     bullets: ['광고성 주목 배지', '단독 핵심상품 ✕'],
+@@ -92,7 +92,7 @@ const FALLBACK_COPY = {
+   },
+   sky: {
+     id: 'sky',
+-    name: 'SKY',
++    name: '주요 대학',
+     tagline: '과외쌤 유료 광고축 · 노출상품 기간에 함께 적용',
+     kind: /** @type {CatalogKind} */ ('badge_addon'),
+     bullets: ['과외쌤 유료 주목 배지', '대학명 자동추론 배지 아님'],
+diff --git a/preview/home-ui/src/plans/hub-home.js b/preview/home-ui/src/plans/hub-home.js
+index e411709..30b740a 100644
+--- a/preview/home-ui/src/plans/hub-home.js
++++ b/preview/home-ui/src/plans/hub-home.js
+@@ -20,9 +20,9 @@ export function renderPlansHubCinema() {
+         <div class="cinema-bg__overlay"></div>
+       </div>
+       <div class="cinema-content">
+-        <div class="cinema-eyebrow">PAID · GUIDE HUB</div>
++        <div class="cinema-eyebrow">유료 안내</div>
+         <h1>무료로 시작하고,<br>필요할 때만 올린다</h1>
+-        <p class="cinema-lead">마이샵 꾸미기와 Basic 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
++        <p class="cinema-lead">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
+         <div class="cinema-actions">
+           <a class="btn-cinema-primary" href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 자세히 보기</a>
+           <a class="btn-cinema-ghost" href="#/plans/access" data-plans-nav="/plans/access">쪽지권 자세히 보기</a>
+@@ -67,13 +67,13 @@ export function renderPlansHomeBody(opts = {}) {
+ 
+       <div class="entry-grid" role="list">
+         <a class="entry-card" href="#/plans/positions" data-plans-nav="/plans/positions" role="listitem">
+-          <span class="entry-kicker">EXPOSURE</span>
++          <span class="entry-kicker">노출</span>
+           <h3 class="entry-title">노출상품</h3>
+-          <p class="entry-desc">Prime·Pick으로 더 자주 발견되게 만듭니다. 홈·추천 영역에서 보이는 기회를 기간제로 올립니다.</p>
++          <p class="entry-desc">프라임·픽으로 더 자주 발견되게 만듭니다. 홈·추천 영역에서 보이는 기회를 기간제로 올립니다.</p>
+           <span class="entry-cta">상세에서 기간 선택 →</span>
+         </a>
+         <a class="entry-card" href="#/plans/access" data-plans-nav="/plans/access" role="listitem">
+-          <span class="entry-kicker">MESSAGE</span>
++          <span class="entry-kicker">쪽지</span>
+           <h3 class="entry-title">쪽지권</h3>
+           <p class="entry-desc">학생에게 먼저 보내는 첫 쪽지 기회를 선택합니다. 같은 대화의 후속 응답은 무료입니다.</p>
+           <span class="entry-cta">상세에서 횟수 선택 →</span>
+@@ -98,7 +98,7 @@ export function renderPlansHomeBody(opts = {}) {
+           <li>목록·추천에서 더 자주 보이고 싶을 때 → <strong>노출상품</strong></li>
+           <li>관심 학생에게 먼저 쪽지를 보내고 싶을 때 → <strong>쪽지권</strong></li>
+           <li>노출상품에 짧은 강조 표시를 더하고 싶을 때 → <strong>홍보 배지</strong>(노출과 함께·최대 2개)</li>
+-          <li>마이샵 꾸미기·Basic 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
++          <li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
+         </ul>
+       </section>
+ 
+@@ -107,11 +107,11 @@ export function renderPlansHomeBody(opts = {}) {
+         <div class="free-paid-grid">
+           <div class="fp-cell">
+             <strong>무료</strong>
+-            <span>마이샵 꾸미기 · Basic 목록 노출 · 받은 쪽지에 답장</span>
++            <span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
+           </div>
+           <div class="fp-cell">
+             <strong>선택 유료</strong>
+-            <span>노출상품(Prime/Pick) · 쪽지권 · 홍보 배지(노출상품과 함께)</span>
++            <span>노출상품(프라임/픽) · 쪽지권 · 홍보 배지(노출상품과 함께)</span>
+           </div>
+         </div>
+       </section>
+diff --git a/preview/home-ui/src/plans/screens.js b/preview/home-ui/src/plans/screens.js
+index ad4753e..4c78f45 100644
+--- a/preview/home-ui/src/plans/screens.js
++++ b/preview/home-ui/src/plans/screens.js
+@@ -315,9 +315,9 @@ function isLowCredit(remaining) {
+ 
+ function productLabel(code) {
+   const normalized = String(code || '').toLowerCase();
+-  if (normalized.includes('prime')) return 'Prime 노출';
+-  if (normalized.includes('pick')) return 'Pick 노출';
+-  if (normalized.includes('basic')) return 'Basic 노출';
++  if (normalized.includes('prime')) return '프라임';
++  if (normalized.includes('pick')) return '픽';
++  if (normalized.includes('basic')) return '베이직카드';
+   if (normalized.includes('memo')) return '쪽지권';
+   return '이용 상품';
+ }
+@@ -364,10 +364,10 @@ function renderRoomPrimeBoard(prime) {
+   const tone = full ? 'is-full' : used > 0 ? 'is-partial' : 'is-open';
+   return `
+     <div class="plans-prime-board ${tone}" data-plans-prime-board>
+-      <h4 class="plans-prime-board__title">선택 지역 Prime 노출 현황</h4>
++      <h4 class="plans-prime-board__title">선택 지역 프라임 노출 현황</h4>
+       <p class="plans-prime-board__occupancy">3자리 중 ${used}자리 이용 중${remaining ? ` · 남은 자리 ${remaining}` : ' · 만석'}</p>
+-      <p class="plans-prime-board__lead">선택 지역의 Prime 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
+-      <ul class="plans-prime-board__cells" aria-label="Prime 자리 3칸">
++      <p class="plans-prime-board__lead">선택 지역의 프라임 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
++      <ul class="plans-prime-board__cells" aria-label="프라임 자리 3칸">
+         ${cells
+           .map((c) => {
+             const st = c.status === 'held' ? 'held' : c.status;
+@@ -381,7 +381,7 @@ function renderRoomPrimeBoard(prime) {
+                     : '이용 중';
+             return `
+           <li class="plans-prime-cell is-${esc(st)}">
+-            <span class="plans-prime-cell__label">Prime 자리</span>
++            <span class="plans-prime-cell__label">프라임 자리</span>
+             <span class="plans-prime-cell__status">${esc(c.label)}</span>
+             <span class="plans-prime-cell__meta">${esc(meta)}</span>
+           </li>`;
+@@ -391,7 +391,7 @@ function renderRoomPrimeBoard(prime) {
+       ${
+         full
+           ? `<div class="plans-prime-waitlist" data-plans-waitlist>
+-              <p><strong>현재 선택 지역의 Prime 자리는 모두 이용 중입니다.</strong></p>
++              <p><strong>현재 선택 지역의 프라임 자리는 모두 이용 중입니다.</strong></p>
+               <p>예약대기를 등록하면 빈자리가 열릴 때 알려드립니다. 대기 등록만으로 자리나 순번이 보장되지는 않으며 결제가 완료되어야 확정됩니다.</p>
+               <button type="button" class="btn btn--primary" data-plans-waitlist-register>예약대기 등록</button>
+               <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 예약대기 보기</a></p>
+@@ -404,12 +404,12 @@ function renderRoomPrimeBoard(prime) {
+ /** 공부방 Pick 5×2=10 미리보기 (순환 목록·과외쌤 미사용) */
+ function renderRoomPickPreview() {
+   return `
+-    <div class="plans-room-pick" aria-label="Pick 노출 미리보기 5열 2행">
+-      <p class="plans-room-pick__title">Pick 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
++    <div class="plans-room-pick" aria-label="픽 노출 미리보기 5열 2행">
++      <p class="plans-room-pick__title">픽 노출 미리보기 · 한 페이지 10명 (5열 × 2행)</p>
+       <ul class="plans-room-pick__grid">
+         ${ROOM_PICK_PREVIEW_TILES.map(
+           (p, i) => `
+-          <li class="plans-room-pick__tile" aria-label="Pick 미리보기 ${i + 1}">
++          <li class="plans-room-pick__tile" aria-label="픽 미리보기 ${i + 1}">
+             <span class="plans-room-pick__thumb" aria-hidden="true">P${i + 1}</span>
+             <span class="plans-room-pick__name">${esc(p.name)}</span>
+             <span class="plans-room-pick__stats">${esc(p.stats)}</span>
+@@ -464,12 +464,12 @@ function renderTutorCircTiles(tiles, prefix) {
+ 
+ function renderTutorPrimeCirculation() {
+   return `
+-    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime 노출 미리보기 페이지당 3명">
++    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="프라임 노출 미리보기 페이지당 3명">
+       <div class="plans-tutor-circ__head">
+         <span class="plans-tutor-circ__kicker">핵심 노출 · 순환형</span>
+         <span class="plans-tutor-circ__count">3 / page</span>
+       </div>
+-      <p class="plans-tutor-circ__title">Prime 순환 미리보기 · 페이지당 3명</p>
++      <p class="plans-tutor-circ__title">프라임 순환 미리보기 · 페이지당 3명</p>
+       <p class="plans-tutor-circ__rotate">선택 시·주력과목 앞쪽 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+       <ul class="plans-tutor-circ__grid">
+         ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
+@@ -480,12 +480,12 @@ function renderTutorPrimeCirculation() {
+ 
+ function renderTutorPickCirculation() {
+   return `
+-    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick 노출 미리보기 페이지당 10명">
++    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="픽 노출 미리보기 페이지당 10명">
+       <div class="plans-tutor-circ__head">
+         <span class="plans-tutor-circ__kicker">추천 노출 · 순환형</span>
+         <span class="plans-tutor-circ__count">10 / page</span>
+       </div>
+-      <p class="plans-tutor-circ__title">Pick 순환 미리보기 · 페이지당 10명</p>
++      <p class="plans-tutor-circ__title">픽 순환 미리보기 · 페이지당 10명</p>
+       <p class="plans-tutor-circ__rotate">선택 시·주력과목 추천 노출 · 15분마다 공정 순환 · 페이지 넘김</p>
+       <ul class="plans-tutor-circ__grid">
+         ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
+@@ -602,7 +602,7 @@ function getEligibility(profile, productCode, family = 'position') {
+     if (productCode === 'prime' || productCode === 'pick') {
+       if (room.detail_completion_status !== 'expanded_complete') {
+         missing.push(
+-          `${productCode === 'prime' ? 'Prime' : 'Pick'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
++          `${productCode === 'prime' ? '프라임' : '픽'} 정보 부족 · 등록점검에서 남은 항목을 채우면 구매가 열립니다`,
+         );
+         canBuy = false;
+       }
+@@ -650,7 +650,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+   const isPick = product.productCode === 'pick';
+   const primaryCta = opts.primaryCta ?? isPrime;
+   const displayName =
+-    product.name || (isPrime ? 'Prime 노출' : isPick ? 'Pick 노출' : productLabel(product.productCode));
++    product.name || (isPrime ? '프라임' : isPick ? '픽' : productLabel(product.productCode));
+   const isStorefront = layout === 'storefront' || layout === 'compact';
+ 
+   if (!implemented) {
+@@ -672,7 +672,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+     eligibility.canBuy = false;
+     eligibility.missing = [
+       ...eligibility.missing.filter((m) => !String(m).includes('슬롯') && !String(m).includes('마감')),
+-      '현재 지역 Prime 자리가 모두 이용 중입니다. 아래에서 예약대기를 등록하세요.',
++      '현재 지역 프라임 자리가 모두 이용 중입니다. 아래에서 예약대기를 등록하세요.',
+     ];
+   }
+   const missingHtml =
+@@ -686,14 +686,14 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+     if (role === 'study_room' && isPick) return '선택 지역에서 10개씩 순환 노출';
+     if (role === 'tutor' && isPrime) return '선택 시·주력과목에서 3개씩 순환 노출';
+     if (role === 'tutor' && isPick) return '선택 시·주력과목에서 10개씩 순환 노출';
+-    if (role === 'study_room' && isPrime) return '선택 지역의 Prime 대표 노출';
++    if (role === 'study_room' && isPrime) return '선택 지역의 프라임 대표 노출';
+     return '';
+   })();
+ 
+   const pickPreviewHtml =
+     embedPickPreview && isPick
+-      ? `<div class="plans-pick-preview" aria-label="Pick 노출 미리보기 5열 2행">
+-        <p class="plans-pick-preview__label">Pick 노출 미리보기 · 5열 × 2행</p>
++      ? `<div class="plans-pick-preview" aria-label="픽 노출 미리보기 5열 2행">
++        <p class="plans-pick-preview__label">픽 노출 미리보기 · 5열 × 2행</p>
+         <ul class="plans-pick-preview__grid">
+           ${Array.from({ length: 10 }, (_, i) => `<li class="plans-pick-preview__cell">P${i + 1}</li>`).join('')}
+         </ul>
+@@ -1102,8 +1102,8 @@ export function renderPlansPositions() {
+         ${renderPlansHero({
+           eyebrow: 'PAID PRODUCTS',
+           title: '노출상품',
+-          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n마이샵을 만들고 Basic 목록에 노출하는 것은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
+-          sub: 'Prime 노출과 Pick 노출은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
++          lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
++          sub: '프라임과 픽은 홈·찾기 화면에서 프로필을 더 잘 발견할 수 있도록 돕는 유료 노출상품입니다.',
+         })}
+         ${renderBasicFreeRow()}
+       </header>
+@@ -1122,8 +1122,8 @@ export function renderPlansPositions() {
+               ? `${renderOffer(
+                   primeProduct,
+                   role === 'tutor'
+-                    ? '선택한 시와 주력과목의 Prime 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
+-                    : '선택한 단지·행정동의 Prime 대표 자리를 확보하세요. Prime은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
++                    ? '선택한 시와 주력과목의 프라임 영역에 페이지당 3명씩 노출되며, 15분마다 공정하게 순환합니다.'
++                    : '선택한 단지·행정동의 프라임 대표 자리를 확보하세요. 프라임은 선택 지역에서 3개만 운영하는 한정 대표 노출입니다.',
+                   0,
+                 )}
+           ${renderOffer(
+@@ -1416,7 +1416,7 @@ export function renderPlansMy() {
+       }
+       ${
+         role === 'study_room' && profile
+-          ? `<h2 class="mypage-subhead">Prime 예약대기</h2>
++          ? `<h2 class="mypage-subhead">프라임 예약대기</h2>
+             <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
+               <p class="mypage-muted">예약대기 목록을 불러오는 중…</p>
+             </div>`
+@@ -1789,18 +1789,18 @@ export function bindPlansScreenEvents(root, rerender) {
+         .then((res) => {
+           const items = Array.isArray(res?.items) ? res.items : [];
+           if (!items.length) {
+-            waitHost.innerHTML = `<p class="mypage-muted">등록된 Prime 예약대기가 없습니다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 보기</a></p>`;
++            waitHost.innerHTML = `<p class="mypage-muted">등록된 프라임 예약대기가 없습니다. · <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 보기</a></p>`;
+             return;
+           }
+           waitHost.innerHTML = `
+-            <table class="plans-table" aria-label="Prime 예약대기">
++            <table class="plans-table" aria-label="프라임 예약대기">
+               <thead><tr><th>상품</th><th>지역</th><th>상태</th><th>등록일</th><th></th></tr></thead>
+               <tbody>
+                 ${items
+                   .map(
+                     (w) => `
+                   <tr>
+-                    <td>${esc(w.product || 'Prime 노출')}</td>
++                    <td>${esc(w.product || '프라임')}</td>
+                     <td>${esc(w.region || '—')}</td>
+                     <td>${esc(w.status_label || w.status || '')}</td>
+                     <td>${esc(String(w.registered_at || '').slice(0, 10))}</td>
+diff --git a/preview/home-ui/src/study-room-reg/registration-check-copy.js b/preview/home-ui/src/study-room-reg/registration-check-copy.js
+index 07b75fb..e20b6cf 100644
+--- a/preview/home-ui/src/study-room-reg/registration-check-copy.js
++++ b/preview/home-ui/src/study-room-reg/registration-check-copy.js
+@@ -7,10 +7,10 @@ export const RC_COPY = {
+   title: '등록점검',
+   lead: '입력한 값은 있는 그대로 카드에 보입니다. Pick·Prime에 더 필요한 항목만 아래에서 확인하세요.',
+   badges: {
+-    pickOk: 'Pick 추가 충족',
+-    pickNeed: (n) => `Pick 추가 ${n}개`,
+-    primeOk: 'Prime 추가 충족',
+-    primeNeed: (n) => `Prime 추가 ${n}개`,
++    pickOk: '픽 추가 충족',
++    pickNeed: (n) => `픽 추가 ${n}개`,
++    primeOk: '프라임 추가 충족',
++    primeNeed: (n) => `프라임 추가 ${n}개`,
+   },
+   next: {
+     prefix: '다음',
+@@ -18,25 +18,25 @@ export const RC_COPY = {
+     fill: (label) => `${label} 입력하러 가기`,
+   },
+   promo: {
+-    title: '카드 노출 · Pick/Prime 자격은 별개입니다',
++    title: '카드 노출 · 픽/프라임 자격은 별개입니다',
+     lines: [
+       '입력한 항목은 입력한 만큼 그대로 카드에 보입니다. 빈 항목은 빈 채로 둡니다.',
+-      '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요 (Pick/Prime 자격).',
++      '더 잘 보이게 하려면 아래 항목을 추가로 채워 주세요 (픽/프라임 자격).',
+       '필요한 정보는 상세정보1, 상세정보2에서 바로 보완할 수 있어요.',
+     ],
+-    pickMissingTitle: '[픽] 추가 입력 — 유료 Pick 노출에 필요한 정보',
+-    primeMissingTitle: '[프라임] 추가 입력 — 유료 Prime 노출에 필요한 정보',
++    pickMissingTitle: '[픽] 추가 입력 — 유료 픽 노출에 필요한 정보',
++    primeMissingTitle: '[프라임] 추가 입력 — 유료 프라임 노출에 필요한 정보',
+     gotoField: '입력하러 가기',
+     pickReadyBody:
+-      'Pick에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 Pick을 구매할 수 있습니다.',
++      '픽에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 픽을 구매할 수 있습니다.',
+     primeReadyBody:
+-      'Prime에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 지역을 선택해 Prime을 구매할 수 있습니다.',
+-    cardsTitle: 'Basic/Pick/Prime 이렇게 달라집니다',
++      '프라임에 필요한 추가 항목이 채워져 있습니다. 노출상품에서 지역을 선택해 프라임을 구매할 수 있습니다.',
++    cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',
+     cardsLead:
+       '샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.',
+-    basicKicker: 'BASIC',
+-    pickKicker: 'PICK',
+-    primeKicker: 'PRIME',
++    basicKicker: '베이직카드',
++    pickKicker: '픽',
++    primeKicker: '프라임',
+     expandCard: '확대카드 보기',
+     expandHint: '확대카드 보기로 상세를 엽니다',
+   },
+@@ -107,11 +107,11 @@ export const RC_REQUIRED_FIELD_IDS = [...new Set([...RC_PICK_FIELD_IDS, ...RC_PR
+ /** 상단 누락 리스트 우선순위 (광고 연결) */
+ export const RC_PROMO_MISSING_DEFS = [
+   { id: 'cover', label: '대표사진', hint: '첫 노출과 상세 진입에 중요합니다', section: 'detail' },
+-  { id: 'intro_short', label: '한 줄 소개', hint: '카드와 마이샵 상단에 쓰입니다', section: 'detail' },
++  { id: 'intro_short', label: '한 줄 소개', hint: '카드와 프로필 상단에 쓰입니다', section: 'detail' },
+   { id: 'intro_long', label: '공부방 소개 / 자랑', hint: '상세 페이지에서 공부방을 설명합니다', section: 'detail' },
+-  { id: 'teaching_style', label: '지도 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },
+-  { id: 'teaching_style_note', label: '지도 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
+-  { id: 'classes', label: '수업상세', hint: '있으면 마이샵에 표시됩니다 (선택)', section: 'detail' },
++  { id: 'teaching_style', label: '수업 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },
++  { id: 'teaching_style_note', label: '수업 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
++  { id: 'classes', label: '수업상세', hint: '있으면 프로필에 표시됩니다 (선택)', section: 'detail' },
+   { id: 'fee', label: '월 평균 수업료', hint: '검색 카드 가격대에 쓰입니다', section: 'detail' },
+   { id: 'lessons_per_week', label: '주당 평균 수업회수', hint: '수업 밀도를 가늠하는 값입니다', section: 'detail' },
+   { id: 'feature_1', label: '경력특징 1', hint: '카드 강조 한 줄. 상세정보2「경력특징 1」과 같은 값입니다', section: 'detail2' },
+diff --git a/preview/home-ui/src/tutor-activity-chart.js b/preview/home-ui/src/tutor-activity-chart.js
+index 59e0fb5..dc06af9 100644
+--- a/preview/home-ui/src/tutor-activity-chart.js
++++ b/preview/home-ui/src/tutor-activity-chart.js
+@@ -87,6 +87,6 @@ export function renderTutorActivityBars(opts = {}) {
+       <div class="act-bars__list" role="list">
+         ${body}
+       </div>
+-      <p class="act-bars__note">시드 노출 데이터 기준 · 과목 필터 미반영</p>
++      <p class="act-bars__note">지금은 예시 지역 기준으로 보여 드려요. 과목 필터는 아직 반영되지 않았어요.</p>
+     </div>`;
+ }
+diff --git a/preview/shared/list-sort.js b/preview/shared/list-sort.js
+index 61edb62..37e4c08 100644
+--- a/preview/shared/list-sort.js
++++ b/preview/shared/list-sort.js
+@@ -1,7 +1,7 @@
+ /**
+  * 찾기결과·Basic 리스트 정렬 SSOT (1차)
+  * — Prime/Pick 비적용 · 지역 필터 이후 · URL ?sort= 유지
+- * — SKY 우선(과외쌤만): isSkyUniversityName(university_name)
++ * — 주요 대학 출신 우선(과외쌤만): isSkyUniversityName(university_name)
+  *   · 그룹 내부 2차=추천순 · 3차=최신순 · 비SKY 제외하지 않음
+  *   · university_note / 대학원 문구 / sky_flag 미사용
+  */
+@@ -23,7 +23,7 @@ export const LIST_SORT_LABELS = {
+   price_desc: '높은 가격순',
+   budget_asc: '낮은 예산순',
+   budget_desc: '높은 예산순',
+-  sky: 'SKY 우선',
++  sky: '주요 대학 출신 우선',
+ };
+ 
+ /**
+diff --git a/preview/shared/location-display.js b/preview/shared/location-display.js
+index f0bd2df..8b6abab 100644
+--- a/preview/shared/location-display.js
++++ b/preview/shared/location-display.js
+@@ -181,6 +181,19 @@ export function normalizeLocation(input = {}, axis = 'room') {
+   return canonical;
+ }
+ 
++/** 같은 시·구·동 토큰이 이어 붙으며 「서울특별시 서울특별시」처럼 반복되는 표시를 접는다. */
++function dedupeAddressTokens(text) {
++  const parts = String(text || '').split(/\s+/).filter(Boolean);
++  const out = [];
++  const seen = new Set();
++  for (const part of parts) {
++    if (seen.has(part)) continue;
++    seen.add(part);
++    out.push(part);
++  }
++  return out.join(' ');
++}
++
+ /**
+  * @param {CanonicalLocation|Partial<CanonicalLocation>|string} loc
+  * @param {LocationAxis} [axis]
+@@ -202,12 +215,13 @@ export function formatLocationDisplay(loc, axis = 'room') {
+   }
+ 
+   if (apartmentName) return dong ? `${dong} · ${apartmentName}` : apartmentName;
+-  if (dong && district && city) return `${city} ${district} ${dong}`;
+-  if (dong && city) return `${city} ${dong}`;
+-  if (dong) return dong;
+-  if (district && city) return `${city} ${district}`;
++  if (dong && city && String(dong).startsWith(city)) return dedupeAddressTokens(dong);
++  if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
++  if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
++  if (dong) return dedupeAddressTokens(dong);
++  if (district && city) return dedupeAddressTokens(`${city} ${district}`);
+   if (city) return city;
+-  return raw || '위치 확인 중';
++  return dedupeAddressTokens(raw) || '위치 확인 중';
+ }
+ 
+ /** @param {string} label */
+diff --git a/preview/shared/study-room-basic-form.js b/preview/shared/study-room-basic-form.js
+index 0d0b055..5e73332 100644
+--- a/preview/shared/study-room-basic-form.js
++++ b/preview/shared/study-room-basic-form.js
+@@ -12,7 +12,7 @@ export const PRIMARY_AUDIENCE_OPTIONS = [
+   { value: 'elementary', label: '초등' },
+   { value: 'middle', label: '중등' },
+   { value: 'high', label: '고등' },
+-  { value: 'n_su', label: 'N수' },
++  { value: 'n_su', label: '대입 준비(재수 이상)' },
+ ];
+ 
+ export const LESSON_PLACE_TYPE_OPTIONS = [
+diff --git a/preview/study-room-ui/src/state.js b/preview/study-room-ui/src/state.js
+index 81a4237..992545f 100644
+--- a/preview/study-room-ui/src/state.js
++++ b/preview/study-room-ui/src/state.js
+@@ -30,7 +30,7 @@ export const SCHOOL_LEVELS = [
+   { value: 'elementary', label: '초등' },
+   { value: 'middle', label: '중등' },
+   { value: 'high', label: '고등' },
+-  { value: 'n_su', label: 'N수' },
++  { value: 'n_su', label: '대입 준비(재수 이상)' },
+   { value: 'general', label: '일반' },
+   { value: 'other', label: '기타' },
+ ];
+@@ -60,7 +60,7 @@ export const GRADE_OPTIONS = [
+   { value: '4학년', label: '4학년' },
+   { value: '5학년', label: '5학년' },
+   { value: '6학년', label: '6학년' },
+-  { value: 'N수', label: 'N수' },
++  { value: 'N수', label: '대입 준비(재수 이상)' },
+ ];
+ 
+ export const WEEKDAY_OPTIONS = [
+@@ -95,7 +95,7 @@ export const WEEKLY_LESSON_COUNTS = [
+   { value: '7', label: '7회 이상' },
+ ];
+ 
+-/** 지도 스타일 — 복수 선택 */
++/** 수업 스타일 — 복수 선택 */
+ export const TEACHING_STYLE_OPTIONS = [
+   { id: 'kind', label: '친절' },
+   { id: 'meticulous', label: '꼼꼼' },

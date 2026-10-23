@@ -1,0 +1,49 @@
+﻿ M docs/internal/23-board-community-integration-draft.md
+ M docs/ssot/09-main-screen-roles.md
+ M docs/ssot/16-messages-structure-proposal.md
+ M docs/ssot/29-empty-error-permission-ux.md
+ M docs/ssot/30-first-route-map-and-screen-inventory.md
+ M preview/home-ui/DOC-CHECKLIST.md
+ M preview/home-ui/SSOT-ALIGNMENT.md
+ M preview/home-ui/src/data.js
+ M preview/home-ui/src/mypage/preview-data.js
+ M preview/home-ui/src/screens/tutor.js
+ M preview/home-ui/src/student-reg/screens.js
+ M preview/home-ui/src/tutor-home-seed.js
+ M preview/search-ui/src/screens/search-page.js
+ M preview/search-ui/src/search-find-surface.js
+ M preview/search-ui/src/search-map.js
+ M preview/search-ui/src/state.js
+ M preview/shared/location-display.js
+ M preview/shared/naver-map.js
+ M preview/shared/student-hope-regions.js
+ M scripts/run-paid-pr-a-e2e.ps1
+ M scripts/verify-guest-baseline-map-cards.mjs
+ M scripts/verify-location-ssot.mjs
+ M src/Paid/ProviderTicketRepository.php
+ M src/Registration/StudentHubRepository.php
+ M src/Registration/TutorHubRepository.php
+ M src/Search/SearchService.php
+?? _164_review_export/
+?? _165_review_export/
+?? _166_review_export/
+?? _177_review_export/
+?? docs/046-studyroom-home-mapbox-detailsearch-ticket.md
+?? docs/047-studyroom-home-prime-basic-occupancy-ticket.md
+?? docs/README.md
+?? docs/_166-key.diff
+?? docs/_166-reject-residuals.txt
+?? docs/_166-residual-grep.txt
+?? docs/_166-residual-json.txt
+?? preview/search-ui/src/student-saved-region.js
+?? public/assets/teaser-5vpY3Luc.js
+?? public/assets/teaser-B4PGj0F8.js
+?? public/assets/teaser-C3WjfejG.js
+?? public/assets/teaser-CUENUXjZ.js
+?? public/assets/teaser-D84VEv_r.js
+?? public/assets/teaser-DhIkdUbM.js
+?? scripts/verify-student-location-flow.mjs
+?? scripts/verify-tutor-box-real-values.mjs
+?? scripts/verify-tutor-region-label.mjs
+?? src/Registration/OfficialRegionLabel.php
+?? tmp/

@@ -1,0 +1,28 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 서버 (가짜 PDO) #####
+PASS  (b) 과외쌤 행 없음 needs=true
+PASS  (b) 공부방 행 없음 needs=true
+PASS  (b) 과외쌤 행만 있고 대표1 없음 needs=true
+PASS  (b) 공부방 행만 있고 홍보1 없음 needs=true
+PASS  (b) 과외쌤 행+대표1 needs=false
+PASS  (b) 공부방 행+홍보1 needs=false
+PASS  (a) 과외쌤 지역 없는 임시행 거부 문구
+PASS  (a) 과외쌤 임시행 거부 후 행 0
+PASS  (a) 공부방 basic 단독 임시행 거부 문구
+PASS  (a) 공부방 임시행 거부 후 행 0
+PASS  (c) 불완전 과외쌤 제출은 기존 id
+PASS  (c) 과외쌤 행 수 불변·INSERT 없음·UPDATE 있음
+PASS  (c) 과외쌤 대표1이 UPDATE 경로로 저장
+PASS  (c) 불완전 공부방 제출은 기존 id
+PASS  (c) 공부방 행 수 불변·INSERT 없음·UPDATE 있음
+PASS  (c) 공부방 홍보1이 UPDATE 경로로 저장
+PASS  (d) 과외쌤 검색은 대표1 있는 행만
+PASS  (d) 공부방 검색은 홍보1 있는 행만
+PASS  (d) 과외쌤 카운트·목록 SQL에 대표1 EXISTS
+PASS  (d) 공부방 카운트·목록 SQL에 홍보1 EXISTS
+PASS  (d) 인사 카드는 대표1 있는 과외쌤만
+PASS  (d) 인사 카드는 홍보1 있는 공부방만
+PASS  (e) 공부방 publish 홍보1 없으면 거부
+PASS  (e) 거부 시 profile_status 는 draft
+
+24 passed, 0 failed

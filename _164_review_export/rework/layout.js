@@ -1,0 +1,566 @@
+import { getCurrentScreen, navigate, previewState, SCREEN_META, ROUTES, getNavRole, isMypageRoute, isMessagesRoute, isGuideRoute, isCommunityRoute, isPromoRoute, isSupportRoute, isPolicyRoute, isLibraryRoute, isAdminRoute, isPlansRoute, isMyshopRoute, isRegisterIntroRoute, getRegisterIntroKind, navigateToGuide, navigateToSupport } from './state.js';
+import { getDefaultMypagePath } from './mypage/router.js';
+import { getDefaultMessagesPath } from './messages/router.js';
+import { REGIONS } from './data.js';
+import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, resolveUtilMenuItems } from './nav-config.js';
+import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
+import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, devLoginAs, logout } from './auth-session.js';
+import { resolveAccountDisplayName } from './auth/display-identity.js';
+import { ensureBackToTop } from '../../shared/back-to-top.js';
+import { isHandoffApiMode } from './handoff-backend.js';
+import { isMessagesApiMode } from './messages-backend.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
+import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../shared/site-chrome.js';
+import { renderSiteFooter } from '../../shared/site-footer.js';
+import { setPendingRoute } from '../../shared/pending-route.js';
+import { redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+
+export function renderPreviewToolbar() {
+  if (!SHOW_PREVIEW_TOOLBAR) return '';
+  const current = getCurrentScreen();
+  const onMypage = isMypageRoute();
+  const onMessages = isMessagesRoute();
+  const onGuide = isGuideRoute();
+  const onCommunity = isCommunityRoute();
+  const onPromo = isPromoRoute();
+  const onSupport = isSupportRoute();
+  const onPolicy = isPolicyRoute();
+  const onLibrary = isLibraryRoute();
+  const onAdmin = isAdminRoute();
+  const onPlans = isPlansRoute();
+  const onMyshop = isMyshopRoute();
+  const region = previewState.regionKey;
+  const isGuest = current === 'guest' && !onMypage && !onMessages && !onGuide && !onCommunity && !onPromo && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && !onMyshop;
+  const authUser = getAuthUser();
+  const apiOn = isHandoffApiMode();
+  const msgApiOn = isMessagesApiMode();
+  const authLabel = authUser
+    ? `${resolveAccountDisplayName(authUser)} · 화면 연결 ${apiOn ? '사용' : '미사용'} · 쪽지 연결 ${msgApiOn ? '사용' : '미사용'}`
+    : '비로그인 · 임시 저장';
+
+  return `
+    <div class="preview-toolbar">
+      <span class="preview-toolbar__label">우동공과 · 메인 화면 미리보기</span>
+      <div class="preview-toolbar__group">
+        ${Object.entries(ROUTES)
+          .map(([path, key]) => {
+            const meta = SCREEN_META[key];
+            const active = !onMypage && !onMessages && !onGuide && !onCommunity && !onPromo && !onSupport && !onPolicy && !onLibrary && !onAdmin && !onPlans && key === current;
+            return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
+          })
+          .join('')}
+        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${mypageEntryForSession()}">마이페이지</button>
+        <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">쪽지·후기함</button>
+        <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">커뮤니티</button>
+        <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">홍보</button>
+        <button type="button" class="preview-toolbar__btn ${onSupport ? 'is-active' : ''}" data-nav="/support">고객센터</button>
+        <button type="button" class="preview-toolbar__btn ${onPlans ? 'is-active' : ''}" data-nav="/plans">유료상품</button>
+        <button type="button" class="preview-toolbar__btn" data-nav="/support/library">자료실</button>
+        <button type="button" class="preview-toolbar__btn" data-nav="/support/policies">약관·정책</button>
+        <button type="button" class="preview-toolbar__btn ${onAdmin ? 'is-active' : ''}" data-nav="/admin">관리자</button>
+        <span class="preview-toolbar__divider"></span>
+        <span class="preview-toolbar__hint" title="화면 연결 상태">${authLabel}</span>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-parent">시험용·학부모</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-room">시험용·공부방</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-tutor">시험용·과외</button>
+        <button type="button" class="preview-toolbar__btn" data-action="dev-login-admin">시험용·운영</button>
+        ${isLoggedIn() ? `<button type="button" class="preview-toolbar__btn" data-action="dev-logout">로그아웃</button>` : ''}
+        <span class="preview-toolbar__divider"></span>
+        ${
+          isGuest
+            ? `<span class="preview-toolbar__hint">비회원: 대치동 고정</span>`
+            : `<button type="button" class="preview-toolbar__btn ${region === 'complex' ? 'is-active' : ''}" data-region="complex" title="미리보기: 아파트단지 기준 지역">단지 기준</button>
+               <button type="button" class="preview-toolbar__btn ${region === 'dong' ? 'is-active' : ''}" data-region="dong" title="미리보기: 행정동 기준 지역">행정동 기준</button>`
+        }
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
+ * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
+ */
+function renderUtilBar(role, showAuth) {
+  const authUser = getAuthUser();
+  const loggedIn = isLoggedIn();
+  const pendingVerify = loggedIn && !isEmailVerified();
+  const items = resolveUtilMenuItems(authUser, loggedIn);
+  const onGuide = isGuideRoute();
+  const adminLink = isAdminUser() && !pendingVerify
+    ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
+    : '';
+  const displayLabel = authUser ? resolveAccountDisplayName(authUser) : '';
+  const account = authUser
+    ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
+    : '';
+  const base = items
+    .map((item) => {
+      const active = item.id === 'guide' && onGuide ? ' is-active' : '';
+      if (item.href) {
+        const cls = item.emphasis
+          ? `home-util__link home-util__link--emphasis${active}`
+          : `home-util__link${active}`;
+        // 같은 탭 이동 — target="_blank" 금지
+        return `<a href="${item.href}" class="${cls}" data-util-href="${item.href}">${item.label}</a>`;
+      }
+      return `<button type="button" class="home-util__link${active}" data-action="${item.action}">${item.label}</button>`;
+    })
+    .join('');
+  return `${account}${adminLink}${base}`;
+}
+
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+function gnbItemLabel(item) {
+  return item.label;
+}
+
+/** 세션 확정 역할 우선 (화면 프리뷰 role보다 GNB 노출 기준) */
+function resolveHeaderGnbRole(fallbackRole) {
+  if (isLoggedIn()) return navRoleFromAuthUser(getAuthUser());
+  return fallbackRole || 'guest';
+}
+
+function renderGnbLink(item, role, { mobile = false } = {}) {
+  if (!isGnbItemVisible(role, item.id)) {
+    return '';
+  }
+  const label = gnbItemLabel(item);
+  const screen = getCurrentScreen();
+  const onRoleHome = screen === 'guest' || screen === 'parent' || screen === 'studyRoom' || screen === 'tutor';
+  const isHomeActive = item.id === 'home' && onRoleHome;
+  const onGuide = isGuideRoute();
+  const onSupport = isSupportRoute();
+  const onCommunity = isCommunityRoute();
+  const onPlans = isPlansRoute();
+  const registerIntroKind = isRegisterIntroRoute() ? getRegisterIntroKind() : null;
+  const isGuideActive = item.id === 'guide' && onGuide;
+  const isSupportActive = item.id === 'support' && onSupport && !window.location.hash.includes('/guide');
+  const isCommunityActive = (item.id === 'community' || item.id === 'concern') && onCommunity;
+  const isPlansActive = item.id === 'plans' && onPlans;
+  const isRegisterRoomActive = item.id === 'register_room' && registerIntroKind === 'room';
+  const isRegisterTutorActive = item.id === 'register_tutor' && registerIntroKind === 'tutor';
+  const cls = [
+    'home-gnb__item',
+    isHomeActive ||
+    isGuideActive ||
+    isSupportActive ||
+    isCommunityActive ||
+    isPlansActive ||
+    isRegisterRoomActive ||
+    isRegisterTutorActive
+      ? 'is-active'
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+  let href = '#';
+  if (item.id === 'home') {
+    href = `#${roleHomePath()}`;
+  } else if (item.id === 'guide') {
+    href = '#/guide';
+  } else if (item.id === 'support') {
+    href = '#/support';
+  } else if (item.id === 'community' || item.id === 'concern') {
+    href = '#/community';
+  } else if (item.id === 'plans') {
+    href = '#/plans';
+  } else {
+    const link = resolveGnbLink(item.id, role);
+    if (link) href = link.external ? link.url : `#${link.url}`;
+  }
+  return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${label}</a>`;
+}
+
+function mypageEntryForSession() {
+  if (navRoleFromAuthUser(getAuthUser()) === 'study_room') return getDefaultMypagePath('study_room');
+  return getDefaultMypagePath(getNavRole());
+}
+
+/** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
+function roleHomePath() {
+  const user = getAuthUser();
+  if (!user) return '/guest';
+  if (user.role_type === 'admin') return '/guest';
+  if (user.role_type === 'study_room_owner') return '/study-room';
+  if (user.role_type === 'tutor') return '/tutor';
+  return '/parent';
+}
+
+/** 같은 탭에서 URL로 이동 (검색·등록·auth SPA) */
+function goSameTab(url) {
+  if (!url) return;
+  window.location.assign(url);
+}
+
+/**
+ * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
+ * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
+ */
+export function renderHeader(role, opts = {}) {
+  const loggedIn = isLoggedIn();
+  // 로그인 여부 기준 — 화면이 guest여도 세션이 있으면 마이페이지·로그아웃 노출
+  const showAuth = opts.showAuth ?? !loggedIn;
+  // 역할 전환은 GNB가 아니라 마이페이지/계정설정 — GNB CTA 기본 비표시
+  const showRoleSwitch = opts.showRoleSwitch === true;
+  const logoPath = loggedIn ? roleHomePath() : '/guest';
+  const gnbRole = resolveHeaderGnbRole(role);
+
+  const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole)).join('');
+  const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole, { mobile: true })).join('');
+
+  return `
+    <header class="home-header">
+      <div class="home-header__util">
+        <div class="home-header__util-inner">
+          <nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth)}</nav>
+          ${
+            showRoleSwitch
+              ? `<button type="button" class="home-util__link home-util__link--role" data-action="role-switch" title="역할 전환">역할 ▾</button>`
+              : ''
+          }
+        </div>
+      </div>
+      <div class="home-header__main">
+        <div class="home-header__inner">
+          <a href="#${logoPath}" class="home-header__logo" data-nav="${logoPath}" aria-label="우동공과 홈">
+            <img src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
+          </a>
+          <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
+        </div>
+      </div>
+      <nav class="home-gnb-mobile" aria-label="모바일 메뉴">${mobileGnb}</nav>
+    </header>
+  `;
+}
+
+export function renderFooter() {
+  return renderSiteFooter({ linkMode: 'hash' });
+}
+
+export function renderRegionBar(showSearch = true) {
+  const region = REGIONS[previewState.regionKey];
+  return `
+    <div class="region-bar">
+      <div>
+        <div class="region-bar__title">${region.label}</div>
+        <div class="region-bar__meta">${region.sub}</div>
+        <span class="region-bar__policy">${region.policy}</span>
+      </div>
+      ${
+        showSearch
+          ? `<div class="region-bar__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-action="region-change">지역 변경</button>
+              <button type="button" class="btn btn--primary btn--search btn--sm" data-action="search">검색</button>
+            </div>`
+          : `<div class="region-bar__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-action="region-change">지역 변경 △</button>
+            </div>`
+      }
+    </div>
+  `;
+}
+
+/** @param {{ slot: string, name: string, meta: string, price?: string, variant?: 'top' | 'mid' }} item */
+function renderSlotCard(item) {
+  const isTop = item.variant === 'top';
+  return `
+    <article class="slot-card ${isTop ? 'slot-card--top' : ''}">
+      <span class="slot-card__badge ${isTop ? '' : 'slot-card__badge--blue'}">${item.slot}</span>
+      <div class="slot-card__name">${item.name}</div>
+      <div class="slot-card__meta">${item.meta}</div>
+      ${item.price ? `<div class="slot-card__price">${item.price}</div>` : ''}
+    </article>
+  `;
+}
+
+/** @param {string} title @param {string} desc @param {Array<{slot:string,name:string,meta:string,price?:string}>} items */
+export function renderTop3Section(title, desc, items) {
+  return `
+    <section class="home-section">
+      <div class="home-section__head">
+        <h2 class="home-section__title">${title}</h2>
+        <span class="home-section__desc">${desc}</span>
+      </div>
+      <div class="slot-grid--3">
+        ${items.map((item, i) => renderSlotCard({ ...item, variant: 'top', slot: item.slot || ['고정 A', '고정 B', '고정 C'][i] })).join('')}
+      </div>
+    </section>
+  `;
+}
+
+export function renderMid5Section(title, desc, items) {
+  return `
+    <section class="home-section">
+      <div class="home-section__head">
+        <h2 class="home-section__title">${title}</h2>
+        <span class="home-section__desc">${desc}</span>
+      </div>
+      <div class="slot-grid--5">
+        ${items.map((item, i) => renderSlotCard({ ...item, variant: 'mid', slot: item.slot || `고정 ${i + 1}` })).join('')}
+      </div>
+    </section>
+  `;
+}
+
+/** @param {string} title @param {Array<{title:string,meta:string,date:string}>} items */
+export function renderBottomList(title, items) {
+  return `
+    <section class="home-section">
+      <div class="list-block">
+        <div class="list-block__head">${title} · 최근 등록순</div>
+        ${items
+          .map(
+            (item, i) => `
+          <div class="list-item">
+            <span class="list-item__rank">${i + 1}</span>
+            <div class="list-item__body">
+              <div class="list-item__title">${item.title}</div>
+              <div class="list-item__meta">${item.meta}</div>
+            </div>
+            <span class="list-item__date">${item.date}</span>
+          </div>
+        `,
+          )
+          .join('')}
+      </div>
+    </section>
+  `;
+}
+
+export function renderMapBlock() {
+  return `
+    <div class="map-block">
+      <div class="map-block__head">📍 공부방 지도 · ${REGIONS[previewState.regionKey].label}</div>
+      <div class="map-block__body">
+        <span>[프리뷰] 공부방 지도 영역</span>
+        <span class="map-block__pin"></span>
+        <span class="map-block__pin"></span>
+        <span class="map-block__pin"></span>
+      </div>
+    </div>
+  `;
+}
+
+import { renderPromoWithRightRail, renderRightRailBlock, bindRightRailEvents } from './right-rail.js';
+
+export function renderAdSidebar() {
+  return renderPromoWithRightRail('home_right_rail');
+}
+
+export function renderAdInline() {
+  return renderRightRailBlock('home_right_rail', { tone: 'entry' });
+}
+
+export function renderHomeShell(role, mainContent, opts = {}) {
+  const { showAuth, showRoleSwitch, sidebarHtml, loginStrip, slotKey = 'home_right_rail', railTone } = opts;
+  const sidebar = sidebarHtml ?? renderPromoWithRightRail(slotKey, { tone: railTone });
+  return `
+    ${renderPreviewToolbar()}
+    <div class="home-shell home-shell--${role}">
+      ${renderHeader(role, { showAuth, showRoleSwitch })}
+      <div class="home-body home-body--with-promo">
+        <div class="home-main">${mainContent}</div>
+        ${sidebar}
+      </div>
+      ${loginStrip ? loginStrip : ''}
+      ${renderFooter()}
+    </div>
+  `;
+}
+
+/**
+ * home-app 계열(유료·이용안내·마이페이지 등)에 홈과 같은 우측 배너 적용
+ * @param {{ toolbar?: string, headerHtml: string, mainHtml: string, footerHtml?: string, slotKey?: string|null, sidebarHtml?: string, appClass?: string }} opts
+ */
+export function renderAppShellWithPromo(opts) {
+  const {
+    toolbar = '',
+    headerHtml,
+    mainHtml,
+    footerHtml = renderFooter(),
+    slotKey = 'support_right_rail',
+    sidebarHtml,
+    appClass = '',
+    railTone,
+  } = opts;
+  const sidebar = sidebarHtml ?? (slotKey ? renderPromoWithRightRail(slotKey, { tone: railTone }) : '');
+  const hasPromo = Boolean(String(sidebar || '').trim());
+  const bodyClass = hasPromo ? 'home-body home-body--with-promo' : 'home-body home-body--no-promo';
+  const appCls = ['home-app', appClass].filter(Boolean).join(' ');
+  return `
+    ${toolbar}
+    <div class="${appCls}">
+      ${headerHtml}
+      <div class="${bodyClass}">
+        <div class="home-main">${mainHtml}</div>
+        ${sidebar}
+      </div>
+      ${footerHtml}
+    </div>
+  `;
+}
+
+export function bindLayoutEvents(root, rerender) {
+  bindRightRailEvents(root);
+  root.querySelectorAll('[data-nav]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = el.dataset.nav || '/guest';
+      if (target === '/support' || target.startsWith('/support/')) {
+        navigateToSupport(target);
+      } else if (target === '/guide' || target.startsWith('/guide/')) {
+        navigateToGuide(target);
+      } else {
+        navigate(target);
+      }
+    });
+  });
+
+  root.querySelectorAll('[data-util-href]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      goSameTab(el.dataset.utilHref || el.getAttribute('href'));
+    });
+  });
+
+  root.querySelectorAll('[data-same-tab-href]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      goSameTab(el.dataset.sameTabHref || el.getAttribute('href'));
+    });
+  });
+
+  root.querySelectorAll('[data-region]').forEach((el) => {
+    el.addEventListener('click', () => {
+      previewState.regionKey = el.dataset.region;
+      rerender();
+    });
+  });
+
+  root.querySelectorAll('[data-action]').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const action = el.dataset.action;
+      if (isLoggedIn() && !isEmailVerified()) {
+        const allowed =
+          action === 'util-logout' ||
+          action === 'util-guide' ||
+          action === 'dev-logout' ||
+          action === 'dev-login-parent' ||
+          action === 'dev-login-room' ||
+          action === 'dev-login-tutor' ||
+          action === 'dev-login-admin';
+        if (!allowed) {
+          redirectToEmailVerifyWait();
+          return;
+        }
+      }
+      if (action === 'role-switch') {
+        // GNB가 아니라 마이페이지 계정설정으로 유도
+        navigate('/mypage/account');
+      } else if (action === 'dev-login-parent' || action === 'dev-login-room' || action === 'dev-login-tutor' || action === 'dev-login-admin') {
+        const key =
+          action === 'dev-login-parent'
+            ? 'parent'
+            : action === 'dev-login-room'
+              ? 'study_room'
+              : action === 'dev-login-admin'
+                ? 'admin'
+                : 'tutor';
+        devLoginAs(key)
+          .then(() => rerender())
+          .catch((err) => console.error('[dev-login]', err));
+      } else if (action === 'dev-logout') {
+        logout().then(() => {
+          navigate('/guest');
+          rerender();
+        });
+      } else if (action.startsWith('gnb-')) {
+        const gnbId = action.replace('gnb-', '');
+        const role = resolveHeaderGnbRole(getNavRole());
+        if (!isGnbItemVisible(role, gnbId)) {
+          return;
+        }
+        if (gnbId === 'home') {
+          navigate(roleHomePath());
+          return;
+        }
+        if (gnbId === 'guide') {
+          navigateToGuide('/guide');
+          return;
+        }
+        if (gnbId === 'support') {
+          navigateToSupport('/support');
+          return;
+        }
+        if (gnbId === 'community' || gnbId === 'concern') {
+          // plans와 같이 pending 보험 — 로그인 직후 역할홈 리다이렉트와 겹치면 커뮤니티가 튕긴다
+          const communityPath = '/community';
+          setPendingRoute(communityPath);
+          navigate(communityPath);
+          return;
+        }
+        if (gnbId === 'plans') {
+          setPendingRoute('/plans');
+          navigate('/plans');
+          return;
+        }
+        const link = resolveGnbLink(gnbId, role);
+        if (!link) return;
+        if (link.external) {
+          goSameTab(link.url);
+        } else {
+          if (
+            link.url === '/register-intro/room' ||
+            link.url === '/register-intro/tutor' ||
+            link.url.startsWith('/register-intro/')
+          ) {
+            setPendingRoute(link.url);
+          }
+          navigate(link.url);
+        }
+      } else if (action === 'search') {
+        const role = getNavRole();
+        goSameTab(searchUiUrl(defaultSearchTabForRole(role), role));
+      } else if (action === 'util-mypage') {
+        navigate(mypageEntryForSession());
+      } else if (action === 'util-messages') {
+        navigate(getDefaultMessagesPath());
+      } else if (action === 'util-recent') {
+        navigate('/mypage/recent');
+      } else if (action === 'util-logout') {
+        logout()
+          .then(() => {
+            navigate('/guest');
+            rerender();
+          })
+          .catch((err) => console.error('[logout]', err));
+      } else if (action === 'util-guide') {
+        navigateToGuide('/guide');
+      } else if (action === 'util-library') {
+        navigate('/support/library');
+      } else if (action === 'util-support') {
+        navigateToSupport('/support');
+      } else if (action.startsWith('ad-')) {
+        setPendingRoute('/plans/positions');
+        navigate('/plans/positions');
+      } else if (el.dataset.href) {
+        goSameTab(el.dataset.href);
+      }
+      // 기타 util-/더미 alert 제거 — 미연결 액션은 무시
+    });
+  });
+
+  ensureSiteHeaderOffsetListeners();
+  syncSiteHeaderOffset(root);
+  requestAnimationFrame(() => syncSiteHeaderOffset(root));
+  ensureBackToTop(root);
+}

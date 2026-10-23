@@ -1,0 +1,110 @@
+{
+  "390": {
+    "rail": {
+      "hash": "#/guest",
+      "loggedOut": true,
+      "tag": "BUTTON",
+      "bg": "rgb(190, 18, 60)",
+      "fg": "rgb(255, 255, 255)",
+      "title": "이달의 베스트",
+      "state": "empty",
+      "first": true,
+      "openTags": [
+        "BUTTON",
+        "BUTTON"
+      ],
+      "emptyText": "이달의 베스트, 아직 글이 미도착중...",
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "itemCount": 0
+    },
+    "errors": [],
+    "clickBand": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "focusBack": "live-rail-slot__band live-rail-best__open",
+    "enter": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "ring": {
+      "className": "live-rail-slot__band live-rail-best__open",
+      "focusVisible": true,
+      "outline": "solid 2px rgb(28, 25, 23)"
+    },
+    "space": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "errorCount": 0,
+    "errorSample": []
+  },
+  "1280": {
+    "rail": {
+      "hash": "#/guest",
+      "loggedOut": true,
+      "tag": "BUTTON",
+      "bg": "rgb(190, 18, 60)",
+      "fg": "rgb(255, 255, 255)",
+      "title": "이달의 베스트",
+      "state": "empty",
+      "first": true,
+      "openTags": [
+        "BUTTON",
+        "BUTTON"
+      ],
+      "emptyText": "이달의 베스트, 아직 글이 미도착중...",
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "itemCount": 0
+    },
+    "errors": [],
+    "clickBand": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "focusBack": "live-rail-slot__band live-rail-best__open",
+    "enter": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "ring": {
+      "className": "live-rail-slot__band live-rail-best__open",
+      "focusVisible": true,
+      "outline": "solid 2px rgb(28, 25, 23)"
+    },
+    "space": {
+      "kind": "concern-best",
+      "bg": "rgb(190, 18, 60)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 이달의 베스트, 아직 글이 미도착중... /  / 게시판에서 보기",
+      "guest": false,
+      "login": false
+    },
+    "errorCount": 0,
+    "errorSample": []
+  }
+}

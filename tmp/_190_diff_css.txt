@@ -1,0 +1,22 @@
+﻿diff --git a/preview/home-ui/src/styles/neighborhood-greeting.css b/preview/home-ui/src/styles/neighborhood-greeting.css
+index f5f9e08..202e0c8 100644
+--- a/preview/home-ui/src/styles/neighborhood-greeting.css
++++ b/preview/home-ui/src/styles/neighborhood-greeting.css
+@@ -71,3 +71,4 @@
+ .ng-editor__note,
+-.ng-editor__error {
++.ng-editor__error,
++.ng-editor__status {
+   margin: 0 0 0.5rem;
+@@ -80,2 +81,11 @@
+ 
++.ng-editor__status {
++  padding: 0.5rem 0.75rem;
++  border: 1px solid #a7f3d0;
++  border-radius: 0.5rem;
++  background: #ecfdf5;
++  color: #047857;
++  font-weight: 600;
++}
++
+ .ng-editor__input {

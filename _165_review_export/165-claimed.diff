@@ -1,0 +1,370 @@
+diff --git a/preview/auth-ui/src/login-stage.js b/preview/auth-ui/src/login-stage.js
+index ba89463..87bfcc5 100644
+--- a/preview/auth-ui/src/login-stage.js
++++ b/preview/auth-ui/src/login-stage.js
+@@ -58,7 +58,7 @@ export function renderLoginPurposeChips() {
+  * @param {{ returnTo?: string, lead?: string }} [opts]
+  */
+ export function renderLoginStageBelow(opts = {}) {
+-  const guestUrl = `${HOME_UI_BASE}#/guest`;
++  const guestUrl = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/guest`;
+   const lead =
+     opts.lead ||
+     (opts.returnTo
+diff --git a/preview/home-ui/src/board/board-backend.js b/preview/home-ui/src/board/board-backend.js
+index 812a147..fe55786 100644
+--- a/preview/home-ui/src/board/board-backend.js
++++ b/preview/home-ui/src/board/board-backend.js
+@@ -7,6 +7,7 @@ import {
+   attachmentDownloadUrl,
+ } from './board-api.js';
+ import { getBoardAccess } from '../board-channel-acl.js';
++import { authRoleType } from '../auth-role.js';
+ 
+ const LIBRARY_BOARD_KEYS = ['library', 'library-template', 'library-guide-pdf'];
+ const OPERATIONAL_BOARD_KEYS = ['notice', 'faq', 'safe-guide'];
+@@ -86,17 +87,28 @@ export function boardKeysBlockedForRole(navRole) {
+   return HYDRATE_BOARD_KEYS.filter((key) => getBoardAccess(key, navRole).access === 'blocked');
+ }
+ 
++/**
++ * 紐낆떆 navRole???놁쑝硫??몄뀡 role_type. 鍮꾨줈洹몄씤? guest.
++ * blocked 蹂대뱶(submission ? 怨쇱쇅?ㅒ룹슫?곷쭔)??GET ?섏? ?딅뒗??
++ * @param {string} [explicit]
++ */
++function resolveHydrateNavRole(explicit) {
++  const given = String(explicit || '').trim();
++  if (given) return given;
++  return authRoleType() || 'guest';
++}
++
+ /**
+  * @param {{ navRole?: string, onlyKeys?: string[] }} [opts]
+- * navRole???덉쑝硫?洹???븷?먯꽌 blocked??蹂대뱶???붿껌?섏? ?딅뒗??
++ * navRole(?먮뒗 ?몄뀡 ??븷)?먯꽌 blocked??蹂대뱶???붿껌?섏? ?딅뒗??
+  * onlyKeys媛 ?덉쑝硫?洹??ㅻ쭔 媛깆떊?쒕떎.
+  */
+ export async function hydrateBoardCache(opts = {}) {
+-  const navRole = opts.navRole || '';
++  const navRole = resolveHydrateNavRole(opts.navRole);
+   const only = Array.isArray(opts.onlyKeys) ? new Set(opts.onlyKeys) : null;
+   const keys = HYDRATE_BOARD_KEYS.filter((key) => !only || only.has(key));
+   const pairs = await Promise.all(keys.map(async (key) => {
+-    if (navRole && getBoardAccess(key, navRole).access === 'blocked') {
++    if (getBoardAccess(key, navRole).access === 'blocked') {
+       return [key, []];
+     }
+     const data = await fetchBoardPosts(key).catch(() => ({ posts: [] }));
+diff --git a/preview/home-ui/src/plans/index.js b/preview/home-ui/src/plans/index.js
+index 2b62054..835c984 100644
+--- a/preview/home-ui/src/plans/index.js
++++ b/preview/home-ui/src/plans/index.js
+@@ -28,6 +28,27 @@ function plansHeaderRole() {
+   return 'guest';
+ }
+ 
++/** ?숈깮 #/plans ??GNB쨌?명꽣???좎??섍퀬 ?좊즺?곹뭹 硫붾돱???댁? ?딅뒗?? */
++function renderPlansStudentNotice() {
++  const headerRole = plansHeaderRole();
++  return `
++    ${renderPreviewToolbar()}
++    <div class="home-app">
++      ${renderHeader(headerRole)}
++      <div class="home-body home-body--no-promo">
++        <div class="home-main">
++          <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
++            <h1>?좊즺?곹뭹</h1>
++            <p>?좊즺?곹뭹? 怨듬?諛㈑룰낵?몄뙟 ?뚯썝?⑹씠?먯슂.</p>
++            <p><a href="#/parent" class="btn btn--primary" data-nav="/parent">?숈깮 ?덉쑝濡??대룞</a></p>
++          </section>
++        </div>
++      </div>
++      ${renderFooter()}
++    </div>
++  `;
++}
++
+ function renderPlansLoginGate(message) {
+   const headerRole = plansHeaderRole();
+   const panel = renderGuestLoginGatePanel({
+@@ -81,6 +102,9 @@ export function renderPlans() {
+     if (hubGate.mode === 'login_gate' || role === 'guest' || !isLoggedIn()) {
+       return renderPlansLoginGate(hubGate.message);
+     }
++    if (role === 'parent') {
++      return renderPlansStudentNotice();
++    }
+     return `
+       <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
+         <h1>?좊즺?곹뭹</h1>
+diff --git a/preview/home-ui/src/registrations-backend.js b/preview/home-ui/src/registrations-backend.js
+index e2bb098..7cb996e 100644
+--- a/preview/home-ui/src/registrations-backend.js
++++ b/preview/home-ui/src/registrations-backend.js
+@@ -10,6 +10,7 @@ import {
+   listTutors,
+   patchTutor,
+ } from './registrations-api.js';
++import { authRoleType } from './auth-role.js';
+ 
+ let apiMode = false;
+ 
+@@ -40,15 +41,38 @@ export function deactivateRegistrationsApi() {
+   resetCaches();
+ }
+ 
++/**
++ * GET ?덉슜 ??븷留??몄텧?쒕떎. 寃뚯뒪?맞룸떎瑜???븷? ?붿껌 ?먯껜瑜?留뚮뱾吏 ?딅뒗??
++ * students=guardian_student 쨌 study-rooms=study_room_owner 쨌 tutors=tutor
++ * @param {string} roleType
++ * @returns {'students'|'studyRooms'|'tutors'|''}
++ */
++function registrationListForRole(roleType) {
++  if (roleType === 'guardian_student') return 'students';
++  if (roleType === 'study_room_owner') return 'studyRooms';
++  if (roleType === 'tutor') return 'tutors';
++  return '';
++}
++
+ export async function hydrateRegistrationsCache() {
+-  const [studentsRes, roomsRes, tutorsRes] = await Promise.all([
+-    listStudents().catch(() => ({ students: [] })),
+-    listStudyRooms().catch(() => ({ rooms: [] })),
+-    listTutors().catch(() => ({ tutors: [] })),
+-  ]);
+-  studentsCache = (studentsRes.students ?? []).map((s) => ({ ...s }));
+-  studyRoomsCache = (roomsRes.rooms ?? []).map((r) => ({ ...r }));
+-  tutorsCache = (tutorsRes.tutors ?? []).map((t) => ({ ...t }));
++  const kind = registrationListForRole(authRoleType());
++  if (kind !== 'students') studentsCache = [];
++  if (kind !== 'studyRooms') studyRoomsCache = [];
++  if (kind !== 'tutors') tutorsCache = [];
++  if (kind === 'students') {
++    const studentsRes = await listStudents().catch(() => ({ students: [] }));
++    studentsCache = (studentsRes.students ?? []).map((s) => ({ ...s }));
++    return;
++  }
++  if (kind === 'studyRooms') {
++    const roomsRes = await listStudyRooms().catch(() => ({ rooms: [] }));
++    studyRoomsCache = (roomsRes.rooms ?? []).map((r) => ({ ...r }));
++    return;
++  }
++  if (kind === 'tutors') {
++    const tutorsRes = await listTutors().catch(() => ({ tutors: [] }));
++    tutorsCache = (tutorsRes.tutors ?? []).map((t) => ({ ...t }));
++  }
+ }
+ 
+ export function getStudentsCache() {
+diff --git a/preview/home-ui/src/state.js b/preview/home-ui/src/state.js
+index 7f32c59..023c099 100644
+--- a/preview/home-ui/src/state.js
++++ b/preview/home-ui/src/state.js
+@@ -4,6 +4,7 @@
+ /** @typedef {'free' | 'paid'} ProviderSubscription */
+ 
+ import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
++import { isStudyRoomAuth } from './auth-role.js';
+ import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
+ import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
+ import {
+@@ -379,8 +380,11 @@ export function bootstrapSupportRoute() {
+     return true;
+   }
+   if (path === '/support' || path === '/support/') {
+-    window.location.replace(`#${getDefaultSupportPath()}`);
+-    return true;
++    const hub = getDefaultSupportPath();
++    if (hub !== '/support' && hub !== '/support/') {
++      window.location.replace(`#${hub}`);
++      return true;
++    }
+   }
+ 
+   // ?덇굅???쎄? 寃쎈줈 ??怨좉컼?쇳꽣 ?쎄?쨌?뺤콉
+@@ -673,6 +677,27 @@ export function bootstrapPlansRoute() {
+   return false;
+ }
+ 
++/**
++ * 怨듬?諛??몄뀡??留덉씠?섏씠吏 湲곕낯 吏꾩엯.
++ * /mypage 쨌 home 쨌 registrations 쨌 registrations/students ???숈깮 紐⑸줉?쇰줈 蹂대궡吏 ?딅뒗??
++ * @param {string} path
++ * @returns {string | null}
++ */
++function studyRoomMypageEntry(path) {
++  if (!isStudyRoomAuth()) return null;
++  const p = String(path || '').split('?')[0];
++  if (
++    p === '/mypage' ||
++    p === '/mypage/' ||
++    p === '/mypage/home' ||
++    p === '/mypage/registrations' ||
++    p === '/mypage/registrations/students'
++  ) {
++    return getStudyRoomEntryPath();
++  }
++  return null;
++}
++
+ /**
+  * Path URL(`/mypage/...`) ?먮뒗 bare `#/mypage`瑜?hash ?쇱슦?몃줈 ?뺢퇋??
+  * SSOT 遺濡?A??PHP 寃쎈줈濡??묒냽?대룄 ?꾨━酉곌? ?대━?꾨줉 ?쒕떎.
+@@ -683,7 +708,7 @@ export function bootstrapMypageRoute() {
+ 
+   if (!hash && pathname.startsWith('/mypage')) {
+     const bare = pathname === '/mypage' || pathname === '/mypage/';
+-    const target = bare ? getDefaultMypagePath(getActiveRole()) : pathname;
++    const target = bare ? studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getActiveRole()) : pathname;
+     window.location.replace(`${origin}/${search}#${target}`);
+     return true;
+   }
+@@ -701,7 +726,13 @@ export function bootstrapMypageRoute() {
+   }
+ 
+   if (path === '/mypage' || path === '/mypage/') {
+-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
++    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
++    return true;
++  }
++
++  const roomEntry = studyRoomMypageEntry(path);
++  if (roomEntry) {
++    window.location.replace(`#${roomEntry}`);
+     return true;
+   }
+ 
+@@ -739,7 +770,7 @@ export function bootstrapMypageRoute() {
+   }
+ 
+   if (path.startsWith('/mypage/') && !normalizeMypagePath(path)) {
+-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
++    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
+     return true;
+   }
+ 
+@@ -829,9 +860,11 @@ export function getMypagePath() {
+   const hash = window.location.hash.slice(1) || '';
+   const path = hash.startsWith('/') ? hash : `/${hash}`;
+   const pathOnly = path.split('?')[0];
++  const roomEntry = studyRoomMypageEntry(pathOnly);
++  if (roomEntry) return roomEntry;
+   const normalized = normalizeMypagePath(pathOnly);
+   if (normalized) return normalized;
+-  return getDefaultMypagePath(getNavRole());
++  return studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getNavRole());
+ }
+ 
+ export function getCurrentScreen() {
+diff --git a/preview/home-ui/src/support/nav.js b/preview/home-ui/src/support/nav.js
+index 91f24a9..582072a 100644
+--- a/preview/home-ui/src/support/nav.js
++++ b/preview/home-ui/src/support/nav.js
+@@ -12,10 +12,10 @@ export const SUPPORT_NAV = [
+ 
+ /** @param {string} path */
+ export function getActiveNavId(path) {
++  if (path === '/support' || path === '/support/') return 'hub';
+   if (path.startsWith('/support/policies')) return 'policies';
+   if (path.startsWith('/support/library')) return 'library';
+   if (path === '/support/contact/tickets') return 'contact';
+-  if (path === '/support' || path === '/support/') return 'notice';
+   const hit = SUPPORT_NAV.find((n) => path === n.path);
+   if (hit) return hit.id;
+   return 'notice';
+@@ -54,6 +54,7 @@ export function renderSupportNav(path) {
+       <div class="if-nav-mobile">
+         <label class="if-nav-mobile__label" for="support-nav-select">怨좉컼?쇳꽣 硫붾돱</label>
+         <select id="support-nav-select" class="if-nav-mobile__select" data-sup-nav-select>
++          ${active === 'hub' ? `<option value="/support" selected>怨좉컼?쇳꽣</option>` : ''}
+           ${SUPPORT_NAV.map((n) => {
+             const locked = Boolean(n.requiresLogin) && !loggedIn;
+             const selected = active === n.id ? ' selected' : '';
+diff --git a/preview/home-ui/src/support/router.js b/preview/home-ui/src/support/router.js
+index 411d180..a570532 100644
+--- a/preview/home-ui/src/support/router.js
++++ b/preview/home-ui/src/support/router.js
+@@ -19,7 +19,7 @@ const LIBRARY_SECTIONS = ['templates', 'guides'];
+ export function normalizeSupportPath(hashPath) {
+   const raw = hashPath.startsWith('/') ? hashPath : `/${hashPath}`;
+   const p = raw.split('?')[0];
+-  if (p === '/support' || p === '/support/') return '/support/notice';
++  if (p === '/support' || p === '/support/') return '/support';
+   if (p === SUPPORT_TERMS_LEGACY_PATH || p === `${SUPPORT_TERMS_LEGACY_PATH}/`) return null;
+   if (['faq', 'notice', 'contact'].some((s) => p === `/support/${s}`)) return p;
+   if (p === '/support/contact/tickets') return p;
+@@ -40,7 +40,7 @@ export function isAdminSupportPath(path) {
+ }
+ 
+ export function getDefaultSupportPath() {
+-  return '/support/notice';
++  return '/support';
+ }
+ 
+ /** @param {string} path */
+diff --git a/preview/home-ui/src/support/screens.js b/preview/home-ui/src/support/screens.js
+index 53b470d..bd82ebf 100644
+--- a/preview/home-ui/src/support/screens.js
++++ b/preview/home-ui/src/support/screens.js
+@@ -126,6 +126,10 @@ export function renderSupportScreen(path) {
+     return renderSupportLibrarySection(path);
+   }
+ 
++  if (path === '/support' || path === '/support/') {
++    return `${renderSupportHero()}${renderSupportQuickCards()}`;
++  }
++
+   const navId = getActiveNavId(path);
+   if (navId === 'faq') return renderFaqSection();
+   if (navId === 'notice') return renderNoticeSection();
+diff --git a/preview/search-ui/src/search-find-surface.js b/preview/search-ui/src/search-find-surface.js
+index e0d1a1d..23457a1 100644
+--- a/preview/search-ui/src/search-find-surface.js
++++ b/preview/search-ui/src/search-find-surface.js
+@@ -1609,8 +1609,15 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
+         'student',
+         state(),
+       );
+-      const base = '#/search/student';
+-      window.location.hash = `${base}?hope=${encodeURIComponent(hope)}`;
++      const raw = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '';
++      const qIdx = raw.indexOf('?');
++      const params = new URLSearchParams(qIdx === -1 ? '' : raw.slice(qIdx + 1));
++      params.set('hope', hope);
++      if (!params.get('role')) {
++        const role = state().role;
++        if (role && role !== 'guest') params.set('role', role);
++      }
++      window.location.hash = `#/search/student?${params.toString()}`;
+       rerender();
+     });
+   });
+diff --git a/preview/shared/site-chrome.js b/preview/shared/site-chrome.js
+index 41bce2a..3681557 100644
+--- a/preview/shared/site-chrome.js
++++ b/preview/shared/site-chrome.js
+@@ -72,9 +72,14 @@ function roleHomePathForNav(role) {
+   return '/guest';
+ }
+ 
++/** 寃????home 諛?GNB ??怨듭? 吏곹뻾 ?놁씠 怨좉컼?쇳꽣 ?덈툕 `#/support` */
++function supportHubUrl() {
++  return `${String(HOME_UI_BASE).replace(/\/$/, '')}/#/support`;
++}
++
+ function gnbHref(itemId, role) {
+   if (itemId === 'home') return homeHashUrl(roleHomePathForNav(role));
+-  if (itemId === 'support') return homeHashUrl('/support/notice');
++  if (itemId === 'support') return supportHubUrl();
+   if (itemId === 'community' || itemId === 'concern') return homeHashUrl('/community');
+   if (itemId === 'plans') return homeHashUrl('/plans');
+   const link = resolveGnbLink(itemId, role);
+@@ -235,7 +240,7 @@ export function bindSiteChrome(root, handlers = {}) {
+           }
+           if (gnbId === 'support') {
+             if (navigateHome && isHomeUiHost()) navigateHome('/support');
+-            else goSameTab(dest);
++            else goSameTab(supportHubUrl());
+             return;
+           }
+           if (gnbId === 'community' || gnbId === 'concern') {

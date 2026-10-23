@@ -1,0 +1,70 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+##### 1부 정적 #####
+PASS  (a) tutor-home-seed: 활동지역 id 로 /search 학생 조회(새 API 없음)
+PASS  (a) tutor-home-seed: getTutorStudentLiveItems · getTutorStudentFeedStatus · bootTutorStudentDemand export
+PASS  (a) tutor-home-seed: 샘플·mock·seed 로 학생 카드를 채우지 않음(실패·지역없음은 null)
+PASS  (a) screens/tutor.js: 학생 탭에서 bootTutorStudentDemand(선택 활동지역)
+PASS  (a) regionFeedContext: 과외쌤 학생 탭 → ctx.liveStudentItems = getTutorStudentLiveItems()
+PASS  (a) getRegionFeed: liveStudentItems 배열이면 학생 노출 카드로 매핑, 없으면 pending
+PASS  서버: 학생 탭이 preferred_lesson_type 를 그대로 거른다
+PASS  서버: preferred_region_id = selectableRegionId(구·시·군) → preferred_tutor_region_id 비교
+PASS  서버: 선택 단위 기준이 같다 — tutor_regions.region_id 와 preferred_tutor_region_id 모두 assertSelectable
+PASS  PHP·SQL 변경 없음(조회 전용) — SearchService 에 새 필터 키를 넣지 않았다
+PASS  (b) 문구는 student-reg-copy 의 TUTOR_HOME_STUDENT_COPY 한곳
+PASS  (b) search-find-surface 안에 과외쌤 학생 탭 문구 하드코딩 없음
+PASS  (c) 활동지역 3탭이 학생 탭 지역바에 그려진다(과외쌤 탭과 같은 renderTutorRegionTabs)
+PASS  (c) data-tutor-region 핸들러가 학생 탭에서는 tutorStudentRegionIndex 를 바꾼다
+PASS  (c) 탭을 누르기 전 기본값은 대표 활동지역
+PASS  (d) 공부방 홈 학생 탭 조회 그대로(preferred_studyroom_region_id · study_room 분기)
+PASS  (d) 공부방 홈 학생 탭 로딩 문구 그대로
+PASS  (d) 학생(parent) 홈 경로 그대로 — studentFeedEntry · studentFeedStatus 분기 유지
+PASS  (d) 게스트 경로 그대로 — guestFeedStatus 분기 유지
+PASS  (d) 과외쌤 홈 대표 고정은 과외쌤 탭만(학생 탭은 고른 탭을 따른다)
+PASS  (d) 과외쌤 홈 내 박스·활동지역 분포 UI 변경 없음
+PASS  (d) 학생찾기 링크배지 유지
+
+##### 2부 실행 #####
+PASS  (b) 활동지역 없음 → 「과외지역을 등록하면 학생이 보여요」
+PASS  (b) 활동지역 없음 → data-tutor-student-feed="no-region"
+PASS  (b) 활동지역 없음 → 조회하지 않는다
+PASS  (b) 활동지역 없음 → 0건 감성 카피를 쓰지 않는다
+PASS  (M1) 서버 /search 학생 탭 호출
+PASS  (M1) 필터 = 과외 분기 + 대표 활동지역 id
+PASS  (M1) 새 API 경로를 쓰지 않는다
+PASS  (M1) 받은 학생 2명이 베이직카드로 나온다(학생 카드는 이름 비공개)
+PASS  (M1) 학생 카드 = 베이직 티어(프라임·픽 승격 없음)
+PASS  (M1) 0건·실패·로딩 카피가 함께 나오지 않는다
+PASS  (M4) 「학생찾기에서 더 찾아보기」 링크배지 유지
+PASS  (M4) 샘플 카드로 채우지 않는다
+PASS  (c) 활동지역 3탭이 학생 탭에 보인다
+PASS  (c) 대표 탭이 기본 선택
+PASS  (M1) 지역 라벨 = 대표 활동지역
+PASS  (M3) 탭 2 전환 → 그 지역 id(424)로 다시 조회
+PASS  (M3) 탭 2 학생이 바뀐다(601 보이고 501·502 사라짐)
+PASS  (M3) 선택 탭 표시
+PASS  (M3) 지역 라벨 = 선택 활동지역
+PASS  (M3) 탭 3 전환 → 노원구(118) 조회
+PASS  (b) 조회 끝 0건 → 감성 카피
+PASS  (b) 0건 카피 지역 = 선택 활동지역
+PASS  (b) 0건에 「공개 중인 학생이 없습니다」(옛 문구) 안 씀
+PASS  (b) 0건 → data-tutor-student-feed="ready"
+PASS  (b) 0건에 샘플 카드 없음
+PASS  (b) 로딩·실패·지역없음 문구가 서로 다르다
+PASS  (b) 조회 중 → 로딩 문구
+PASS  (b) 조회 중 → data-tutor-student-feed="loading"
+PASS  (b) 조회 중에는 0건 카피를 쓰지 않는다
+PASS  (b) 조회 실패 → 「잠시 후 다시 확인해 주세요」 톤
+PASS  (b) 조회 실패 → role="alert"
+PASS  (b) 조회 실패 → data-tutor-student-feed="error"
+PASS  (b) 조회 실패와 0건을 구분한다
+PASS  (d) 공부방 홈 학생 탭은 공부방 로딩 문구를 그대로 쓴다
+PASS  (d) 공부방 홈에 과외쌤 전용 문구 안 나온다
+PASS  (d) 공부방 홈에 data-tutor-student-feed 없음
+PASS  (d) 게스트 홈에 data-tutor-student-feed 없음
+PASS  (d) 게스트 홈은 게스트 피드 문구를 그대로 쓴다
+PASS  (d) 학생 홈에 data-tutor-student-feed 없음
+PASS  (d) 과외쌤 탭에 data-tutor-student-feed 없음
+PASS  (d) 과외쌤 탭 지역바는 여전히 숨김(hideRegionBar)
+
+63 passed, 0 failed

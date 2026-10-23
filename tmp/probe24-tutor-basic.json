@@ -1,0 +1,26 @@
+﻿node : node:internal/modules/run_main:107
+위치 C:\Users\jetty\AppData\Local\Temp\ps-script-303ed673-f95b-4ec8-89aa-bab100c5f81e.ps1:109 문자:50
++ ... ing]::UTF8; node tmp/probe24.mjs tutor-ui tutor /register/basic "[dat ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (node:internal/modules/run_main:107:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    triggerUncaughtException(
+    ^
+
+browserType.launch: Executable doesn't exist at C:\Users\jetty\AppData\Local\Temp\cursor-sandbox-cache\0b1f9fdacc7cfcab
+4e05ca3a3aba74a0\playwright\chromium_headless_shell-1228\chrome-headless-shell-win64\chrome-headless-shell.exe
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+    at D:\work\study114\tmp\probe24.mjs:49:32 {
+  log: [],
+  name: 'Error'
+}
+
+Node.js v24.16.0

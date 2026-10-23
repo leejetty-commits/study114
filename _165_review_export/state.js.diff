@@ -1,0 +1,100 @@
+diff --git a/preview/home-ui/src/state.js b/preview/home-ui/src/state.js
+index 7f32c59..023c099 100644
+--- a/preview/home-ui/src/state.js
++++ b/preview/home-ui/src/state.js
+@@ -4,6 +4,7 @@
+ /** @typedef {'free' | 'paid'} ProviderSubscription */
+ 
+ import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
++import { isStudyRoomAuth } from './auth-role.js';
+ import { studyRoomLegacyExposureRedirect } from './study-room-reg/router.js';
+ import { getDefaultMessagesPath, normalizeMessagesPath, isMessagesDetailPath } from './messages/router.js';
+ import {
+@@ -379,8 +380,11 @@ export function bootstrapSupportRoute() {
+     return true;
+   }
+   if (path === '/support' || path === '/support/') {
+-    window.location.replace(`#${getDefaultSupportPath()}`);
+-    return true;
++    const hub = getDefaultSupportPath();
++    if (hub !== '/support' && hub !== '/support/') {
++      window.location.replace(`#${hub}`);
++      return true;
++    }
+   }
+ 
+   // ?덇굅???쎄? 寃쎈줈 ??怨좉컼?쇳꽣 ?쎄?쨌?뺤콉
+@@ -673,6 +677,27 @@ export function bootstrapPlansRoute() {
+   return false;
+ }
+ 
++/**
++ * 怨듬?諛??몄뀡??留덉씠?섏씠吏 湲곕낯 吏꾩엯.
++ * /mypage 쨌 home 쨌 registrations 쨌 registrations/students ???숈깮 紐⑸줉?쇰줈 蹂대궡吏 ?딅뒗??
++ * @param {string} path
++ * @returns {string | null}
++ */
++function studyRoomMypageEntry(path) {
++  if (!isStudyRoomAuth()) return null;
++  const p = String(path || '').split('?')[0];
++  if (
++    p === '/mypage' ||
++    p === '/mypage/' ||
++    p === '/mypage/home' ||
++    p === '/mypage/registrations' ||
++    p === '/mypage/registrations/students'
++  ) {
++    return getStudyRoomEntryPath();
++  }
++  return null;
++}
++
+ /**
+  * Path URL(`/mypage/...`) ?먮뒗 bare `#/mypage`瑜?hash ?쇱슦?몃줈 ?뺢퇋??
+  * SSOT 遺濡?A??PHP 寃쎈줈濡??묒냽?대룄 ?꾨━酉곌? ?대━?꾨줉 ?쒕떎.
+@@ -683,7 +708,7 @@ export function bootstrapMypageRoute() {
+ 
+   if (!hash && pathname.startsWith('/mypage')) {
+     const bare = pathname === '/mypage' || pathname === '/mypage/';
+-    const target = bare ? getDefaultMypagePath(getActiveRole()) : pathname;
++    const target = bare ? studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getActiveRole()) : pathname;
+     window.location.replace(`${origin}/${search}#${target}`);
+     return true;
+   }
+@@ -701,7 +726,13 @@ export function bootstrapMypageRoute() {
+   }
+ 
+   if (path === '/mypage' || path === '/mypage/') {
+-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
++    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
++    return true;
++  }
++
++  const roomEntry = studyRoomMypageEntry(path);
++  if (roomEntry) {
++    window.location.replace(`#${roomEntry}`);
+     return true;
+   }
+ 
+@@ -739,7 +770,7 @@ export function bootstrapMypageRoute() {
+   }
+ 
+   if (path.startsWith('/mypage/') && !normalizeMypagePath(path)) {
+-    window.location.replace(`#${getDefaultMypagePath(getNavRole())}`);
++    window.location.replace(`#${studyRoomMypageEntry(path) || getDefaultMypagePath(getNavRole())}`);
+     return true;
+   }
+ 
+@@ -829,9 +860,11 @@ export function getMypagePath() {
+   const hash = window.location.hash.slice(1) || '';
+   const path = hash.startsWith('/') ? hash : `/${hash}`;
+   const pathOnly = path.split('?')[0];
++  const roomEntry = studyRoomMypageEntry(pathOnly);
++  if (roomEntry) return roomEntry;
+   const normalized = normalizeMypagePath(pathOnly);
+   if (normalized) return normalized;
+-  return getDefaultMypagePath(getNavRole());
++  return studyRoomMypageEntry('/mypage') || getDefaultMypagePath(getNavRole());
+ }
+ 
+ export function getCurrentScreen() {

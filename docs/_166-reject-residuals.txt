@@ -1,0 +1,10 @@
+ACCEPT rework residuals (user UI):
+1. PAID PRODUCTS → 0 (plans/screens.js:1103,1240 = 유료 안내)
+2. Solved stories → 0 (concern/screens.js:362 = 해결됨)
+3. UI Prime/Pick → 0 in store-ui/right-rail/layout body; comment store-ui.js:214 OK
+4. N18: studyRoomTeaserLanding hides tutor|parent; landingPath/소개 페이지에서 보기 removed; study_room/guest keep
+
+HEAD: fa3762d dirty ~67 tracked +441/-225
+164/165 intact (studyRoomMypageEntry, auth-role, /#/guest, plans→#/parent, support hub, 학생 의뢰 JS=0)
+browser smoke: not run (code-level only)
+next=167

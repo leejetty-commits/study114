@@ -1,0 +1,52 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: tutor.js 에 MY_TUTOR 참조 없음
+PASS: data.js 에 MY_TUTOR 없음
+PASS: data.js 에 MY_STUDY_ROOM 없음(사용처 없음)
+PASS: tutor.js 내 박스가 readTutorMemberBox() 로 그린다
+PASS: tutor.js 에 「쪽지 받음 ·」 고정 문구 없음
+PASS: tutor.js 가 box.name 를 쓴다
+PASS: tutor.js 가 box.subject 를 쓴다
+PASS: tutor.js 가 box.inquiry 를 쓴다
+PASS: tutor.js 가 box.unread 를 쓴다
+PASS: tutor.js 가 box.views 를 쓴다
+PASS: tutor.js 가 box.registered 를 쓴다
+PASS: 「김우동」 문자열이 src 에 없음
+PASS: 「2026-04-15」 문자열이 src 에 없음
+PASS: readTutorMemberBox 가 tutor_display_name 을 읽는다
+PASS: readTutorMemberBox 가 main_subject_note 를 읽는다
+PASS: readTutorMemberBox 가 inquiry_status 를 읽는다
+PASS: readTutorMemberBox 가 created_at 을 읽는다
+PASS: readTutorMemberBox 가 getUnreadCount() 를 읽는다
+PASS: readTutorMemberBox 가 try/catch 로 기본값을 돌려준다
+PASS: tutor-home-seed.js 에 목업 키·시드 이름 없음
+PASS: TutorHubRepository 응답에 created_at(YYYY-MM-DD, 없으면 null) 포함
+PASS: 게스트(등록 API 꺼짐) 이름 = 내 과외 프로필 (got 내 과외 프로필)
+PASS: 게스트 과목 = 미등록 (got 미등록)
+PASS: 게스트 쪽지 상태 = — (got —)
+PASS: 게스트 미확인 = 0 (got 0)
+PASS: 게스트 등록 = — (got —)
+PASS: 조회 불러오는 중 = … (got …)
+PASS: ROI 호출 실패 → 조회 — (got —)
+PASS: 쪽지 데이터 없음 → 미확인 0 (got 0)
+PASS: 프로필 없음 → 내 과외 프로필 / 미등록 (got 내 과외 프로필 / 미등록)
+PASS: created_at 없음 → 등록 — (got —)
+PASS: 첫 boot 에서 값이 채워지면 한 번 다시 그린다 (renders=1)
+PASS: 같은 값이면 다시 그리지 않는다 (renders=1)
+PASS: ROI 응답했는데 값 없음 → 조회 0 (got 0)
+PASS: 조회 값이 바뀌면 한 번 다시 그린다 (renders=2)
+PASS: 다시 그린 뒤 boot 는 멈춘다 (renders=2)
+PASS: 이름 = 서버 tutor_display_name (got 테스트쌤)
+PASS: 과목 = 서버 main_subject_note (got 수학)
+PASS: inquiry_status open → 쪽지 받음 (got 쪽지 받음)
+PASS: 미확인 = getUnreadCount() 2 (got 2)
+PASS: 등록 = 서버 created_at (got 2025-03-04)
+PASS: 로그인 뒤 서버 값이 들어오면 다시 그린다 (renders=3)
+PASS: inquiry_status paused → 쪽지 안받음
+PASS: inquiry_status not_accepting → 쪽지 안받음
+PASS: inquiry_status null → —
+PASS: 빈 표시명 → 내 과외 프로필 (got 내 과외 프로필)
+PASS: 빈 과목 → 미등록 (got 미등록)
+PASS: created_at null → 등록 — (got —)
+PASS: 쪽지 0건 → 미확인 0 (got 0)
+
+49 passed, 0 failed

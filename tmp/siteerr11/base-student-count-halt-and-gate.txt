@@ -1,0 +1,39 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+=== (c) 학생 수 안내 화면 ===
+PASS: store SEED 활성 학생 3명(2명 이상 시나리오 준비)
+PASS: 활성 학생 2명으로 맞춤
+PASS: 2명: many 화면
+PASS: 2명: 운영문의 링크 href="#/support/contact"
+PASS: 2명: data-p19-nav="/support/contact"
+PASS: 2명: 학생 수 안내 문구
+PASS: 2명: 「운영문의」 버튼
+PASS: 2명: 특정 학생 화면으로 보내는 링크 없음(임의로 고르지 않음)
+PASS: 활성 학생 0명으로 맞춤
+PASS: 0명: zero 화면
+PASS: 0명(세션 없음): http://127.0.0.1:5173/#/signup/basic
+PASS: 0명: 「기본정보 입력」 버튼
+PASS: 시스템식 문구 없음
+PASS: 「공개」「보드」 표현 없음
+PASS: 시스템식 문구 없음
+PASS: 「공개」「보드」 표현 없음
+
+=== (b) 비로그인 빈카드 클릭 ===
+PASS: 바인딩은 한 번만(클릭 시점 판정 검증용으로 같은 핸들러 재사용)
+PASS: 비로그인 · 빈카드 → 로그인 창 열림
+PASS: 비로그인 · preventDefault/stopPropagation 실행
+PASS: 비로그인 · 샘플카드 → 로그인 창 열림
+
+=== (a) 로그인 빈카드 클릭 (auth-session) ===
+PASS: initAuthSession 후 isLoggedIn() = true
+PASS: 로그인 · 빈카드 → 로그인 창 없음
+PASS: 로그인 · preventDefault/stopPropagation 없음
+PASS: 로그인 · 샘플카드 → 통과
+PASS: 0명(학부모 세션): http://127.0.0.1:5173/#/signup/basic?role=student
+PASS: logout 후 같은 바인딩 → 다시 로그인 창(클릭 시점 판정)
+
+=== (a') 로그인 빈카드 클릭 (chrome-session) ===
+PASS: initChromeSession 로그인 · 빈카드 → 통과
+PASS: chromeLogout 후 → 다시 로그인 창
+
+통과 28 / 실패 0

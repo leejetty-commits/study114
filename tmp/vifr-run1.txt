@@ -1,0 +1,240 @@
+##### 2부 실제 렌더 #####
+PASS  T1 과외 등록 기본: data-input-fill 표시
+PASS  T1 과외 등록 기본: 입력칸마다 data-fill = 값 유무 (11칸)
+PASS  T1 과외 등록 기본: (b) 라디오·체크·숨김·파일은 표시 없음 (11)
+PASS  T1 과외 등록 기본: (a) 값 있는 칸 회색 (2)
+PASS  T1 과외 등록 기본: (a) 빈 칸 흰색 (9)
+PASS  T1 과외 등록 기본: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  T1 과외 등록 기본: (a) 값 있는 칸 포커스 중 흰색
+PASS  T1 과외 등록 기본: (a) 포커스 해제 → 회색
+PASS  T1 (b) 적용 폼 밖 data-fill 없음
+PASS  T1 페이지 오류 없음
+PASS  T2 과외 등록 수업: data-input-fill 표시
+PASS  T2 과외 등록 수업: 입력칸마다 data-fill = 값 유무 (5칸)
+PASS  T2 과외 등록 수업: (b) 라디오·체크·숨김·파일은 표시 없음 (19)
+PASS  T2 과외 등록 수업: (a) 값 있는 칸 회색 (2)
+PASS  T2 과외 등록 수업: (a) 빈 칸 흰색 (3)
+PASS  T2 과외 등록 수업: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  T2 과외 등록 수업: 선택하면 회색
+PASS  T2 (b) 적용 폼 밖 data-fill 없음
+PASS  T2 페이지 오류 없음
+PASS  T3 과외 등록 연락·경력: data-input-fill 표시
+PASS  T3 과외 등록 연락·경력: 입력칸마다 data-fill = 값 유무 (11칸)
+PASS  T3 과외 등록 연락·경력: (b) 라디오·체크·숨김·파일은 표시 없음 (17)
+PASS  T3 과외 등록 연락·경력: (a) 값 있는 칸 회색 (3)
+PASS  T3 과외 등록 연락·경력: (a) 빈 칸 흰색 (8)
+PASS  T3 과외 등록 연락·경력: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  T3 (b) 적용 폼 밖 data-fill 없음
+PASS  T3 페이지 오류 없음
+PASS  T4 과외 등록 상세: data-input-fill 표시
+PASS  T4 과외 등록 상세: 입력칸마다 data-fill = 값 유무 (17칸)
+PASS  T4 과외 등록 상세: (b) 라디오·체크·숨김·파일은 표시 없음 (36)
+PASS  T4 과외 등록 상세: (a) 값 있는 칸 회색 (5)
+PASS  T4 과외 등록 상세: (a) 빈 칸 흰색 (12)
+PASS  T4 과외 등록 상세: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  T4 대학: 저장된 대학명 회색
+PASS  T4 (d) 대학: 눌렀다 고르지 않고 빠지면 되돌린 값 회색
+PASS  T4 (d) 대학: 시·도 변경으로 코드가 비운 칸 흰색
+PASS  T4 (d) 대학: 고른 대학 회색·hidden 값 반영
+PASS  T4 과외 등록 상세: (f) 값 있는 칸을 disabled 로 → 규칙 밖(흰색 유지)
+PASS  T4 (b) 적용 폼 밖 data-fill 없음
+PASS  T4 페이지 오류 없음
+PASS  S1 공부방 기본 수정 팝업: data-input-fill 표시
+PASS  S1 공부방 기본 수정 팝업: 입력칸마다 data-fill = 값 유무 (18칸)
+PASS  S1 공부방 기본 수정 팝업: (b) 라디오·체크·숨김·파일은 표시 없음 (65)
+PASS  S1 공부방 기본 수정 팝업: (a) 값 있는 칸 회색 (1)
+PASS  S1 공부방 기본 수정 팝업: (a) 빈 칸 흰색 (17)
+PASS  S1 공부방 기본 수정 팝업: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  S1 (c) readonly 개설주소 빈칸 흰색
+PASS  S1 (c)(d) 주소검색 대입 뒤 readonly 개설주소 회색
+PASS  S1 (d) 홍보1 자동 채움 회색
+PASS  S1 (c)(d) 집 주소 대입 뒤 회색
+PASS  S1 (b) 적용 폼 밖 data-fill 없음
+PASS  S1 페이지 오류 없음
+PASS  S2 공부방 상세1: data-input-fill 표시
+PASS  S2 공부방 상세1: 입력칸마다 data-fill = 값 유무 (7칸)
+PASS  S2 공부방 상세1: (b) 라디오·체크·숨김·파일은 표시 없음 (22)
+PASS  S2 공부방 상세1: (a) 값 있는 칸 회색 (1)
+PASS  S2 공부방 상세1: (a) 빈 칸 흰색 (6)
+PASS  S2 공부방 상세1: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  S2 (b) 적용 폼 밖 data-fill 없음
+PASS  S2 페이지 오류 없음
+PASS  S3 공부방 상세2: data-input-fill 표시
+PASS  S3 공부방 상세2: 입력칸마다 data-fill = 값 유무 (17칸)
+PASS  S3 공부방 상세2: (b) 라디오·체크·숨김·파일은 표시 없음 (4)
+PASS  S3 공부방 상세2: (a) 값 있는 칸 회색 (1)
+PASS  S3 공부방 상세2: (a) 빈 칸 흰색 (16)
+PASS  S3 공부방 상세2: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  S3 공부방 상세2: (a) 입력하고 빠지면 회색
+PASS  S3 공부방 상세2: (a) 지우면 흰색
+PASS  S3 (b) 적용 폼 밖 data-fill 없음
+PASS  S3 페이지 오류 없음
+PASS  A1 가입 정보: data-input-fill 표시
+PASS  A1 가입 정보: 입력칸마다 data-fill = 값 유무 (8칸)
+PASS  A1 가입 정보: (b) 라디오·체크·숨김·파일은 표시 없음 (2)
+PASS  A1 가입 정보: (a) 값 있는 칸 회색 (3)
+PASS  A1 가입 정보: (a) 빈 칸 흰색 (5)
+PASS  A1 가입 정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  A1 (c) readonly 주소 빈칸 흰색
+PASS  A1 (c)(d) 카카오 주소 확정 뒤 readonly 주소 회색
+PASS  A1 가입 정보: (a) 값 있는 칸 포커스 중 흰색
+PASS  A1 가입 정보: (a) 포커스 해제 → 회색
+PASS  A1 가입 정보: (f) 값 있는 칸을 disabled 로 → 규칙 밖(흰색 유지)
+PASS  A1 (b) 적용 폼 밖 data-fill 없음
+PASS  A1 페이지 오류 없음
+PASS  A2 가입 연락처: data-input-fill 표시
+PASS  A2 가입 연락처: 입력칸마다 data-fill = 값 유무 (2칸)
+PASS  A2 가입 연락처: (b) 라디오·체크·숨김·파일은 표시 없음 (0)
+PASS  A2 가입 연락처: (a) 값 있는 칸 회색 (0)
+PASS  A2 가입 연락처: (a) 빈 칸 흰색 (2)
+PASS  A2 가입 연락처: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  A2 가입 연락처: (a) 입력하고 빠지면 회색
+PASS  A2 가입 연락처: (a) 지우면 흰색
+PASS  A2 (b) 적용 폼 밖 data-fill 없음
+PASS  A2 페이지 오류 없음
+PASS  A3 가입 기본 학생: data-input-fill 표시
+PASS  A3 가입 기본 학생: 입력칸마다 data-fill = 값 유무 (13칸)
+PASS  A3 가입 기본 학생: (b) 라디오·체크·숨김·파일은 표시 없음 (25)
+PASS  A3 가입 기본 학생: (a) 값 있는 칸 회색 (0)
+PASS  A3 가입 기본 학생: (a) 빈 칸 흰색 (11)
+PASS  A3 가입 기본 학생: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  A3 (f) disabled 학년(보이는 칸) 흰색 유지
+PASS  A3 (d) 지역 연쇄: 시·도 회색, 비운 시·군 흰색
+PASS  A3 (d) 지역 연쇄: 시·군 고르면 회색
+PASS  A3 (b) 적용 폼 밖 data-fill 없음
+PASS  A3 페이지 오류 없음
+PASS  A4 가입 기본 공부방: data-input-fill 표시
+PASS  A4 가입 기본 공부방: 입력칸마다 data-fill = 값 유무 (18칸)
+PASS  A4 가입 기본 공부방: (b) 라디오·체크·숨김·파일은 표시 없음 (65)
+PASS  A4 가입 기본 공부방: (a) 값 있는 칸 회색 (1)
+PASS  A4 가입 기본 공부방: (a) 빈 칸 흰색 (17)
+PASS  A4 가입 기본 공부방: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  A4 (c)(d) 개설주소·홍보1 대입 뒤 회색
+PASS  A4 (b) 적용 폼 밖 data-fill 없음
+PASS  A4 페이지 오류 없음
+PASS  A5 가입 기본 과외: data-input-fill 표시
+PASS  A5 가입 기본 과외: 입력칸마다 data-fill = 값 유무 (11칸)
+PASS  A5 가입 기본 과외: (b) 라디오·체크·숨김·파일은 표시 없음 (9)
+PASS  A5 가입 기본 과외: (a) 값 있는 칸 회색 (2)
+PASS  A5 가입 기본 과외: (a) 빈 칸 흰색 (9)
+PASS  A5 가입 기본 과외: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  A5 (b) 적용 폼 밖 data-fill 없음
+PASS  A5 페이지 오류 없음
+PASS  AX (b) 제외 auth /login: 표시 없음 (칸 2)
+PASS  AX (b) 제외 auth /find-id: 표시 없음 (칸 2)
+PASS  AX (b) 제외 auth /find-password: 표시 없음 (칸 1)
+PASS  AX 페이지 오류 없음
+PASS  H1 학생 기본정보: data-input-fill 표시
+PASS  H1 학생 기본정보: 입력칸마다 data-fill = 값 유무 (16칸)
+PASS  H1 학생 기본정보: (b) 라디오·체크·숨김·파일은 표시 없음 (17)
+PASS  H1 학생 기본정보: (a) 값 있는 칸 회색 (7)
+PASS  H1 학생 기본정보: (a) 빈 칸 흰색 (5)
+PASS  H1 학생 기본정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H1 학생 기본정보: (a) 값 있는 칸 포커스 중 흰색
+PASS  H1 학생 기본정보: (a) 포커스 해제 → 회색
+PASS  H1 학생 기본정보: (a) 입력하고 빠지면 회색
+PASS  H1 학생 기본정보: (a) 지우면 흰색
+PASS  H1 (d) 지역 연쇄: 시·도 회색, 비운 시·군 흰색
+PASS  H1 (d) 지역 연쇄: 시·군 고르면 회색
+PASS  H1 학생 기본정보: (f) disabled 칸 배경은 규칙과 무관 (4)
+PASS  H1 분기 변경으로 갈아 끼운 빈 희망지역 흰색
+PASS  H1 (b) 적용 폼 밖 data-fill 없음
+PASS  H1 페이지 오류 없음
+PASS  H2 학생 기본정보(공부방 분기): data-input-fill 표시
+PASS  H2 학생 기본정보(공부방 분기): 입력칸마다 data-fill = 값 유무 (16칸)
+PASS  H2 학생 기본정보(공부방 분기): (b) 라디오·체크·숨김·파일은 표시 없음 (17)
+PASS  H2 학생 기본정보(공부방 분기): (a) 값 있는 칸 회색 (7)
+PASS  H2 학생 기본정보(공부방 분기): (a) 빈 칸 흰색 (5)
+PASS  H2 학생 기본정보(공부방 분기): (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H2 (c) readonly 희망지역 빈칸 흰색
+PASS  H2 (c)(d) 주소검색 적용 뒤 readonly 희망지역 회색
+PASS  H2 (b) 적용 폼 밖 data-fill 없음
+PASS  H2 페이지 오류 없음
+PASS  H3 학생 상세정보: data-input-fill 표시
+PASS  H3 학생 상세정보: 입력칸마다 data-fill = 값 유무 (7칸)
+PASS  H3 학생 상세정보: (b) 라디오·체크·숨김·파일은 표시 없음 (10)
+PASS  H3 학생 상세정보: (a) 값 있는 칸 회색 (2)
+PASS  H3 학생 상세정보: (a) 빈 칸 흰색 (5)
+PASS  H3 학생 상세정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H3 (b) 적용 폼 밖 data-fill 없음
+PASS  H3 페이지 오류 없음
+PASS  H4 학생 쪽지설정: data-input-fill 표시
+PASS  H4 학생 쪽지설정: (b) 라디오·체크 표시 없음
+PASS  H4 (b) 적용 폼 밖 data-fill 없음
+PASS  H4 페이지 오류 없음
+PASS  H5 계정 표시명: data-input-fill 표시
+PASS  H5 계정 표시명: 입력칸마다 data-fill = 값 유무 (1칸)
+PASS  H5 계정 표시명: (b) 라디오·체크·숨김·파일은 표시 없음 (0)
+PASS  H5 계정 표시명: (a) 값 있는 칸 회색 (1)
+PASS  H5 계정 표시명: (a) 빈 칸 흰색 (0)
+PASS  H5 계정 표시명: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H5 계정 비밀번호: data-input-fill 표시
+PASS  H5 계정 비밀번호: 입력칸마다 data-fill = 값 유무 (3칸)
+PASS  H5 계정 비밀번호: (b) 라디오·체크·숨김·파일은 표시 없음 (0)
+PASS  H5 계정 비밀번호: (a) 값 있는 칸 회색 (0)
+PASS  H5 계정 비밀번호: (a) 빈 칸 흰색 (3)
+PASS  H5 계정 비밀번호: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H5 (b) 탈퇴 폼은 표시 없음
+PASS  H5 (d) 표시명 열기: 코드 대입 + 포커스 중 흰색
+PASS  H5 표시명 포커스 해제 → 회색
+PASS  H5 (b) 적용 폼 밖 data-fill 없음
+PASS  H5 페이지 오류 없음
+PASS  H6 과외 마이 기본정보: data-input-fill 표시
+PASS  H6 과외 마이 기본정보: 입력칸마다 data-fill = 값 유무 (11칸)
+PASS  H6 과외 마이 기본정보: (b) 라디오·체크·숨김·파일은 표시 없음 (9)
+PASS  H6 과외 마이 기본정보: (a) 값 있는 칸 회색 (2)
+PASS  H6 과외 마이 기본정보: (a) 빈 칸 흰색 (9)
+PASS  H6 과외 마이 기본정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H6 (b) 적용 폼 밖 data-fill 없음
+PASS  H6 페이지 오류 없음
+PASS  H7 과외 마이 상세정보: data-input-fill 표시
+PASS  H7 과외 마이 상세정보: 입력칸마다 data-fill = 값 유무 (19칸)
+PASS  H7 과외 마이 상세정보: (b) 라디오·체크·숨김·파일은 표시 없음 (5)
+PASS  H7 과외 마이 상세정보: (a) 값 있는 칸 회색 (7)
+PASS  H7 과외 마이 상세정보: (a) 빈 칸 흰색 (12)
+PASS  H7 과외 마이 상세정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H7 과외 마이 상세정보: (M6) p19-select 화살표 보임 (1)
+PASS  H7 (M6) p19-select 칸이 있다
+PASS  H7 (M6) p19-select 고른 뒤 회색 + 화살표 유지
+PASS  H7 (b) 적용 폼 밖 data-fill 없음
+PASS  H7 페이지 오류 없음
+PASS  H8 공부방 마이 기본 수정: data-input-fill 표시
+PASS  H8 공부방 마이 기본 수정: 입력칸마다 data-fill = 값 유무 (18칸)
+PASS  H8 공부방 마이 기본 수정: (b) 라디오·체크·숨김·파일은 표시 없음 (65)
+PASS  H8 공부방 마이 기본 수정: (a) 값 있는 칸 회색 (1)
+PASS  H8 공부방 마이 기본 수정: (a) 빈 칸 흰색 (17)
+PASS  H8 공부방 마이 기본 수정: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H8 (c)(d) 개설주소·홍보1 대입 뒤 회색
+PASS  H8 (b) 적용 폼 밖 data-fill 없음
+PASS  H8 페이지 오류 없음
+PASS  H9 공부방 마이 상세1: data-input-fill 표시
+PASS  H9 공부방 마이 상세1: 입력칸마다 data-fill = 값 유무 (7칸)
+PASS  H9 공부방 마이 상세1: (b) 라디오·체크·숨김·파일은 표시 없음 (22)
+PASS  H9 공부방 마이 상세1: (a) 값 있는 칸 회색 (1)
+PASS  H9 공부방 마이 상세1: (a) 빈 칸 흰색 (6)
+PASS  H9 공부방 마이 상세1: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H9 (b) 적용 폼 밖 data-fill 없음
+PASS  H9 페이지 오류 없음
+PASS  H10 공부방 마이 상세2: data-input-fill 표시
+PASS  H10 공부방 마이 상세2: 입력칸마다 data-fill = 값 유무 (16칸)
+PASS  H10 공부방 마이 상세2: (b) 라디오·체크·숨김·파일은 표시 없음 (4)
+FAIL  H10 공부방 마이 상세2: (a) 값 있는 칸 회색 (0)
+PASS  H10 공부방 마이 상세2: (a) 빈 칸 흰색 (16)
+PASS  H10 공부방 마이 상세2: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H10 (b) 적용 폼 밖 data-fill 없음
+PASS  H10 페이지 오류 없음
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('[data-rc-light]')
+
+    at Object.run (D:\work\study114\scripts\verify-input-fill-rule.mjs:595:16)
+    at D:\work\study114\scripts\verify-input-fill-rule.mjs:763:17 {
+  log: [ "  - waiting for locator('[data-rc-light]')" ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.16.0

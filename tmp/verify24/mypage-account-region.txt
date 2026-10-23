@@ -1,0 +1,44 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  (a) 공부방 홍보1 promo_label
+PASS  (a) 과외쌤 대표 region_id 라벨
+PASS  (a) 학생 과외 분기 1번
+PASS  (a) 학생 공부방 분기 1번
+PASS  (b) 값 없으면 등록 전
+PASS  (M8) is_primary 없는 첫 슬롯은 대표가 아님
+PASS  (M8) is_primary 없으면 서버 primary_region_label
+PASS  (c) #숫자·지역 id 는 나오지 않음
+PASS  (d) 과외 분기는 공부방 지역을 쓰지 않음
+PASS  (d) 공부방 분기는 과외 지역을 쓰지 않음
+PASS  (e) 사업장 동만 있으면 등록 전
+PASS  (e) 슬롯 region_label 만 있고 promo 가 없으면 등록 전
+PASS  (M3) 로드 전엔 등록 전을 쓰지 않음
+PASS  (M3) 로드 후 같은 값은 라벨
+PASS  과외 단위 로드 전·서버 라벨 없음은 대기
+PASS  과외 단위 로드 전·서버 라벨이 있으면 그 라벨
+PASS  단위 조회 실패 후 서버 라벨도 없으면 등록 전
+PASS  화면은 합성 함수만 쓰고 라벨 글자는 대표 지역
+PASS  계정 화면 갱신은 칸만 고치고 rerender 를 부르지 않음
+PASS  합성은 account-region-label 한 곳
+PASS  (M3) hydrate 전에 API 모드
+PASS  (M3) 캐시 전 화면은 대기이고 등록 전이 아님
+PASS  (M3) 캐시 전 HTML 에 등록 전·홍보 라벨이 없음
+PASS  (a) 새로 읽은 공부방 홍보1 이 카드에 있음
+PASS  login study_room_owner
+PASS  (a) 여러 공부방이면 공개된 대표 공부방 홍보1
+PASS  login study_room_owner
+PASS  (e) 화면은 사업장 동을 대표 지역으로 쓰지 않음
+PASS  login study_room_owner
+PASS  (c) 화면 HTML 에 #숫자 라벨이 없음
+PASS  login tutor
+PASS  (M3) 과외 단위 전에는 등록 전으로 비우지 않음
+PASS  입력 중인 값은 지역 칸 갱신 뒤에도 유지
+PASS  (a) 과외 대표 지역은 단위 조합 라벨
+PASS  (a) 과외 카드 HTML 이 대표 라벨
+PASS  login guardian_student
+PASS  (d) 화면 학생 과외 분기는 공부방 지역을 안 씀
+PASS  login guardian_student
+PASS  (d) 화면 학생 공부방 분기는 과외 지역을 안 씀
+PASS  login guardian_student
+PASS  (b) 학생 분기 지역이 없으면 등록 전
+
+41 passed, 0 failed

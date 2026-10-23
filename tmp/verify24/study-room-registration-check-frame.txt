@@ -1,0 +1,103 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: screens: passes readiness into RC
+PASS: screens: no publish-readiness CTA wiring
+PASS: screens: passes profileStatus only
+PASS: screens: binds RC events
+PASS: screens: uses RC renderer
+PASS: screens: old checklist title removed
+PASS: render: next action
+PASS: render: pick/prime action blocks
+PASS: render: cards independent
+PASS: render: compare block separate from missing
+PASS: render: shared home-card samples
+PASS: render: expand on samples
+PASS: render: BASIC row alone
+PASS: render: PICK+PRIME row
+PASS: render: old 3-col grid removed
+PASS: render: old rc-tier sample removed
+PASS: render: fold control
+PASS: render: publish wrap removed
+PASS: render: publish summary removed
+PASS: render: publish CTA removed
+PASS: render: self-check removed
+PASS: render: subsection from board children
+PASS: render: section ids
+PASS: hcs: BASIC uses renderBrowseList
+PASS: hcs: PICK uses renderExposureBox
+PASS: hcs: PRIME uses renderExposureBox
+PASS: hcs css: basic 1-cell width
+PASS: hcs css: pick 1-cell width
+PASS: hcs css: prime 1-cell width
+PASS: hcs css: upgrade row flex
+PASS: hcs css: live expo-grid gap
+PASS: hcs css: live prime grid gap
+PASS: hcs css: no scale
+PASS: hcs css: no artificial pick/prime stretch
+PASS: hcs css: no 100vw
+PASS: main: home-card-samples.css linked
+PASS: rc css: no artificial pick/prime stretch
+PASS: rc css: no legacy trc rc-sample prime width
+PASS: rc css: no 28rem basic cap
+PASS: tokens: prime media height ×1.3
+PASS: tokens: no aspect-ratio swap token
+PASS: listings: prime 16:9×1.3 via aspect-ratio (no cqw collapse)
+PASS: listings: no aspect-ratio swap token
+PASS: listings: no cqw prime height
+PASS: listings: no expo-prime-media cqw container
+PASS: page: pick action
+PASS: page: prime action
+PASS: page: cards after pick/prime
+PASS: page: publish CTA removed
+PASS: page: board after cards
+PASS: page: header first
+PASS: model: 상세정보 parent with children
+PASS: model: 상세정보1 child id
+PASS: model: 상세정보2 child id
+PASS: model: detail collapsed
+PASS: model: basic open
+PASS: model: single next action
+PASS: model: nextAction helper
+PASS: model: no publish badge
+PASS: model: basic board section
+PASS: model: pick badge
+PASS: model: prime badge
+PASS: model: no fake 기본정보 등록완료
+PASS: model: no % progress badge
+PASS: model: no long sentence badges
+PASS: copy: no publish CTA block
+PASS: copy: pick title
+PASS: copy: 상세정보 parent
+PASS: copy: 상세정보1 child
+PASS: copy: 상세정보2 child
+PASS: copy: next done
+PASS: copy: no self-check publish copy
+PASS: copy: no basic-only claim
+PASS: copy: next.fill helper
+PASS: copy: next fill label
+PASS: copy: RC_COPY.publish undefined (CTA removed)
+PASS: copy: pick remaining chip
+PASS: copy: prime remaining chip
+PASS: css: study-room next
+PASS: css: study-room fold
+PASS: css: study-room subsection
+PASS: css: stack layout available
+PASS: css: tutor fold untouched
+PASS: edit: expand sample kept
+PASS: edit: expand uses virtual sample
+PASS: edit: fold handler
+PASS: edit: no publish CTA handler
+PASS: edit: no self-check gate
+PASS: edit: no publishStudyRoom action
+PASS: store: publish checklist SSOT
+PASS: store: publish readiness SSOT
+PASS: store: publish policy fields kept
+PASS: store: region item kept
+PASS: store: contact publish item removed
+PASS: tutor render untouched marker
+PASS: tutor model untouched marker
+PASS: tutor copy labels untouched
+PASS: tutor edit expand untouched
+PASS: tutor model not mixed with study-room copy
+PASS: tutor render stays on data-trc-page
+
+study-room registration-check frame OK

@@ -1,0 +1,48 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  (a) 탭이 박스 분할보다 앞
+PASS  (a) home-mkt-wrap--with-panel 없음
+PASS  (a) 배너 패널 클래스 없음
+PASS  (a) 래퍼는 남음
+PASS  (b) 배지·4행
+PASS  (b) 과목 칸 없음
+PASS  (b) 이름·상태·조회 —·등록
+PASS  (b) 홍보지역 안내
+PASS  (b) 쪽지설정 메뉴가 있어 3행 전체 안내
+PASS  (b) 화면은 메뉴를 코드로 가른다
+PASS  (c) 홍보1만 알약 1개·대표
+PASS  (c) 미선택 알약 없음
+PASS  (c) 빈 홍보2·3은 알약을 만들지 않음
+PASS  (c) 홍보3만 값이 있으면 알약 2개
+PASS  (c) 삼성동은 보이고 빈 칸 알약은 없음
+PASS  (c) 홍보1·2·3 알약 3개, 대표는 첫 알약
+PASS  (c) 알약 순서는 홍보1 다음 비대표
+PASS  (c) 헬퍼는 비대표·값 있는 슬롯만
+PASS  (d) 마이페이지는 getDefaultMypagePath(study_room)
+PASS  (d) 쪽지 후기함은 /mypage/messages
+PASS  (e) 현황 카드는 분할 안·지도보다 앞
+PASS  (e) 공부방 홈 지도 안에 배너 없음
+PASS  (e) 카드 값이 지도 계산과 같음
+PASS  (e) 동·부제
+PASS  (f) 찾기(배너 유지)는 같은 부제·수를 지도 안에
+PASS  (f) 게스트 지도 배너 유지
+PASS  (f) renderFloatMap 게스트 분기·heading 식
+PASS  (f) 학생 지도 배너 유지
+PASS  (e) 홍보1 없으면 제목은 memberPlacePrompt
+PASS  (c) 홍보 슬롯이 없으면 알약 없음
+PASS  (g) 화면 파일에 안내 리터럴 없음
+PASS  (g) 화면 파일에 학부모 문구 없음
+PASS  (g) 안내 상수는 문구 파일에
+PASS  (색) 공부방 박스 규칙이 과외쌤과 같은 선택자
+PASS  (색) 액센트는 --role-accent-study 만
+PASS  (css) with-panel·banner-panel·panel 규칙 제거, 래퍼는 유지
+PASS  (반응형) 분할은 768px
+PASS  (반응형) 719px 배너 relative 는 게스트·찾기용으로 유지
+PASS  (전달) 홈에서만 지도 배너를 뺌
+PASS  (a) 학생 탭에는 내 박스 분할 없음
+PASS  변이 준비: 배너 생략 식이 소스에 있음
+PASS  변이: 배너 생략을 되돌리면 홈 지도에 배너가 다시 그려져 단언이 실패한다
+PASS  변이 준비: 탭 다음 박스 순서가 소스에 있음
+PASS  변이: 박스를 탭 앞으로 되돌리면 「탭 다음 박스」 단언이 실패한다
+PASS  변이 뒤 소스 복구
+
+45 passed, 0 failed

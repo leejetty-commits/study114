@@ -1,0 +1,36 @@
+### lastRegionByHope.tutor=[]
+lastRegionByHope.tutor=""  axisFromSearchTab('student', null)=study_room
+normalize(study_room axis).displayLabel=""  normalize(tutor axis).displayLabel=""
+0 초기: activeRegionLabel="" canon=null src=undefined studentHopeType=undefined
+1 refreshActiveResultItems(student, parent): activeRegionLabel="" canon="" src=session studentHopeType=undefined
+2 renderCompactRegionBar: activeRegionLabel="" canon="" src=session studentHopeType=undefined
+   regionBar label = ["위치를 선택해 주세요"]
+3 renderProviderHomeBody(student) 이전탭=null: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback
+3 renderProviderHomeBody(student) 이전탭=tutor: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback
+### lastRegionByHope.tutor=[경기도 의정부시]
+lastRegionByHope.tutor="경기도 의정부시"  axisFromSearchTab('student', null)=study_room
+normalize(study_room axis).displayLabel=""  normalize(tutor axis).displayLabel="경기도 의정부시"
+0 초기: activeRegionLabel="" canon=null src=undefined studentHopeType=undefined
+1 refreshActiveResultItems(student, parent): activeRegionLabel="" canon="" src=session studentHopeType=undefined
+2 renderCompactRegionBar: activeRegionLabel="" canon="" src=session studentHopeType=undefined
+   regionBar label = ["위치를 선택해 주세요"]
+3 renderProviderHomeBody(student) 이전탭=null: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback
+3 renderProviderHomeBody(student) 이전탭=tutor: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback
+### lastRegionByHope.tutor=[424]
+lastRegionByHope.tutor="424"  axisFromSearchTab('student', null)=study_room
+normalize(study_room axis).displayLabel="424"  normalize(tutor axis).displayLabel="424"
+0 초기: activeRegionLabel="" canon=null src=undefined studentHopeType=undefined
+1 refreshActiveResultItems(student, parent): activeRegionLabel="424" canon="424" src=session studentHopeType=undefined
+2 renderCompactRegionBar: activeRegionLabel="424" canon="424" src=session studentHopeType=undefined
+   regionBar label = ["424"]
+3 renderProviderHomeBody(student) 이전탭=null: label=["위치를 선택해 주세요"] activeRegionLabel="424" canon="424" axis=study_room src=fallback
+3 renderProviderHomeBody(student) 이전탭=tutor: label=["위치를 선택해 주세요"] activeRegionLabel="424" canon="424" axis=study_room src=fallback
+### lastRegionByHope.tutor=[서울특별시 도봉구]
+lastRegionByHope.tutor="서울특별시 도봉구"  axisFromSearchTab('student', null)=study_room
+normalize(study_room axis).displayLabel=""  normalize(tutor axis).displayLabel="서울특별시 도봉구"
+0 초기: activeRegionLabel="" canon=null src=undefined studentHopeType=undefined
+1 refreshActiveResultItems(student, parent): activeRegionLabel="" canon="" src=session studentHopeType=undefined
+2 renderCompactRegionBar: activeRegionLabel="" canon="" src=session studentHopeType=undefined
+   regionBar label = ["위치를 선택해 주세요"]
+3 renderProviderHomeBody(student) 이전탭=null: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback
+3 renderProviderHomeBody(student) 이전탭=tutor: label=["위치를 선택해 주세요"] activeRegionLabel="" canon="" axis=study_room src=fallback

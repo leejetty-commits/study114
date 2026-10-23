@@ -1,0 +1,377 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  a_copy_constants_exact
+PASS  a_no_copy_literals_in_screen_files
+PASS  a_no_pressure_tone
+PASS  b_loading_cells_titles_guest
+PASS  b_posts_state_guest
+PASS  c_notice_home_three_lines_guest
+PASS  d_notice_exposure_guest
+PASS  d_no_student_notice_guest
+PASS  c_greeting_home_three_lines_guest
+PASS  c_guest_greeting_teaser_masked
+PASS  b_no_refetch_when_fresh_guest
+PASS  b_empty_copy_guest
+PASS  b_fail_copy_not_empty_guest
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:299:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  b_loading_cells_titles_parent
+PASS  b_posts_state_parent
+PASS  c_notice_home_three_lines_parent
+PASS  d_notice_exposure_parent
+PASS  b_no_refetch_when_fresh_parent
+PASS  b_empty_copy_parent
+PASS  b_fail_copy_not_empty_parent
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:299:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  b_loading_cells_titles_study_room
+PASS  b_posts_state_study_room
+PASS  c_notice_home_three_lines_study_room
+PASS  d_notice_exposure_study_room
+PASS  d_no_student_notice_study_room
+PASS  b_no_refetch_when_fresh_study_room
+PASS  b_empty_copy_study_room
+PASS  b_fail_copy_not_empty_study_room
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:299:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  b_loading_cells_titles_tutor
+PASS  b_posts_state_tutor
+PASS  c_notice_home_three_lines_tutor
+PASS  d_notice_exposure_tutor
+PASS  d_no_student_notice_tutor
+PASS  b_no_refetch_when_fresh_tutor
+PASS  b_empty_copy_tutor
+PASS  b_fail_copy_not_empty_tutor
+PASS  d_notice_requests_view_home_only
+PASS  d_notice_home_requests_limit_3
+PASS  d_no_local_notice_seed_used
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:387:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  e_auth_event_drops_cache
+PASS  e_no_browser_storage_in_sources
+PASS  e_no_storage_writes_at_runtime
+PASS  f_body_best_strip_removed
+PASS  f_right_rail_no_best_strip_export
+PASS  f_best_css_removed
+PASS  f_trio_has_no_best_or_notice_guest
+PASS  f_trio_has_no_best_or_notice_parent
+PASS  f_trio_has_no_best_or_notice_study_room
+PASS  f_trio_has_no_best_or_notice_tutor
+PASS  f_rail_best_on_top_guest
+PASS  f_rail_best_one_per_room_guest
+PASS  f_rail_best_top_reaction_item_guest
+PASS  f_guest_rail_no_body_author
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:421:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  f_rail_best_on_top_parent
+PASS  f_rail_best_one_per_room_parent
+PASS  f_rail_best_top_reaction_item_parent
+PASS  f_student_no_provider_room_dom
+PASS  f_student_provider_room_popup_no_request
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:421:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  f_rail_best_on_top_study_room
+PASS  f_rail_best_one_per_room_study_room
+PASS  f_rail_best_top_reaction_item_study_room
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:421:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  f_rail_best_on_top_tutor
+PASS  f_rail_best_one_per_room_tutor
+PASS  f_rail_best_top_reaction_item_tutor
+PASS  f_best_rule_constants
+PASS  f_best_helper_filters_under_5
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:61:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:177:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:209:5)
+    at signIn (D:\work\study114\scripts\verify-home-news-row.mjs:252:3)
+    at D:\work\study114\scripts\verify-home-news-row.mjs:470:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+PASS  g_rerender_once_no_room
+PASS  g_same_key_reuses_boot_no_room
+PASS  g_search_requests_no_room
+PASS  g_student_live_no_room
+PASS  g_rerender_once_room_without_region
+PASS  g_same_key_reuses_boot_room_without_region
+PASS  g_search_requests_room_without_region
+PASS  g_student_live_room_without_region
+PASS  g_rerender_once_region_search_ok
+PASS  g_same_key_reuses_boot_region_search_ok
+PASS  g_search_requests_region_search_ok
+PASS  g_student_live_region_search_ok
+PASS  g_rerender_once_region_search_fail
+PASS  g_same_key_reuses_boot_region_search_fail
+PASS  g_search_requests_region_search_fail
+PASS  g_student_live_region_search_fail
+PASS  g_removed_guest_temp_notice
+
+공부방 학생 수요 부트(다시 그리기 횟수):
+  no_room: sync=0 total=1 searches=0
+  room_without_region: sync=0 total=1 searches=0
+  region_search_ok: sync=0 total=1 searches=1
+  region_search_fail: sync=0 total=1 searches=1
+
+역할별 홈 공지 3줄(서버 view=home 응답 기준):
+  guest      NOTICE_ALL_1, NOTICE_ALL_2, NOTICE_ALL_3
+  parent     NOTICE_STUDENT, NOTICE_ALL_1, NOTICE_ALL_2
+  study_room NOTICE_ROOM, NOTICE_ALL_1, NOTICE_ALL_2
+  tutor      NOTICE_TUTOR, NOTICE_ALL_1, NOTICE_ALL_2
+PASS  B_home_row_loaded_guest
+PASS  B_order_trio_row_mybox_guest
+PASS  B_notice_three_lines_guest
+PASS  B_notice_exposure_guest
+PASS  B_greeting_three_lines_guest
+PASS  B_no_best_strip_in_body_guest
+PASS  B_more_font_le_title_guest
+PASS  B_titles_have_aria_label_guest
+PASS  B_rail_best_top_one_per_room_guest
+PASS  B_notice_popup_open_selected_guest
+PASS  B_notice_popup_hash_unchanged_guest
+PASS  B_notice_popup_list_10_per_page_exposure_guest
+PASS  B_notice_popup_go_board_guest
+PASS  B_notice_popup_focus_inside_guest
+PASS  B_notice_popup_switch_guest
+PASS  B_notice_popup_esc_focus_back_guest
+PASS  B_notice_more_selects_latest_guest
+PASS  B_notice_close_focus_back_to_more_guest
+PASS  B_concern_room_popup_open_guest
+PASS  B_concern_room_popup_list_pages_guest
+PASS  B_concern_room_popup_hash_unchanged_guest
+PASS  B_concern_room_popup_go_board_guest
+PASS  B_guest_concern_popup_titles_only
+PASS  B_concern_room_popup_esc_focus_back_guest
+PASS  B_concern_room_more_latest_guest
+PASS  B_concern_room_backdrop_close_guest
+PASS  B_best_popup_open_three_guest
+PASS  B_best_popup_hash_unchanged_guest
+PASS  B_best_popup_switch_guest
+PASS  B_best_popup_close_focus_back_guest
+PASS  B_no_page_errors_from_changed_modules_guest
+PASS  B_home_row_loaded_parent
+PASS  B_order_trio_row_mybox_parent
+PASS  B_notice_three_lines_parent
+PASS  B_notice_exposure_parent
+PASS  B_greeting_cell_settled_parent
+PASS  B_no_best_strip_in_body_parent
+PASS  B_more_font_le_title_parent
+PASS  B_titles_have_aria_label_parent
+PASS  B_rail_best_top_one_per_room_parent
+PASS  B_student_no_provider_room_dom
+PASS  B_notice_popup_open_selected_parent
+PASS  B_notice_popup_hash_unchanged_parent
+PASS  B_notice_popup_list_10_per_page_exposure_parent
+PASS  B_notice_popup_go_board_parent
+PASS  B_notice_popup_focus_inside_parent
+PASS  B_notice_popup_switch_parent
+PASS  B_notice_popup_esc_focus_back_parent
+PASS  B_notice_more_selects_latest_parent
+PASS  B_notice_close_focus_back_to_more_parent
+PASS  B_concern_room_popup_open_parent
+PASS  B_concern_room_popup_list_pages_parent
+PASS  B_concern_room_popup_hash_unchanged_parent
+PASS  B_concern_room_popup_go_board_parent
+PASS  B_concern_room_popup_body_parent
+PASS  B_concern_room_popup_esc_focus_back_parent
+PASS  B_concern_room_more_latest_parent
+PASS  B_concern_room_backdrop_close_parent
+PASS  B_best_popup_open_three_parent
+PASS  B_best_popup_hash_unchanged_parent
+PASS  B_best_popup_switch_parent
+PASS  B_best_popup_close_focus_back_parent
+PASS  B_student_no_provider_room_requests
+PASS  B_no_page_errors_from_changed_modules_parent
+PASS  B_home_row_loaded_study_room
+PASS  B_order_trio_row_mybox_study_room
+PASS  B_notice_three_lines_study_room
+PASS  B_notice_exposure_study_room
+PASS  B_greeting_cell_settled_study_room
+PASS  B_no_best_strip_in_body_study_room
+PASS  B_more_font_le_title_study_room
+PASS  B_titles_have_aria_label_study_room
+PASS  B_rail_best_top_one_per_room_study_room
+PASS  B_notice_popup_open_selected_study_room
+PASS  B_notice_popup_hash_unchanged_study_room
+PASS  B_notice_popup_list_10_per_page_exposure_study_room
+PASS  B_notice_popup_go_board_study_room
+PASS  B_notice_popup_focus_inside_study_room
+PASS  B_notice_popup_switch_study_room
+PASS  B_notice_popup_esc_focus_back_study_room
+PASS  B_notice_more_selects_latest_study_room
+PASS  B_notice_close_focus_back_to_more_study_room
+PASS  B_concern_room_popup_open_study_room
+PASS  B_concern_room_popup_list_pages_study_room
+PASS  B_concern_room_popup_hash_unchanged_study_room
+PASS  B_concern_room_popup_go_board_study_room
+PASS  B_concern_room_popup_body_study_room
+PASS  B_concern_room_popup_esc_focus_back_study_room
+PASS  B_concern_room_more_latest_study_room
+PASS  B_concern_room_backdrop_close_study_room
+PASS  B_best_popup_open_three_study_room
+PASS  B_best_popup_hash_unchanged_study_room
+PASS  B_best_popup_switch_study_room
+PASS  B_best_popup_close_focus_back_study_room
+PASS  B_auth_change_closes_popup
+PASS  B_no_page_errors_from_changed_modules_study_room
+PASS  B_home_row_loaded_tutor
+PASS  B_order_trio_row_mybox_tutor
+PASS  B_notice_three_lines_tutor
+PASS  B_notice_exposure_tutor
+PASS  B_greeting_cell_settled_tutor
+PASS  B_no_best_strip_in_body_tutor
+PASS  B_more_font_le_title_tutor
+PASS  B_titles_have_aria_label_tutor
+PASS  B_rail_best_top_one_per_room_tutor
+PASS  B_notice_popup_open_selected_tutor
+PASS  B_notice_popup_hash_unchanged_tutor
+PASS  B_notice_popup_list_10_per_page_exposure_tutor
+PASS  B_notice_popup_go_board_tutor
+PASS  B_notice_popup_focus_inside_tutor
+PASS  B_notice_popup_switch_tutor
+PASS  B_notice_popup_esc_focus_back_tutor
+PASS  B_notice_more_selects_latest_tutor
+PASS  B_notice_close_focus_back_to_more_tutor
+PASS  B_concern_room_popup_open_tutor
+PASS  B_concern_room_popup_list_pages_tutor
+PASS  B_concern_room_popup_hash_unchanged_tutor
+PASS  B_concern_room_popup_go_board_tutor
+PASS  B_concern_room_popup_body_tutor
+PASS  B_concern_room_popup_esc_focus_back_tutor
+PASS  B_concern_room_more_latest_tutor
+PASS  B_concern_room_backdrop_close_tutor
+PASS  B_best_popup_open_three_tutor
+PASS  B_best_popup_hash_unchanged_tutor
+PASS  B_best_popup_switch_tutor
+PASS  B_best_popup_close_focus_back_tutor
+PASS  B_no_page_errors_from_changed_modules_tutor
+PASS  B_no_storage_writes_news_popup_study_room_no_region
+PASS  B_steady_home_rendered_study_room_no_region
+PASS  B_steady_app_renders_capped_study_room_no_region
+PASS  B_no_storage_writes_news_popup_study_room_region
+PASS  B_steady_home_rendered_study_room_region
+PASS  B_steady_app_renders_capped_study_room_region
+PASS  B_no_storage_writes_news_popup_guest
+PASS  B_steady_home_rendered_guest
+PASS  B_steady_app_renders_capped_guest
+PASS  B_no_storage_writes_news_popup_parent
+PASS  B_steady_home_rendered_parent
+PASS  B_steady_app_renders_capped_parent
+PASS  B_no_storage_writes_news_popup_tutor
+PASS  B_steady_home_rendered_tutor
+PASS  B_steady_app_renders_capped_tutor
+PASS  B_mobile_cells_stacked
+
+4역할 홈 2단 박스 형제 순서(부모 안 앞 6개):
+  guest      home-promo-trio > home-news-row > hero-map > content-section > content-section > mypage-muted
+  parent     home-promo-trio > home-news-row > parent-tabs > parent-home-body
+  study_room home-promo-trio > home-news-row
+  tutor      home-promo-trio > home-news-row > parent-tabs > tutor-home-split > parent-home-body
+
+5가지 상태 홈(#app 다시 그리기 3초→5초, 저장소 쓰기 키):
+  study_room_no_region   renders=5→5 writes={"session:study114-preview-provider-reviews-v2":1,"session:study114-preview-review-quotas-v1":1,"session:study114-preview-active-role":16,"local:study114-neighborhood-greetings-v1":1}
+  study_room_region      renders=5→5 writes={"session:study114-preview-provider-reviews-v2":1,"session:study114-preview-review-quotas-v1":1,"session:study114-preview-active-role":16,"local:study114-neighborhood-greetings-v1":1}
+  guest                  renders=3→3 writes={"session:study114-preview-provider-reviews-v2":1,"session:study114-preview-review-quotas-v1":1,"session:study114-preview-students-v3":1,"local:study114-neighborhood-greetings-v1":1}
+  parent                 renders=3→3 writes={"session:study114-preview-provider-reviews-v2":1,"session:study114-preview-review-quotas-v1":1,"session:study114-preview-active-role":14,"local:study114-neighborhood-greetings-v1":1}
+  tutor                  renders=4→4 writes={"session:study114-preview-provider-reviews-v2":1,"session:study114-preview-review-quotas-v1":1,"session:study114-preview-active-role":16,"local:study114-find-canonical-v1":24,"local:study114-neighborhood-greetings-v1":1}
+  참고: local:study114-neighborhood-greetings-v1 쓰기가 남아 있다(study_room_no_region, study_room_region, guest, parent, tutor). main.js 의 pullNeighborhoodGreetings 가 쓴다 — 마이페이지 인사 편집·내리기와 가입 완료 화면이 이 키를 읽어 이번에 지우지 않았다.
+스크린샷: C:\Users\jetty\AppData\Local\Temp\s114-home-news-row
+
+226 passed / 0 failed
+home-news-row verify ok

@@ -39,11 +39,10 @@ Wait-Api
 $env:STUDY114_PREVIEW_URL = "http://127.0.0.1:8080"
 Write-Host "STUDY114_PREVIEW_URL=$env:STUDY114_PREVIEW_URL"
 
-Write-Host "=== playwright p18-b / p18-d / p18-c / p18-02 / history (061 없음) ==="
+Write-Host "=== playwright p18-b / p18-d / p18-02 / history (061 없음) ==="
 npx playwright test --workers=1 --project=chromium `
   e2e/p18-b-tickets.spec.js `
   e2e/p18-d-checkout.spec.js `
-  e2e/p18-c-request-view.spec.js `
   e2e/p18-02-roi-api.spec.js `
   e2e/p18-pr-a-history.spec.js
 if ($LASTEXITCODE -ne 0) { throw "E2E failed before schema 061" }

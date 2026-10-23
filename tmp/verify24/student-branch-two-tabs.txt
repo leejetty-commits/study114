@@ -1,0 +1,179 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 1부 서버 (가짜 PDO · StudentHubService::applyAction update) #####
+PASS E1 분기 = study_room
+PASS E1 과외 지역 NULL(요청 117 무시)
+PASS E1 공부방 지역·단지·기준 NULL
+PASS E1 UPDATE 1건에 4개 지역 컬럼 모두 포함
+PASS E1 현재 분기 FOR UPDATE 읽기 = 트랜잭션 안
+PASS E1 UPDATE = 같은 트랜잭션
+PASS E1 rejudgeExposure 실행(published → draft) = 같은 트랜잭션
+PASS E1 트랜잭션 1번 열고 1번 커밋
+PASS E1 카드 노출 내려감(draft)
+PASS E1 응답 basic_missing 에 희망지역
+PASS E1 응답 region_label 빈 문자열(메모·반대 축 폴백 없음)
+PASS E2 과외 지역 = 117(새 분기 값은 저장)
+PASS E2 공부방 지역 NULL(요청 9201 무시)
+PASS E2 단지·기준 NULL
+PASS E2 기본정보 완료 → published 유지
+PASS E2 응답 region_label = 서울특별시 도봉구
+PASS E3 반대 분기 값은 검증 전에 버림(요청 실패 없음) · 과외 지역 = 117
+PASS E3 UPDATE 에 공부방 컬럼 없음
+PASS E3 분기 그대로면 기존 반대 축 값은 손대지 않음(일괄 보정 없음)
+PASS E4 공부방 지역 = 단지 행정동 9101
+PASS E4 단지 55 · 기준 complex
+PASS E4 과외 지역 요청 117 무시(기존 424 그대로)
+PASS E5 공부방 동 = 9101 · 과외 지역 NULL
+PASS E5 단지 NULL · 기준 dong
+PASS E5 기본정보 완료 → published 유지
+PASS E5 응답 region_label = 경기도 의정부시 신곡동
+PASS D1 과외 분기 + 공부방 지역만 → region_label 빈 문자열
+PASS D1 공부방 시군구 칸(과외쌤 찾기 폴백용) 없음
+PASS D1 공부방 분기 + 과외 지역만 → region_label 빈 문자열
+PASS  php 실행
+PASS  서버 학생 행 준비(과외 의정부·공부방 신곡동·과외 분기+공부방만)
+PASS  (d) 학생 카드 지역 JOIN = 분기 축만(COALESCE 반대 축 폴백 없음)
+
+##### 2부 화면 (실제 모듈) #####
+=== 과외 분기(경기도 의정부시) ===
+PASS  과외 분기 분기 = tutor
+PASS  (a) 과외 분기 홈 첫 탭 = tutor
+PASS  (a) 과외 분기 홈 탭 = tutor:우리동네 과외쌤 · student:우리동네 학생
+PASS  (a) 과외 분기 반대 분기 탭 상태(옛 값)는 첫 탭으로
+PASS  (b) 과외 분기 홈 tutor 검색 폼 없음
+PASS  (b) 과외 분기 홈 tutor 「지역 변경」 버튼 없음
+PASS  (b) 과외 분기 홈 tutor 필터바 없음
+PASS  (b) 과외 분기 홈 tutor 카드 = 서버 /search 저장 지역 조회
+PASS  (b) 과외 분기 홈 tutor 0건 → 샘플+빈칸(tutor)
+PASS  (b) 과외 분기 홈 tutor 샘플 도장
+PASS  (b) 과외 분기 홈 tutor 빈칸 박스(프라임·픽·베이직)
+PASS  (b) 과외 분기 홈 tutor 샘플 카드 = 티어마다 1장(프라임·픽·베이직 3장)
+PASS  (b) 과외 분기 홈 tutor 샘플 지역 = 내 지역
+PASS  (b) 과외 분기 홈 tutor 링크배지 없음
+PASS  (b) 과외 분기 홈 student 검색 폼·지역 변경 없음
+PASS  (b) 과외 분기 홈 student 목록 = 분기 학생(preferred_lesson_type tutor)
+PASS  (b) 과외 분기 홈 student 0건 감성 문구
+PASS  (b) 과외 분기 홈 student 링크배지 「학생찾기에서 더 찾아보기」
+PASS  (b) 과외 분기 홈 student 탭 본문 「학부모」 없음
+PASS  (c) 과외 분기 GNB find_room = hide
+PASS  (c) 과외 분기 GNB find_tutor·student_parent = show
+PASS  (c) 과외 분기 홈 GNB 링크에 find_room 없음
+PASS  (c) 과외 분기 찾기 탭 목록 = tutor·student
+PASS  (c) 과외 분기 #/search/room 직접 진입 → 그리지 않고 /search/tutor
+PASS  (c) 과외 분기 차단된 탭 목록을 부르지 않음
+PASS  (c) 과외 분기 route-access 가드
+PASS  (c) 과외 분기 찾기 tutor 열림 · 현재위치 = 내 지역
+PASS  (c) 과외 분기 찾기 탭 줄에 반대 탭 없음
+PASS  (c) 과외 분기 학생 찾기 = 분기 고정(희망 유형 선택칸 없음)
+=== 공부방 분기(경기도 의정부시 신곡동) ===
+PASS  공부방 분기 분기 = study_room
+PASS  (a) 공부방 분기 홈 첫 탭 = study_room
+PASS  (a) 공부방 분기 홈 탭 = study_room:우리동네 공부방 · student:우리동네 학생
+PASS  (a) 공부방 분기 반대 분기 탭 상태(옛 값)는 첫 탭으로
+PASS  (b) 공부방 분기 홈 study_room 검색 폼 없음
+PASS  (b) 공부방 분기 홈 study_room 「지역 변경」 버튼 없음
+PASS  (b) 공부방 분기 홈 study_room 필터바 없음
+PASS  (b) 공부방 분기 홈 study_room 카드 = 서버 /search 저장 지역 조회
+PASS  (b) 공부방 분기 홈 study_room 0건 → 샘플+빈칸(study_room)
+PASS  (b) 공부방 분기 홈 study_room 샘플 도장
+PASS  (b) 공부방 분기 홈 study_room 빈칸 박스(프라임·픽·베이직)
+PASS  (b) 공부방 분기 홈 study_room 샘플 카드 = 티어마다 1장(프라임·픽·베이직 3장)
+PASS  (b) 공부방 분기 홈 study_room 샘플 지역 = 내 지역
+PASS  (b) 공부방 분기 홈 study_room 링크배지 「공부방찾기에서 더 찾아보기」
+PASS  (b) 공부방 분기 홈 student 검색 폼·지역 변경 없음
+PASS  (b) 공부방 분기 홈 student 목록 = 분기 학생(preferred_lesson_type study_room)
+PASS  (b) 공부방 분기 홈 student 0건 감성 문구
+PASS  (b) 공부방 분기 홈 student 링크배지 「학생찾기에서 더 찾아보기」
+PASS  (b) 공부방 분기 홈 student 탭 본문 「학부모」 없음
+PASS  (c) 공부방 분기 GNB find_tutor = hide
+PASS  (c) 공부방 분기 GNB find_room·student_parent = show
+PASS  (c) 공부방 분기 홈 GNB 링크에 find_tutor 없음
+PASS  (c) 공부방 분기 찾기 탭 목록 = room·student
+PASS  (c) 공부방 분기 #/search/tutor 직접 진입 → 그리지 않고 /search/room
+PASS  (c) 공부방 분기 차단된 탭 목록을 부르지 않음
+PASS  (c) 공부방 분기 route-access 가드
+PASS  (c) 공부방 분기 찾기 room 열림 · 현재위치 = 내 지역
+PASS  (c) 공부방 분기 찾기 탭 줄에 반대 탭 없음
+PASS  (c) 공부방 분기 학생 찾기 = 분기 고정(희망 유형 선택칸 없음)
+=== (d) 과외 분기 + 공부방 지역만(옛 데이터) ===
+PASS  (d) 저장 지역 모듈: 과외 분기 지역 없음
+PASS  (d) studentPlaceFor tutor/student = null(공부방 동으로 채우지 않음)
+PASS  (d) studentPlaceFor room = null(반대 분기 탭)
+PASS  (d) 홈 과외쌤 탭 = 지역 등록 유도(창동 없음)
+PASS  (d) 과외쌤 찾기 = 지역 등록 유도(창동 없음)
+PASS  (d) 다른 지역으로 목록을 부르지 않음
+PASS  (d) student-saved-region: studyroomSigungu·branchSigungu 폴백 제거
+PASS  (d) 서버 행 출력에 preferred_studyroom_sigungu_* 없음
+=== (f) 마이페이지 분기 변경 안내 ===
+PASS  (f) 확인창 문구 = 지역설정 초기화 안내
+PASS  (f) 분기 변경 시 확인창(저장된 분기와 다를 때만)
+PASS  (f) 취소하면 이전 선택으로 되돌림
+PASS  (f) 동의하면 새 분기 지역칸 비움 · 저장된 분기로 돌아오면 저장값 복원
+PASS  (f) 저장 후 항상 새로고침 안내(분기 변경/일반)
+PASS  (f) 지역이 비면 「지역을 입력하면 다시 보여요」
+PASS  (f) 기본·상세 저장 모두 같은 안내
+PASS  (f) 서버 응답(E1) = 희망지역 빈칸 → 지역 입력 안내 대상
+PASS  「학부모」 없음 · preview/home-ui/src/provider-home.js
+PASS  「학부모」 없음 · preview/home-ui/src/state.js
+PASS  「학부모」 없음 · preview/home-ui/src/screens/parent.js
+PASS  「학부모」 없음 · preview/search-ui/src/student-saved-region.js
+PASS  「학부모」 없음 · preview/search-ui/src/search-tier-render.js
+PASS  「학부모」 없음 · preview/shared/route-access.js
+PASS  「학부모」 없음 · STUDENT_BRANCH_COPY 문구
+PASS  홈 3탭 정의·parentTab study_room 고정 제거
+PASS  찾기 링크배지·학생 0건 문구 = student-reg-copy 한곳
+
+##### 3부 세션 분기 (공용 저장소) #####
+=== (e) me.php 학생 행 선택 ===
+PASS (e) 여러 행 → id 오름차순 첫 살아 있는 행(3 study_room)
+PASS (e) 더 작은 id 가 삭제면 다음 행
+PASS (e) 학생 행 없음 → null
+PASS (e) 공급자 역할 → null
+PASS (e) 공부방 공급자 역할 → null
+PASS (e) 유형이 없는 첫 행 → null
+PASS (e) 인증 응답에 student_branch 키
+PASS (e) 학생 행 조회는 guardian_user_id
+PASS  (e) php 학생 행 선택 실행
+=== (a) 분기 모름 · 로드 실패 ===
+PASS  (a) 세션 확인 전 parentBranch = null
+PASS  (a) 세션 확인 전 find_room·find_tutor 둘 다 hide
+PASS  (a) 세션 확인 전 학생찾기·홈은 그대로
+PASS  (a) 세션 확인 전 공급자 메뉴는 숨기지 않음
+PASS  (a) fetchSession 로드 실패는 예외
+PASS  (a) 로드 실패 후 세션 확인 완료·분기 null
+PASS  (a) 로드 실패 시 학생 찾기 둘 다 hide
+PASS  (a) 로드 실패여도 게스트 메뉴는 그대로
+PASS  (a) student_branch null 확정 → 둘 다 hide
+=== (b) 번들별 공부방·과외 학생 ===
+PASS  (b) auth-ui·study-room-ui·tutor-ui 는 initChromeSession
+PASS  (b) home-ui 는 fetchSession, search-ui 는 initAuthSession
+PASS  (b) 공용 저장소는 preview/shared 한 파일
+PASS  (b) preview/auth-ui 에 저장소 복제 없음
+PASS  (b) preview/study-room-ui 에 저장소 복제 없음
+PASS  (b) preview/tutor-ui 에 저장소 복제 없음
+PASS  (b) preview/home-ui 에 저장소 복제 없음
+PASS  (b) preview/search-ui 에 저장소 복제 없음
+PASS  (b) auth-ui·study-room-ui·tutor-ui chrome 공부방 학생 저장소
+PASS  (b) auth-ui·study-room-ui·tutor-ui 공부방 학생: find_room 보이고 find_tutor 없음
+PASS  (b) auth-ui·study-room-ui·tutor-ui chrome 과외 학생: find_tutor 보이고 find_room 없음
+PASS  (b) home-ui·search-ui fetchSession 공부방 학생 저장소
+PASS  (b) home-ui·search-ui 공부방 학생 GNB
+PASS  (b) home-ui·search-ui 과외 학생 GNB
+PASS  (b) 마이페이지는 sessionChecked 전에 renderMypage 를 부르지 않음
+PASS  (b) 마이페이지 확인 전 저장 역할 parent 여도 분기는 null·찾기 둘 다 hide
+PASS  (b) 마이페이지 확인 후 공부방 학생은 find_tutor 만 hide
+PASS  (b) 마이페이지 확인 후 과외 학생은 find_room 만 hide
+=== (c) 공급자·게스트·관리자·이메일 인증 대기 ===
+PASS  (c) 공부방 공급자 메뉴 불변
+PASS  (c) 과외쌤 공급자 메뉴 불변
+PASS  (c) 게스트 메뉴 불변
+PASS  (c) 관리자 메뉴 불변
+PASS  (c) 이메일 인증 대기 화면은 분기 숨김을 적용하지 않음
+PASS  (c) 이메일 인증 대기에서도 공급자 메뉴 불변
+=== (d) 공용 저장소 갱신 후 메뉴 ===
+PASS  (d) 갱신 전 과외 학생은 find_room hide
+PASS  (d) preferred_lesson_type 반영 후 find_tutor hide · find_room show
+PASS  (d) 저장 안내 문구는 그대로
+PASS  (d) screens.js 가 저장 응답 분기로 저장소를 갱신
+PASS  (d) 잘못된 값으로는 저장소를 지우지 않음
+
+162 passed, 0 failed

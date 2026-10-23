@@ -1,0 +1,401 @@
+﻿diff --git a/preview/home-ui/src/concern/shell.js b/preview/home-ui/src/concern/shell.js
+index 021596e..0f2a857 100644
+--- a/preview/home-ui/src/concern/shell.js
++++ b/preview/home-ui/src/concern/shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole, getCommunityPath } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { renderConcernScreen, renderConcernSideNav, bindConcernScreenEvents } from './screens.js';
+ import { getCommunityView } from './router.js';
+ 
+@@ -24,7 +26,7 @@ function renderCommunityPageTitle(path) {
+ 
+ export function renderConcernShell(currentPath, bodyHtml) {
+   const role = getNavRole();
+-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+ 
+   const mainHtml = `
+     <div class="concern-layout">
+diff --git a/preview/home-ui/src/guide/shell.js b/preview/home-ui/src/guide/shell.js
+index ae467cc..010f239 100644
+--- a/preview/home-ui/src/guide/shell.js
++++ b/preview/home-ui/src/guide/shell.js
+@@ -1,10 +1,12 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { renderGuidePageTitle, renderGuideNav } from './nav.js';
+ 
+ export function renderGuideShell(currentPath, bodyHtml) {
+   const role = getNavRole();
+-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+ 
+   const mainHtml = `
+     <div class="guide-layout">
+diff --git a/preview/home-ui/src/home-marketing-banner.js b/preview/home-ui/src/home-marketing-banner.js
+index 8993e4e..0a66c64 100644
+--- a/preview/home-ui/src/home-marketing-banner.js
++++ b/preview/home-ui/src/home-marketing-banner.js
+@@ -4,7 +4,8 @@
+  */
+ 
+ import { AUTH_UI_BASE } from './data.js';
+-import { searchUiUrl, HOME_UI_BASE } from './nav-config.js';
++import { searchUiUrl, HOME_UI_BASE, memberHomeHashPath } from './nav-config.js';
++import { getAuthUser } from './auth-session.js';
+ 
+ const SIGNUP_URL = `${AUTH_UI_BASE}/#/signup/terms`;
+ const HOME_GUEST = `${HOME_UI_BASE}/#/guest`;
+@@ -262,7 +263,14 @@ export function renderHomeMarketingBanner(surface) {
+   const lines = (copy.lines || [])
+     .map((line) => `<p class="home-mkt__line">${accentBrandWords(line)}</p>`)
+     .join('');
+-  const actions = (cfg.ctas || []).map((c) => renderCta(c)).join('');
++  const actions = (cfg.ctas || [])
++    .map((c) => {
++      if (c.label !== '?덉쑝濡?) return renderCta(c);
++      const path = memberHomeHashPath(getAuthUser());
++      const href = `${String(HOME_UI_BASE).replace(/\/$/, '')}/#${path}`;
++      return renderCta({ ...c, href });
++    })
++    .join('');
+ 
+   return `
+     <section class="home-mkt home-mkt--${esc(cfg.layout)} home-mkt--${esc(copy.id)}" aria-label="?뚭컻 諛곕꼫">
+diff --git a/preview/home-ui/src/layout.js b/preview/home-ui/src/layout.js
+index 72e6da9..8ca20c7 100644
+--- a/preview/home-ui/src/layout.js
++++ b/preview/home-ui/src/layout.js
+@@ -49,7 +49,7 @@ export function renderPreviewToolbar() {
+             return `<button type="button" class="preview-toolbar__btn ${active ? 'is-active' : ''}" data-nav="${path}">${meta.label}</button>`;
+           })
+           .join('')}
+-        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${getDefaultMypagePath(getNavRole())}">留덉씠?섏씠吏</button>
++        <button type="button" class="preview-toolbar__btn ${onMypage ? 'is-active' : ''}" data-nav="${mypageEntryForSession()}">留덉씠?섏씠吏</button>
+         <button type="button" class="preview-toolbar__btn ${onMessages ? 'is-active' : ''}" data-nav="${getDefaultMessagesPath()}">履쎌?쨌?꾧린??/button>
+         <button type="button" class="preview-toolbar__btn ${onCommunity ? 'is-active' : ''}" data-nav="/community">而ㅻ??덊떚</button>
+         <button type="button" class="preview-toolbar__btn ${onPromo ? 'is-active' : ''}" data-nav="/promo/study-room">?띾낫</button>
+@@ -179,6 +179,11 @@ function renderGnbLink(item, role, { mobile = false } = {}) {
+   return `<a href="${href}" class="${cls}" data-action="gnb-${item.id}">${label}</a>`;
+ }
+ 
++function mypageEntryForSession() {
++  if (navRoleFromAuthUser(getAuthUser()) === 'study_room') return getDefaultMypagePath('study_room');
++  return getDefaultMypagePath(getNavRole());
++}
++
+ /** @returns {'/guest'|'/parent'|'/study-room'|'/tutor'} */
+ function roleHomePath() {
+   const user = getAuthUser();
+@@ -526,7 +531,7 @@ export function bindLayoutEvents(root, rerender) {
+         const role = getNavRole();
+         goSameTab(searchUiUrl(defaultSearchTabForRole(role), role));
+       } else if (action === 'util-mypage') {
+-        navigate(getDefaultMypagePath(getNavRole()));
++        navigate(mypageEntryForSession());
+       } else if (action === 'util-messages') {
+         navigate(getDefaultMessagesPath());
+       } else if (action === 'util-recent') {
+diff --git a/preview/home-ui/src/library/library-shell.js b/preview/home-ui/src/library/library-shell.js
+index 860b48b..22e9252 100644
+--- a/preview/home-ui/src/library/library-shell.js
++++ b/preview/home-ui/src/library/library-shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { LIBRARY_HEAD, LIBRARY_SECTIONS } from './library-copy.js';
+ import { getLibrarySection } from './library-router.js';
+ 
+@@ -7,11 +9,8 @@ function esc(s) {
+   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+ }
+ 
+-function getRoleHomePath(role) {
+-  if (role === 'guest') return '/guest';
+-  if (role === 'parent') return '/parent';
+-  if (role === 'study_room') return '/study-room';
+-  return '/tutor';
++function getRoleHomePath() {
++  return memberHomeHashPath(getAuthUser());
+ }
+ 
+ /** @param {string} path */
+@@ -53,7 +52,7 @@ function renderLibraryTitle(path) {
+  */
+ export function renderLibraryShell(path, bodyHtml) {
+   const role = getNavRole();
+-  const homePath = getRoleHomePath(role);
++  const homePath = getRoleHomePath();
+   const mainHtml = `
+     <div class="sup-layout">
+       <header class="sup-content__head">
+diff --git a/preview/home-ui/src/messages/shell.js b/preview/home-ui/src/messages/shell.js
+index 76e74d9..5c2fd5b 100644
+--- a/preview/home-ui/src/messages/shell.js
++++ b/preview/home-ui/src/messages/shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents } from '../layout.js';
+ import { getNavRole } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { getScreenIdForPath, screenTitle } from './router.js';
+ 
+ function esc(s) {
+@@ -20,7 +22,7 @@ export function renderMessagesShell(currentPath, bodyHtml) {
+   const role = getNavRole();
+   const screenId = getScreenIdForPath(currentPath);
+   const title = screenTitle(screenId);
+-  const sub = role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+ 
+   return `
+     ${renderPreviewToolbar()}
+diff --git a/preview/home-ui/src/mypage/index.js b/preview/home-ui/src/mypage/index.js
+index 44f1fc7..f885bf1 100644
+--- a/preview/home-ui/src/mypage/index.js
++++ b/preview/home-ui/src/mypage/index.js
+@@ -1,6 +1,7 @@
+ import { getMypagePath, getNavRole } from '../state.js';
+-import { getDefaultMypagePath } from './router.js';
+-import { isLoggedIn } from '../auth-session.js';
++import { getDefaultMypagePath, getStudyRoomEntryPath } from './router.js';
++import { getAuthUser, isLoggedIn } from '../auth-session.js';
++import { navRoleFromAuthUser } from '../nav-config.js';
+ import { guardMypageAccess } from '../../../shared/route-access.js';
+ import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
+ import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
+@@ -64,7 +65,32 @@ export function renderMypage() {
+   consumeStudentImportFromHash();
+   ensureDemoThreads();
+   ensureSubmissionBoardSeed(getNavRole() === 'guest' ? 'tutor' : getNavRole());
+-  if (getNavRole() === 'parent') {
++  if (navRoleFromAuthUser(getAuthUser()) === 'study_room') {
++    const raw = (window.location.hash.slice(1) || '').split('?')[0];
++    const bare = raw.startsWith('/') ? raw : `/${raw}`;
++    const generic =
++      bare === '/mypage' ||
++      bare === '/mypage/' ||
++      bare === '/mypage/home' ||
++      bare === '/mypage/registrations' ||
++      bare === '/mypage/registrations/students';
++    if (generic) {
++      const dest = getStudyRoomEntryPath();
++      queueMicrotask(() => {
++        const cur = (window.location.hash.slice(1) || '').split('?')[0];
++        const p = cur.startsWith('/') ? cur : `/${cur}`;
++        if (
++          p === '/mypage' ||
++          p === '/mypage/' ||
++          p === '/mypage/home' ||
++          p === '/mypage/registrations' ||
++          p === '/mypage/registrations/students'
++        ) {
++          window.location.replace(`#${dest}`);
++        }
++      });
++    }
++  } else if (getNavRole() === 'parent') {
+     const raw = (window.location.hash.slice(1) || '').split('?')[0];
+     const bare = raw.startsWith('/') ? raw : `/${raw}`;
+     if (bare === '/mypage' || bare === '/mypage/') {
+diff --git a/preview/home-ui/src/mypage/screens.js b/preview/home-ui/src/mypage/screens.js
+index 2073e57..4f4e89b 100644
+--- a/preview/home-ui/src/mypage/screens.js
++++ b/preview/home-ui/src/mypage/screens.js
+@@ -3,7 +3,7 @@ import {
+   SUBMISSION_DOCS_LEAD,
+   TRUST_PLATFORM_DISCLAIMER,
+ } from '../lifecycle-copy.js';
+-import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL } from '../nav-config.js';
++import { TUTOR_REGISTER_URL, STUDY_ROOM_REGISTER_URL, navRoleFromAuthUser } from '../nav-config.js';
+ import { getNavRole, getMypagePath } from '../state.js';
+ import {
+   getPreviewProfile,
+@@ -136,8 +136,9 @@ function renderCtaBlock(cta) {
+ /** @param {string} path */
+ export function renderMypageScreen(path) {
+   const role = getNavRole();
++  const sessionRole = navRoleFromAuthUser(getAuthUser());
+   /** @type {'parent'|'study_room'|'tutor'} */
+-  const r = role === 'guest' ? 'parent' : role;
++  const r = sessionRole === 'study_room' ? 'study_room' : role === 'guest' ? 'parent' : role;
+   const profile = getPreviewProfile(r);
+   const counts = getSummaryCounts(r);
+   const cta = getPrimaryCta(r);
+diff --git a/preview/home-ui/src/mypage/shell.js b/preview/home-ui/src/mypage/shell.js
+index 445f198..45bd84c 100644
+--- a/preview/home-ui/src/mypage/shell.js
++++ b/preview/home-ui/src/mypage/shell.js
+@@ -1,6 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
+ import { getAuthUser, isAdminUser } from '../auth-session.js';
++import { navRoleFromAuthUser } from '../nav-config.js';
+ import { resolveAccountDisplayName } from '../auth/display-identity.js';
+ import {
+   MYPAGE_NAV,
+@@ -64,7 +65,8 @@ function renderBreadcrumb(currentPath, title, role) {
+  * @param {string} bodyHtml
+  */
+ export function renderMypageShell(currentPath, bodyHtml) {
+-  const role = getNavRole();
++  const sessionRole = navRoleFromAuthUser(getAuthUser());
++  const role = sessionRole === 'study_room' ? 'study_room' : getNavRole();
+   const screenId = getScreenIdForPath(currentPath);
+   const title = screenTitle(screenId, currentPath, role);
+   const authUser = getAuthUser();
+diff --git a/preview/home-ui/src/nav-config.js b/preview/home-ui/src/nav-config.js
+index 3ca170d..a645657 100644
+--- a/preview/home-ui/src/nav-config.js
++++ b/preview/home-ui/src/nav-config.js
+@@ -8,6 +8,7 @@ export {
+   GNB_MUTED_TITLE,
+   navRoleFromAuthUser,
+   roleHomeHashPath,
++  memberHomeHashPath,
+   AUTH_UI_BASE,
+   HOME_UI_BASE,
+   STUDY_ROOM_REGISTER_URL,
+diff --git a/preview/home-ui/src/plans/shell.js b/preview/home-ui/src/plans/shell.js
+index b63f082..01117dc 100644
+--- a/preview/home-ui/src/plans/shell.js
++++ b/preview/home-ui/src/plans/shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { renderPlansPageTitle, renderPlansNav } from './nav.js';
+ import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+ import { renderPromoWithRightRail } from '../right-rail.js';
+@@ -14,8 +16,7 @@ import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
+ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
+   const role = opts.role || getNavRole();
+   const headerRole = opts.headerRole || role;
+-  const sub =
+-    role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+   const hideNav =
+     currentPath.startsWith('/plans/checkout') || currentPath.startsWith('/plans/result');
+   const guestCatalogOnly = Boolean(opts.isGuest);
+diff --git a/preview/home-ui/src/policy-shell.js b/preview/home-ui/src/policy-shell.js
+index 45c396d..a03c17a 100644
+--- a/preview/home-ui/src/policy-shell.js
++++ b/preview/home-ui/src/policy-shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from './layout.js';
+ import { getNavRole } from './state.js';
++import { getAuthUser } from './auth-session.js';
++import { memberHomeHashPath } from './nav-config.js';
+ import { renderPolicyNav } from './policy-screens.js';
+ import { getPolicySlug } from './policy-router.js';
+ 
+@@ -7,17 +9,14 @@ function esc(s) {
+   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+ }
+ 
+-function getRoleHomePath(role) {
+-  if (role === 'guest') return '/guest';
+-  if (role === 'parent') return '/parent';
+-  if (role === 'study_room') return '/study-room';
+-  return '/tutor';
++function getRoleHomePath() {
++  return memberHomeHashPath(getAuthUser());
+ }
+ 
+ export function renderPolicyShell(title, path, bodyHtml) {
+   const role = getNavRole();
+   const slug = getPolicySlug(path);
+-  const homePath = getRoleHomePath(role);
++  const homePath = getRoleHomePath();
+   const mainHtml = `
+     <div class="sup-layout">
+       <header class="sup-content__head">
+diff --git a/preview/home-ui/src/promo/shell.js b/preview/home-ui/src/promo/shell.js
+index 7222f58..be0a53b 100644
+--- a/preview/home-ui/src/promo/shell.js
++++ b/preview/home-ui/src/promo/shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole, getPromoPath } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { renderPromoScreen, bindPromoScreenEvents } from './screens.js';
+ import { getPromoView } from './router.js';
+ import { getPromoLandingByPath } from './catalog.js';
+@@ -9,7 +11,7 @@ export function renderPromoShell(currentPath, bodyHtml) {
+   const role = getNavRole();
+   const landing = getPromoLandingByPath(currentPath);
+   const title = landing?.title || STUDY_ROOM_PROMO.meta.title;
+-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+ 
+   const mainHtml = `
+     <div class="promo-layout">
+diff --git a/preview/home-ui/src/support/shell.js b/preview/home-ui/src/support/shell.js
+index 5ed36fd..487b9eb 100644
+--- a/preview/home-ui/src/support/shell.js
++++ b/preview/home-ui/src/support/shell.js
+@@ -1,5 +1,7 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
++import { getAuthUser } from '../auth-session.js';
++import { memberHomeHashPath } from '../nav-config.js';
+ import { renderPageTitle, renderSupportNav } from './nav.js';
+ 
+ /**
+@@ -8,7 +10,7 @@ import { renderPageTitle, renderSupportNav } from './nav.js';
+  */
+ export function renderSupportShell(currentPath, bodyHtml) {
+   const role = getNavRole();
+-  const sub = role === 'guest' ? '/guest' : role === 'parent' ? '/parent' : role === 'study_room' ? '/study-room' : '/tutor';
++  const sub = memberHomeHashPath(getAuthUser());
+ 
+   const mainHtml = `
+     <div class="sup-layout">
+diff --git a/preview/search-ui/src/student-hope-type.js b/preview/search-ui/src/student-hope-type.js
+index ef3604e..87cf832 100644
+--- a/preview/search-ui/src/student-hope-type.js
++++ b/preview/search-ui/src/student-hope-type.js
+@@ -48,7 +48,7 @@ export const DEFAULT_STUDENT_HOPE_TYPE = /** @type {StudentHopeType} */ ('tutor'
+ export function renderHopeTypeGate() {
+   return `
+     <section class="search-hope-gate" aria-label="?щ쭩 ?좏삎 ?좏깮">
+-      <h2 class="search-hope-gate__title">?대뼡 ?숈깮 ?섎ː瑜?蹂쇨퉴??</h2>
++      <h2 class="search-hope-gate__title">?대뼡 ?숈깮 ?깅줉??蹂쇨퉴??</h2>
+       <p class="search-hope-gate__desc">?쒖옣 鍮꾧탳??釉붾씪?몃뱶 由ъ뒪?몄엯?덈떎. ?ㅻ챸쨌?곕씫泥샕룹そ吏???쒓났?섏? ?딆뒿?덈떎.</p>
+       <div class="search-hope-gate__actions">
+         <button type="button" class="btn btn--primary" data-action="pick-hope-type" data-hope="tutor">怨쇱쇅 ?щ쭩 ?숈깮</button>
+diff --git a/preview/shared/site-nav-config.js b/preview/shared/site-nav-config.js
+index fcabd20..e24a22f 100644
+--- a/preview/shared/site-nav-config.js
++++ b/preview/shared/site-nav-config.js
+@@ -235,6 +235,21 @@ export function roleHomeHashPath(user) {
+   return '/parent';
+ }
+ 
++/**
++ * ?뚮찓???덉쑝濡쒌띲뚰솃?쇰줈?? 濡쒓렇???몄뀡 ??븷留?蹂몃떎.
++ * 鍮꾨줈洹몄씤? /guest. 誘몃━蹂닿린 ?????븷濡?/tutor???⑥뼱吏吏 ?딅뒗??
++ * @param {{ role_type?: string } | null | undefined} user
++ * @returns {'/guest'|'/parent'|'/study-room'|'/tutor'|'/admin'}
++ */
++export function memberHomeHashPath(user) {
++  const role = navRoleFromAuthUser(user);
++  if (role === 'study_room') return '/study-room';
++  if (role === 'tutor') return '/tutor';
++  if (role === 'parent') return '/parent';
++  if (role === 'admin') return '/admin';
++  return '/guest';
++}
++
+ /**
+  * home-ui ?λ쭅??URL.
+  * 怨좉컼?쇳꽣쨌留덉씠?섏씠吏 ?깆? pathname?쇰줈 ?곕떎 ???깅줉/寃??SPA?먯꽌 `/#/path`濡??대룞 ??

@@ -44,9 +44,17 @@ const syncSrc = readFileSync(resolve(root, 'src/StudyRoom/StudyRoomRegisterServi
 assert(syncSrc.includes('사업장/집주소($input)로 빈 홍보지역 2·3을 채우지 않음'), 'detail sync forbids input address fallback');
 
 const completeSrc = readFileSync(resolve(root, 'preview/auth-ui/src/screens/signup-complete.js'), 'utf8');
+const welcomeCopy = readFileSync(resolve(root, 'preview/shared/auth-welcome-copy.js'), 'utf8');
 assert(completeSrc.includes('studyRoomHasPromoSlot1'), 'complete go-home uses promo slot1');
-assert(completeSrc.includes('기본등록이 완료되었습니다. 상세등록은 마이페이지에서 이어갈 수 있습니다.'), 'complete go-home copy');
-assert(completeSrc.includes('홍보지역(기본등록)'), 'missing-seed copy uses 홍보지역');
+assert(completeSrc.includes('AUTH_WELCOME_COPY'), 'complete uses welcome copy');
+assert(
+  welcomeCopy.includes('기본등록이 끝났어요. 상세등록은 마이페이지에서 이어갈 수 있어요.'),
+  'complete go-home copy',
+);
+assert(welcomeCopy.includes('홍보지역'), 'missing-seed copy uses 홍보지역');
+assert(!completeSrc.includes('profile.kind'), 'complete does not print kind');
+assert(!/#\$\{profile\.id\}/.test(completeSrc), 'complete does not print profile id');
+assert(!completeSrc.includes('Basic 카드') && !completeSrc.includes('학생 Basic'), 'complete does not say Basic');
 assert(!completeSrc.includes("'지역(기본등록) 정보가 없습니다"), 'old 지역 wording removed');
 assert(!completeSrc.includes('"지역(기본등록) 정보가 없습니다'), 'old 지역 wording removed (dq)');
 

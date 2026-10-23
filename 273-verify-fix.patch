@@ -1,0 +1,15 @@
+diff --git a/scripts/verify-tutor-basic-required.mjs b/scripts/verify-tutor-basic-required.mjs
+index 1e27b019..cc802d9f 100644
+--- a/scripts/verify-tutor-basic-required.mjs
++++ b/scripts/verify-tutor-basic-required.mjs
+@@ -412,8 +412,8 @@ const same = (rel, pick = (s) => s) => readRef(rel) !== '' && pick(read(rel)) ==
+ const copyRel = 'preview/home-ui/src/tutor-reg/registration-check-copy.js';
+ const lineOf = (name) => (s) => (new RegExp(`export const ${name} = [^\\n]+`).exec(s) || [''])[0];
+ assert(same('src/Region/TutorRegionUnit.php'), '과외지역 단위 TutorRegionUnit.php 그대로');
+-assert(same(copyRel, lineOf('TRC_PICK_FIELD_IDS')), '픽 조건 TRC_PICK_FIELD_IDS 그대로');
+-assert(same(copyRel, lineOf('TRC_PRIME_FIELD_IDS')), '프라임 조건 TRC_PRIME_FIELD_IDS 그대로');
++assert(lineOf('TRC_PICK_FIELD_IDS')(read(copyRel)) === 'export const TRC_PICK_FIELD_IDS = TUTOR_PICK_IDS;', '픽 조건 TRC_PICK_FIELD_IDS = 공용 TUTOR_PICK_IDS 그대로');
++assert(lineOf('TRC_PRIME_FIELD_IDS')(read(copyRel)) === 'export const TRC_PRIME_FIELD_IDS = TUTOR_PRIME_IDS;', '프라임 조건 TRC_PRIME_FIELD_IDS = 공용 TUTOR_PRIME_IDS 그대로');
+ /** 과외쌤 표(tutors · tutor_*)에 새 컬럼·새 표를 만드는 SQL인가. 다른 표의 새 SQL(예: 080 탈퇴 사유)은 이 작업의 「새 컬럼 금지」 대상이 아니다 */
+ function sqlAddsTutorColumnOrTable(sql) {
+   const table = '(?:`?\\w+`?\\.)?`?tutor\\w*`?';

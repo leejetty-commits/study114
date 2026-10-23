@@ -1,0 +1,46 @@
+﻿From c3775110fcbd66ad1fc70de16c8b68bc02a2c6d1 Mon Sep 17 00:00:00 2001
+From: leejetty-commits <leejetty@gmail.com>
+Date: Mon, 28 Sep 2026 23:39:01 +0900
+Subject: [PATCH] fix(plans): pass the live session role into the plans right
+ rail.
+
+Provider plans pages were using the guest nav role, so wishlist and safety CTAs showed for study rooms and tutors.
+
+diff --git a/preview/home-ui/src/plans/shell.js b/preview/home-ui/src/plans/shell.js
+index 01117dc..b399005 100644
+--- a/preview/home-ui/src/plans/shell.js
++++ b/preview/home-ui/src/plans/shell.js
+@@ -1,13 +1,23 @@
+ import { renderPreviewToolbar, renderHeader, renderFooter, bindLayoutEvents, renderAppShellWithPromo } from '../layout.js';
+ import { getNavRole } from '../state.js';
+ import { getAuthUser } from '../auth-session.js';
+-import { memberHomeHashPath } from '../nav-config.js';
++import { memberHomeHashPath, navRoleFromAuthUser } from '../nav-config.js';
+ import { renderPlansPageTitle, renderPlansNav } from './nav.js';
+ import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
+ import { renderPromoWithRightRail } from '../right-rail.js';
+ import { isPaidHubPath, isPaidStorefrontPath, isPaidTrackPath, wrapPaidStorefront } from './theme.js';
+ import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
+ 
++/**
++ * plans ?쇱슦?몄쓽 getNavRole()? guest濡?怨좎젙?쒕떎.
++ * ?곗륫 ?덉씪留??ㅼ꽭??study_room/tutor/parent/guest)???대떎.
++ */
++function plansRailNavRole() {
++  const live = navRoleFromAuthUser(getAuthUser());
++  if (live === 'study_room' || live === 'tutor' || live === 'parent' || live === 'guest') return live;
++  return 'guest';
++}
++
+ /**
+  * @param {string} currentPath
+  * @param {string} bodyHtml
+@@ -46,7 +56,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
+         <div class="plans-hub-gap-rail" aria-hidden="true"></div>
+         <div class="plans-hub-rail">
+           ${isHub ? renderPlansHubRailCard() : ''}
+-          ${renderPromoWithRightRail('plans_right_rail')}
++          ${renderPromoWithRightRail('plans_right_rail', { navRole: plansRailNavRole() })}
+         </div>
+         <div class="plans-hub-gutter-r" aria-hidden="true"></div>
+       </div>

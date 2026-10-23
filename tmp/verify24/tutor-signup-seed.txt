@@ -1,0 +1,27 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: fetchRegions returns cities
+PASS: auth-api DEV failure logging
+PASS: page title copy
+PASS: section title copy
+PASS: help copy
+PASS: submit button copy
+PASS: signup hides primary radio
+PASS: client validates activity regions
+PASS: payload includes saved_regions
+PASS: shared validator exported
+PASS: primary UI optional
+PASS: server normalizes tutor signup regions
+PASS: server requires activity region 1
+PASS: server rejects duplicate regions
+PASS: server marks first saved region primary
+PASS: validation returns HTTP 200 + ok:false
+PASS: A: slot1 only OK + primary
+PASS: B: two slots, primary forced to first
+PASS: C: three slots
+PASS: D: slot1 missing blocked
+PASS: E: empty 2·3 OK
+PASS: F: duplicate blocked
+PASS: G: metro-* fake id rejected
+PASS: collectTutorRegionSlots exported
+
+tutor signup seed gate OK

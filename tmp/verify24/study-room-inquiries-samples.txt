@@ -1,0 +1,57 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: store: inquiry save hydrates cache
+PASS: store: PATCH inquiry_status
+PASS: api: study-room open does not require phone
+PASS: screens: shared inquiry sample pair
+PASS: hcs: home BASIC renderBrowseList
+PASS: hcs: inquiry preset builders
+PASS: guides: SVG guide
+PASS: guides: measures 쪽지 button
+PASS: guides: no width probe
+PASS: screens: local sample renderer removed
+PASS: screens: live owner preview removed
+PASS: screens: owner cover fallback removed
+PASS: screens: old aside guide removed
+PASS: screens: old summary cards removed
+PASS: screens: checkbox toggle removed
+PASS: screens: no 카드 미리보기 title
+PASS: screens: sample title binding
+PASS: copy: sample title text
+PASS: copy: 현재상태 수정
+PASS: copy: contactHeading key removed
+PASS: copy: verifyFirstHint key removed
+PASS: screens: contact verify block removed
+PASS: screens: no OTP modal
+PASS: screens: no local phone gate
+PASS: screens: no phone_verify_required handling
+PASS: structure order: p21-inq__lead after previous
+PASS: structure order: p21-inq-block--status after previous
+PASS: structure order: p21-inq-block--edit after previous
+PASS: structure order: data-p20-inquiry-save after previous
+PASS: structure order: p21-inq-block--samples after previous
+PASS: copy: open callout
+PASS: copy: closed callout
+PASS: css: basic 1-cell width token
+PASS: css: basic card cell
+PASS: css: width probe removed
+PASS: member css: width probe removed
+PASS: css: preview listing-w removed
+PASS: css: sample card is not scaled
+PASS: css: no 100vw
+PASS: css: old disconnected arrow removed
+PASS: sample: room default image exists
+PASS: sample: image path is brand asset
+PASS: html: filled image
+PASS: html: no gray placeholder
+PASS: html: name filled
+PASS: html: location filled
+PASS: html: recommend filled
+PASS: html: review filled
+PASS: html: wish filled
+PASS: html: message count filled
+PASS: html: BASIC study_room card
+PASS: html: home hcard structure
+PASS: RC render untouched marker
+PASS: RC model untouched
+
+study-room inquiries samples OK

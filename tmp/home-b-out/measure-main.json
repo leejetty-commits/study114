@@ -1,0 +1,782 @@
+{
+  "empty|1280|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1280|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1280|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1280|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1023|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1023|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1023|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|1023|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|390|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|390|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|390|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "empty|390|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "empty",
+      "openKeys": [],
+      "openTags": [],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": null,
+    "focusBack": "",
+    "focusRing": {
+      "className": "",
+      "focusVisible": false,
+      "outline": "none 3px rgb(28, 25, 23)"
+    },
+    "space": null
+  },
+  "posts|1280|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent",
+        "concern-director",
+        "concern-tutor"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1280|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-director",
+        "concern-tutor",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "공부방 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글1 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1280|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-tutor",
+        "concern-director",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "과외쌤 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글2 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1280|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        1026,
+        221,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1023|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent",
+        "concern-director",
+        "concern-tutor"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1023|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-director",
+        "concern-tutor",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "공부방 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글1 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1023|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-tutor",
+        "concern-director",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "과외쌤 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글2 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|1023|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        34,
+        956,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|390|비회원": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent",
+        "concern-director",
+        "concern-tutor"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|390|공부방": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-director",
+        "concern-tutor",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "공부방 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글1 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|390|과외쌤": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-tutor",
+        "concern-director",
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON",
+        "BUTTON",
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)",
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--room|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info|live-rail-slot--info|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "과외쌤 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글2 / 반응 9 / 게시판에서 보기"
+    }
+  },
+  "posts|390|학생": {
+    "rail": {
+      "tag": "DIV",
+      "bg": "rgb(109, 40, 217)",
+      "fg": "rgb(255, 255, 255)",
+      "band": [
+        18,
+        355,
+        34
+      ],
+      "first": true,
+      "state": "posts",
+      "openKeys": [
+        "concern-parent"
+      ],
+      "openTags": [
+        "BUTTON"
+      ],
+      "rooms": [
+        "rgb(109, 40, 217)"
+      ],
+      "order": "live-rail-slot--best|live-rail-slot--room|live-rail-slot--field|live-rail-slot--action|live-rail-slot--info",
+      "contrast": 7.1
+    },
+    "pop": {
+      "kind": "concern-best",
+      "bg": "rgb(109, 40, 217)",
+      "text": "학생/학부모 고민방 · 이달의 베스트 / 닫기 /  / 글을 불러오는 중 길이 막혔어요. 잠시 후 다시 확인해 주세요 /  / 베스트글3 / 반응 9 / 게시판에서 보기"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+﻿const fs = require('fs');
+const s = fs.readFileSync('preview/home-ui/src/guide/screens.js', 'utf8');
+const i = s.indexOf('openGuideMemberPeek');
+const j = s.indexOf('function openGuidePeek');
+const peek = s.slice(i, j);
+console.log('mypage in member peek', /mypage/.test(peek));
+console.log('has close', peek.includes('닫기'));
+console.log('guest gate', s.includes('openDeepAccessLoginGate'));
+console.log('wishlist peek btn', s.includes('data-guide-peek="wishlist"'));
+console.log('messages peek btn', s.includes('data-guide-peek="messages"'));
+console.log('no wishlistPath', !s.includes('wishlistPath'));
+const c = fs.readFileSync('preview/home-ui/src/guide/copy.js', 'utf8');
+const ac = c.slice(c.indexOf('compare:'), c.indexOf('safe:'));
+console.log('compare mypage', /mypage/.test(ac));
+console.log('peek count', (ac.match(/peek:/g) || []).length);
+const empty = s.match(/아직 찜한[\s\S]{0,80}/);
+console.log('empty wish lead', JSON.stringify(empty && empty[0]));

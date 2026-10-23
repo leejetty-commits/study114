@@ -1,0 +1,15 @@
+﻿const { execSync } = require('child_process');
+const fs = require('fs');
+console.log('=== candidate email template files ===');
+const out = execSync('git ls-files', { encoding: 'utf8' }).split(/\n/).filter(f => /mail|smtp|template/i.test(f) && /\.(php|html|txt|md|js)$/i.test(f));
+console.log(out.join('\n') || '(none)');
+console.log('\n=== git diff names matching mail/smtp/template ===');
+console.log(execSync('git diff --name-only', { encoding: 'utf8' }).split(/\n/).filter(l=>/mail|smtp|template/i.test(l)).join('\n')||'(none)');
+console.log('\n=== OFL first lines ===');
+console.log(fs.readFileSync('preview/shared/fonts/OFL.txt','utf8').slice(0,300));
+console.log('\n=== tokens.css font block ===');
+const tok = fs.readFileSync('preview/home-ui/src/styles/tokens.css','utf8');
+const idx = tok.indexOf('pretendard');
+console.log(tok.slice(Math.max(0,idx-80), idx+450));
+console.log('\n=== git diff index.html CDN ===');
+console.log(execSync('git diff -- preview/auth-ui/index.html preview/home-ui/index.html', { encoding: 'utf8' }).slice(0,3000));

@@ -1,0 +1,440 @@
+﻿diff --git a/preview/auth-ui/src/register-enums.js b/preview/auth-ui/src/register-enums.js
+index ef26c99..060529e 100644
+--- a/preview/auth-ui/src/register-enums.js
++++ b/preview/auth-ui/src/register-enums.js
+@@ -33,7 +33,7 @@ export const SCHOOL_LEVEL_OPTIONS = [
+   { value: 'elementary', label: '珥덈벑' },
+   { value: 'middle', label: '以묐벑' },
+   { value: 'high', label: '怨좊벑' },
+-  { value: 'n_su', label: 'N?? },
++  { value: 'n_su', label: '???以鍮??ъ닔 ?댁긽)' },
+ ];
+ 
+ export const VISIBILITY_OPTIONS = [
+diff --git a/preview/home-ui/src/empty-state-copy.js b/preview/home-ui/src/empty-state-copy.js
+index f283acb..f1a895f 100644
+--- a/preview/home-ui/src/empty-state-copy.js
++++ b/preview/home-ui/src/empty-state-copy.js
+@@ -145,7 +145,7 @@ export const EMPTY_COPY = {
+   studentReview: {
+     screenId: 'P25-S10',
+     title: '寃??以묒씤 ?숈깮???놁뒿?덈떎',
+-    body: '留덉쓬???쒕뒗 ?숈깮 ?섎ː瑜?寃?좏븿???ｌ뼱 ?먭퀬, 以鍮꾧? ?섎㈃ 履쎌?瑜??댁뼱媛?몄슂.',
++    body: '留덉쓬???쒕뒗 ?깅줉??寃?좏븿???ｌ뼱 ?먭퀬, 以鍮꾧? ?섎㈃ 履쎌?瑜??댁뼱媛?몄슂.',
+     cta: null,
+   },
+   contactHistory: {
+@@ -399,7 +399,14 @@ export function renderStateCard(opts) {
+     String(s ?? '')
+       .replace(/&/g, '&amp;')
+       .replace(/</g, '&lt;');
++  const ctaHref = String(opts.ctaHref || '');
++  const ctaLabel = String(opts.cta || '');
+   const links = (opts.links || [])
++    .filter((l) => {
++      if (!l?.href) return false;
++      if (ctaHref && l.href === ctaHref && (!ctaLabel || l.label === ctaLabel)) return false;
++      return true;
++    })
+     .map((l) => `<a href="${esc(l.href)}" class="state-card__link">${esc(l.label)}</a>`)
+     .join('');
+   const cta =
+diff --git a/preview/home-ui/src/exposure-render.js b/preview/home-ui/src/exposure-render.js
+index 3adf57f..dccc76f 100644
+--- a/preview/home-ui/src/exposure-render.js
++++ b/preview/home-ui/src/exposure-render.js
+@@ -116,12 +116,14 @@ function joinFeatures(item, max = 3) {
+ }
+ 
+ /** 11??짠2-0 / ?곸쐞湲고쉷 짠18 ???듦퀎쨌湲곕뒫 遺꾨━ (異붿쿇쨌?꾧린?좎븸?섎같吏) */
+-function actionCountBtn(icon, count, { title, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
++function actionCountBtn(icon, count, { title, aria, cls = '', attrs = '', disabled = false, hideWhenZero = false } = {}) {
+   const n = Number(count) || 0;
+   if (hideWhenZero && n <= 0) return '';
+   const dis = disabled ? ' disabled aria-disabled="true"' : '';
+-  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" ${attrs}${dis}>
+-    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${n}</span>
++  const label = aria || title;
++  const countHtml = n > 0 ? String(n) : '<span class="item-actions__count-empty">?놁쓬</span>';
++  return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" aria-label="${esc(label)}" ${attrs}${dis}>
++    <span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">${countHtml}</span>
+   </button>`;
+ }
+ 
+@@ -161,7 +163,7 @@ export function renderItemActions(opts = {}) {
+     const rail = ['?몟', '?뮠', '??, '??, '??]
+       .map(
+         (icon) =>
+-          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count">0</span></button>`,
++          `<button type="button" class="item-actions__btn" disabled aria-disabled="true" tabindex="-1" title="?덉떆"><span class="item-actions__icon" aria-hidden="true">${icon}</span><span class="item-actions__count"><span class="item-actions__count-empty">?놁쓬</span></span></button>`,
+       )
+       .join('');
+     return `<div class="card-visual__rail" data-expo-sample-rail="1" aria-hidden="true"><div class="card-stats">${rail}</div></div>`;
+@@ -183,13 +185,15 @@ export function renderItemActions(opts = {}) {
+       ? `data-action="recommend-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`
+       : '';
+   const recommendStat = actionCountBtn('?몟', rec, {
+-    title: `異붿쿇 ${rec}`,
++    title: '異붿쿇?섍린',
++    aria: '異붿쿇',
+     cls: 'item-actions__btn--stat',
+     attrs: recommendAttrs,
+     disabled: !guest && itemId == null,
+   });
+   const reviewStat = actionCountBtn('?뮠', rev, {
+-    title: `?꾧린 ${rev}`,
++    title: '?꾧린 蹂닿린',
++    aria: '?꾧린',
+     cls: 'item-actions__btn--stat',
+     attrs: guest
+       ? `data-action="login-gate" data-gate="review" data-gate-label="?꾧린" data-item-kind="${kind}" data-item-id="${itemId}"`
+@@ -205,7 +209,8 @@ export function renderItemActions(opts = {}) {
+     !showWish
+       ? ''
+       : actionCountBtn(wished ? '?? : '??, wish_count, {
+-          title: `李?${wish_count}`,
++          title: '李쒗븯湲?,
++          aria: '李?,
+           cls: wished ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
+           attrs: wishAttrs,
+         });
+@@ -214,12 +219,14 @@ export function renderItemActions(opts = {}) {
+     ? ''
+     : guest
+       ? actionCountBtn('??, compare_count, {
+-          title: `鍮꾧탳 ${compare_count}`,
++          title: '鍮꾧탳?섍린',
++          aria: '鍮꾧탳',
+           cls: 'item-actions__btn--action',
+           attrs: `data-action="compare-guest-blocked" data-compare-kind="${kind}" data-item-kind="${kind}" data-item-id="${itemId}"`,
+         })
+       : actionCountBtn('??, compare_count, {
+-          title: `鍮꾧탳 ${compare_count}`,
++          title: '鍮꾧탳?섍린',
++          aria: '鍮꾧탳',
+           cls: inCompare ? 'is-active item-actions__btn--action' : 'item-actions__btn--action',
+           attrs: `data-action="compare-toggle" data-item-kind="${kind}" data-item-id="${itemId}"`,
+         });
+@@ -228,7 +235,8 @@ export function renderItemActions(opts = {}) {
+     ? `data-action="login-gate" data-gate="inquire" data-gate-label="履쎌?" data-item-kind="${kind}" data-item-id="${itemId}"`
+     : `data-action="open-detail-memo" data-item-kind="${kind}" data-item-id="${itemId}"`;
+   const messageBtn = actionCountBtn('??, message_count, {
+-    title: `履쎌? ${message_count}`,
++    title: '履쎌? 蹂대궡湲?,
++    aria: '履쎌?',
+     cls: 'item-actions__btn--action',
+     attrs: msgAttrs,
+   });
+@@ -404,7 +412,10 @@ function optionalStudentPlaces(lesson_places) {
+ }
+ 
+ function appendSloganAndActions(rows, item, actions, { showIntro = true } = {}) {
+-  rows.push([labeled('?щ줈嫄?, item.slogan || '??, { col: 2, cls: 'expo-tbl__cell--slogan' })]);
++  const slogan = distinctSlogan(item);
++  if (slogan || !String(item?.slogan || '').trim()) {
++    rows.push([labeled('?щ줈嫄?, slogan || '??, { col: 2, cls: 'expo-tbl__cell--slogan' })]);
++  }
+   rows.push([{ html: actions, col: 2, cls: 'expo-tbl__cell--actions' }]);
+   return rows;
+ }
+@@ -726,6 +737,14 @@ function featureTagList(item, max = 3) {
+   return [item.feature_1, item.feature_2, item.feature_3].filter(Boolean).slice(0, max);
+ }
+ 
++/** ?뱀쭠 移⑷낵 媛숈? 臾멸뎄(?? IELTS)瑜??щ줈嫄댁뿉 ??踰???遺숈씠吏 ?딅뒗?? */
++function distinctSlogan(item) {
++  const slogan = String(item?.slogan || '').trim();
++  if (!slogan) return '';
++  const features = [item.feature_1, item.feature_2, item.feature_3].map((v) => String(v || '').trim());
++  return features.includes(slogan) ? '' : slogan;
++}
++
+ function renderHcardMetaItem(label, value) {
+   const v = blankDash(value || '');
+   if (!v) return '';
+@@ -841,7 +860,7 @@ function renderBasicTutorRow(item, opts) {
+             valOnly(schedule),
+             labeled('?뱀쭠', item.feature_1 || '??),
+           ],
+-          [labeled('?щ줈嫄?, item.slogan || item.feature_1 || '??, { col: 5 })],
++          ...(distinctSlogan(item) ? [[labeled('?щ줈嫄?, distinctSlogan(item), { col: 5 })]] : []),
+           [{ html: actions, col: 5, cls: 'expo-tbl__cell--actions' }],
+         ],
+         'expo-tbl--basic expo-tbl--card',
+@@ -852,7 +871,7 @@ function renderBasicTutorRow(item, opts) {
+   const tags = featureTagList(item)
+     .map((t) => `<span class="expo-hcard__tag">${esc(t)}</span>`)
+     .join('');
+-  const slogan = item.slogan || item.feature_1 || '';
++  const slogan = distinctSlogan(item);
+   const gender = item.gender && item.gender !== '?? ? formatGender(item.gender) : '';
+   const nameLine = gender
+     ? `<span class="expo-hcard__gender">${esc(gender)}</span>${esc(item.tutor_display_name || '')}`
+diff --git a/preview/home-ui/src/messages/compose-flow.js b/preview/home-ui/src/messages/compose-flow.js
+index 8fd7d67..d99ae2e 100644
+--- a/preview/home-ui/src/messages/compose-flow.js
++++ b/preview/home-ui/src/messages/compose-flow.js
+@@ -53,7 +53,7 @@ export function startFirstMemoFlow(opts) {
+     kind: opts.kind,
+     targetId: opts.targetId,
+     targetName: opts.targetName,
+-    contextLabel: opts.contextLabel || (opts.kind === 'student' ? '?숈깮 ?섎ː' : '?곸꽭'),
++    contextLabel: opts.contextLabel || (opts.kind === 'student' ? '?깅줉' : '?곸꽭'),
+     scopeBadge: badge.label,
+     scopeHint: badge.hint,
+     showRequestInPanel: showRequest,
+diff --git a/preview/home-ui/src/messages/thread-store.js b/preview/home-ui/src/messages/thread-store.js
+index 31f312d..c5ab477 100644
+--- a/preview/home-ui/src/messages/thread-store.js
++++ b/preview/home-ui/src/messages/thread-store.js
+@@ -620,7 +620,7 @@ export function ensureDemoThreads() {
+ 
+       contextId: 1,
+ 
+-      contextLabel: '?숈깮 ?섎ː',
++      contextLabel: '?깅줉',
+ 
+       peerDisplayName: '留묒??섎뒛',
+ 
+diff --git a/preview/home-ui/src/provider-reviews/copy.js b/preview/home-ui/src/provider-reviews/copy.js
+index d7dbb3d..ab60c7f 100644
+--- a/preview/home-ui/src/provider-reviews/copy.js
++++ b/preview/home-ui/src/provider-reviews/copy.js
+@@ -80,7 +80,7 @@ export const PROVIDER_REVIEW_COPY = {
+   inboxHub: '?꾧린??,
+   inboxByTarget: '??곷퀎 蹂닿린',
+   inboxByTargetTitle: '????곸쓽 ?꾧린',
+-  inboxByTargetLead: '留덉씠?듭씠???곸꽭?먯꽌 ?꾧린 ?붾낫湲곕? ?꾨Ⅴ硫??대떦 怨듬?諛㈑룰낵?몄뙟 ?꾧린媛 ?ш린??紐⑥엯?덈떎.',
++  inboxByTargetLead: '?꾨줈?꾩씠???곸꽭?먯꽌 ?꾧린 ?붾낫湲곕? ?꾨Ⅴ硫??대떦 怨듬?諛㈑룰낵?몄뙟 ?꾧린媛 ?ш린??紐⑥엯?덈떎.',
+   inboxByTargetEmpty: '?꾩쭅 ?곌껐????곸씠 ?놁뼱?? 怨듦컻 ?꾨줈?꾩쓽 ?꾧린 ?붾낫湲곗뿉??諛붾줈 ?ㅼ뼱?????덉뼱??',
+   inboxByTargetOpen: '????곸쓽 ?꾧린 蹂닿린',
+   inboxWritten: '?닿? ???꾧린',
+diff --git a/preview/home-ui/src/student-enums.js b/preview/home-ui/src/student-enums.js
+index f699e7c..23b55fa 100644
+--- a/preview/home-ui/src/student-enums.js
++++ b/preview/home-ui/src/student-enums.js
+@@ -51,7 +51,7 @@ export const SCHOOL_LEVEL_LABELS = {
+   elementary: '珥덈벑',
+   middle: '以묐벑',
+   high: '怨좊벑',
+-  n_su: 'N??,
++  n_su: '???以鍮??ъ닔 ?댁긽)',
+   general: '?쇰컲',
+   other: '湲고?',
+ };
+diff --git a/preview/home-ui/src/student-reg/router.js b/preview/home-ui/src/student-reg/router.js
+index 60c6d91..3c10e28 100644
+--- a/preview/home-ui/src/student-reg/router.js
++++ b/preview/home-ui/src/student-reg/router.js
+@@ -63,7 +63,7 @@ export function studentRegScreenTitle(screenId) {
+     'P19-05': '履쎌??ㅼ젙',
+     'P19-06': '??젣',
+   };
+-  return map[screenId] || '?숈깮 ?섎ː 愿由?;
++  return map[screenId] || '?깅줉';
+ }
+ 
+ /** @param {number} id */
+diff --git a/preview/home-ui/src/student-reg/student-reg-copy.js b/preview/home-ui/src/student-reg/student-reg-copy.js
+index bd5aa43..11fbbaa 100644
+--- a/preview/home-ui/src/student-reg/student-reg-copy.js
++++ b/preview/home-ui/src/student-reg/student-reg-copy.js
+@@ -1,5 +1,5 @@
+ /**
+- * 19?????숈깮 ?섎ː copy 쨌 ??쨌 visibility 쨌 ?덈툕 ?쇰꺼 (?〓떒 SSOT)
++ * 19?????숈깮 ?깅줉 copy 쨌 ??쨌 visibility 쨌 ?덈툕 ?쇰꺼 (?〓떒 SSOT)
+  * docs/ssot/19-student-registration-management.md 짠3 쨌 짠4 쨌 짠5
+  */
+ 
+diff --git a/preview/home-ui/src/support/support-copy.js b/preview/home-ui/src/support/support-copy.js
+index 10e473b..33c8761 100644
+--- a/preview/home-ui/src/support/support-copy.js
++++ b/preview/home-ui/src/support/support-copy.js
+@@ -113,7 +113,7 @@ export const GUIDE_ARTICLES = [
+   },
+   {
+     slug: 'parent-check',
+-    title: '?숇?紐㉱룻븰???섎ː 泥댄겕由ъ뒪??,
++    title: '?숇?紐㉱룻븰???깅줉 泥댄겕由ъ뒪??,
+     priority: 'secondary',
+     audience: '?숇?紐?,
+     related: ['provider-check', 'prepay', 'privacy'],
+diff --git a/preview/home-ui/src/tutor-activity-chart.js b/preview/home-ui/src/tutor-activity-chart.js
+index 59e0fb5..dc06af9 100644
+--- a/preview/home-ui/src/tutor-activity-chart.js
++++ b/preview/home-ui/src/tutor-activity-chart.js
+@@ -87,6 +87,6 @@ export function renderTutorActivityBars(opts = {}) {
+       <div class="act-bars__list" role="list">
+         ${body}
+       </div>
+-      <p class="act-bars__note">?쒕뱶 ?몄텧 ?곗씠??湲곗? 쨌 怨쇰ぉ ?꾪꽣 誘몃컲??/p>
++      <p class="act-bars__note">吏湲덉? ?덉떆 吏??湲곗??쇰줈 蹂댁뿬 ?쒕젮?? 怨쇰ぉ ?꾪꽣???꾩쭅 諛섏쁺?섏? ?딆븯?댁슂.</p>
+     </div>`;
+ }
+diff --git a/preview/shared/korean-universities.js b/preview/shared/korean-universities.js
+index a5437a0..16ebca2 100644
+--- a/preview/shared/korean-universities.js
++++ b/preview/shared/korean-universities.js
+@@ -52,7 +52,7 @@ export const KOREAN_UNIVERSITY_OPTIONS = KOREAN_UNIVERSITY_NAMES.map((label) =>
+   label,
+ }));
+ 
+-/** SKY ?곗꽑 ???숇? ?뺤떇紐?+ 吏㏃? ?쒓린留?(university_note쨌??숈썝 臾멸뎄 ?뚯떛 湲덉?) */
++/** 二쇱슂 ???異쒖떊 ?곗꽑 ???숇? ?뺤떇紐?+ 吏㏃? ?쒓린留?(university_note쨌??숈썝 臾멸뎄 ?뚯떛 湲덉?) */
+ export const SKY_UNIVERSITY_NAMES = Object.freeze(['?쒖슱??숆탳', '?곗꽭??숆탳', '怨좊젮??숆탳']);
+ 
+ /** @type {ReadonlySet<string>} */
+diff --git a/preview/shared/list-sort.js b/preview/shared/list-sort.js
+index 61edb62..37e4c08 100644
+--- a/preview/shared/list-sort.js
++++ b/preview/shared/list-sort.js
+@@ -1,7 +1,7 @@
+ /**
+  * 李얘린寃곌낵쨌Basic 由ъ뒪???뺣젹 SSOT (1李?
+  * ??Prime/Pick 鍮꾩쟻??쨌 吏???꾪꽣 ?댄썑 쨌 URL ?sort= ?좎?
+- * ??SKY ?곗꽑(怨쇱쇅?ㅻ쭔): isSkyUniversityName(university_name)
++ * ??二쇱슂 ???異쒖떊 ?곗꽑(怨쇱쇅?ㅻ쭔): isSkyUniversityName(university_name)
+  *   쨌 洹몃９ ?대? 2李?異붿쿇??쨌 3李?理쒖떊??쨌 鍮껾KY ?쒖쇅?섏? ?딆쓬
+  *   쨌 university_note / ??숈썝 臾멸뎄 / sky_flag 誘몄궗??  */
+@@ -23,7 +23,7 @@ export const LIST_SORT_LABELS = {
+   price_desc: '?믪? 媛寃⑹닚',
+   budget_asc: '??? ?덉궛??,
+   budget_desc: '?믪? ?덉궛??,
+-  sky: 'SKY ?곗꽑',
++  sky: '二쇱슂 ???異쒖떊 ?곗꽑',
+ };
+ 
+ /**
+diff --git a/preview/shared/location-display.js b/preview/shared/location-display.js
+index f0bd2df..8b6abab 100644
+--- a/preview/shared/location-display.js
++++ b/preview/shared/location-display.js
+@@ -181,6 +181,19 @@ export function normalizeLocation(input = {}, axis = 'room') {
+   return canonical;
+ }
+ 
++/** 媛숈? ?쑣룰뎄쨌???좏겙???댁뼱 遺숈쑝硫??뚯꽌?명듅蹂꾩떆 ?쒖슱?밸퀎?쒌띿쿂??諛섎났?섎뒗 ?쒖떆瑜??묐뒗?? */
++function dedupeAddressTokens(text) {
++  const parts = String(text || '').split(/\s+/).filter(Boolean);
++  const out = [];
++  const seen = new Set();
++  for (const part of parts) {
++    if (seen.has(part)) continue;
++    seen.add(part);
++    out.push(part);
++  }
++  return out.join(' ');
++}
++
+ /**
+  * @param {CanonicalLocation|Partial<CanonicalLocation>|string} loc
+  * @param {LocationAxis} [axis]
+@@ -202,12 +215,13 @@ export function formatLocationDisplay(loc, axis = 'room') {
+   }
+ 
+   if (apartmentName) return dong ? `${dong} 쨌 ${apartmentName}` : apartmentName;
+-  if (dong && district && city) return `${city} ${district} ${dong}`;
+-  if (dong && city) return `${city} ${dong}`;
+-  if (dong) return dong;
+-  if (district && city) return `${city} ${district}`;
++  if (dong && city && String(dong).startsWith(city)) return dedupeAddressTokens(dong);
++  if (dong && district && city) return dedupeAddressTokens(`${city} ${district} ${dong}`);
++  if (dong && city) return dedupeAddressTokens(`${city} ${dong}`);
++  if (dong) return dedupeAddressTokens(dong);
++  if (district && city) return dedupeAddressTokens(`${city} ${district}`);
+   if (city) return city;
+-  return raw || '?꾩튂 ?뺤씤 以?;
++  return dedupeAddressTokens(raw) || '?꾩튂 ?뺤씤 以?;
+ }
+ 
+ /** @param {string} label */
+diff --git a/preview/shared/study-room-basic-form.js b/preview/shared/study-room-basic-form.js
+index 0d0b055..5e73332 100644
+--- a/preview/shared/study-room-basic-form.js
++++ b/preview/shared/study-room-basic-form.js
+@@ -12,7 +12,7 @@ export const PRIMARY_AUDIENCE_OPTIONS = [
+   { value: 'elementary', label: '珥덈벑' },
+   { value: 'middle', label: '以묐벑' },
+   { value: 'high', label: '怨좊벑' },
+-  { value: 'n_su', label: 'N?? },
++  { value: 'n_su', label: '???以鍮??ъ닔 ?댁긽)' },
+ ];
+ 
+ export const LESSON_PLACE_TYPE_OPTIONS = [
+diff --git a/preview/study-room-ui/src/screens/step-lesson.js b/preview/study-room-ui/src/screens/step-lesson.js
+index 7b41ce8..7277b14 100644
+--- a/preview/study-room-ui/src/screens/step-lesson.js
++++ b/preview/study-room-ui/src/screens/step-lesson.js
+@@ -256,11 +256,11 @@ export function renderLessonFormHtml(opts = {}) {
+         </div>
+       </div>
+       <div class="form-group" data-rc-field="teaching_style">
+-        ${starLabel('', '吏???ㅽ???)}
++        ${starLabel('', '?섏뾽 ?ㅽ???)}
+         <div class="register-check-grid">${renderStyleChecks(s.teaching_style_ids)}</div>
+       </div>
+       <div class="form-group" data-rc-field="teaching_style_note">
+-        ${starLabel('teaching_style_note', '吏???ㅽ???異붽??ㅻ챸')}
++        ${starLabel('teaching_style_note', '?섏뾽 ?ㅽ???異붽??ㅻ챸')}
+         <textarea class="form-input form-textarea" id="teaching_style_note" name="teaching_style_note" rows="2" placeholder="異붽?濡??꾪븯怨??띠? 吏??諛⑹떇???곸뼱 二쇱꽭??">${esc(s.teaching_style_note)}</textarea>
+       </div>
+       <div class="form-group">
+diff --git a/preview/study-room-ui/src/state.js b/preview/study-room-ui/src/state.js
+index 81a4237..992545f 100644
+--- a/preview/study-room-ui/src/state.js
++++ b/preview/study-room-ui/src/state.js
+@@ -30,7 +30,7 @@ export const SCHOOL_LEVELS = [
+   { value: 'elementary', label: '珥덈벑' },
+   { value: 'middle', label: '以묐벑' },
+   { value: 'high', label: '怨좊벑' },
+-  { value: 'n_su', label: 'N?? },
++  { value: 'n_su', label: '???以鍮??ъ닔 ?댁긽)' },
+   { value: 'general', label: '?쇰컲' },
+   { value: 'other', label: '湲고?' },
+ ];
+@@ -60,7 +60,7 @@ export const GRADE_OPTIONS = [
+   { value: '4?숇뀈', label: '4?숇뀈' },
+   { value: '5?숇뀈', label: '5?숇뀈' },
+   { value: '6?숇뀈', label: '6?숇뀈' },
+-  { value: 'N??, label: 'N?? },
++  { value: 'N??, label: '???以鍮??ъ닔 ?댁긽)' },
+ ];
+ 
+ export const WEEKDAY_OPTIONS = [
+@@ -95,7 +95,7 @@ export const WEEKLY_LESSON_COUNTS = [
+   { value: '7', label: '7???댁긽' },
+ ];
+ 
+-/** 吏???ㅽ?????蹂듭닔 ?좏깮 */
++/** ?섏뾽 ?ㅽ?????蹂듭닔 ?좏깮 */
+ export const TEACHING_STYLE_OPTIONS = [
+   { id: 'kind', label: '移쒖젅' },
+   { id: 'meticulous', label: '瑗쇨세' },
+diff --git a/preview/study-room-ui/src/summary.js b/preview/study-room-ui/src/summary.js
+index bcfa646..d97bfe9 100644
+--- a/preview/study-room-ui/src/summary.js
++++ b/preview/study-room-ui/src/summary.js
+@@ -167,8 +167,8 @@ export function buildRoomInputSummary(room) {
+         { label: '???됯퇏 ?섏뾽猷?, value: str(s.monthly_fee_manwon) ? `${str(s.monthly_fee_manwon)}留뚯썝` : '' },
+         { label: '移대뱶寃곗젣 ?щ?', value: yn(s.card_payment_available) },
+         { label: '?꾧툑?곸닔利??щ?', value: yn(s.cash_receipt_available) },
+-        { label: '吏???ㅽ???, value: str(s.teaching_style) },
+-        { label: '吏???ㅽ???異붽??ㅻ챸', value: str(s.teaching_style_note) },
++        { label: '?섏뾽 ?ㅽ???, value: str(s.teaching_style) },
++        { label: '?섏뾽 ?ㅽ???異붽??ㅻ챸', value: str(s.teaching_style_note) },
+         { label: '二쇰쭚 媛??, value: yn(s.weekend_available) },
+         { label: '泥⑥궘??, value: yn(s.correction_available) },
+         { label: '1:1 媛??, value: yn(s.one_on_one_available) },
+diff --git a/preview/tutor-ui/src/state.js b/preview/tutor-ui/src/state.js
+index 2e7e384..3697996 100644
+--- a/preview/tutor-ui/src/state.js
++++ b/preview/tutor-ui/src/state.js
+@@ -60,7 +60,7 @@ export const SCHOOL_LEVELS = [
+   { value: 'elementary', label: '珥덈벑' },
+   { value: 'middle', label: '以묐벑' },
+   { value: 'high', label: '怨좊벑' },
+-  { value: 'n_su', label: 'N?? },
++  { value: 'n_su', label: '???以鍮??ъ닔 ?댁긽)' },
+ ];
+ 
+ /** 怨쇰ぉ ??쨌 ?숇뀈? (1~6?숇뀈) */

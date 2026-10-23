@@ -1,0 +1,244 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  route_room_list
+PASS  route_tutor_list
+PASS  route_new
+PASS  route_detail
+PASS  route_edit
+PASS  route_normalize_keeps_info_paths
+PASS  route_existing_library_unchanged
+PASS  bootstrap_info_path_not_redirected
+PASS  bootstrap_existing_library_still_redirects
+PASS  acl_js_guest_titles
+PASS  acl_js_student_member_blocked
+PASS  acl_js_providers_admin_full_compose
+PASS  acl_js_no_comment_react_download_upload
+PASS  acl_js_matrix_has_info_rows
+PASS  copy_policy_strings_exact
+PASS  copy_board_names_exact
+PASS  copy_categories_exact
+PASS  screens_have_no_literal_copy
+PASS  copy_terms_clean
+PASS  store_server_only_no_local_storage
+PASS  nav_links_none_for_student_member
+PASS  nav_links_for_guest_provider_admin
+PASS  shell_renders_nav_links_helper
+PASS  screen_demand_direct_url_blocked
+PASS  screen_member_direct_url_blocked
+PASS  student_never_requests_server
+PASS  guest_list_titles_only
+PASS  guest_detail_title_and_login_copy
+PASS  guest_compose_shows_login_not_form
+PASS  free_provider_sees_notice_not_compose_link
+PASS  free_provider_compose_page_has_no_form
+PASS  paid_provider_sees_compose_link_and_form
+PASS  list_has_all_plus_four_category_tabs
+PASS  category_tab_requests_server_filter
+PASS  empty_list_copy
+PASS  load_failed_copy
+PASS  more_button_and_paging
+PASS  owner_switch_drops_cache
+PASS  detail_full_escapes_html_keeps_breaks
+PASS  edit_page_needs_server_can_edit
+PASS  save_posts_to_server_and_list_updates_without_reload
+PASS  save_failure_surfaces_server_message
+PASS  edit_posts_post_key_and_updates_caches
+PASS  own_post_detail_shows_edit_delete
+PASS  delete_calls_server_and_drops_from_list
+PASS  support_library_renders
+PASS  support_entry_hidden_before_role_known
+PASS  support_screens_use_shared_helper
+PASS  support_screens_no_literal_info_copy
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:619:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:619:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:618:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_none_for_demand
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:619:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:619:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:618:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_none_for_member
+PASS  support_entry_two_links_for_guest
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:633:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_two_links_for_room
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:633:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_two_links_for_tutor
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:634:5
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:633:3
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_two_links_for_admin
+PASS  support_library_head_unchanged_by_entry
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:645:3
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:645:3
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:644:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_back_from_info_restores_library
+[auth] provider hydrate skipped Error: not found
+    at parseJson (D:\work\study114\preview\home-ui\src\handoff-api.js:19:17)
+    at async Promise.all (index 0)
+    at hydrateHandoffCache (D:\work\study114\preview\home-ui\src\handoff-backend.js:79:61)
+    at activateHandoffApi (D:\work\study114\preview\home-ui\src\handoff-backend.js:70:3)
+    at activateProviderApis (D:\work\study114\preview\home-ui\src\auth-session.js:56:3)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:160:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:652:3
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22) {
+  code: undefined,
+  status: 404
+}
+[messages-api] not found
+[exposure-bridge] Error: not found
+    at searchPreviewTab (D:\work\study114\preview\home-ui\src\search-api.js:13:11)
+    at async Promise.all (index 0)
+    at hydrateExposureBridge (D:\work\study114\preview\home-ui\src\exposure-bridge.js:104:39)
+    at hydrateSessionDependencies (D:\work\study114\preview\home-ui\src\auth-session.js:169:3)
+    at Module.initAuthSession (D:\work\study114\preview\home-ui\src\auth-session.js:192:5)
+    at signIn (D:\work\study114\scripts\verify-info-boards-client.mjs:589:3)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:652:3
+    at okAsync (D:\work\study114\scripts\verify-info-boards-client.mjs:186:22)
+    at D:\work\study114\scripts\verify-info-boards-client.mjs:651:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/559363d983859a930caa15c8ed41648e/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+PASS  support_entry_logout_becomes_guest_links
+
+58 passed / 0 failed
+info-boards-client verify ok

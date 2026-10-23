@@ -1,0 +1,71 @@
+﻿node.exe : npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help
+ npmrc` for supported config options.
+위치 줄:1 문자:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...config options.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+PASS: 鍮꾨줈洹몄씤 횞 #/parent = #/guest (got #/guest)
+PASS: 鍮꾨줈洹몄씤: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 鍮꾨줈洹몄씤 횞 #/study-room = #/guest (got #/guest)
+PASS: 鍮꾨줈洹몄씤: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 鍮꾨줈洹몄씤 횞 #/tutor = #/guest (got #/guest)
+PASS: 鍮꾨줈洹몄씤: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 鍮꾨줈洹몄씤 횞 #/guest ??긽 ?덉슜
+PASS: ?숇?紐?횞 #/parent = ok (got ok)
+PASS: ?숇?紐?횞 #/study-room = #/parent (got #/parent)
+PASS: ?숇?紐?횞 #/study-room 嫄곕? ??곸씠 roleHomeHashPath(#/parent)? 媛숇떎
+PASS: ?숇?紐? #/parent 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: ?숇?紐?횞 #/tutor = #/parent (got #/parent)
+PASS: ?숇?紐?횞 #/tutor 嫄곕? ??곸씠 roleHomeHashPath(#/parent)? 媛숇떎
+PASS: ?숇?紐? #/parent 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: ?숇?紐?횞 #/guest ??긽 ?덉슜
+PASS: 怨듬?諛?횞 #/parent = #/study-room (got #/study-room)
+PASS: 怨듬?諛?횞 #/parent 嫄곕? ??곸씠 roleHomeHashPath(#/study-room)? 媛숇떎
+PASS: 怨듬?諛? #/study-room 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 怨듬?諛?횞 #/study-room = ok (got ok)
+PASS: 怨듬?諛?횞 #/tutor = #/study-room (got #/study-room)
+PASS: 怨듬?諛?횞 #/tutor 嫄곕? ??곸씠 roleHomeHashPath(#/study-room)? 媛숇떎
+PASS: 怨듬?諛? #/study-room 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 怨듬?諛?횞 #/guest ??긽 ?덉슜
+PASS: 怨쇱쇅??횞 #/parent = #/tutor (got #/tutor)
+PASS: 怨쇱쇅??횞 #/parent 嫄곕? ??곸씠 roleHomeHashPath(#/tutor)? 媛숇떎
+PASS: 怨쇱쇅?? #/tutor 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 怨쇱쇅??횞 #/study-room = #/tutor (got #/tutor)
+PASS: 怨쇱쇅??횞 #/study-room 嫄곕? ??곸씠 roleHomeHashPath(#/tutor)? 媛숇떎
+PASS: 怨쇱쇅?? #/tutor 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: 怨쇱쇅??횞 #/tutor = ok (got ok)
+PASS: 怨쇱쇅??횞 #/guest ??긽 ?덉슜
+PASS: 愿由ъ옄 횞 #/parent = #/admin (got #/admin)
+PASS: 愿由ъ옄 횞 #/parent 嫄곕? ??곸씠 roleHomeHashPath(#/admin)? 媛숇떎
+PASS: 愿由ъ옄: ??븷 ??諛???곸? #/admin 肉?(got #/admin)
+PASS: 愿由ъ옄 횞 #/study-room = #/admin (got #/admin)
+PASS: 愿由ъ옄 횞 #/study-room 嫄곕? ??곸씠 roleHomeHashPath(#/admin)? 媛숇떎
+PASS: 愿由ъ옄: ??븷 ??諛???곸? #/admin 肉?(got #/admin)
+PASS: 愿由ъ옄 횞 #/tutor = #/admin (got #/admin)
+PASS: 愿由ъ옄 횞 #/tutor 嫄곕? ??곸씠 roleHomeHashPath(#/admin)? 媛숇떎
+PASS: 愿由ъ옄: ??븷 ??諛???곸? #/admin 肉?(got #/admin)
+PASS: 愿由ъ옄 횞 #/guest ??긽 ?덉슜
+PASS: ?湲?媛?낆옄 횞 #/parent = #/guest (got #/guest)
+PASS: ?湲?媛?낆옄 횞 #/parent 嫄곕? ??곸씠 roleHomeHashPath(#/guest)? 媛숇떎
+PASS: ?湲?媛?낆옄: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: ?湲?媛?낆옄 횞 #/study-room = #/guest (got #/guest)
+PASS: ?湲?媛?낆옄 횞 #/study-room 嫄곕? ??곸씠 roleHomeHashPath(#/guest)? 媛숇떎
+PASS: ?湲?媛?낆옄: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: ?湲?媛?낆옄 횞 #/tutor = #/guest (got #/guest)
+PASS: ?湲?媛?낆옄 횞 #/tutor 嫄곕? ??곸씠 roleHomeHashPath(#/guest)? 媛숇떎
+PASS: ?湲?媛?낆옄: #/guest 濡?蹂대궦 ???ㅼ떆 媛???듦낵(猷⑦봽 ?놁쓬)
+PASS: ?湲?媛?낆옄 횞 #/guest ??긽 ?덉슜
+PASS: navRole ?앸왂 ??guest 濡?蹂댁븘 濡쒓렇?몃쭔?쇰줈????븷 ?덉쓣 ?댁? ?딅뒗??PASS: main.js 媛 navRoleFromAuthUser(getAuthUser()) 濡?媛?쒕? 遺瑜몃떎
+PASS: main.js ??愿由ъ옄 ??#/admin 蹂꾨룄 遺꾧린媛 ?녿떎(媛?쒕줈 ?듯빀)
+PASS: main.js ???몄뀡 ?뺤씤 ????븷 ?덉쓣 洹몃━嫄곕굹 ?먯젙?섏? ?딅뒗??PASS: main.js shouldPaintBeforeSession ? ??븷 ?덉쓣 ?몄뀡 ?꾩뿉 洹몃━吏 ?딅뒗??
+??븷 \ ??           navRole      #/parent        #/study-room    #/tutor
+鍮꾨줈洹몄씤         guest           嫄곕???/guest      嫄곕???/guest      嫄곕???/guest     
+?숇?紐?         parent          ?덉슜              嫄곕???/parent     嫄곕???/parent    
+怨듬?諛?         study_room      嫄곕???/study-room ?덉슜              嫄곕???/study-room
+怨쇱쇅??         tutor           嫄곕???/tutor      嫄곕???/tutor      ?덉슜             
+愿由ъ옄          admin           嫄곕???/admin      嫄곕???/admin      嫄곕???/admin     
+?湲?媛?낆옄       guest           嫄곕???/guest      嫄곕???/guest      嫄곕???/guest     
+
+?듦낵 56 / ?ㅽ뙣 0

@@ -1,0 +1,49 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 서버 #####
+PASS  M1 동 슬롯 complex_name·complex_address 는 null
+PASS  M1 동 슬롯 promo_label 유지
+PASS  M1 단지 슬롯 complex_name·complex_address
+PASS  M1 단지 promo_label 유지
+PASS  M1 미등록 주소는 그대로 전달
+PASS  PHP 검사 프로세스 정상 종료
+##### 질의 규칙 #####
+PASS  (a) peek 동 슬롯
+PASS  (a) 동 질의 = promo_label
+PASS  (b) peek 단지 슬롯
+PASS  (b) 단지 질의 = complex_address
+PASS  (c) 빈 주소는 라벨로 대체하지 않음
+PASS  (c) (주소 미등록) 은 질의하지 않음
+PASS  안내 문구에 위치를 선택해 주세요 없음
+PASS  찾기 URL 은 고른 라벨
+PASS  홈은 주소 선택이 있어도 대표 슬롯
+##### 가짜 지오코더 #####
+PASS  (a) 지오코더 질의 = promo_label
+PASS  (a) 대치 좌표로 열지 않음
+PASS  (b) 지오코더 질의 = complex_address
+PASS  (b) 중심은 그 질의의 좌표
+PASS  (c) 주소 없음 → 안내 문구
+PASS  (c) 지오코더를 부르지 않음
+PASS  (c) 지도를 만들지 않고 대치 아님
+PASS  (c) 지오코딩 실패 → 못 찾음 문구, 대치 아님
+PASS  (d) 핀이 있어도 중심은 홍보1 지오코딩
+PASS  (d) 핀 맞춤으로 중심을 옮기지 않음
+PASS  mutation self-check: usePins 가드를 되돌리면 (d)가 실패한다
+PASS  (e) 게스트 명시 좌표는 대치역
+PASS  (e) 게스트 중심 상수는 대치역
+PASS  (e) 게스트 찾기 지도 HTML 은 대치 좌표·지오코딩 없음
+PASS  (f) 학생은 핀이 있으면 핀 중심(지오코딩 안 함)
+PASS  (f) 학생은 핀이 없으면 지역 라벨을 지오코딩
+PASS  (f) 학생 HTML 은 기존 지오코딩 속성
+PASS  (f) 학생 분기 조건 줄 유지
+PASS  (f) 학생 실패 문구 상수 유지
+##### 화면 속성 #####
+PASS  공부방 지도 HTML 질의 = 도로명
+PASS  공부방 배너 라벨은 promo_label
+PASS  상세 지도는 회원 지오코딩, 게스트 문구는 유지
+PASS  상세 게스트 분기에는 지오코딩 속성이 없다
+PASS  mutation self-check: 소스의 usePins 가드 한 줄을 지우면 핀 평균이 복구된다
+PASS  찾기 화면이 resolveStudyRoomMapQuery 를 지도 질의로 넘긴다
+PASS  mutation self-check: 단지를 promo_label 질의로 되돌리면 (b)가 실패한다
+PASS  location-ssot 라벨 좌표 고정은 그대로
+
+42 passed, 0 failed

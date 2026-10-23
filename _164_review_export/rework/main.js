@@ -1,0 +1,490 @@
+import './styles/tokens.css';
+import './styles/home.css';
+import './styles/home-member-flows.css';
+import './styles/home-support-guide.css';
+import './styles/home-admin.css';
+import './styles/home-right-rail.css';
+import './styles/home-community.css';
+import './styles/info-pages.css';
+import './styles/zip-bridge.css';
+import './styles/zip-guide.css';
+import './styles/zip-visual-v2.css';
+import './styles/home-promo.css';
+import './styles/home-provider-reviews.css';
+import '@search-ui/styles/search.css';
+import './styles/design-system.css';
+/* listings는 design-system 뒤에 — section-heading/toolbar 정본 */
+import './styles/home-listings.css';
+import './styles/product-chrome.css';
+import './styles/home-marketing-banner.css';
+import './styles/home-popup.css';
+import './styles/plans-theme.css';
+import './styles/plans-store.css';
+import './styles/mypage-ops.css';
+import './styles/registration-check.css';
+/* 등록점검·쪽지설정 샘플: 라이브 홈/찾기 카드 outer 1칸 폭 토큰 */
+import './styles/home-card-samples.css';
+import './styles/myshop.css';
+import './styles/myshop-public.css';
+/* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */
+import '../../shared/register-form-primitives.css';
+import '../../shared/register-flow.css';
+import '../../study-room-ui/src/styles/register.css';
+import '@search-ui/styles/search-visily.css';
+/* UDX-STD-001 오버레이는 공통 CSS 이후 */
+import './styles/udx-std-apply.css';
+import './styles/student-detail.css';
+/* 홍보랜딩·공부방 쪽지설정 본문만. 전역 헤더/다른 탭에는 선택자가 닿지 않음 */
+import './styles/promo-catalog.css';
+import './styles/inquiry-settings-catalog.css';
+/* 학생 마이페이지·내 등록만. 홈·타역할 선택자는 없음 */
+import './styles/student-mypage-stage5b.css';
+import { renderGuest, bindGuestEvents } from './screens/guest.js';
+import { renderParent, bindParentEvents } from './screens/parent.js';
+import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
+import { renderTutor, bindTutorEvents } from './screens/tutor.js';
+import {
+  getCurrentScreen,
+  navigate,
+  isMypageRoute,
+  bootstrapMypageRoute,
+  bootstrapMessagesRoute,
+  isGuideRoute,
+  bootstrapGuideRoute,
+  isCommunityRoute,
+  bootstrapCommunityRoute,
+  isPromoRoute,
+  bootstrapPromoRoute,
+  isSupportRoute,
+  bootstrapSupportRoute,
+  isPolicyRoute,
+  bootstrapPolicyRoute,
+  isLibraryRoute,
+  bootstrapLibraryRoute,
+  isAdminRoute,
+  bootstrapAdminRoute,
+  isPlansRoute,
+  bootstrapPlansRoute,
+  isMyshopRoute,
+  bootstrapMyshopRoute,
+  isMessagesRoute,
+  isRegisterIntroRoute,
+} from './state.js';
+import { PLANS_REDIRECTS } from './plans/router.js';
+import { renderMypage, bindMypageEvents } from './mypage/index.js';
+import { renderPublicMyshop, bindPublicMyshopEvents } from './myshop/index.js';
+import { renderGuide, bindGuideEvents } from './guide/index.js';
+import { renderConcern, bindConcernEvents, getDefaultCommunityPath } from './concern/index.js';
+import { renderPromo, bindPromoEvents } from './promo/index.js';
+import { renderSupport, bindSupportEvents } from './support/index.js';
+import { renderPolicy, bindPolicyEvents } from './policy-index.js';
+import { renderLibrary, bindLibraryEvents } from './library/index.js';
+import { renderAdmin, bindAdminEvents } from './admin/index.js';
+import { renderPlans, bindPlansEvents } from './plans/index.js';
+import {
+  renderRegisterIntro,
+  bindRegisterIntroEvents,
+  redirectLoggedInFromRegisterIntro,
+} from './register-intro/index.js';
+import { initAuthSession, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
+import { guardRoleHomeAccess } from '../../shared/route-access.js';
+import { parseHashQuery } from '../../shared/preview-links.js';
+import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
+import { showEmailVerifyOverlay } from './email-verify-overlay.js';
+import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
+import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache } from './board/board-backend.js';
+import { resetConcernPreviewData } from './concern/store.js';
+import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
+import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
+import { mountOpsChrome } from './site-ops-chrome.js';
+import { mountHomePopup } from './home-popup/mount.js';
+import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
+import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
+
+const SCREENS = {
+  guest: { render: renderGuest, bind: bindGuestEvents },
+  parent: { render: renderParent, bind: bindParentEvents },
+  studyRoom: { render: renderStudyRoom, bind: bindStudyRoomEvents },
+  tutor: { render: renderTutor, bind: bindTutorEvents },
+};
+
+function applyPlansRedirects() {
+  const hash = window.location.hash.slice(1) || '';
+  const pathWithQuery = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = pathWithQuery.split('?')[0];
+  const query = pathWithQuery.includes('?') ? pathWithQuery.slice(pathWithQuery.indexOf('?')) : '';
+  if (PLANS_REDIRECTS[path]) {
+    window.location.replace(`#${PLANS_REDIRECTS[path]}${query}`);
+    return true;
+  }
+  return false;
+}
+
+let paintedHash = null;
+
+function render() {
+  if (isMypageRoute()) bootstrapMypageRoute();
+  const hashBefore = window.location.hash;
+  renderScreen();
+  if (window.location.hash === hashBefore) paintedHash = hashBefore;
+}
+
+function shouldPaintBeforeSession() {
+  if (isAdminRoute() || isMypageRoute() || isPlansRoute() || isMessagesRoute() || isRegisterIntroRoute()) {
+    return false;
+  }
+  const screen = getCurrentScreen();
+  return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
+}
+
+function renderScreen() {
+  // 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
+  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute()) {
+    redirectToEmailVerifyWait();
+    return;
+  }
+  if (applyPlansRedirects()) return;
+  const app = document.getElementById('app');
+  if (isAdminRoute()) {
+    app.innerHTML = renderAdmin();
+    bindAdminEvents(app, render);
+    mountHomePopup(app);
+    return;
+  }
+  if (isRegisterIntroRoute()) {
+    if (redirectLoggedInFromRegisterIntro()) return;
+    app.innerHTML = renderRegisterIntro();
+    bindRegisterIntroEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isPlansRoute()) {
+    app.innerHTML = renderPlans();
+    bindPlansEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isLibraryRoute()) {
+    app.innerHTML = renderLibrary();
+    bindLibraryEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isSupportRoute()) {
+    app.innerHTML = renderSupport();
+    bindSupportEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isGuideRoute()) {
+    app.innerHTML = renderGuide();
+    bindGuideEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isCommunityRoute()) {
+    app.innerHTML = renderConcern();
+    bindConcernEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isPromoRoute()) {
+    app.innerHTML = renderPromo();
+    bindPromoEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isPolicyRoute()) {
+    app.innerHTML = renderPolicy();
+    bindPolicyEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isMyshopRoute()) {
+    app.innerHTML = renderPublicMyshop();
+    bindPublicMyshopEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isMypageRoute()) {
+    app.innerHTML = renderMypage();
+    bindMypageEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  const key = getCurrentScreen();
+  const roleGate = guardRoleHomeAccess(key, isLoggedIn());
+  if (!roleGate.ok) {
+    if (window.location.hash !== roleGate.redirectHash) {
+      window.location.replace(roleGate.redirectHash);
+      return;
+    }
+  }
+  const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
+  app.innerHTML = screen.render();
+  screen.bind(app, render);
+  mountOpsChrome(app);
+  mountHomePopup(app);
+}
+
+function showBootError(err) {
+  const app = document.getElementById('app');
+  if (!app) return;
+  const msg = err instanceof Error ? err.message : String(err);
+  app.innerHTML = `
+    <div style="padding:1.5rem;font-family:system-ui,sans-serif;max-width:40rem">
+      <p style="font-weight:700;color:#b91c1c">프리뷰 로드 오류</p>
+      <pre style="margin-top:0.5rem;padding:0.75rem;background:#fef2f2;border-radius:0.5rem;font-size:0.8125rem;white-space:pre-wrap">${msg.replace(/</g, '&lt;')}</pre>
+      <p style="margin-top:0.75rem;font-size:0.875rem;color:#64748b">개발자 도구(F12) 콘솔에서 스택을 확인하세요.</p>
+    </div>
+  `;
+  console.error(err);
+}
+
+function init() {
+  try {
+    if (!SHOW_PREVIEW_TOOLBAR) {
+      document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
+    }
+    bootstrapPlansRoute();
+    bootstrapMypageRoute();
+    bootstrapMessagesRoute();
+    bootstrapGuideRoute();
+    bootstrapCommunityRoute();
+    bootstrapPromoRoute();
+    bootstrapSupportRoute();
+    bootstrapPolicyRoute();
+    bootstrapLibraryRoute();
+    bootstrapAdminRoute();
+    bootstrapMyshopRoute();
+    // pathname 딥링크는 bootstrap*가 hash로 옮긴다. fragment만 유실된 `/`는 guest.
+    // /support 등 pathname이 남은 채 hash만 비면 guest로 덮어쓰지 않는다.
+    // SPA 간 이동으로 hash/pathname이 떨어졌을 때는 pending-route로 복구한다.
+    if (!window.location.hash) {
+      const pending = consumePendingRoute();
+      if (pending) {
+        window.location.hash = pending.startsWith('#') ? pending : `#${pending}`;
+      } else {
+        const path = window.location.pathname.replace(/\/$/, '') || '/';
+        const deep =
+          path === '/support' ||
+          path.startsWith('/support/') ||
+          path === '/guide' ||
+          path.startsWith('/guide/') ||
+          path === '/community' ||
+          path.startsWith('/community/') ||
+          path === '/promo' ||
+          path.startsWith('/promo/') ||
+          path === '/concern' ||
+          path.startsWith('/concern/') ||
+          path === '/mypage' ||
+          path.startsWith('/mypage/') ||
+          path === '/messages' ||
+          path.startsWith('/messages/') ||
+          path === '/policy' ||
+          path.startsWith('/policy/') ||
+          path === '/library' ||
+          path.startsWith('/library/') ||
+          path === '/admin' ||
+          path.startsWith('/admin/') ||
+          path === '/plans' ||
+          path.startsWith('/plans/') ||
+          path === '/myshop' ||
+          path.startsWith('/myshop/');
+        if (!deep) {
+          window.location.hash = '#/guest';
+        }
+      }
+    } else if (
+      window.location.hash.slice(1).split('?')[0] === '/plans' ||
+      window.location.hash.slice(1).startsWith('/plans/') ||
+      window.location.hash.slice(1).split('?')[0] === '/community' ||
+      window.location.hash.slice(1).startsWith('/community/') ||
+      window.location.hash.slice(1).split('?')[0] === '/register-intro/room' ||
+      window.location.hash.slice(1).split('?')[0] === '/register-intro/tutor' ||
+      window.location.hash.slice(1).startsWith('/register-intro/')
+    ) {
+      clearPendingRoute();
+    }
+    // bootstrap*Route가 큐에 넣은 hashchange는 방금 그린 셸과 같으면 무시한다.
+    // 게스트·공개 화면은 me.php·board·support 완료 전에 셸을 그린다.
+    // 역할 홈·마이페이지·관리자는 세션 전 guard가 해시를 옮기므로 여기서 그리지 않는다.
+    let bootReady = false;
+    window.addEventListener('hashchange', (event) => {
+      if (!bootReady) return;
+      // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
+      // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
+      if (event.isTrusted && window.location.hash === paintedHash) return;
+      try {
+        render();
+      } catch (e) {
+        showBootError(e);
+      }
+    });
+    window.addEventListener('auth:login', async () => {
+      if (isAdminUser()) {
+        await activateAdminApi().catch((err) => {
+          console.warn('[admin] api disabled — static A28 fallback', err);
+          deactivateAdminApi();
+        });
+        await activateContentConfigApi().catch((err) => {
+          console.warn('[content-config] api disabled — sessionStorage fallback', err);
+          deactivateContentConfigApi();
+        });
+      } else {
+        deactivateAdminApi();
+        deactivateContentConfigApi();
+      }
+      render();
+      queueMicrotask(() => resumePendingDeepIntent());
+    });
+    window.addEventListener('auth:logout', () => {
+      resetDeepIntentResumeFlag();
+      resetConcernPreviewData();
+      deactivateBoardApi();
+      deactivateAdminApi();
+      deactivateContentConfigApi();
+      render();
+    });
+    window.addEventListener('auth:role-change', () => {
+      resetConcernPreviewData();
+      deactivateBoardApi();
+      activateBoardApi().catch((err) => {
+        console.warn('[board] rehydrate after role-change failed', err);
+        deactivateBoardApi();
+      });
+    });
+    window.addEventListener('auth:profile', () => {
+      render();
+    });
+    if (shouldPaintBeforeSession()) {
+      try {
+        render();
+      } catch (e) {
+        showBootError(e);
+      }
+    }
+    setTimeout(() => {
+      bootReady = true;
+      if (paintedHash !== null && window.location.hash !== paintedHash) {
+        try {
+          render();
+        } catch (e) {
+          showBootError(e);
+        }
+      }
+    }, 0);
+    const supportBoot = activateSupportApi().catch((err) => {
+      console.warn('[support] api disabled — sessionStorage fallback', err);
+      deactivateSupportApi();
+    });
+    // 게스트에게 401이 나는 library·submission은 첫 부트에서 요청하지 않는다.
+    const guestBoardBoot = activateBoardApi({ navRole: 'guest' }).catch((err) => {
+      console.warn('[board] api disabled — sessionStorage fallback', err);
+      deactivateBoardApi();
+    });
+    let followUpDone = false;
+    Promise.all([
+      supportBoot,
+      guestBoardBoot,
+      initAuthSession(),
+    ])
+      .then(async ([, , user]) => {
+        if (followUpDone) return;
+        followUpDone = true;
+        if (isAuthRedirectPending()) return;
+        if (user) {
+          const deferred = boardKeysBlockedForRole('guest');
+          if (deferred.length) {
+            hydrateBoardCache({ onlyKeys: deferred })
+              .then(() => {
+                if (isLibraryRoute() || isMypageRoute() || isAdminRoute()) render();
+              })
+              .catch((err) => {
+                console.warn('[board] deferred hydrate failed', err);
+              });
+          }
+        }
+        if (user && isAdminUser()) {
+          await activateAdminApi().catch((err) => {
+            console.warn('[admin] api disabled — static A28 fallback', err);
+            deactivateAdminApi();
+          });
+          await activateContentConfigApi().catch((err) => {
+            console.warn('[content-config] api disabled — sessionStorage fallback', err);
+            deactivateContentConfigApi();
+          });
+        }
+        // 소셜/세션 로그인 후 #/guest에 남아 있으면 역할 홈으로 이동
+        // admin은 운영 콘솔이 기본 홈이 아님 — 사이트 진입 시 게스트 홈 유지
+        // 커뮤니티·유료상품 등 pending/딥링크와 겹치면 역할홈으로 덮어쓰지 않음
+        const pending = peekPendingRoute();
+        const onDeep =
+          isCommunityRoute() ||
+          isPromoRoute() ||
+          isPlansRoute() ||
+          isRegisterIntroRoute() ||
+          isSupportRoute() ||
+          isGuideRoute() ||
+          isMyshopRoute() ||
+          isMypageRoute() ||
+          isAdminRoute();
+        if (
+          user &&
+          getCurrentScreen() === 'guest' &&
+          !onDeep &&
+          !pending &&
+          !hasPendingDeepIntent() &&
+          user.role_type !== 'admin' &&
+          ROLE_HOME[user.role_type]
+        ) {
+          navigate(ROLE_HOME[user.role_type]);
+          return;
+        }
+        if (pending === '/community' || pending === '/community/' || (pending && pending.startsWith('/community/'))) {
+          clearPendingRoute();
+          const target = pending;
+          if (!isCommunityRoute()) {
+            navigate(target);
+            return;
+          }
+        }
+        if (
+          pending === '/register-intro/room' ||
+          pending === '/register-intro/tutor' ||
+          (pending && pending.startsWith('/register-intro/'))
+        ) {
+          clearPendingRoute();
+          const target = pending;
+          if (!isRegisterIntroRoute()) {
+            navigate(target);
+            return;
+          }
+        }
+        const q = parseHashQuery();
+        if (q.email_verified === '1') {
+          window.alert('이메일 인증이 완료되었습니다.');
+        } else if (q.email_verify_error) {
+          showEmailVerifyOverlay();
+        }
+        render();
+        if (user) queueMicrotask(() => resumePendingDeepIntent());
+      })
+      .catch((err) => showBootError(err));
+  } catch (err) {
+    showBootError(err);
+  }
+}
+
+init();

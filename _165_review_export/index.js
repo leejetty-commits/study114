@@ -1,0 +1,187 @@
+import {
+  guardPlansAccess,
+  guardPlansPath,
+  resolveAccessNavRole,
+} from '../../../shared/route-access.js';
+import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
+import { clearPendingRoute } from '../../../shared/pending-route.js';
+import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
+import { getAuthUser, isLoggedIn } from '../auth-session.js';
+import { getPlansPath, getNavRole } from '../state.js';
+import { renderPlansShell, bindPlansShellEvents } from './shell.js';
+import { renderPlansScreen, bindPlansScreenEvents } from './screens.js';
+import { isPaidStorefrontPath, wrapPaidStorefront } from './theme.js';
+import {
+  hydratePaidCatalog,
+  isCatalogReady,
+  getCatalogError,
+  getCatalogState,
+} from './runtime-config.js';
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+/** 헤더 GNB용 — 세션 역할 우선, 비로그인은 항상 guest (메뉴 축소 방지) */
+function plansHeaderRole() {
+  if (isLoggedIn()) return resolveAccessNavRole(getAuthUser(), 'guest');
+  return 'guest';
+}
+
+/** 학생 #/plans — GNB·푸터는 유지하고 유료상품 메뉴는 열지 않는다. */
+function renderPlansStudentNotice() {
+  const headerRole = plansHeaderRole();
+  return `
+    ${renderPreviewToolbar()}
+    <div class="home-app">
+      ${renderHeader(headerRole)}
+      <div class="home-body home-body--no-promo">
+        <div class="home-main">
+          <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
+            <h1>유료상품</h1>
+            <p>유료상품은 공부방·과외쌤 회원용이에요.</p>
+            <p><a href="#/parent" class="btn btn--primary" data-nav="/parent">학생 홈으로 이동</a></p>
+          </section>
+        </div>
+      </div>
+      ${renderFooter()}
+    </div>
+  `;
+}
+
+function renderPlansLoginGate(message) {
+  const headerRole = plansHeaderRole();
+  const panel = renderGuestLoginGatePanel({
+    title: '유료상품',
+    lead: message,
+    bullets: [
+      '유료상품·노출·쪽지권·결제는 로그인 후 이용할 수 있습니다.',
+      '공부방·과외쌤 계정으로 로그인하면 상품센터가 열립니다.',
+    ],
+    from: 'plans',
+    action: 'plans',
+    primaryLabel: '로그인하고 유료상품 열기',
+  });
+  // 비로그인 유료상품: 우측배너 없음 · 안내박스만 중앙
+  const gateInner = `
+          <div class="site-gate-wrap">
+            ${panel}
+          </div>`;
+  const gateBody = isPaidStorefrontPath(getPlansPath()) ? wrapPaidStorefront(gateInner) : gateInner;
+  const appCls = isPaidStorefrontPath(getPlansPath()) ? 'home-app home-app--plans-sf' : 'home-app';
+  return `
+    ${renderPreviewToolbar()}
+    <div class="${appCls}">
+      ${renderHeader(headerRole)}
+      <div class="home-body home-body--no-promo">
+        <div class="home-main">
+          ${gateBody}
+        </div>
+      </div>
+      ${renderFooter()}
+    </div>
+  `;
+}
+
+function renderCatalogUnavailable(message) {
+  return `
+    <section class="mypage-panel plans-catalog-miss">
+      <h1>유료상품</h1>
+      <p class="mypage-note" role="alert">상품 가격표를 불러오지 못해 구매를 진행할 수 없습니다.</p>
+      <p>${esc(message || '잠시 후 다시 시도해 주세요.')}</p>
+      <p><button type="button" class="btn btn--primary" data-plans-reload-catalog>다시 불러오기</button></p>
+    </section>`;
+}
+
+export function renderPlans() {
+  // 유료상품 화면이 실제로 열리면 pending 복구는 완료된 것
+  clearPendingRoute();
+  const role = resolveAccessNavRole(getAuthUser(), getNavRole());
+  const hubGate = guardPlansAccess(role);
+  if (!hubGate.ok) {
+    if (hubGate.mode === 'login_gate' || role === 'guest' || !isLoggedIn()) {
+      return renderPlansLoginGate(hubGate.message);
+    }
+    if (role === 'parent') {
+      return renderPlansStudentNotice();
+    }
+    return `
+      <section class="mypage-panel" style="max-width:32rem;margin:2rem auto;padding:1.5rem;">
+        <h1>유료상품</h1>
+        <p>${esc(hubGate.message)}</p>
+        <p><a href="#${hubGate.redirect || '/support/faq'}" class="btn btn--primary" data-nav="${hubGate.redirect || '/support/faq'}">자주 묻는 질문으로 이동</a></p>
+        <p><a href="#/mypage/account" class="btn btn--secondary" data-nav="/mypage/account">마이페이지 · 계정설정</a></p>
+      </section>`;
+  }
+
+  const path = getPlansPath();
+  const pathGate = guardPlansPath(role, path);
+  if (!pathGate.ok) {
+    return renderPlansLoginGate(pathGate.message);
+  }
+
+  const effective =
+    role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+  const hasRoleProducts = (getCatalogState()?.products || []).some(
+    (p) => p.provider_type === effective || p.provider_type === 'both',
+  );
+
+  if (!isCatalogReady() || !hasRoleProducts) {
+    const err = getCatalogError() || '서버 카탈로그를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
+    const body = renderCatalogUnavailable(err);
+    return renderPlansShell(path, body, { role, isGuest: false });
+  }
+
+  const body = renderPlansScreen(path);
+  return renderPlansShell(path, body, { role, isGuest: false });
+}
+
+/** @param {HTMLElement} root @param {() => void} rerender */
+export function bindPlansEvents(root, rerender) {
+  const role = resolveAccessNavRole(getAuthUser(), getNavRole());
+  const hubGate = guardPlansAccess(role);
+  if (!hubGate.ok) {
+    // GNB는 bindLayoutEvents로 연결 (게스트 게이트에서도 메뉴 동작 유지)
+    bindPlansShellEvents(root, rerender);
+    bindGuestGateLinks(root);
+    return;
+  }
+
+  const path = getPlansPath();
+  const pathGate = guardPlansPath(role, path);
+  if (!pathGate.ok) {
+    bindPlansShellEvents(root, rerender);
+    bindGuestGateLinks(root);
+    return;
+  }
+
+  bindPlansShellEvents(root, rerender);
+
+  root.querySelectorAll('[data-plans-reload-catalog]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const effective =
+        role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+      hydratePaidCatalog(effective, { force: true })
+        .then(() => rerender())
+        .catch(() => rerender());
+    });
+  });
+
+  const effective =
+    role === 'study_room_owner' || role === 'study_room' ? 'study_room' : 'tutor';
+  const hasRoleProducts = (getCatalogState()?.products || []).some(
+    (p) => p.provider_type === effective || p.provider_type === 'both',
+  );
+  if (!isCatalogReady() || !hasRoleProducts) {
+    hydratePaidCatalog(effective, { force: true })
+      .then(() => rerender())
+      .catch(() => rerender());
+    if (!isCatalogReady() || !hasRoleProducts) {
+      return;
+    }
+  }
+
+  bindPlansScreenEvents(root, rerender);
+}
+
+export { getDefaultPlansPath } from './router.js';

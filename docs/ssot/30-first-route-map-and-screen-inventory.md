@@ -636,7 +636,7 @@
 | 2026-07-07 | **부록 F** — A28-07 QA 조합표 · §11 A28-07 행 분리 · 28§3-b 연동 |
 | 2026-07-07 | **부록 G** — 화면 갭 감사 · §5-b P18 · §8·§16 row 확장 · route ownership 잠금안 |
 | 2026-07-07 | **P18 hash** — `#/mypage/paid` · `#/mypage/paid/usage` · P15-09 허브 분리 |
-| 2026-08-29 | **ACL 재잠금** — discover/list 분리 · guest 소개만 · 공급자 세 방 전체 읽기 · 자료실 다운로드 미구현 · submission 과외쌤 전용 · 레일 submission 제거 |
+| 2026-08-29 | **ACL 재잠금** — discover/list 분리 · guest 소개만(2026-10-01 정정: 게스트·읽기 권한 없는 방은 제목만 — [09 §14-b](09-main-screen-roles.md)) · 공급자 세 방 전체 읽기 · 자료실 다운로드 미구현 · submission 과외쌤 전용 · 레일 submission 제거 |
 | 2026-08-10 | **채널 ACL 런타임 연결** — `board-channel-acl.js` · `BoardChannelAcl.php` · community list/detail 분리 · 레일 `visibilityRule`/`roleTarget`/`guestFilter`/`sourceBoardKeys` 적용 · Board API 세션 게이트 · guest `/library` 잠금(`/library/guides` 목록만) |
 
 ### 부록 H. channel ACL · guest list/detail · API gate (2026-08-10)
@@ -659,16 +659,18 @@
 | library / library-template | ✕ | ✕ | login 목록 · **다운로드 미구현** | admin |
 | library-guide-pdf | ○ | ○(메타) | 목록 메타 · **다운로드 미구현** | admin |
 | submission | ✕ | ✕ | tutor | tutor |
-| concern-parent (family) | ○ 소개만 | ✕ | parent + 공부방·과외쌤 읽기 | parent |
-| concern-director | ○ 소개만 | ✕ | 공부방·과외쌤 읽기 | room |
-| concern-tutor | ○ 소개만 | ✕ | 공부방·과외쌤 읽기 | tutor |
-| concern-solved | ○ 소개만 | ✕ | 로그인 전체 열람 | login (기존 유지) |
+| concern-parent (family) | ○ | 제목만 | parent + 공부방·과외쌤 읽기 | parent |
+| concern-director | ○ | 제목만 | 공부방·과외쌤 읽기 | room |
+| concern-tutor | ○ | 제목만 | 공부방·과외쌤 읽기 | tutor |
+| concern-solved | ○ | 제목만 | 로그인 전체 열람 | login (기존 유지) |
+
+> concern 「제목만」(게스트·그 방 읽기 권한 없는 사람): 제목·방 이름·날짜·반응 합계·댓글 수만. 본문·작성자 없음, 글쓰기·댓글·반응·신고 불가. 정본 [09 §14-b](09-main-screen-roles.md) (2026-10-01).
 
 | surface | gate |
 |---------|------|
-| `#/community/*` 목록·상세 | FE `canDiscoverBoard` / `canListBoard` / `canReadBoardDetail` · 소개 카드 |
-| HOT/레일 카드 | 채널 ACL 통과분만 · 글 권한 없으면 채널명·소개 CTA |
-| `/api/board/posts.php` | `access=intro` 이면 `posts=[]` · 제목·작성자 미반환 |
+| `#/community/*` 목록·상세 | FE `canDiscoverBoard` / `canListBoard` / `canReadBoardDetail` · 고민방은 읽기 권한이 없으면 제목 목록(상세·작성 불가) |
+| HOT/레일 카드 | 서버가 준 항목은 제목 항목이어도 카드(제목·방 이름·반응 합계·댓글 수) · 서버가 항목을 주지 않은 방 중 읽기 권한 없는 방만 채널명·소개 카드 |
+| `/api/board/posts.php` | 고민방 읽기 권한 없음 → `access=titles`(제목 항목, 본문·작성자 미반환) · `access=intro` 이면 `posts=[]` |
 | attachment token/download | session + submission download ACL (과외쌤·admin) |
 | mobile inline rail | `renderRightRailBlock` 동일 ACL |
 

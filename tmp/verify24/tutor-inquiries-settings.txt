@@ -1,0 +1,158 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: screens: uses renderTutorInquiries
+PASS: screens: binds inquiries events
+PASS: tab: 쪽지설정 unchanged
+PASS: route: inquiries → P21-05
+PASS: path: /inquiries
+PASS: pref: no sessionStorage
+PASS: pref: local pref key removed
+PASS: map: receiving → open
+PASS: map: closed+paused → paused
+PASS: map: closed+reason → not_accepting
+PASS: map: closed+no reason → null (no silent paused)
+PASS: map: closed+empty reason → null
+PASS: map: study-room reason rejected
+PASS: map: open → receiving
+PASS: map: paused → closed
+PASS: map: not_accepting reason
+PASS: map: missing → paused/closed
+PASS: roundtrip: open ↔ UI ↔ open
+PASS: normalize keeps open
+PASS: roundtrip: paused ↔ UI ↔ paused
+PASS: normalize keeps paused
+PASS: roundtrip: not_accepting ↔ UI ↔ not_accepting
+PASS: normalize keeps not_accepting
+PASS: copy: not_accepting ≠ paused
+PASS: edit: save calls store API
+PASS: edit: persistInquiryStatus named path
+PASS: edit: persist body PATCHes inquiry_status
+PASS: edit: no API phone gate retry
+PASS: edit: no OTP modal
+PASS: edit: no local phone gate
+PASS: edit: closed save requires reason
+PASS: edit: selectedReason does not fold to paused
+PASS: edit: schema_missing handled
+PASS: edit: schema_missing copy
+PASS: edit: failure restores last saved render
+PASS: edit: sessionStorage setter removed
+PASS: edit: goes through store, not raw patch
+PASS: edit: save does not overwrite tab URL
+PASS: store: PATCH inquiry_status
+PASS: store: PATCH 후 응답 불일치면 GET hydrate
+PASS: store: 성공 응답 inquiry_status 일치 확인
+PASS: service: inquiry_status action
+PASS: service: open does not require phone
+PASS: service: no phone verify on inquiry save
+PASS: repo: UPDATE inquiry_status
+PASS: repo: 064 missing is explicit
+PASS: api: schema_missing error code
+PASS: api: PATCH passes body
+PASS: ddl: tutor-only enum
+PASS: ddl: marked deploy prerequisite
+PASS: ddl: does not copy study-room enum
+PASS: deploy.yml: 064 file guard
+PASS: deploy.yml: inquiries verify job
+PASS: render: SSOT from tutor.inquiry_status
+PASS: render: raw status on root
+PASS: render: stored line from same status
+PASS: render: save button
+PASS: render: shared inquiry sample pair
+PASS: sample-cards: home BASIC renderBrowseList path
+PASS: sample-presets: tutor preset
+PASS: default status attr: paused
+PASS: default badge: 안받음
+PASS: default stored line: paused
+PASS: default closed: reasons stay active
+PASS: open status attr
+PASS: badge: 받는 중 from server status
+PASS: stored line: open
+PASS: reasons inactive when open
+PASS: radio: receiving checked
+PASS: not_accepting status attr
+PASS: not_accepting badge: 안받음
+PASS: stored line: not_accepting
+PASS: stored line helper matches render
+PASS: radio: closed checked
+PASS: reason: not_accepting checked
+PASS: reason: paused not checked
+PASS: css: inquiries scoped
+PASS: RC render untouched marker
+PASS: RC model untouched
+PASS: study-room service untouched
+PASS: structure order: p21-inq__lead after previous
+PASS: structure order: p21-inq-block--status after previous
+PASS: structure order: p21-inq-block--edit after previous
+PASS: structure order: data-p21-inquiry-save after previous
+PASS: structure order: p21-inq-block--samples after previous
+PASS: copy: sample title 쪽지 설정시 카드 샘플
+PASS: copy: no 카드 미리보기
+PASS: copy: 현재상태 수정
+PASS: copy: contact verify block removed
+PASS: copy: no 기본 연락처 검증 heading
+PASS: copy: contactHeading key removed
+PASS: copy: verifyFirstHint key removed
+PASS: css: inactive blocks pointer
+PASS: css: basic 1-cell width token
+PASS: css: basic card cell
+PASS: css: width probe removed
+PASS: sample ui: no hidden width probe
+PASS: sample css: no full home-body shell
+PASS: css: preview listing-w token removed
+PASS: css: preview card wrapper removed
+PASS: css: sample card is not scaled
+PASS: css: sample does not use 100vw
+PASS: sample ui: SVG guide
+PASS: sample ui: measures 쪽지 button
+PASS: sample: tutor-card-sample.jpg file exists
+PASS: sample: home BASIC portrait asset
+PASS: sample: no gray image placeholder
+PASS: sample: name filled
+PASS: sample: location filled
+PASS: sample: recommend count filled
+PASS: sample: review count filled
+PASS: sample: wish count filled
+PASS: sample: SVG arrow marker present
+PASS: sample: callout present
+PASS: sample: basic 1-cell card
+PASS: sample: open arrow copy
+PASS: sample: closed arrow copy
+PASS: sample: callout names the message slot
+PASS: sample: both cards have callouts
+PASS: route A direct: canonical inquiries → P21-05 / inquiries / id
+PASS: route A direct: screens switch P21-05
+PASS: route A direct: renderInquiries
+PASS: route A direct: shell active inquiries
+PASS: route B refresh: getMypagePath strips query before normalize
+PASS: route B refresh: same parse on reload
+PASS: route B refresh: hash query strip exists
+PASS: route C active key: tab order
+PASS: route C active key: hub
+PASS: route C active key: basic
+PASS: route C active key: detail
+PASS: route C active key: inquiries
+PASS: route C active key: publish
+PASS: route C: access shell maps to inquiries
+PASS: route D: stripHashQuery return=
+PASS: route D: ?return= does not break inquiries
+PASS: route D: ?focus= does not break inquiries
+PASS: route D: hash-trailing query keeps P21-05
+PASS: route D: return param readable
+PASS: route D: legacy /access + query → P21-05
+PASS: route D: access path canonicalizes to /inquiries
+PASS: route D: screens canonicalize /access
+PASS: route E tab: data-p21-nav handler present
+PASS: route E tab: hash set immediately
+PASS: route E tab: no persist gate
+PASS: route E tab: inquiries save does not hijack nav
+PASS: route E tab: inquiries does not consume return banner
+PASS: api B: PATCH endpoint tutors.php
+PASS: api B: payload id + action + body
+PASS: api E: server open does not require verify
+PASS: api E: server does not throw phone_verify_required
+PASS: api C: API maps schema_missing
+PASS: api C: API maps validation
+PASS: api D: GET hydrate inquiry_status
+PASS: api E: no OTP continuation into persist
+PASS: api E: persist path is PATCH
+
+tutor inquiries settings OK

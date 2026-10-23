@@ -1,0 +1,52 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  (b) screens.js에 renderMypageNoticeStrip 없음
+PASS  (b) screens.js에 _withNotice 없음
+PASS  (b) screens.js에 _entryPath 없음
+PASS  (a) 틀이 공지 스트립을 한 번만 호출
+PASS  (a) guest이면 스트립을 넣지 않음
+PASS  (a) 스트립이 bodyHtml 앞
+PASS  (f) border-bottom 2px var(--gray-300) 이 스타일 한 곳
+PASS  (f) 그 선언은 .mypage-notice 안
+PASS  (f) 화면 제목 구분선은 1px 로 별도
+PASS  (M7) 제목 말줄임 유지
+PASS  (M6) 캐시 후 마이페이지일 때만 다시 그림
+PASS  login guardian_student
+PASS  parent 입구 공지 1개·제목 아래·본문 앞 (/mypage/registrations/students/1)
+PASS  parent 입구 더보기·행은 #/support/notice
+PASS  parent 기본정보 공지 1개·제목 아래·본문 앞 (/mypage/registrations/students/1/basic)
+PASS  parent 기본정보 더보기·행은 #/support/notice
+PASS  parent 쪽지설정 공지 1개·제목 아래·본문 앞 (/mypage/registrations/students/1/settings)
+PASS  parent 쪽지설정 더보기·행은 #/support/notice
+PASS  parent 쪽지 공지 1개·제목 아래·본문 앞 (/mypage/messages)
+PASS  parent 쪽지 더보기·행은 #/support/notice
+PASS  parent 계정설정 공지 1개·제목 아래·본문 앞 (/mypage/account)
+PASS  parent 계정설정 더보기·행은 #/support/notice
+PASS  login study_room_owner
+PASS  study_room 입구 공지 1개·제목 아래·본문 앞 (/mypage/registrations/study-rooms/1)
+PASS  study_room 입구 더보기·행은 #/support/notice
+PASS  study_room 기본정보 공지 1개·제목 아래·본문 앞 (/mypage/registrations/study-rooms/1/basic)
+PASS  study_room 기본정보 더보기·행은 #/support/notice
+PASS  study_room 쪽지설정 공지 1개·제목 아래·본문 앞 (/mypage/registrations/study-rooms/1/inquiries)
+PASS  study_room 쪽지설정 더보기·행은 #/support/notice
+PASS  study_room 쪽지 공지 1개·제목 아래·본문 앞 (/mypage/messages)
+PASS  study_room 쪽지 더보기·행은 #/support/notice
+PASS  study_room 계정설정 공지 1개·제목 아래·본문 앞 (/mypage/account)
+PASS  study_room 계정설정 더보기·행은 #/support/notice
+PASS  login tutor
+PASS  tutor 입구 공지 1개·제목 아래·본문 앞 (/mypage/registrations/tutors/1)
+PASS  tutor 입구 더보기·행은 #/support/notice
+PASS  tutor 기본정보 공지 1개·제목 아래·본문 앞 (/mypage/registrations/tutors/1/basic)
+PASS  tutor 기본정보 더보기·행은 #/support/notice
+PASS  tutor 쪽지설정 공지 1개·제목 아래·본문 앞 (/mypage/registrations/tutors/1/inquiries)
+PASS  tutor 쪽지설정 더보기·행은 #/support/notice
+PASS  tutor 쪽지 공지 1개·제목 아래·본문 앞 (/mypage/messages)
+PASS  tutor 쪽지 더보기·행은 #/support/notice
+PASS  tutor 계정설정 공지 1개·제목 아래·본문 앞 (/mypage/account)
+PASS  tutor 계정설정 더보기·행은 #/support/notice
+PASS  (a) 틀 출력에 공지가 본문 마커보다 앞이고 1개
+PASS  (d) guest 0개
+PASS  login guardian_student
+PASS  (e) 공지 0건이면 0개
+PASS  (e) 0건 계정설정도 0개
+
+49 passed, 0 failed

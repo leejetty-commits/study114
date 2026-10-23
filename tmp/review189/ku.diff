@@ -1,0 +1,862 @@
+﻿diff --git a/preview/shared/korean-universities.js b/preview/shared/korean-universities.js
+index 16ebca2..832be5c 100644
+--- a/preview/shared/korean-universities.js
++++ b/preview/shared/korean-universities.js
+@@ -1,57 +1,481 @@
+ /**
+- * ?쒓뎅 ??숆탳紐?SSOT ??怨쇱쇅???깅줉/?섏젙/寃??怨듯넻
+- * - ?숇? ??숇챸 1媛???tutors.university_name
+- * - ?숆낵紐??쒖닠?? ??tutors.major_name (??紐⑤뱢 踰붿쐞 諛?
+- * - ??숈썝/異붽? ?숇젰쨌university_note ???숆탳 ?먯젙/?뺣젹 湲곗????ъ슜?섏? ?딆쓬
++ * ?쒓뎅 ???SSOT ???깅줉쨌寃?됀룰껐怨쇨? 媛숈? 紐⑸줉???대떎.
++ * ???쑣룸룄  ??洹?吏?????4?꾩젣+?꾨Ц?). ?뺤쟻 踰덈뱾. ?고????몃? API ?놁쓬.
++ * - 紐⑸줉???덈뒗 ?숇?紐???university_name
++ * - ??숈썝쨌紐⑸줉 諛????깅줉? ?쒖닠(湲고? + 吏곸젒 ?낅젰). 寃?됱? ?뚭린???+ * - ?숆낵紐끒톟niversity_note ????紐⑤뱢 諛? SKY ?먯젙? ?숇? ?뺤떇紐낅쭔.
+  */
+ 
++/** 紐⑸줉 諛뼿룸??숈썝 寃?됱슜 ?쒖떆紐? ?붾㈃ 肄붾뱶媛믪쑝濡??곗? ?딅뒗?? */
++export const UNIVERSITY_NAME_OTHER = '湲고?';
++
++/**
++ * 蹂멸탳(?먮뒗 罹좏띁?? 湲곗?. 紐낆???숆탳???쒖슱 ?몃Ц쨌寃쎄린 ?먯뿰 ?묒そ 紐⑸줉???붾떎.
++ * @type {readonly (readonly [string, readonly string[]])[]}
++ */
++const REGION_SOURCE = [
++  [
++    '?쒖슱?밸퀎??,
++    [
++      '媛먮━援먯떊?숇??숆탳',
++      '嫄닿뎅??숆탳',
++      '寃쏀씗??숆탳',
++      '寃쏀씗?ъ씠踰꾨??숆탳',
++      '怨좊젮??숆탳',
++      '怨좊젮?ъ씠踰꾨??숆탳',
++      '愿묒슫??숆탳',
++      '援????숆탳',
++      '援?젣?덉닠??숆탳',
++      '?뺤꽦?ъ옄??숆탳',
++      '?숆뎅??숆탳',
++      '?숇뜒?ъ옄??숆탳',
++      '?숈뼇誘몃옒??숆탳',
++      '紐낆???숆탳',
++      '紐낆??꾨Ц???,
++      '諛고솕?ъ옄??숆탳',
++      '諛깆꽍?덉닠??숆탳',
++      '?쇱쑁??숆탳',
++      '?쇱쑁蹂닿굔??숆탳',
++      '?곷챸??숆탳',
++      '?쒓컯??숆탳',
++      '?쒓꼍??숆탳',
++      '?쒖슱怨쇳븰湲곗닠??숆탳',
++      '?쒖슱援먯쑁??숆탳',
++      '?쒖슱??숆탳',
++      '?쒖슱?붿??몃??숆탳',
++      '?쒖슱?ъ씠踰꾨??숆탳',
++      '?쒖슱?쒕┰??숆탳',
++      '?쒖슱?ъ옄媛꾪샇??숆탳',
++      '?쒖슱?ъ옄??숆탳',
++      '?쒖슱?쒖쁺??숆탳',
++      '?쒖씪??숆탳',
++      '?깃났?뚮??숆탳',
++      '?깃퇏愿??숆탳',
++      '?깆떊?ъ옄??숆탳',
++      '?몄쥌??숆탳',
++      '?몄쥌?ъ씠踰꾨??숆탳',
++      '?숇챸?ъ옄??숆탳',
++      '??떎??숆탳',
++      '??떎?ъ씠踰꾨??숆탳',
++      '??쓽?ъ옄??숆탳',
++      '?ъ씠踰꾪븳援?쇅援?뼱??숆탳',
++      '?곗꽭??숆탳',
++      '?↔뎔?ш??숆탳',
++      '?댄솕?ъ옄??숆탳',
++      '?몃뜒??숆탳',
++      '?λ줈?뚯떊?숇??숆탳',
++      '?뺥솕?덉닠??숆탳',
++      '以묒븰??숆탳',
++      '珥앹떊??숆탳',
++      '異붽퀎?덉닠??숆탳',
++      '?쒓뎅諛⑹넚?듭떊??숆탳',
++      '?쒓뎅?대┛?ъ씠踰꾨??숆탳',
++      '?쒓뎅?덉닠醫낇빀?숆탳',
++      '?쒓뎅?멸뎅?대??숆탳',
++      '?쒓뎅泥댁쑁??숆탳',
++      '?쒖꽦??숆탳',
++      '?쒖뼇??숆탳',
++      '?쒖뼇?ъ씠踰꾨??숆탳',
++      '?쒖뼇?ъ옄??숆탳',
++      '?띿씡??숆탳',
++      'KC??숆탳',
++      '?쒖슱湲곕룆??숆탳',
++    ],
++  ],
++  [
++    '遺?곌킅??떆',
++    [
++      '寃쎌꽦??숆탳',
++      '寃쎈궓?뺣낫??숆탳',
++      '怨좎떊??숆탳',
++      '??숇??숆탳',
++      '?숇챸??숆탳',
++      '?숈꽌??숆탳',
++      '?숈븘??숆탳',
++      '?숈쓽怨쇳븰??숆탳',
++      '?숈쓽??숆탳',
++      '遺寃쎈??숆탳',
++      '遺?곌??⑤┃??숆탳',
++      '遺?곌꼍?곷??숆탳',
++      '遺?곌낵?숆린?좊??숆탳',
++      '遺?곌탳?〓??숆탳',
++      '遺?곕??숆탳',
++      '遺?곕뵒吏?몃??숆탳',
++      '遺?곗뿬?먮??숆탳',
++      '遺?곗삁?좊??숆탳',
++      '遺?곗쇅援?뼱??숆탳',
++      '?좊씪??숆탳',
++      '?쒓뎅?댁뼇??숆탳',
++      '?붿떊?ъ씠踰꾨??숆탳',
++    ],
++  ],
++  [
++    '?援ш킅??떆',
++    [
++      '寃쎈턿??숆탳',
++      '怨꾨챸??숆탳',
++      '怨꾨챸臾명솕??숆탳',
++      '?援ш꼍遺곴낵?숆린?좎썝(DGIST)',
++      '?援ш났?낅??숆탳',
++      '?援ш낵?숇??숆탳',
++      '?援ш탳?〓??숆탳',
++      '?援щ낫嫄대??숆탳',
++      '?섏꽦??숆탳',
++      '?곷궓?닿났??숆탳',
++      '?곸쭊?ъ씠踰꾨??숆탳',
++      '?곸쭊?꾨Ц??숆탳',
++    ],
++  ],
++  [
++    '?몄쿇愿묒뿭??,
++    [
++      '寃쎌씤援먯쑁??숆탳',
++      '寃쎌씤?ъ옄??숆탳',
++      '?몄쿇媛?⑤┃??숆탳',
++      '?몄쿇??숆탳',
++      '?몄쿇?щ뒫??숆탳',
++      '?명븯怨듭뾽?꾨Ц???,
++      '?명븯??숆탳',
++    ],
++  ],
++  [
++    '愿묒＜愿묒뿭??,
++    [
++      '愿묒떊??숆탳',
++      '愿묒＜怨쇳븰湲곗닠??GIST)',
++      '愿묒＜援먯쑁??숆탳',
++      '愿묒＜??숆탳',
++      '愿묒＜蹂닿굔??숆탳',
++      '愿묒＜?ъ옄??숆탳',
++      '湲곕룆媛꾪샇??숆탳',
++      '?⑤???숆탳',
++      '?숆컯??숆탳',
++      '?쒖쁺??숆탳',
++      '?≪썝??숆탳',
++      '?꾨궓??숆탳',
++      '議곗꽑媛꾪샇??숆탳',
++      '議곗꽑??숆탳',
++      '議곗꽑?닿났??숆탳',
++      '?몃궓??숆탳',
++      '?몃궓?좏븰??숆탳',
++    ],
++  ],
++  [
++    '??꾧킅??떆',
++    [
++      '嫄댁뼇?ъ씠踰꾨??숆탳',
++      '援?뎔媛꾪샇?ш??숆탳',
++      '??뺣??숆탳',
++      '??꾨??숆탳',
++      '??꾨낫嫄대??숆탳',
++      '??꾩떊?숇??숆탳',
++      '紐⑹썝??숆탳',
++      '諛곗옱??숆탳',
++      '?곗넚??숆탳',
++      '?곗넚?뺣낫???,
++      '?꾩???숆탳',
++      '移⑤??좏븰??숆탳',
++      '異⑸궓??숆탳',
++      '?쒕궓??숆탳',
++      '?쒕강??숆탳',
++      '?쒓뎅怨쇳븰湲곗닠??KAIST)',
++    ],
++  ],
++  [
++    '?몄궛愿묒뿭??,
++    [
++      '?몄궛怨쇳븰湲곗닠??UNIST)',
++      '?몄궛怨쇳븰??숆탳',
++      '?몄궛??숆탳',
++      '異섑빐蹂닿굔??숆탳',
++    ],
++  ],
++  [
++    '?몄쥌?밸퀎?먯튂??,
++    ['??꾧??⑤┃??숆탳', '?쒓뎅?곸긽??숆탳'],
++  ],
++  [
++    '寃쎄린??,
++    [
++      '媛泥쒕??숆탳',
++      '媛?⑤┃??숆탳',
++      '媛뺣궓??숆탳',
++      '寃쎄린??숆탳',
++      '寃쎈???숆탳',
++      '寃쎈났??숆탳',
++      '援?젣??숆탳',
++      '援?젣?ъ씠踰꾨??숆탳',
++      '源?щ??숆탳',
++      '?랁삊??숆탳',
++      '?④뎅??숆탳',
++      '?由쇰??숆탳',
++      '?吏꾨??숆탳',
++      '?숇궓蹂닿굔??숆탳',
++      '?숈꽌?몃??숆탳',
++      '?숈븘諛⑹넚?덉닠??숆탳',
++      '?숈썝??숆탳',
++      '?먯썝怨듦낵??숆탳',
++      '猷⑦꽣??숆탳',
++      '紐낆???숆탳',
++      '遺泥쒕??숆탳',
++      '?쒖젙??숆탳',
++      '?쒖슱?좏븰??숆탳',
++      '?쒖슱?덉닠??숆탳',
++      '?쒖슱?μ떊??숆탳',
++      '?깃껐??숆탳',
++      '?섏썝媛?⑤┃??숆탳',
++      '?섏썝怨쇳븰??숆탳',
++      '?섏썝??숆탳',
++      '?섏썝?ъ옄??숆탳',
++      '?좉꼍??숆탳',
++      '?좉뎄??숆탳',
++      '?좎븞?곕??숆탳',
++      '?좏븳??숆탳',
++      '?꾩＜??숆탳',
++      '?덉궛??숆탳',
++      '?덉뼇??숆탳',
++      '?ъ＜??숆탳',
++      '?곗꽦??숆탳',
++      '?ㅼ궛??숆탳',
++      '?⑹씤??숆탳',
++      '?⑹씤?덉닠怨쇳븰??숆탳',
++      '?좏븳??숆탳',
++      '?μ븞??숆탳',
++      '以묒븰?밴???숆탳',
++      '李⑥쓽怨쇳븰??숆탳',
++      '泥?컯臾명솕?곗뾽??숆탳',
++      '移쇰퉰??숆탳',
++      '?됲깮??숆탳',
++      '?쒓꼍援?┰??숆탳',
++      '?쒓뎅怨듯븰??숆탳',
++      '?쒓뎅愿愿묐??숆탳',
++      '?쒓뎅蹂듭???숆탳',
++      '?쒓뎅??났??숆탳',
++      '?쒖꽭??숆탳',
++      '?쒖떊??숆탳',
++      '?묒꽦??숆탳',
++      '?꾩꽭?꾩뿰?⑹떊?숇??숆탳',
++    ],
++  ],
++  [
++    '媛뺤썝?밸퀎?먯튂??,
++    [
++      '媛?⑤┃愿?숇??숆탳',
++      '媛뺣쫱?먯＜??숆탳',
++      '媛뺤썝??숆탳',
++      '媛뺤썝?꾨┰??숆탳',
++      '寃쎈룞??숆탳',
++      '?곸???숆탳',
++      '?곸??곸꽌??숆탳',
++      '?멸꼍??숆탳',
++      '?↔끝??숆탳',
++      '異섏쿇援먯쑁??숆탳',
++      '?쒓뎅怨⑦봽??숆탳',
++      '?쒕씪??숆탳',
++      '?쒕┝??숆탳',
++      '?쒕┝?깆떖??숆탳',
++    ],
++  ],
++  [
++    '異⑹껌遺곷룄',
++    [
++      '媛뺣룞??숆탳',
++      '怨듦뎔?ш??숆탳',
++      '洹밸룞??숆탳',
++      '苑껊룞?ㅻ??숆탳',
++      '??먮??숆탳',
++      '?쒖썝??숆탳',
++      '?몃챸??숆탳',
++      '?좎썝??숆탳',
++      '以묒썝??숆탳',
++      '泥?＜援먯쑁??숆탳',
++      '泥?＜??숆탳',
++      '異⑸턿??숆탳',
++      '異⑸턿?꾨┰??숆탳',
++      '異⑸턿蹂닿굔怨쇳븰??숆탳',
++      '異⑹껌??숆탳',
++      '?쒓뎅援먯썝??숆탳',
++      '?쒓뎅援먰넻??숆탳',
++    ],
++  ],
++  [
++    '異⑹껌?⑤룄',
++    [
++      '嫄댁뼇??숆탳',
++      '寃쎌같???,
++      '怨듭＜援먯쑁??숆탳',
++      '怨듭＜??숆탳',
++      '湲濡쒕쾶?ъ씠踰꾨??숆탳',
++      '湲덇컯??숆탳',
++      '?섏궗?쏅??숆탳',
++      '?⑥꽌?몃??숆탳',
++      '諛깆꽍??숆탳',
++      '諛깆꽍臾명솕??숆탳',
++      '?좊Ц??숆탳',
++      '?쒖쿇?λ??숆탳',
++      '?좎꽦??숆탳',
++      '?꾩＜?먮룞李⑤??숆탳',
++      '?곗븫??숆탳',
++      '以묐???숆탳',
++      '泥?슫??숆탳',
++      '異⑸궓?꾨┰??숆탳',
++      '?쒓뎅湲곗닠援먯쑁??숆탳',
++      '?쒓뎅?꾪넻臾명솕??숆탳',
++      '?쒖꽌??숆탳',
++      '?쒖쟾??숆탳',
++      '?몄꽌??숆탳',
++    ],
++  ],
++  [
++    '?꾨턿?밸퀎?먯튂??,
++    [
++      '援곗궛媛꾪샇??숆탳',
++      '援곗궛??숆탳',
++      '援곗옣??숆탳',
++      '諛깆젣?덉닠??숆탳',
++      '?덉닔??숆탳',
++      '?덉썝?덉닠??숆탳',
++      '?곗꽍??숆탳',
++      '?먭킅??숆탳',
++      '?먭킅?붿??몃??숆탳',
++      '?먭킅蹂닿굔??숆탳',
++      '?꾨턿怨쇳븰??숆탳',
++      '?꾨턿??숆탳',
++      '?꾩＜援먯쑁??숆탳',
++      '?꾩＜??숆탳',
++      '?꾩＜鍮꾩쟾??숆탳',
++      '?쒓뎅?띿닔?곕??숆탳',
++      '?쒖씪?μ떊??숆탳',
++      '?몄썝??숆탳',
++    ],
++  ],
++  [
++    '?꾨씪?⑤룄',
++    [
++      '愿묒뼇蹂닿굔??숆탳',
++      '怨좉뎄?ㅻ??숆탳',
++      '?숈떊??숆탳',
++      '?숈븘蹂닿굔??숆탳',
++      '紐⑺룷媛?⑤┃??숆탳',
++      '紐⑺룷怨쇳븰??숆탳',
++      '紐⑺룷??숆탳',
++      '紐⑺룷?댁뼇??숆탳',
++      '?명븳??숆탳',
++      '?쒖쿇??숆탳',
++      '?쒖쿇?쒖씪??숆탳',
++      '?곸궛?좏븰??숆탳',
++      '?꾨궓怨쇳븰??숆탳',
++      '?꾨궓?꾨┰??숆탳',
++      '泥?븫??숆탳',
++      '珥덈떦??숆탳',
++      '?쒓뎅?먮꼫吏怨듦낵??숆탳',
++      '?쒖쁺??숆탳',
++    ],
++  ],
++  [
++    '寃쎌긽遺곷룄',
++    [
++      '媛?⑤┃?곸???숆탳',
++      '寃쎈턿怨쇳븰??숆탳',
++      '寃쎈턿?꾨┰??숆탳',
++      '寃쎈턿蹂닿굔??숆탳',
++      '寃쎈턿?꾨Ц??숆탳',
++      '寃쎌슫??숆탳',
++      '寃쎌씪??숆탳',
++      '寃쎌＜??숆탳',
++      '援щ???숆탳',
++      '湲덉삤怨듦낵??숆탳',
++      '源泥쒕??숆탳',
++      '?援ш??⑤┃??숆탳',
++      '?援щ??숆탳',
++      '?援ъ삁?좊??숆탳',
++      '?援ы븳?섎??숆탳',
++      '?寃쎈??숆탳',
++      '?숈뼇??숆탳',
++      '臾멸꼍??숆탳',
++      '?좊┛??숆탳',
++      '?깆슫??숆탳',
++      '?쒕씪踰뚮??숆탳',
++      '?덈룞怨쇳븰??숆탳',
++      '?덈룞??숆탳',
++      '?곷궓??숆탳',
++      '?곷궓?좏븰??숆탳',
++      '?꾨뜒??숆탳',
++      '?ы빆怨듦낵??숆탳(POSTECH)',
++      '?쒕룞??숆탳',
++      '?몄궛??숆탳',
++      '?↔뎔3?ш??숆탳',
++    ],
++  ],
++  [
++    '寃쎌긽?⑤룄',
++    [
++      '媛?쇰??숆탳',
++      '嫄곗젣??숆탳',
++      '寃쎈궓??숆탳',
++      '寃쎈궓?꾨┰嫄곗갹???,
++      '寃쎈궓?꾨┰?⑦빐???,
++      '寃쎌긽援?┰??숆탳',
++      '源?대??숆탳',
++      '?숈썝怨쇳븰湲곗닠??숆탳',
++      '留덉궛??숆탳',
++      '遺?곗옣?좊??숆탳',
++      '?곗븫怨듦낵??숆탳',
++      '?곸궛??숆탳',
++      '?몄젣??숆탳',
++      '吏꾩＜援먯쑁??숆탳',
++      '吏꾩＜蹂닿굔??숆탳',
++      '李쎌떊??숆탳',
++      '李쎌썝臾몄꽦??숆탳',
++      '李쎌썝??숆탳',
++      '?쒓뎅?밴컯湲곕??숆탳',
++      '?닿뎔?ш??숆탳',
++    ],
++  ],
++  [
++    '?쒖＜?밸퀎?먯튂??,
++    ['?쒖＜愿愿묐??숆탳', '?쒖＜援?젣??숆탳', '?쒖＜??숆탳', '?쒖＜?쒕씪??숆탳'],
++  ],
++];
++
++function sortKo(names) {
++  return Object.freeze([...new Set(names)].sort((a, b) => a.localeCompare(b, 'ko')));
++}
++
++/** @type {readonly { region: string, schools: readonly string[] }[]} */
++export const KOREAN_UNIVERSITIES_BY_REGION = Object.freeze(
++  REGION_SOURCE.map(([region, schools]) =>
++    Object.freeze({
++      region,
++      schools: sortKo(schools),
++    }),
++  ),
++);
++
+ /** @type {readonly string[]} */
+-export const KOREAN_UNIVERSITY_NAMES = Object.freeze([
+-  '?쒖슱??숆탳',
+-  '?곗꽭??숆탳',
+-  '怨좊젮??숆탳',
+-  '?쒓컯??숆탳',
+-  '?깃퇏愿??숆탳',
+-  '?쒖뼇??숆탳',
+-  '以묒븰??숆탳',
+-  '寃쏀씗??숆탳',
+-  '?쒓뎅?멸뎅?대??숆탳',
+-  '?쒖슱?쒕┰??숆탳',
+-  '?댄솕?ъ옄??숆탳',
+-  '?숇챸?ъ옄??숆탳',
+-  '?띿씡??숆탳',
+-  '嫄닿뎅??숆탳',
+-  '?숆뎅??숆탳',
+-  '援????숆탳',
+-  '??떎??숆탳',
+-  '?몄쥌??숆탳',
+-  '?④뎅??숆탳',
+-  '?명븯??숆탳',
+-  '?꾩＜??숆탳',
+-  '媛?⑤┃??숆탳',
+-  '?쒓뎅怨쇳븰湲곗닠??KAIST)',
+-  '?ы빆怨듦낵??숆탳(POSTECH)',
+-  '?몄궛怨쇳븰湲곗닠??UNIST)',
+-  '愿묒＜怨쇳븰湲곗닠??GIST)',
+-  '?援ш꼍遺곴낵?숆린?좎썝(DGIST)',
+-  '遺?곕??숆탳',
+-  '寃쎈턿??숆탳',
+-  '?꾨궓??숆탳',
+-  '?꾨턿??숆탳',
+-  '異⑸궓??숆탳',
+-  '異⑸턿??숆탳',
+-  '媛뺤썝??숆탳',
+-  '?쒖＜??숆탳',
+-  '?쒖슱援먯쑁??숆탳',
+-  '湲고?',
+-]);
++export const KOREAN_UNIVERSITY_REGIONS = Object.freeze(
++  KOREAN_UNIVERSITIES_BY_REGION.map((group) => group.region),
++);
++
++/** 紐⑸줉 ?숇?紐? 湲고?쨌??숈썝 ?쒖닠? ?ｌ? ?딅뒗?? */
++export const KOREAN_UNIVERSITY_NAMES = Object.freeze(
++  sortKo(KOREAN_UNIVERSITIES_BY_REGION.flatMap((group) => [...group.schools])),
++);
+ 
+-/** 寃?됀룹꽑??UI??{ value, label } */
++/** 寃?됀룹꽑??UI??{ value, label }. 媛믪? ?붾㈃ ?숆탳紐낃낵 媛숇떎. */
+ export const KOREAN_UNIVERSITY_OPTIONS = KOREAN_UNIVERSITY_NAMES.map((label) => ({
+   value: label,
+   label,
+ }));
+ 
++/** @type {Map<string, string>} 泥섏쓬 ?깆옣?섎뒗 ?쑣룸룄. 紐낆?? 蹂듭썝? ?쒖슱. */
++const SCHOOL_REGION = new Map();
++for (const group of KOREAN_UNIVERSITIES_BY_REGION) {
++  for (const school of group.schools) {
++    if (!SCHOOL_REGION.has(school)) SCHOOL_REGION.set(school, group.region);
++  }
++}
++
+ /** 二쇱슂 ???異쒖떊 ?곗꽑 ???숇? ?뺤떇紐?+ 吏㏃? ?쒓린留?(university_note쨌??숈썝 臾멸뎄 ?뚯떛 湲덉?) */
+ export const SKY_UNIVERSITY_NAMES = Object.freeze(['?쒖슱??숆탳', '?곗꽭??숆탳', '怨좊젮??숆탳']);
+ 
+@@ -93,15 +517,47 @@ export function normalizeUniversityNameInput(raw) {
+ }
+ 
+ /**
+- * 紐⑸줉???덈뒗 ?뺤떇紐낆씤吏 (湲고? ?쒖쇅)
++ * 紐⑸줉???덈뒗 ?뺤떇紐낆씤吏 (湲고?쨌?쒖닠 ?쒖쇅)
+  * @param {string | null | undefined} raw
+  */
+ export function isListedUniversityName(raw) {
+   const n = normalizeUniversityNameInput(raw);
+-  if (!n || n === '湲고?') return false;
++  if (!n || n === UNIVERSITY_NAME_OTHER) return false;
+   return KOREAN_UNIVERSITY_NAMES.includes(n);
+ }
+ 
++/**
++ * @param {string} region
++ * @returns {readonly string[]}
++ */
++export function universitiesInRegion(region) {
++  const found = KOREAN_UNIVERSITIES_BY_REGION.find((group) => group.region === region);
++  return found ? found.schools : [];
++}
++
++/**
++ * @param {string | null | undefined} raw
++ * @returns {string}
++ */
++export function regionForUniversityName(raw) {
++  const n = normalizeUniversityNameInput(raw);
++  if (!n) return '';
++  return SCHOOL_REGION.get(n) || '';
++}
++
++/**
++ * @param {string | null | undefined} raw
++ * @returns {{ region: string, visible: string, note: string }}
++ */
++export function resolveUniversityPicker(raw) {
++  const name = normalizeUniversityNameInput(raw);
++  if (!name) return { region: '', visible: '', note: '' };
++  const region = regionForUniversityName(name);
++  if (region) return { region, visible: name, note: '' };
++  if (name === UNIVERSITY_NAME_OTHER) return { region: '', visible: UNIVERSITY_NAME_OTHER, note: '' };
++  return { region: '', visible: UNIVERSITY_NAME_OTHER, note: name };
++}
++
+ function escAttr(s) {
+   return String(s ?? '')
+     .replace(/&/g, '&amp;')
+@@ -109,8 +565,27 @@ function escAttr(s) {
+     .replace(/</g, '&lt;');
+ }
+ 
++function regionOptionsHtml(selected) {
++  const head = '<option value="">?쑣룸룄 ?좏깮</option>';
++  const body = KOREAN_UNIVERSITY_REGIONS.map((region) => {
++    const sel = region === selected ? ' selected' : '';
++    return `<option value="${escAttr(region)}"${sel}>${escAttr(region)}</option>`;
++  }).join('');
++  return head + body;
++}
++
++function datalistOptionsHtml(region) {
++  const schools = universitiesInRegion(region);
++  const listed = schools.map((name) => `<option value="${escAttr(name)}"></option>`).join('');
++  return `${listed}<option value="${UNIVERSITY_NAME_OTHER}"></option>`;
++}
++
++const REGISTER_HINT =
++  '?쑣룸룄瑜?怨좊Ⅸ ??洹?吏????숈쓣 ?좏깮?섏꽭?? ??숈썝?대굹 紐⑸줉???녿뒗 ?숆탳??湲고?瑜?怨좊Ⅴ怨?吏곸젒 ?낅젰?⑸땲??';
++const SEARCH_HINT = '??숈썝쨌紐⑸줉 諛뽰? 湲고??낅땲??';
++
+ /**
+- * ??숇챸 ?먮룞?꾩꽦(datalist) ?꾨뱶 HTML
++ * ?????숈썝 2???꾨뱶. ??κ컪? name ?낅젰 ?섎굹.
+  * @param {{
+  *   name?: string,
+  *   value?: string,
+@@ -124,80 +599,194 @@ function escAttr(s) {
+  * }} [opts]
+  */
+ export function renderUniversityNameField(opts = {}) {
++  const variant = opts.variant || 'form';
++  const mode = variant === 'search' ? 'search' : 'register';
+   const name = opts.name || 'university_name';
+-  const value = normalizeUniversityNameInput(opts.value);
++  const stored = normalizeUniversityNameInput(opts.value);
++  const resolved = resolveUniversityPicker(stored);
+   const id = opts.id || `univ_${name}`;
+   const listId = opts.listId || `${id}_list`;
+-  const className = opts.className || '';
+-  const variant = opts.variant || 'form';
++  const label = opts.label || '?????숈썝';
++  const hint = opts.hint || (mode === 'search' ? SEARCH_HINT : REGISTER_HINT);
+   const required = opts.required ? 'required' : '';
+-  const hint =
+-    opts.hint ||
+-    '?쒓뎅 ??숆탳紐?紐⑸줉?먯꽌 ?좏깮쨌寃?됲븯?몄슂. ?숇? ??숇챸 1媛쒕쭔 ??λ맗?덈떎.';
+-
+-  const optionsHtml = KOREAN_UNIVERSITY_NAMES.map(
+-    (u) => `<option value="${escAttr(u)}"></option>`,
+-  ).join('');
++  const controlClass =
++    variant === 'p19' ? 'p19-input' : variant === 'search' ? 'search-field__control' : 'form-input';
++  const selectClass = variant === 'p19' ? `${controlClass} p19-select` : controlClass;
++  const showNote = mode === 'register' && resolved.visible === UNIVERSITY_NAME_OTHER;
++  const tier = `
++    <div data-university-tier style="display:flex;flex-direction:column;gap:8px">
++      <select class="${escAttr(selectClass)}" data-university-sido aria-label="?쑣룸룄">
++        ${regionOptionsHtml(resolved.region)}
++      </select>
++      <input
++        class="${escAttr(controlClass)}"
++        type="text"
++        id="${escAttr(id)}"
++        list="${escAttr(listId)}"
++        value="${escAttr(resolved.visible)}"
++        placeholder="???寃?됀룹꽑??
++        autocomplete="off"
++        data-university-autocomplete="1"
++        aria-label="???
++        ${required}
++      />
++      <datalist id="${escAttr(listId)}">${datalistOptionsHtml(resolved.region)}</datalist>
++      ${
++        mode === 'register'
++          ? `<input
++        class="${escAttr(controlClass)}"
++        type="text"
++        data-university-note
++        value="${escAttr(resolved.note)}"
++        placeholder="??숈썝 ?먮뒗 紐⑸줉???녿뒗 ?숆탳"
++        autocomplete="off"
++        aria-label="??숈썝 ?먮뒗 湲고? ?숆탳"
++        ${showNote ? '' : 'hidden'}
++      />`
++          : ''
++      }
++      <input type="hidden" name="${escAttr(name)}" value="${escAttr(stored)}" data-university-value />
++    </div>`;
+ 
+   if (variant === 'search') {
+-    const labelInner = opts.labelHtml || escAttr(opts.label || '?숆탳紐?);
++    const extra = opts.className ? ` ${opts.className}` : '';
+     return `
+-      <label class="search-field${className ? ` ${className}` : ''}">
+-        <span class="search-field__label">${labelInner}</span>
+-        <input
+-          type="text"
+-          class="search-field__control"
+-          name="${escAttr(name)}"
+-          id="${escAttr(id)}"
+-          list="${escAttr(listId)}"
+-          value="${escAttr(value)}"
+-          placeholder="??숇챸 寃?됀룹꽑??
+-          autocomplete="off"
+-          data-university-autocomplete="1"
+-        />
+-        <datalist id="${escAttr(listId)}">${optionsHtml}</datalist>
+-      </label>`;
++      <div class="search-field${extra}" data-university-picker data-university-mode="search">
++        <span class="search-field__label">${escAttr(label)}</span>
++        ${tier}
++        <span class="search-field__label" style="font-weight:400;color:#64748b">${escAttr(hint)}</span>
++      </div>`;
+   }
+ 
+   if (variant === 'p19') {
+-    const inputClass = ['p19-input', className].filter(Boolean).join(' ');
++    const req = opts.required ? ' <em class="p19-required">?꾩닔</em>' : '';
+     return `
+-      <label class="p19-field">
+-        <span class="p19-field__label">${escAttr(opts.label || '異쒖떊???)}${opts.required ? ' <em class="p19-required">?꾩닔</em>' : ''}</span>
+-        <input
+-          class="${escAttr(inputClass)}"
+-          type="text"
+-          name="${escAttr(name)}"
+-          id="${escAttr(id)}"
+-          list="${escAttr(listId)}"
+-          value="${escAttr(value)}"
+-          placeholder="??숇챸 寃?됀룹꽑??
+-          autocomplete="off"
+-          data-university-autocomplete="1"
+-          ${required}
+-        />
+-        <datalist id="${escAttr(listId)}">${optionsHtml}</datalist>
++      <div class="p19-field" data-university-picker data-university-mode="register">
++        <span class="p19-field__label">${escAttr(label)}${req}</span>
++        ${tier}
+         <span class="p19-field__hint">${escAttr(hint)}</span>
+-      </label>`;
++      </div>`;
+   }
+ 
+-  const inputClass = ['form-input', className].filter(Boolean).join(' ');
+   return `
+-    <div class="form-group">
+-      <label class="form-label" for="${escAttr(id)}">${escAttr(opts.label || '異쒖떊???)}</label>
+-      <input
+-        class="${escAttr(inputClass)}"
+-        type="text"
+-        name="${escAttr(name)}"
+-        id="${escAttr(id)}"
+-        list="${escAttr(listId)}"
+-        value="${escAttr(value)}"
+-        placeholder="??숇챸 寃?됀룹꽑??
+-        autocomplete="off"
+-        data-university-autocomplete="1"
+-        ${required}
+-      />
+-      <datalist id="${escAttr(listId)}">${optionsHtml}</datalist>
++    <div class="form-group" data-university-picker data-university-mode="register">
++      <label class="form-label" for="${escAttr(id)}">${escAttr(label)}</label>
++      ${tier}
+       <p class="form-hint">${escAttr(hint)}</p>
+     </div>`;
+ }
++
++/**
++ * ?쑣룸룄 ??洹?吏?????datalist.
++ * 188: 媛믪씠 ?덉쑝硫??꾨Ⅴ硫?鍮꾩슦怨? 怨좊Ⅴ吏 ?딄퀬 鍮좎?硫??댁쟾 媛믪쓣 ?섎룎由곕떎. readonly/disabled 湲덉?.
++ * @param {ParentNode} root
++ */
++export function bindUniversityNameField(root) {
++  root.querySelectorAll('[data-university-picker]').forEach((picker) => {
++    if (!(picker instanceof HTMLElement)) return;
++    if (picker.dataset.universityBound === '1') return;
++    picker.dataset.universityBound = '1';
++
++    const mode = picker.dataset.universityMode === 'search' ? 'search' : 'register';
++    const sido = picker.querySelector('[data-university-sido]');
++    const visible = picker.querySelector('[data-university-autocomplete]');
++    const hidden = picker.querySelector('[data-university-value]');
++    const list = picker.querySelector('datalist');
++    const note = picker.querySelector('[data-university-note]');
++    if (!(sido instanceof HTMLSelectElement)) return;
++    if (!(visible instanceof HTMLInputElement)) return;
++    if (!(hidden instanceof HTMLInputElement)) return;
++    if (!(list instanceof HTMLDataListElement)) return;
++
++    sido.disabled = false;
++    visible.disabled = false;
++    visible.readOnly = false;
++    hidden.disabled = false;
++    sido.removeAttribute('disabled');
++    visible.removeAttribute('readonly');
++    visible.removeAttribute('disabled');
++    if (note instanceof HTMLInputElement) {
++      note.disabled = false;
++      note.readOnly = false;
++      note.removeAttribute('readonly');
++      note.removeAttribute('disabled');
++    }
++
++    const fillList = (region) => {
++      const schools = universitiesInRegion(region);
++      list.replaceChildren();
++      for (const school of schools) {
++        const opt = document.createElement('option');
++        opt.value = school;
++        list.appendChild(opt);
++      }
++      const other = document.createElement('option');
++      other.value = UNIVERSITY_NAME_OTHER;
++      list.appendChild(other);
++    };
++
++    const syncNote = () => {
++      if (!(note instanceof HTMLInputElement) || mode === 'search') return;
++      note.hidden = visible.value.trim() !== UNIVERSITY_NAME_OTHER;
++    };
++
++    const publish = () => {
++      const current = visible.value.trim();
++      if (mode === 'register' && current === UNIVERSITY_NAME_OTHER && note instanceof HTMLInputElement) {
++        note.hidden = false;
++        const typed = note.value.trim();
++        hidden.value = typed || UNIVERSITY_NAME_OTHER;
++        return;
++      }
++      if (note instanceof HTMLInputElement && current !== UNIVERSITY_NAME_OTHER) {
++        note.hidden = true;
++        if (current && isListedUniversityName(current)) note.value = '';
++      }
++      hidden.value = current;
++    };
++
++    sido.addEventListener('change', () => {
++      const current = visible.value.trim();
++      const schools = universitiesInRegion(sido.value);
++      if (sido.value && current && current !== UNIVERSITY_NAME_OTHER && !schools.includes(current)) {
++        visible.value = '';
++        if (note instanceof HTMLInputElement) note.value = '';
++      }
++      fillList(sido.value);
++      publish();
++    });
++
++    let held = '';
++    visible.addEventListener('pointerdown', () => {
++      visible.readOnly = false;
++      visible.disabled = false;
++      if (!visible.value) return;
++      held = visible.value;
++      visible.value = '';
++    });
++    visible.addEventListener('input', () => {
++      held = '';
++      publish();
++    });
++    visible.addEventListener('change', () => {
++      held = '';
++      publish();
++      if (mode === 'register' && visible.value.trim() === UNIVERSITY_NAME_OTHER && note instanceof HTMLInputElement) {
++        note.focus();
++      }
++    });
++    visible.addEventListener('blur', () => {
++      if (!visible.value.trim() && held) visible.value = held;
++      held = '';
++      publish();
++    });
++
++    if (note instanceof HTMLInputElement) {
++      note.addEventListener('input', publish);
++      note.addEventListener('change', publish);
++      note.addEventListener('blur', publish);
++    }
++
++    syncNote();
++  });
++}

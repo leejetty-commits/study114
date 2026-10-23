@@ -1,0 +1,30 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 서버 (가짜 PDO) #####
+PASS  (a) 빈 목록 거부 문구
+PASS  (a)(c) 빈 목록 거부 후 기존 행 유지
+PASS  (c) 빈 목록 거부는 롤백
+PASS  (b) 2번만 저장 거부 문구
+PASS  (b)(c) 2번만 거부 후 기존 행(99) 유지
+PASS  (b) 3번만 저장 거부
+PASS  (d) 1·2·3 저장 후 3행
+PASS  (d) 대표는 1번(region 11) 한 행
+PASS  (d) 2·3번은 대표가 아님
+PASS  (d) 2번 승격 UPDATE 없음
+PASS  (e) 목록 읽기 전후 study_room_regions 행 수 동일
+PASS  (e) 읽기 중 INSERT/UPDATE/DELETE 없음
+PASS  (f) 홍보1 없는 공부방 saved_regions 는 빈 목록
+PASS  (f) 이름 없는 홍보 행 라벨은 빈 값
+PASS  (f) 목록 응답에 #숫자 라벨 없음
+PASS  (f) 이용권 지역 이름을 못 찾으면 빈 라벨
+PASS  (f) 시 이름을 못 찾으면 빈 값
+PASS  PHP 검사 프로세스 정상 종료
+##### 프런트·소스 #####
+PASS  (g) 2번만 있는 입력 거부
+PASS  (g) 3번만 있는 입력 거부
+PASS  (g) 1·2·3 은 통과하고 대표는 1번
+PASS  (g) 마이페이지 저장이 공용 검증을 씀
+PASS  (g) 가입 저장이 공용 검증을 씀
+PASS  (g) 인페이지 저장은 검증된 슬롯만 받고 빈 1번을 앞으로 당기지 않음
+PASS  (f) src 에 행정동 #·단지 #·시 # 라벨 없음
+
+25 passed, 0 failed

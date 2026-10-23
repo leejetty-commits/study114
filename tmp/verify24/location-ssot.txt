@@ -1,0 +1,17 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  CanonicalLocation fields + coords from label
+PASS  serialize/deserialize roundtrip keeps lat/lng/source
+PASS  priority: URL wins over saved
+PASS  priority: saved wins over fallback (GPS slot empty)
+PASS  GPS skip when saved/url/address present
+PASS  filter encode/decode roundtrip
+PASS  searched=1 + f → needs restore once; second hydrate no loop
+PASS  searched=1 without f → region from canonical not stale storage
+PASS  no searched → clear search keep region concept
+PASS  promote non-numeric region_id → region_label
+PASS  toDisplayLabel normalizes raw region_label
+PASS  map center coords prefer explicit canonical
+PASS  reverseGeocodeCoords nearest fallback (no naver SDK)
+PASS  nearestRegionByCoords uses GPS coords not seed center only
+
+All location SSOT checks passed.

@@ -1,0 +1,52 @@
+##### 2부 실제 렌더 #####
+PASS  H6 과외 마이 기본정보: data-input-fill 표시
+PASS  H6 과외 마이 기본정보: 입력칸마다 data-fill = 값 유무 (11칸)
+PASS  H6 과외 마이 기본정보: (b) 라디오·체크·숨김·파일은 표시 없음 (9)
+PASS  H6 과외 마이 기본정보: (a) 값 있는 칸 회색 (2)
+PASS  H6 과외 마이 기본정보: (a) 빈 칸 흰색 (9)
+PASS  H6 과외 마이 기본정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H6 (b) 적용 폼 밖 data-fill 없음
+PASS  H6 페이지 오류 없음
+PASS  H7 과외 마이 상세정보: data-input-fill 표시
+PASS  H7 과외 마이 상세정보: 입력칸마다 data-fill = 값 유무 (19칸)
+PASS  H7 과외 마이 상세정보: (b) 라디오·체크·숨김·파일은 표시 없음 (5)
+PASS  H7 과외 마이 상세정보: (a) 값 있는 칸 회색 (7)
+PASS  H7 과외 마이 상세정보: (a) 빈 칸 흰색 (12)
+PASS  H7 과외 마이 상세정보: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H7 과외 마이 상세정보: (M6) p19-select 화살표 보임 (1)
+PASS  H7 (M6) p19-select 칸이 있다
+PASS  H7 (M6) p19-select 고른 뒤 회색 + 화살표 유지
+PASS  H7 (b) 적용 폼 밖 data-fill 없음
+PASS  H7 페이지 오류 없음
+PASS  H10 공부방 마이 상세2: data-input-fill 표시
+PASS  H10 공부방 마이 상세2: 입력칸마다 data-fill = 값 유무 (16칸)
+PASS  H10 공부방 마이 상세2: (b) 라디오·체크·숨김·파일은 표시 없음 (4)
+PASS  H10 공부방 마이 상세2: (a) 값 있는 칸 회색 (1)
+PASS  H10 공부방 마이 상세2: (a) 빈 칸 흰색 (15)
+PASS  H10 공부방 마이 상세2: (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H10 (b) 적용 폼 밖 data-fill 없음
+PASS  H10 페이지 오류 없음
+PASS  H11 등록점검 서랍(한 줄 소개): data-input-fill 표시
+PASS  H11 등록점검 서랍(한 줄 소개): 입력칸마다 data-fill = 값 유무 (1칸)
+PASS  H11 등록점검 서랍(한 줄 소개): (b) 라디오·체크·숨김·파일은 표시 없음 (0)
+PASS  H11 등록점검 서랍(한 줄 소개): (a) 값 있는 칸 회색 (1)
+PASS  H11 등록점검 서랍(한 줄 소개): (a) 빈 칸 흰색 (0)
+PASS  H11 등록점검 서랍(한 줄 소개): (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H11 등록점검 서랍(수업시간): data-input-fill 표시
+PASS  H11 등록점검 서랍(수업시간): 입력칸마다 data-fill = 값 유무 (1칸)
+PASS  H11 등록점검 서랍(수업시간): (b) 라디오·체크·숨김·파일은 표시 없음 (0)
+PASS  H11 등록점검 서랍(수업시간): (a) 값 있는 칸 회색 (0)
+PASS  H11 등록점검 서랍(수업시간): (a) 빈 칸 흰색 (1)
+PASS  H11 등록점검 서랍(수업시간): (M6) 규칙은 background-image(select 화살표)를 바꾸지 않음
+PASS  H11 등록점검 서랍: 선택하면 회색
+PASS  H11 페이지 오류 없음
+PASS  HX (b) 제외 홈·찾기 필터 /guest: 표시 없음 (칸 3)
+PASS  HX (b) 제외 게시판 /community: 표시 없음 (칸 1)
+PASS  HX (b) 제외 고객센터 /support: 표시 없음 (칸 1)
+PASS  HX (b) 제외 상품 /plans: 표시 없음 (칸 0)
+PASS  HX (b) 제외 쪽지 /mypage/messages: 표시 없음 (칸 0)
+PASS  HX 페이지 오류 없음
+PASS  HA (b) 제외 관리자 /admin: 표시 없음 (칸 0)
+PASS  HA 페이지 오류 없음
+
+49 passed, 0 failed

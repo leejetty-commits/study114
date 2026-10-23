@@ -134,7 +134,7 @@ http://localhost:5174 · `cd preview/home-ui && npm run dev`
 
 ## 24장 상세 판단 레이어 (P24-xx) `[home-ui 1차 ✅ · §20 잠금]`
 
-**정본:** `src/detail-decision/` · legacy `student-detail-modal.js` — 등록 폼만 유지 · 상세는 detail-decision
+**정본:** `src/detail-decision/` — 상세는 detail-decision 단일 경로 (legacy `student-detail-modal.js` 삭제됨)
 
 | # | 화면 | 파일 | SSOT | home-ui | search-ui |
 |---|------|------|------|---------|-----------|

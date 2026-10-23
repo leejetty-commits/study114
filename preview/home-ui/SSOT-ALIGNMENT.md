@@ -23,7 +23,7 @@
 | **쪽지함** | 핵심 중계 채널 | △ 유틸 메뉴 노출 · 페이지 미구현 |
 | **등록 2단계** | 기본→리스트 / 상세→누구나 이어서 | ✅ `study-room-ui` · `tutor-ui` |
 | **Pick/Prime** | **상세등록 완료 필수** | ✅ 문구·`EXPOSURE_TIERS` |
-| **열람권** | 1차 미구현 | ✅ `TUTOR_VIEW_PASS_CANDIDATE` 메모만 |
+| **열람권** | 폐지 · 판매 안 함 | ✅ 요청문 열람권 SKU 제거(`PaidCatalog` `removed_skus`) · 요청문 원문은 유료 공급자·관리자·학생 본인만 |
 
 ---
 

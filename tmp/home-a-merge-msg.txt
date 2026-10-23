@@ -1,0 +1,1 @@
+Merge cursor/home-a-banner-gap-20261014 — 홍보 화면 3칸 유지 + 홈 상단 여백 8px (승인 a7ce6387)

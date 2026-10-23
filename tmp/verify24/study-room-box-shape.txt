@@ -1,0 +1,24 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:235
+				const error = new Error(`Cannot find ${isBareImport(id) ? "package" : "module"} '${id}'${importer ? ` imported from '${importer}'` : ""}`, { cause });
+				              ^
+
+Error: Cannot find package '@search-ui/search-role-access.js' imported from 'D:/work/study114/preview/home-ui/src/layout.js'
+    at ViteNodeRunner._fetchModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:235:19)
+    at ViteNodeRunner.directRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:255:44)
+    at ViteNodeRunner.cachedRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:181:11)
+    at ViteNodeRunner.dependencyRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:228:10)
+    at D:\work\study114\preview\home-ui\src\layout.js:6:1
+    at ViteNodeRunner.runModule (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:368:4)
+    at ViteNodeRunner.directRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:348:3)
+    at ViteNodeRunner.cachedRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:181:11)
+    at ViteNodeRunner.dependencyRequest (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite-node/dist/client.mjs:228:10)
+    at D:\work\study114\preview\home-ui\src\screens\study-room.js:2:1 {
+  code: 'ERR_MODULE_NOT_FOUND',
+  [cause]: Error: Failed to load url @search-ui/search-role-access.js (resolved id: @search-ui/search-role-access.js) in D:/work/study114/preview/home-ui/src/layout.js. Does the file exist?
+      at loadAndTransform (file:///C:/Users/jetty/AppData/Local/Temp/cursor-sandbox-cache/0b1f9fdacc7cfcab4e05ca3a3aba74a0/npm/_npx/f2342a4b64a2bc92/node_modules/vite/dist/node/chunks/node.js:19977:31) {
+    code: 'ERR_LOAD_URL'
+  }
+}
+
+Node.js v24.16.0

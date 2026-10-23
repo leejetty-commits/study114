@@ -1,0 +1,427 @@
+=== RESIDUAL ASCII GREP (src only, no dist/node_modules) ===
+preview/auth-ui/src/screens/find-password.js:13:const SENT_MESSAGE =
+preview/auth-ui/src/screens/find-password.js:62:<p class="auth-subheading recovery-stage__desc">${SENT_MESSAGE}</p>
+preview/auth-ui/src/screens/signup-form.js:113:aria-label="우편번호"
+preview/auth-ui/src/layout.js:148:<div class="step-indicator" aria-label="가입 단계 ${currentStep}/${totalSteps}">
+preview/auth-ui/src/layout.js:164:<div class="social-login" aria-label="소셜 로그인">
+preview/auth-ui/src/login-stage.js:51:<div class="login-purpose" aria-label="로그인 후 할 수 있는 일">
+preview/auth-ui/src/recovery-stage.js:12:<a href="#/login" class="recovery-stage__logo" data-nav="/login" aria-label="로그인으로">
+preview/auth-ui/src/recovery-stage.js:34:<ul class="recovery-rules" aria-label="비밀번호 규칙">
+preview/auth-ui/src/register-enums.js:36:{ value: 'n_su', label: '대입 준비(재수 이상)' },
+preview/home-ui/src/admin/a28-copy.js:482:export const A28_EXPOSURE_ACTIONS = {
+preview/home-ui/src/admin/a28-copy.js:488:export const A28_EXPOSURE_TARGET_LABELS = {
+preview/home-ui/src/admin/a28-screens-bind.js:96:A28_EXPOSURE_ACTIONS,
+preview/home-ui/src/admin/a28-screens-bind.js:97:A28_EXPOSURE_TARGET_LABELS,
+preview/home-ui/src/admin/a28-screens-labs.js:228:const nav = `<nav class="addon-subnav" aria-label="부가서비스 구분">
+preview/home-ui/src/admin/a28-screens-shared.js:37:<div class="admin-drawer__panel" role="dialog" aria-label="${esc(title)}">
+preview/home-ui/src/admin/a28-screens-state.js:13:pending: '결제 대기',
+preview/home-ui/src/admin/a28-screens.js:92:A28_EXPOSURE_ACTIONS,
+preview/home-ui/src/admin/a28-screens.js:93:A28_EXPOSURE_TARGET_LABELS,
+preview/home-ui/src/admin/a28-screens.js:983:const typeLabel = A28_EXPOSURE_TARGET_LABELS[item.targetType] || item.targetType;
+preview/home-ui/src/admin/a28-screens.js:1012:<button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="hide" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.hide.hint)}">${esc(A28_EXPOSURE_ACTIONS.hide.label)}</button>
+preview/home-ui/src/admin/a28-screens.js:1016:: `<button type="button" class="btn btn--primary btn--sm" data-a28-exp-action="publish" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.publish.hint)}">${esc(A28_EXPOSURE_ACTIONS.publish.label)}</button>`
+preview/home-ui/src/admin/a28-screens.js:1020:? `<button type="button" class="btn btn--secondary btn--sm" data-a28-exp-action="inquiry_status" data-a28-exp-id="${esc(item.targetType)}:${esc(item.targetId)}" title="${esc(A28_EXPOSURE_ACTIONS.inquiry_status.hint)}">상담 보정</button>`
+preview/home-ui/src/admin/a28-screens.js:652:<div class="a28-promo-quick" aria-label="홍보 랜딩 바로가기">
+preview/home-ui/src/admin/a28-screens.js:1290:<div class="admin-ov" role="group" aria-label="회원 상태 집계">
+preview/home-ui/src/admin/shell.js:42:<nav class="admin-breadcrumb" aria-label="위치">
+preview/home-ui/src/admin/shell.js:97:<aside class="admin-sidebar" aria-label="관리자 메뉴">
+preview/home-ui/src/concern/screens.js:148:<span class="section-chip">게시판 4곳</span>
+preview/home-ui/src/concern/screens.js:127:<section class="hero-band" aria-label="커뮤니티 히어로">
+preview/home-ui/src/concern/screens.js:201:<section class="login-wall" aria-label="로그인 안내">
+preview/home-ui/src/concern/screens.js:206:<div class="login-wall__steps" aria-label="이용 단계">
+preview/home-ui/src/concern/screens.js:270:<section class="concern-alert-strip" aria-label="커뮤니티 알림">
+preview/home-ui/src/concern/screens.js:386:<div class="concern-filters" role="tablist" aria-label="글 유형">
+preview/home-ui/src/concern/screens.js:572:<nav class="concern-nav" aria-label="커뮤니티 메뉴">
+preview/home-ui/src/detail-decision/detail-shell.js:288:<button type="button" class="modal__close p24-modal__dragbar-close" data-p24-action="close" aria-label="닫기">×</button>
+preview/home-ui/src/detail-decision/detail-shell.js:297:${floating ? '' : '<button type="button" class="modal__close" data-p24-action="close" aria-label="닫기">×</button>'}
+preview/home-ui/src/detail-decision/detail-shell.js:302:<div class="p24-judgment" aria-label="3초 판단바">
+preview/home-ui/src/detail-decision/detail-utils.js:102:<div class="p24-compare-aware" aria-label="비교 상태">
+preview/home-ui/src/detail-decision/detail-utils.js:121:<div class="p24-compare-aware" aria-label="비교 상태">
+preview/home-ui/src/detail-decision/detail-utils.js:194:host.setAttribute('aria-labelledby', 'p24-leave-title');
+preview/home-ui/src/detail-decision/index.js:1:import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from '../exposure-data.js';
+preview/home-ui/src/detail-decision/index.js:47:? EXPOSURE_STUDENTS
+preview/home-ui/src/detail-decision/index.js:49:? EXPOSURE_TUTORS
+preview/home-ui/src/detail-decision/index.js:50:: EXPOSURE_STUDY_ROOMS;
+preview/home-ui/src/detail-decision/index.js:56:* 공부방 학생 탐색 정책: 미니카드 → 여기(확대) → 마이샵(풀페이지 본편).
+preview/home-ui/src/detail-decision/index.js:57:* 배너/카드 클릭은 확대만. 마이샵은 명시적 CTA로만. docs/internal/50-student-myshop-routing.md
+preview/home-ui/src/guide/nav.js:24:<nav class="guide-nav" aria-label="이용안내 메뉴">
+preview/home-ui/src/guide/screens.js:97:${sectionHead('여기에서 시작', '어디에 해당하나요?')}
+preview/home-ui/src/guide/screens.js:145:${sectionHead('바로 이용해 보기', '바로 이용하기')}
+preview/home-ui/src/guide/screens.js:37:<section class="guide-hero" aria-label="${esc(label)}">
+preview/home-ui/src/guide/screens.js:118:<div class="aux-links" role="navigation" aria-label="보조 링크">
+preview/home-ui/src/guide/screens.js:258:<div class="role-tabs" role="tablist" aria-label="역할 선택">
+preview/home-ui/src/guide/screens.js:262:<ul class="checklist" id="panel-room" role="tabpanel" aria-labelledby="tab-room">
+preview/home-ui/src/guide/screens.js:272:<ul class="checklist" id="panel-tutor" role="tabpanel" aria-labelledby="tab-tutor" hidden>
+preview/home-ui/src/guide/screens.js:329:<div class="chip-row" aria-label="찜 · 비교 · 쪽지">
+preview/home-ui/src/home-card-samples/render.js:98:<section class="rc-block rc-block--compare" aria-label="${esc(copy.cardsTitle)}">
+preview/home-ui/src/home-popup/mount.js:32:return `<button type="button" class="home-popup__x" data-home-popup-close aria-label="닫기">×</button>`;
+preview/home-ui/src/home-popup/mount.js:43:<article class="home-popup__card home-popup__card--notice" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+preview/home-ui/src/home-popup/mount.js:66:<article class="home-popup__card home-popup__card--event" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+preview/home-ui/src/home-popup/mount.js:93:<article class="home-popup__card home-popup__card--ad" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+preview/home-ui/src/home-popup/mount.js:152:return `<div class="home-popup__switch" role="group" aria-label="팝업 패밀리와 유형">${families}<span class="home-popup__switch-gap" aria-hidden="true"></span>${buttons}</div>`;
+preview/home-ui/src/library/library-screens.js:27:return `<div class="lib-policy-chips" aria-label="자료 권한 안내">${chips.join('')}</div>`;
+preview/home-ui/src/library/library-shell.js:20:<nav class="sup-nav" aria-label="자료실 메뉴">
+preview/home-ui/src/messages/attachment-spec.js:6:export const MESSAGE_ATTACHMENT = {
+preview/home-ui/src/messages/attachment-spec.js:29:if (files.length > MESSAGE_ATTACHMENT.maxFiles) {
+preview/home-ui/src/messages/attachment-spec.js:30:return `파일은 최대 ${MESSAGE_ATTACHMENT.maxFiles}개까지 첨부할 수 있습니다.`;
+preview/home-ui/src/messages/attachment-spec.js:33:if (file.size > MESSAGE_ATTACHMENT.maxBytes) {
+preview/home-ui/src/messages/attachment-spec.js:37:if (!MESSAGE_ATTACHMENT.allowedExt.includes(ext)) {
+preview/home-ui/src/messages/overlays.js:18:import { MESSAGE_ATTACHMENT, formatFileBytes, validateMessageFiles } from './attachment-spec.js';
+preview/home-ui/src/messages/overlays.js:196:<span>${MESSAGE_ATTACHMENT.label}</span>
+preview/home-ui/src/messages/overlays.js:198:<input class="msg-compose__file" type="file" multiple accept="${MESSAGE_ATTACHMENT.accept}" />
+preview/home-ui/src/messages/overlays.js:200:<span class="msg-compose__file-hint">${MESSAGE_ATTACHMENT.hint}</span>
+preview/home-ui/src/messages/overlays.js:60:<div class="msg-overlay" data-overlay="gate" role="dialog" aria-modal="true" aria-labelledby="msg-gate-title">
+preview/home-ui/src/messages/overlays.js:172:<div class="msg-overlay" data-overlay="compose" role="dialog" aria-modal="true" aria-labelledby="msg-compose-title">
+preview/home-ui/src/messages/router.js:6:export const MESSAGES_BASE = '/mypage/messages';
+preview/home-ui/src/messages/router.js:9:export const MESSAGES_TABS = ['inbox', 'sent', 'active', 'archive'];
+preview/home-ui/src/messages/router.js:10:export const REVIEWS_BASE = `${MESSAGES_BASE}/reviews`;
+preview/home-ui/src/messages/router.js:22:return MESSAGES_BASE;
+preview/home-ui/src/messages/router.js:25:if (m) return `${MESSAGES_BASE}/thread/${m[1]}`;
+preview/home-ui/src/messages/router.js:35:if (p === MESSAGES_BASE || p === `${MESSAGES_BASE}/`) return MESSAGES_BASE;
+preview/home-ui/src/messages/router.js:37:p === `${MESSAGES_BASE}/inbox` ||
+preview/home-ui/src/messages/router.js:38:p === `${MESSAGES_BASE}/sent` ||
+preview/home-ui/src/messages/router.js:39:p === `${MESSAGES_BASE}/active` ||
+preview/home-ui/src/messages/router.js:40:p === `${MESSAGES_BASE}/archive`
+preview/home-ui/src/messages/router.js:42:return MESSAGES_BASE;
+preview/home-ui/src/messages/router.js:44:if (p.startsWith(`${MESSAGES_BASE}/reviews`)) {
+preview/home-ui/src/messages/router.js:45:return `${MESSAGES_BASE}/reviews`;
+preview/home-ui/src/messages/router.js:55:return !!n && n !== MESSAGES_BASE;
+preview/home-ui/src/messages/router.js:59:return MESSAGES_BASE;
+preview/home-ui/src/messages/router.js:99:if (tab === 'sent') return `${MESSAGES_BASE}/sent`;
+preview/home-ui/src/messages/router.js:100:if (tab === 'active') return `${MESSAGES_BASE}/active`;
+preview/home-ui/src/messages/router.js:101:if (tab === 'archive') return `${MESSAGES_BASE}/archive`;
+preview/home-ui/src/messages/router.js:102:return `${MESSAGES_BASE}/inbox`;
+preview/home-ui/src/messages/router.js:107:return `${MESSAGES_BASE}/thread/${id}`;
+preview/home-ui/src/messages/screens.js:37:import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router.js';
+preview/home-ui/src/messages/screens.js:44:MESSAGE_ATTACHMENT,
+preview/home-ui/src/messages/screens.js:122:const msgHref = MESSAGES_BASE;
+preview/home-ui/src/messages/screens.js:164:const titleHref = open ? MESSAGES_BASE : threadPath(t.id);
+preview/home-ui/src/messages/screens.js:225:<label class="msg-reply__file-label">${MESSAGE_ATTACHMENT.label}
+preview/home-ui/src/messages/screens.js:226:<input class="msg-reply__file" type="file" multiple accept="${MESSAGE_ATTACHMENT.accept}" />
+preview/home-ui/src/messages/screens.js:228:<p class="msg-reply__attach-hint">${MESSAGE_ATTACHMENT.hint}</p>
+preview/home-ui/src/messages/screens.js:269:window.location.hash = el.getAttribute('data-msg-nav') || MESSAGES_BASE;
+preview/home-ui/src/messages/screens.js:124:return `<div class="msg-hub" role="tablist" aria-label="쪽지와 후기함">
+preview/home-ui/src/messages/screens.js:168:<span class="msg-row__name">${t.unread ? '<span class="msg-row__dot" aria-label="안 읽음"></span>' : ''}${esc(t.peerDisplayName)}${readStateBadge(t)}</span>
+preview/home-ui/src/messages/screens.js:170:<button type="button" class="msg-star${t.isImportant ? ' is-on' : ''}" data-msg-action="important" data-thread-id="${t.id}" aria-pressed="${t.isImportant ? 'true' : 'false'}" aria-label="${t.isImportant ? '중요 해제' : '중요 표시'}">★</button>
+preview/home-ui/src/mypage/mypage-copy.js:41:export const MESSAGES_SUMMARY_LEAD = '새 쪽지와 진행 중인 대화를 한곳에서 확인하세요.';
+preview/home-ui/src/mypage/paid-screens.js:9:P18_EXPOSURE_STATUS,
+preview/home-ui/src/mypage/paid-screens.js:123:const exposureLabel = exposure?.label ?? P18_EXPOSURE_STATUS.basic;
+preview/home-ui/src/mypage/paid-screens.js:153:<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.note)}</p>
+preview/home-ui/src/mypage/paid-screens.js:158:<div class="mypage-stats roi-metrics" aria-label="무료 반응 요약 3종">
+preview/home-ui/src/mypage/plans-catalog.js:189:export const P18_EXPOSURE_STATUS = {
+preview/home-ui/src/mypage/plans-catalog.js:95:name: '주요 대학',
+preview/home-ui/src/mypage/preview-data.js:76:const MESSAGE_PREVIEW = { unread: 2, active: 1 };
+preview/home-ui/src/mypage/preview-data.js:82:return MESSAGE_PREVIEW;
+preview/home-ui/src/mypage/router.js:6:MESSAGES_BASE,
+preview/home-ui/src/mypage/router.js:199:if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return getMessagesScreenId(path);
+preview/home-ui/src/mypage/router.js:229:if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
+preview/home-ui/src/mypage/router.js:230:if (role === 'parent' && path === MESSAGES_BASE) return '쪽지';
+preview/home-ui/src/mypage/screens.js:67:import { P18_EXPOSURE_STATUS } from './plans-catalog.js';
+preview/home-ui/src/mypage/screens.js:787:: `<p class="mypage-muted">${esc(P18_EXPOSURE_STATUS.basic)}</p>`
+preview/home-ui/src/mypage/screens.js:46:import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
+preview/home-ui/src/mypage/screens.js:200:if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return renderMessagesScreen(path);
+preview/home-ui/src/mypage/screens.js:259:<section class="mypage-home-section" aria-labelledby="mypage-today-title">
+preview/home-ui/src/mypage/screens.js:267:<div class="mypage-status-strip" aria-label="현황 요약">
+preview/home-ui/src/mypage/screens.js:796:<table class="plans-table" aria-label="결제 내역">
+preview/home-ui/src/mypage/screens.js:878:? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
+preview/home-ui/src/mypage/screens.js:931:<table class="p15-submission__table" aria-label="제출자료 상태">
+preview/home-ui/src/mypage/shell.js:49:<nav class="mypage-breadcrumb" aria-label="현재 위치">
+preview/home-ui/src/mypage/shell.js:120:<aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
+preview/home-ui/src/myshop/index.js:1:/** 공개 마이샵 — 라우트·셸·복귀 스냅샷 */
+preview/home-ui/src/myshop/navigate.js:2:* 공개 마이샵 진입 — 스냅샷 저장 후 `#/myshop/study-room/:id` 로 이동
+preview/home-ui/src/myshop/public-resolve.js:6:import { EXPOSURE_STUDY_ROOMS } from '../exposure-data.js';
+preview/home-ui/src/myshop/public-resolve.js:70:return EXPOSURE_STUDY_ROOMS.find((x) => Number(x.id) === n) || null;
+preview/home-ui/src/myshop/public-shell.js:2:* 공개 마이샵 풀페이지 셸
+preview/home-ui/src/myshop/public-shell.js:3:* — 본문은 원장 「내 등록 → 마이샵」과 동일 렌더(renderMyshopShowcase)
+preview/home-ui/src/myshop/return-snapshot.js:2:* 공개 마이샵 복귀 스냅샷 계약
+preview/home-ui/src/myshop/router.js:2:* 공개 마이샵 라우트 — `#/myshop/study-room/:id`
+preview/home-ui/src/plans/history-mock.js:124:pending: '결제 대기',
+preview/home-ui/src/plans/hub-home.js:23:<div class="cinema-eyebrow">유료 안내</div>
+preview/home-ui/src/plans/hub-home.js:25:<p class="cinema-lead">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
+preview/home-ui/src/plans/hub-home.js:101:<li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
+preview/home-ui/src/plans/hub-home.js:110:<span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
+preview/home-ui/src/plans/hub-home.js:25:<p class="cinema-lead">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>
+preview/home-ui/src/plans/hub-home.js:101:<li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>
+preview/home-ui/src/plans/hub-home.js:110:<span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>
+preview/home-ui/src/plans/hub-home.js:17:<section class="plans-hub-cinema home-cinema--soft" aria-label="유료상품 안내">
+preview/home-ui/src/plans/hub-home.js:83:<aside class="badge-aux" aria-labelledby="badgeAuxTitle">
+preview/home-ui/src/plans/hub-home.js:87:<ul class="badge-aux__chips" aria-label="핵심 조건">
+preview/home-ui/src/plans/hub-home.js:95:<section class="howto-block" aria-labelledby="howtoTitle">
+preview/home-ui/src/plans/hub-home.js:105:<section class="free-paid-block" aria-labelledby="fpTitle">
+preview/home-ui/src/plans/hub-home.js:119:<section class="faq-cta-block" aria-labelledby="faqTitle">
+preview/home-ui/src/plans/nav.js:38:<nav class="sup-nav${shellFit ? ' plans-sf-sidenav' : ''}" aria-label="유료상품 메뉴">
+preview/home-ui/src/plans/nav.js:67:<nav class="plans-sf-nav" aria-label="유료상품 storefront">
+preview/home-ui/src/plans/order-blocks.js:472:<li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>
+preview/home-ui/src/plans/order-blocks.js:483:<strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>
+preview/home-ui/src/plans/order-blocks.js:472:<li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>
+preview/home-ui/src/plans/order-blocks.js:483:<strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>
+preview/home-ui/src/plans/order-blocks.js:279:return `<div class="plans-apply-target__regions" role="group" aria-label="적용 지역">
+preview/home-ui/src/plans/order-blocks.js:300:aria-label="적용 지역 ${esc(r.label)}"
+preview/home-ui/src/plans/order-blocks.js:430:: `<button type="button" class="btn btn--primary plans-order-summary__cta" data-plans-order-cta aria-label="${esc(ctaLabel)}" ${ctaDisabled ? 'disabled' : ''}>${esc(ctaLabel)}</button>`
+preview/home-ui/src/plans/receipt.js:12:<aside class="plans-receipt" data-plans-receipt role="dialog" aria-label="결제 상세">
+preview/home-ui/src/plans/screens.js:1103:eyebrow: 'PAID PRODUCTS',
+preview/home-ui/src/plans/screens.js:1240:eyebrow: 'PAID PRODUCTS',
+preview/home-ui/src/plans/screens.js:7:P18_EXPOSURE_STATUS,
+preview/home-ui/src/plans/screens.js:1383:: `<div class="mypage-info-box"><p>${esc(P18_EXPOSURE_STATUS.basic)}</p>
+preview/home-ui/src/plans/screens.js:1105:lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
+preview/home-ui/src/plans/screens.js:320:if (normalized.includes('basic')) return '베이직카드';
+preview/home-ui/src/plans/screens.js:1105:lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',
+preview/home-ui/src/plans/screens.js:370:<ul class="plans-prime-board__cells" aria-label="프라임 자리 3칸">
+preview/home-ui/src/plans/screens.js:407:<div class="plans-room-pick" aria-label="픽 노출 미리보기 5열 2행">
+preview/home-ui/src/plans/screens.js:412:<li class="plans-room-pick__tile" aria-label="픽 미리보기 ${i + 1}">
+preview/home-ui/src/plans/screens.js:419:<nav class="plans-room-pick__pager" aria-label="페이지">
+preview/home-ui/src/plans/screens.js:446:return `<nav class="plans-tutor-circ__pager" aria-label="페이지">
+preview/home-ui/src/plans/screens.js:455:<li class="plans-tutor-circ__tile" aria-label="${prefix} 미리보기 ${i + 1}">
+preview/home-ui/src/plans/screens.js:467:<div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="프라임 노출 미리보기 페이지당 3명">
+preview/home-ui/src/plans/screens.js:483:<div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="픽 노출 미리보기 페이지당 10명">
+preview/home-ui/src/plans/screens.js:695:? `<div class="plans-pick-preview" aria-label="픽 노출 미리보기 5열 2행">
+preview/home-ui/src/plans/screens.js:700:<nav class="plans-pick-preview__pager" aria-label="페이지">
+preview/home-ui/src/plans/screens.js:737:<div class="plans-period" role="group" aria-label="기간 선택">
+preview/home-ui/src/plans/screens.js:886:aria-label="${esc(aria)}">
+preview/home-ui/src/plans/screens.js:1156:<aside class="plans-storefront__summary" aria-label="주문 요약">
+preview/home-ui/src/plans/screens.js:1248:<section class="plans-access-explain" aria-label="쪽지권 핵심 안내">
+preview/home-ui/src/plans/screens.js:1300:<aside class="plans-storefront__summary" aria-label="주문 요약">
+preview/home-ui/src/plans/screens.js:1367:? `<table class="plans-table" aria-label="이용중 노출상품">
+preview/home-ui/src/plans/screens.js:1394:? `<table class="plans-table" aria-label="쪽지권" data-plans-my-status="packs-ready">
+preview/home-ui/src/plans/screens.js:1469:<table class="plans-table" aria-label="결제내역">
+preview/home-ui/src/plans/screens.js:1796:<table class="plans-table" aria-label="프라임 예약대기">
+preview/home-ui/src/plans/store-ui.js:93:<table class="plans-compare__table" aria-label="${esc(opts.title)}">
+preview/home-ui/src/plans/store-ui.js:245:<fieldset class="plans-badge-select__fieldset" aria-labelledby="plans-badge-heading" aria-describedby="${policyId}${selectable && atMax ? ` ${limitId}` : ''}">
+preview/home-ui/src/plans/store-ui.js:247:<ul class="plans-badge-select__options" role="group" aria-label="홍보 배지 다중 선택, 최대 2개">
+preview/home-ui/src/plans/store-ui.js:261:aria-label="${esc(b.name)} 홍보 배지${b.id === 'sky' ? ', 광고 표현이며 인증 아님' : ''}" />
+preview/home-ui/src/promo/screens.js:42:<section class="pcat-hero" aria-labelledby="pcat-hero-title">
+preview/home-ui/src/promo/screens.js:55:<section class="pcat-section" aria-labelledby="pcat-near-title">
+preview/home-ui/src/promo/screens.js:71:<section class="pcat-section" aria-labelledby="pcat-compare-title">
+preview/home-ui/src/promo/screens.js:99:<section class="pcat-section" aria-labelledby="pcat-start-title">
+preview/home-ui/src/promo/screens.js:119:<section class="pcat-section" aria-labelledby="pcat-aud-title">
+preview/home-ui/src/promo/screens.js:138:<section class="pcat-section" aria-labelledby="pcat-trust-title">
+preview/home-ui/src/promo/screens.js:158:<section class="pcat-close" aria-labelledby="pcat-close-title">
+preview/home-ui/src/promo/screens.js:195:<aside class="promo-inline-card" aria-label="서비스 소개">
+preview/home-ui/src/provider-reviews/sheet.js:238:<div class="review-sheet" role="dialog" aria-modal="true" aria-labelledby="review-sheet-title">
+preview/home-ui/src/provider-reviews/sheet.js:245:<button type="button" class="review-sheet__close" data-review-sheet-act="close" aria-label="닫기">×</button>
+preview/home-ui/src/provider-reviews/teaser.js:4:* 공부방 마이샵 1차. 과외쌤 공개 페이지가 생기면 같은 mount를 재사용한다.
+preview/home-ui/src/provider-reviews/teaser.js:19:/** 마이샵 티저 노출 개수. 정렬은 최신순(summary와 동일). 향후 대표+최신 혼합 여지. */
+preview/home-ui/src/provider-reviews/teaser.js:57:<a class="shop-review-teaser__more" href="${esc(moreHref)}" aria-label="후기함에서 이 대상의 후기 더 보기">${esc(PROVIDER_REVIEW_COPY.moreCta)}</a>`;
+preview/home-ui/src/screens/study-room.js:36:<aside class="my-box my-box--banner-panel" aria-label="내 공부방 박스">
+preview/home-ui/src/screens/tutor.js:43:<aside class="my-box my-box--status" aria-label="${label}">
+preview/home-ui/src/screens/tutor.js:49:<div class="my-box__row my-box__row--2" aria-label="활동 지역">
+preview/home-ui/src/screens/tutor.js:99:<aside class="my-box my-box--status my-box--activity" aria-label="활동지역 분포">
+preview/home-ui/src/screens/tutor.js:113:<section class="tutor-home-split" aria-label="과외쌤 홈 현황">
+preview/home-ui/src/student-reg/screens.js:91:<nav class="mp-room__tabs" aria-label="내 등록">${tabs}</nav>
+preview/home-ui/src/student-reg/screens.js:436:<div class="p21-inq-choices" role="radiogroup" aria-label="쪽지 수신">
+preview/home-ui/src/study-room-reg/embedded-panels.js:301:{ label: '수업 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },
+preview/home-ui/src/study-room-reg/embedded-panels.js:302:{ label: '수업 스타일 추가설명', value: s.teaching_style_note, required: true },
+preview/home-ui/src/study-room-reg/inquiry-display.js:59:* 마이샵 본문용 — 이벤트 없는 읽기 전용 상태 문구 (CTA/버튼 카피 금지)
+preview/home-ui/src/study-room-reg/myshop-render.js:64:? `<section class="shop-bento" aria-label="핵심 정보" data-shop-section="facts">
+preview/home-ui/src/study-room-reg/myshop-render.js:98:<button type="button" class="shop-gallery__hero" data-shop-thumb="${esc(main.src)}" data-shop-photo-type="${esc(main.type)}" aria-label="사진 크게 보기">
+preview/home-ui/src/study-room-reg/myshop-render.js:108:<button type="button" class="shop-gallery__thumb" data-shop-thumb="${esc(g.src)}" data-shop-photo-type="${esc(g.type)}" aria-label="사진 ${i + 2}">
+preview/home-ui/src/study-room-reg/myshop-render.js:251:<button type="button" class="shop-lightbox__close" data-myshop-lightbox-close aria-label="닫기">×</button>
+preview/home-ui/src/study-room-reg/registration-check-copy.js:3:* 마이샵/쇼케이스 문구와 섞지 않는다.
+preview/home-ui/src/study-room-reg/registration-check-copy.js:34:cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',
+preview/home-ui/src/study-room-reg/registration-check-copy.js:37:basicKicker: '베이직카드',
+preview/home-ui/src/study-room-reg/registration-check-copy.js:112:{ id: 'teaching_style', label: '수업 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },
+preview/home-ui/src/study-room-reg/registration-check-copy.js:113:{ id: 'teaching_style_note', label: '수업 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },
+preview/home-ui/src/study-room-reg/registration-check-edit.js:164:<aside class="rc-drawer__panel" role="dialog" aria-modal="true" aria-labelledby="rc-drawer-title">
+preview/home-ui/src/study-room-reg/registration-check-edit.js:167:<button type="button" class="rc-icon-btn" data-rc-drawer-close aria-label="닫기">×</button>
+preview/home-ui/src/study-room-reg/registration-check-model.js:365:row('teaching_style', '수업 스타일', styles.join(' · '), styles.length ? 'filled' : 'empty'),
+preview/home-ui/src/study-room-reg/registration-check-model.js:366:row('teaching_style_note', '수업 스타일 추가설명', s?.teaching_style_note, textStatus(s?.teaching_style_note)),
+preview/home-ui/src/study-room-reg/registration-check-model.js:469:teaching_style: { step: 'lesson', type: 'styles', label: '수업 스타일' },
+preview/home-ui/src/study-room-reg/registration-check-model.js:470:teaching_style_note: { step: 'lesson', type: 'textarea', label: '수업 스타일 추가설명', max: 200, rows: 3 },
+preview/home-ui/src/study-room-reg/registration-check-render.js:44:<div class="rc-head__stats" aria-label="입력 상태 요약">${badges}</div>
+preview/home-ui/src/study-room-reg/registration-check-render.js:51:<section class="rc-block" aria-label="${esc(c.title)}">
+preview/home-ui/src/study-room-reg/registration-check-render.js:150:return `<a class="rc-section__edit" href="#${esc(editPath)}" data-p20-nav="${esc(editPath)}" aria-label="${esc(RC_COPY.board.editAria(title))}" title="수정">${editIconSvg()}</a>`;
+preview/home-ui/src/study-room-reg/router.js:81:'P20-02': '프로필 꾸미기',
+preview/home-ui/src/study-room-reg/router.js:110:{ key: 'hub', label: '프로필 꾸미기' },
+preview/home-ui/src/study-room-reg/screens.js:145:// 중간 목록 depth 제거 — 마이샵(hub)으로 직행
+preview/home-ui/src/study-room-reg/screens.js:343:<a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">프로필 꾸미기</a>`,
+preview/home-ui/src/study-room-reg/screens.js:412:<a href="#${studyRoomHubPath(room.id)}" class="btn btn--ghost" data-p20-nav="${studyRoomHubPath(room.id)}">프로필 꾸미기</a>`,
+preview/home-ui/src/study-room-reg/screens.js:96:<nav class="mp-room__tabs" aria-label="공부방 메뉴">
+preview/home-ui/src/study-room-reg/screens.js:524:<section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.currentStatusHeading)}">
+preview/home-ui/src/study-room-reg/screens.js:532:<section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
+preview/home-ui/src/study-room-reg/screens.js:536:<div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
+preview/home-ui/src/study-room-reg/screens.js:563:<section class="p21-inq-block p21-inq-block--samples p20-inq-sample" aria-label="${esc(P20_INQUIRY_COPY.sampleTitle)}">
+preview/home-ui/src/study-room-reg/shop-completeness.js:2:* 마이샵(ShopPage) 완성도 — 등록점검에 되먹임
+preview/home-ui/src/study-room-reg/shop-completeness.js:47:label: '수업 스타일',
+preview/home-ui/src/study-room-reg/shop-completeness.js:50:emptyShort: '수업 스타일 없음',
+preview/home-ui/src/study-room-reg/shop-completeness.js:51:emptyWhy: '수업 스타일이 없어 「이 공부방의 매력」이 약하거나 숨겨집니다',
+preview/home-ui/src/submission-board/submission-screens.js:57:<div class="lib-policy-chips" aria-label="제출함 권한">
+preview/home-ui/src/submission-board/submission-screens.js:209:<table class="sub-board-table" aria-label="내 제출 목록">
+preview/home-ui/src/support/admin-screens.js:34:<nav class="sup-admin-nav" aria-label="운영 메뉴">
+preview/home-ui/src/support/admin-screens.js:159:<select class="sup-admin-select" data-ticket-status="${esc(t.id)}" aria-label="상태">${options}</select>
+preview/home-ui/src/support/nav.js:53:<nav class="sup-nav" aria-label="고객센터 메뉴">
+preview/home-ui/src/support/screens.js:84:<section class="login-wall" aria-label="운영문의 로그인 안내">
+preview/home-ui/src/support/screens.js:89:<div class="login-wall__steps" aria-label="이용 단계">
+preview/home-ui/src/support/screens.js:176:<section class="support-hero" aria-label="고객센터 히어로">
+preview/home-ui/src/support/screens.js:369:<div class="tab-pills" role="tablist" aria-label="약관·정책">${tabs}</div>
+preview/home-ui/src/support/screens.js:391:return `<div class="lib-policy-chips" aria-label="자료 권한 안내">${chips.join('')}</div>`;
+preview/home-ui/src/support/screens.js:443:<div class="tab-pills" role="tablist" aria-label="자료실">${tabs}</div>
+preview/home-ui/src/support/support-copy.js:231:export const HOME_EXPOSURE_GUIDES = getHomeExposureGuides();
+preview/home-ui/src/tutor-reg/inquiries-copy.js:29:sampleLead: '홈과 같은 실제 베이직카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',
+preview/home-ui/src/tutor-reg/inquiries-render.js:43:<section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.currentStatusHeading)}">
+preview/home-ui/src/tutor-reg/inquiries-render.js:51:<section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.editHeading)}">
+preview/home-ui/src/tutor-reg/inquiries-render.js:55:<div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P21_INQUIRY_COPY.editHeading)}">
+preview/home-ui/src/tutor-reg/inquiries-render.js:82:<section class="p21-inq-block p21-inq-block--samples p20-inq-sample" aria-label="${esc(P21_INQUIRY_COPY.sampleTitle)}">
+preview/home-ui/src/tutor-reg/profile-read.js:165:return `<div class="p21-profile__gallery" aria-label="프로필 사진">${items}</div>`;
+preview/home-ui/src/tutor-reg/registration-check-copy.js:14:basicOk: '베이직카드 충족',
+preview/home-ui/src/tutor-reg/registration-check-copy.js:15:basicNeed: (n) => `베이직카드 ${n}개 부족`,
+preview/home-ui/src/tutor-reg/registration-check-copy.js:39:cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',
+preview/home-ui/src/tutor-reg/registration-check-copy.js:42:basicKicker: '베이직카드',
+preview/home-ui/src/tutor-reg/registration-check-render.js:44:<div class="rc-head__stats" aria-label="입력 상태 요약">${badges}</div>
+preview/home-ui/src/tutor-reg/registration-check-render.js:51:<section class="rc-block" aria-label="${esc(c.title)}">
+preview/home-ui/src/tutor-reg/registration-check-render.js:172:? `<a class="rc-section__edit" href="#${esc(editPath)}" data-p21-nav="${esc(editPath)}" aria-label="${esc(TRC_COPY.board.editAria(sec.title))}" title="수정">${editIconSvg()}</a>`
+preview/home-ui/src/tutor-reg/screens.js:441:'프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 베이직카드·픽·프라임 카드 대표 사진입니다.',
+preview/home-ui/src/tutor-reg/screens.js:78:<nav class="mp-room__tabs" aria-label="과외쌤 메뉴">${tabs}</nav>
+preview/home-ui/src/admin-red-line-copy.js:182:* UI 라벨은 a28-copy.js `A28_EXPOSURE_*` · 구현: AdminExposureService
+preview/home-ui/src/card-visual.js:216:return `<div class="card-visual__promo" aria-label="주목·신규 배지">${badges
+preview/home-ui/src/card-visual.js:231:return `<div class="card-visual__trust" aria-label="신뢰 배지">${labels
+preview/home-ui/src/compare-modal.js:71:<div class="compare-policy-axis" aria-label="카드 정책 비교축">
+preview/home-ui/src/compare-modal.js:180:<div class="compare-modal" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+preview/home-ui/src/compare-modal.js:186:<button type="button" class="compare-modal__close" data-action="compare-close" aria-label="닫기">×</button>
+preview/home-ui/src/data.js:9:EXPOSURE_STUDY_ROOMS,
+preview/home-ui/src/data.js:10:EXPOSURE_TUTORS,
+preview/home-ui/src/data.js:11:EXPOSURE_STUDENTS,
+preview/home-ui/src/email-verify-overlay.js:14:<div class="email-verify-overlay__panel" role="dialog" aria-labelledby="email-verify-title">
+preview/home-ui/src/exposure-bridge.js:9:EXPOSURE_STUDY_ROOMS,
+preview/home-ui/src/exposure-bridge.js:10:EXPOSURE_TUTORS,
+preview/home-ui/src/exposure-bridge.js:11:EXPOSURE_STUDENTS,
+preview/home-ui/src/exposure-bridge.js:109:patchPool(EXPOSURE_STUDY_ROOMS, rooms.items ?? [], mapRoomItem, REAL_DB_CAP.study_room);
+preview/home-ui/src/exposure-bridge.js:110:patchPool(EXPOSURE_TUTORS, tutors.items ?? [], mapTutorItem, REAL_DB_CAP.tutor);
+preview/home-ui/src/exposure-bridge.js:111:patchPool(EXPOSURE_STUDENTS, students.items ?? [], mapStudentItem, REAL_DB_CAP.student);
+preview/home-ui/src/exposure-data.js:248:export const EXPOSURE_STUDY_ROOMS = expandSeed(STUDY_ROOM_SEED, 28, 'registered_at').map(enrichStudyRoom);
+preview/home-ui/src/exposure-data.js:249:export const EXPOSURE_TUTORS = expandSeed(TUTOR_SEED, 28, 'registered_at').map(enrichTutor);
+preview/home-ui/src/exposure-data.js:250:export const EXPOSURE_STUDENTS = expandSeed(STUDENT_SEED, 28, 'published_at').map(enrichStudent);
+preview/home-ui/src/exposure-data.js:253:window.__STUDENT_PREVIEW_POOL = EXPOSURE_STUDENTS;
+preview/home-ui/src/exposure-data.js:257:export const DUMMY_STUDY_ROOMS = EXPOSURE_STUDY_ROOMS;
+preview/home-ui/src/exposure-data.js:258:export const DUMMY_TUTORS = EXPOSURE_TUTORS;
+preview/home-ui/src/exposure-data.js:259:export const DUMMY_STUDENT_REQUESTS = EXPOSURE_STUDENTS.map((s) => ({
+preview/home-ui/src/exposure-render.js:125:return `<button type="button" class="item-actions__btn${cls ? ` ${cls}` : ''}" title="${esc(title)}" aria-label="${esc(label)}" ${attrs}${dis}>
+preview/home-ui/src/exposure-render.js:246:<div class="card-stats" aria-label="통계">${recommendStat}${reviewStat}</div>
+preview/home-ui/src/exposure-render.js:247:<div class="item-actions card-actions" aria-label="기능">${wishBtn}${compareBtn}${messageBtn}</div>
+preview/home-ui/src/exposure-render.js:289:return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
+preview/home-ui/src/exposure-schema.js:9:export const EXPOSURE_TIER_META = {
+preview/home-ui/src/guest-sections.js:83:<section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${r.full}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false" data-allow-fallback="true">
+preview/home-ui/src/guest-sections.js:85:<div class="hero-map__surface hero-map__surface--naver" aria-label="${r.gu} ${r.dong} 공부방 지도">
+preview/home-ui/src/guest-sections.js:89:<aside class="hero-map__banner" aria-label="지역 요약">
+preview/home-ui/src/guest-sections.js:197:<section class="guest-browse-lists" aria-label="우동공과 리스트">
+preview/home-ui/src/guest-sections.js:201:<section class="guest-browse-lists guest-browse-lists--students" aria-label="학생 학습 의뢰">
+preview/home-ui/src/handoff-lifecycle.js:5:import { EXPOSURE_STUDENTS } from './exposure-data.js';
+preview/home-ui/src/handoff-lifecycle.js:81:return EXPOSURE_STUDENTS.find((s) => s.id === entry.id) || null;
+preview/home-ui/src/handoff-sticker.js:64:<section class="p24-section p24-section--pre-contact" aria-label="${esc(PRE_CONTACT_CHECKLIST.title)}">
+preview/home-ui/src/home-basic-live.js:3:* 운영 정책: live 실패 시 EXPOSURE mock 정렬 금지 → 빈 목록 + 안내
+preview/home-ui/src/home-basic-live.js:138:// 운영: mock EXPOSURE_* 폴백 금지 — live 전/실패 모두 빈 배열
+preview/home-ui/src/home-marketing-banner.js:12:const HOME_MESSAGES = `${HOME_UI_BASE}/#/mypage/messages`;
+preview/home-ui/src/home-marketing-banner.js:193:{ label: '쪽지함으로', href: HOME_MESSAGES, external: true, kind: 'primary' },
+preview/home-ui/src/home-marketing-banner.js:276:<section class="home-mkt home-mkt--${esc(cfg.layout)} home-mkt--${esc(copy.id)}" aria-label="소개 배너">
+preview/home-ui/src/layout.js:223:<nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth)}</nav>
+preview/home-ui/src/layout.js:233:<a href="#${logoPath}" class="home-header__logo" data-nav="${logoPath}" aria-label="우동공과 홈">
+preview/home-ui/src/layout.js:236:<nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
+preview/home-ui/src/layout.js:239:<nav class="home-gnb-mobile" aria-label="모바일 메뉴">${mobileGnb}</nav>
+preview/home-ui/src/lifecycle-copy.js:18:export const EXPOSURE_STATUS_LABELS = {
+preview/home-ui/src/lifecycle-copy.js:61:return EXPOSURE_STATUS_LABELS[/** @type {ExposureStatusKey} */ (status)] || status || '—';
+preview/home-ui/src/list-pagination.js:38:<nav class="list-pagination" data-list-id="${listId}" aria-label="${listId} 페이지">
+preview/home-ui/src/list-pagination.js:39:<div class="list-pagination__nums" role="group" aria-label="페이지 번호">
+preview/home-ui/src/main.js:142:// 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
+preview/home-ui/src/messages-api.js:9:export const MESSAGES_ENDPOINTS = {
+preview/home-ui/src/messages-api.js:34:return fetch(MESSAGES_ENDPOINTS.threads, {
+preview/home-ui/src/messages-api.js:53:const res = await fetch(MESSAGES_ENDPOINTS.threads, { ...CREDENTIALS });
+preview/home-ui/src/messages-api.js:59:const res = await fetch(`${MESSAGES_ENDPOINTS.threads}${qs}`, { ...CREDENTIALS });
+preview/home-ui/src/messages-api.js:64:const res = await fetch(`${MESSAGES_ENDPOINTS.threads}?counts=1`, { ...CREDENTIALS });
+preview/home-ui/src/messages-api.js:76:: await fetch(MESSAGES_ENDPOINTS.threads, {
+preview/home-ui/src/messages-api.js:88:: await fetch(MESSAGES_ENDPOINTS.threads, {
+preview/home-ui/src/messages-api.js:98:const res = await fetch(MESSAGES_ENDPOINTS.threads, {
+preview/home-ui/src/messages-api.js:108:const res = await fetch(MESSAGES_ENDPOINTS.entitlements, { ...CREDENTIALS });
+preview/home-ui/src/messages-api.js:113:const res = await fetch(MESSAGES_ENDPOINTS.threads, {
+preview/home-ui/src/policy-screens.js:21:<nav class="sup-nav sup-nav--policy" aria-label="정책 페이지">
+preview/home-ui/src/policy.js:26:export const EXPOSURE_TIERS = {
+preview/home-ui/src/right-rail.js:104:)}" aria-label="${visible ? '현장 고민과 안내' : '안내'}">
+preview/home-ui/src/right-rail.js:394:<div class="live-rail-media-dialog" hidden role="dialog" aria-modal="true" aria-label="${esc(media.title)}">
+preview/home-ui/src/section-headings.js:69:<span class="section-heading__loc" aria-label="현재위치 ${esc(loc)}">
+preview/home-ui/src/section-headings.js:183:<header class="section-heading${tierClass} ${alignClass}" ${cfg.id ? `id="${cfg.id}"` : ''} aria-label="${aria}">
+preview/home-ui/src/site-ops-chrome.js:70:<div class="ops-chrome__popup" role="dialog" aria-modal="true" aria-labelledby="ops-popup-title" data-ops-popup="${esc(popup.id)}">
+preview/home-ui/src/spa-navigation.js:3:* 공부방찾기는 /search SPA라 해시만 바꾸면 마이샵·후기함·가이드가 안 열린다.
+preview/home-ui/src/state.js:87:myshop: { label: '공개 마이샵', role: 'guest' },
+preview/home-ui/src/state.js:145:// 커뮤니티·홍보·자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
+preview/home-ui/src/student-enums.js:54:n_su: '대입 준비(재수 이상)',
+preview/home-ui/src/student-review-store.js:6:import { EXPOSURE_STUDENTS } from './exposure-data.js';
+preview/home-ui/src/student-review-store.js:47:const student = EXPOSURE_STUDENTS.find((s) => s.id === entry.id);
+preview/home-ui/src/student-review-ui.js:12:import { PAID_GATE_MESSAGE } from './student-visibility.js';
+preview/home-ui/src/student-review-ui.js:30:? PAID_GATE_MESSAGE
+preview/home-ui/src/student-review-ui.js:37:<div class="item-actions item-actions--student" aria-label="학생 액션">
+preview/home-ui/src/student-review-ui.js:44:<div class="item-actions item-actions--student" aria-label="학생 액션">
+preview/home-ui/src/student-review-ui.js:60:<div class="item-actions item-actions--student" aria-label="학생 액션">
+preview/home-ui/src/student-visibility.js:78:export const PAID_GATE_MESSAGE = PERMISSION_DENIED_COPY.paid.body;
+preview/home-ui/src/tutor-activity-chart.js:3:* 데이터: 프론트 시드 EXPOSURE_* + filterTutorsByRegion / filterStudentsByRegion
+preview/home-ui/src/tutor-activity-chart.js:6:import { EXPOSURE_TUTORS, EXPOSURE_STUDENTS } from './exposure-data.js';
+preview/home-ui/src/tutor-activity-chart.js:27:const tutors = filterTutorsByRegion(EXPOSURE_TUTORS, region.label);
+preview/home-ui/src/tutor-activity-chart.js:28:let students = filterStudentsByRegion(EXPOSURE_STUDENTS, region.label);
+preview/home-ui/src/tutor-activity-chart.js:82:<div class="act-bars" data-tutor-activity-bars aria-label="활동지역별 과외쌤·학생 수요">
+preview/home-ui/src/user-actions-state.js:7:import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS } from './exposure-data.js';
+preview/home-ui/src/user-actions-state.js:54:const pool = kind === 'tutor' ? EXPOSURE_TUTORS : EXPOSURE_STUDY_ROOMS;
+preview/home-ui/src/user-actions-ui.js:58:<aside class="compare-bar" aria-label="비교 담기">
+preview/home-ui/src/user-actions-ui.js:102:<div class="compare-modal wishlist-modal" role="dialog" aria-modal="true" aria-labelledby="wishlist-modal-title">
+preview/home-ui/src/user-actions-ui.js:108:<button type="button" class="compare-modal__close" data-action="wishlist-close" aria-label="닫기">×</button>
+preview/search-ui/src/screens/search-page.js:1:import { PAID_GATE_MESSAGE } from '@home-visibility';
+preview/search-ui/src/screens/search-page.js:63:: `무료 공급자 — 메모 접근 시 ${PAID_GATE_MESSAGE}`;
+preview/search-ui/src/search-exposure-mapper.js:4:EXPOSURE_STUDY_ROOMS,
+preview/search-ui/src/search-exposure-mapper.js:5:EXPOSURE_TUTORS,
+preview/search-ui/src/search-exposure-mapper.js:6:EXPOSURE_STUDENTS,
+preview/search-ui/src/search-exposure-mapper.js:49:const base = pooled || EXPOSURE_STUDY_ROOMS[index % EXPOSURE_STUDY_ROOMS.length] || EXPOSURE_STUDY_ROOMS[0];
+preview/search-ui/src/search-exposure-mapper.js:103:const base = pooled || EXPOSURE_TUTORS[index % EXPOSURE_TUTORS.length] || EXPOSURE_TUTORS[0];
+preview/search-ui/src/search-exposure-mapper.js:135:const base = pooled || EXPOSURE_STUDENTS[index % EXPOSURE_STUDENTS.length] || EXPOSURE_STUDENTS[0];
+preview/search-ui/src/search-find-surface.js:1125:// 홈 본문 주석 제거 — 이용안내(HOME_EXPOSURE_GUIDES)로 이전
+preview/search-ui/src/search-find-surface.js:663:<section class="search-student-demand" aria-label="해당 지역 학생 수요">
+preview/search-ui/src/search-find-surface.js:669:<section class="search-student-demand" aria-label="해당 지역 학생 수요">
+preview/search-ui/src/search-find-surface.js:1046:<nav class="tutor-region-tabs" aria-label="${esc(label)}" role="tablist">
+preview/search-ui/src/search-find-surface.js:1073:<div class="parent-home-region parent-home-region--tutor" aria-label="활동 지역">
+preview/search-ui/src/search-find-surface.js:1087:<div class="parent-home-region parent-home-region--tutor" aria-label="${esc(badge)}">
+preview/search-ui/src/search-find-surface.js:1108:<div class="parent-home-region" aria-label="내 지역">
+preview/search-ui/src/search-find-surface.js:1163:<aside class="search-form__title-col" aria-label="상세검색">
+preview/search-ui/src/search-find-surface.js:1259:<section class="search-results search-results--hope-gate" aria-label="희망 유형 선택" ${debugAttrs}>
+preview/search-ui/src/search-find-surface.js:1280:<section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
+preview/search-ui/src/search-find-surface.js:1292:<section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
+preview/search-ui/src/search-map.js:101:<section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+preview/search-ui/src/search-map.js:103:<div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
+preview/search-ui/src/search-map.js:107:<aside class="hero-map__banner" aria-label="지역 요약">
+preview/search-ui/src/search-provider-self.js:6:import { EXPOSURE_TUTORS } from '@home-ui/exposure-data.js';
+preview/search-ui/src/search-provider-self.js:45:const own = EXPOSURE_TUTORS.find((x) => x.id === PREVIEW_OWN_TUTOR_ID) || EXPOSURE_TUTORS[0];
+preview/search-ui/src/search-region-feed.js:7:EXPOSURE_STUDY_ROOMS,
+preview/search-ui/src/search-region-feed.js:8:EXPOSURE_TUTORS,
+preview/search-ui/src/search-region-feed.js:9:EXPOSURE_STUDENTS,
+preview/search-ui/src/search-region-feed.js:145:let pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionHint);
+preview/search-ui/src/search-region-feed.js:210:const pool = filterStudyRoomsByRegion(EXPOSURE_STUDY_ROOMS, regionLabel);
+preview/search-ui/src/search-region-feed.js:216:const pool = filterTutorsByRegion(EXPOSURE_TUTORS, regionLabel);
+preview/search-ui/src/search-region-feed.js:221:let pool = filterStudentsByRegion(EXPOSURE_STUDENTS, regionLabel);
+preview/search-ui/src/student-hope-type.js:50:<section class="search-hope-gate" aria-label="희망 유형 선택">
+preview/shared/back-to-top.js:35:btn.setAttribute('aria-label', '맨 위로');
+preview/shared/guest-gate-ui.js:50:<section class="guest-gate" aria-label="${esc(title)}">
+preview/shared/guest-gate-ui.js:187:overlay.setAttribute('aria-labelledby', 'guest-deep-gate-title');
+preview/shared/korean-universities.js:55:/** 주요 대학 출신 우선 — 학부 정식명 + 짧은 표기만 (university_note·대학원 문구 파싱 금지) */
+preview/shared/list-sort.js:4:* — 주요 대학 출신 우선(과외쌤만): isSkyUniversityName(university_name)
+preview/shared/list-sort.js:26:sky: '주요 대학 출신 우선',
+preview/shared/list-sort.js:265:aria-label="목록 정렬"
+preview/shared/promo-image.js:88:<div class="promo-crop-dialog" role="dialog" aria-modal="true" aria-labelledby="promo-crop-title">
+preview/shared/site-chrome.js:120:<nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth, user)}</nav>
+preview/shared/site-chrome.js:125:<a href="${logoHref}" class="home-header__logo" data-site-logo="${logoHref}" aria-label="우동공과 홈">
+preview/shared/site-chrome.js:128:<nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
+preview/shared/site-chrome.js:131:<nav class="home-gnb-mobile" aria-label="모바일 메뉴">${mobileGnb}</nav>
+preview/shared/site-footer.js:99:<nav class="site-footer__links home-footer__links" aria-label="정책 및 고객센터">
+preview/shared/study-room-basic-form.js:15:{ value: 'n_su', label: '대입 준비(재수 이상)' },
+preview/shared/study-room-basic-form.js:142:<input class="form-input" type="text" name="${esc(zipName)}" value="${esc(zip)}" placeholder="우편번호" readonly ${required ? 'required' : ''} aria-label="우편번호" />
+preview/study-room-ui/src/screens/step-basic.js:170:<div class="register-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="basic-edit-title">
+preview/study-room-ui/src/screens/step-basic.js:173:<button type="button" class="register-edit-dialog__close" data-action="cancel-edit" aria-label="닫기">×</button>
+preview/study-room-ui/src/screens/step-lesson.js:259:${starLabel('', '수업 스타일')}
+preview/study-room-ui/src/screens/step-lesson.js:263:${starLabel('teaching_style_note', '수업 스타일 추가설명')}
+preview/study-room-ui/src/layout.js:329:export const MESSAGE_INQUIRY_PAGE_TITLE = '쪽지설정';
+preview/study-room-ui/src/layout.js:342:<p class="register-message-notice__where">설정 위치: 마이페이지 - 내 등록 - <strong>${MESSAGE_INQUIRY_PAGE_TITLE}</strong></p>
+preview/study-room-ui/src/layout.js:196:<div class="register-phase" aria-label="등록 단계">
+preview/study-room-ui/src/layout.js:208:<div class="step-indicator" aria-label="등록 단계 ${Math.max(current, 0) + 1}/${visible.length}">
+preview/study-room-ui/src/layout.js:315:<nav class="register-work-tabs" aria-label="등록 단계 이동">
+preview/study-room-ui/src/state.js:63:{ value: 'N수', label: '대입 준비(재수 이상)' },
+preview/study-room-ui/src/state.js:33:{ value: 'n_su', label: '대입 준비(재수 이상)' },
+preview/study-room-ui/src/state.js:63:{ value: 'N수', label: '대입 준비(재수 이상)' },
+preview/study-room-ui/src/state.js:98:/** 수업 스타일 — 복수 선택 */
+preview/study-room-ui/src/summary.js:170:{ label: '수업 스타일', value: str(s.teaching_style) },
+preview/study-room-ui/src/summary.js:171:{ label: '수업 스타일 추가설명', value: str(s.teaching_style_note) },
+preview/tutor-ui/src/layout.js:123:<div class="register-phase" aria-label="등록 단계">
+preview/tutor-ui/src/layout.js:135:<div class="step-indicator" aria-label="등록 단계 ${Math.max(current, 0) + 1}/${visible.length}">
+preview/tutor-ui/src/state.js:63:{ value: 'n_su', label: '대입 준비(재수 이상)' },

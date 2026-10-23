@@ -1,0 +1,17 @@
+﻿2055:.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--space-4); }
+2063:.p24-overlay--floating {
+2071:.p24-overlay--floating .p24-modal--floating {
+2120:.p24-overlay--floating .p24-modal__head[data-p24-drag-handle] {
+FILE home-listings.css L2055
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: var(--space-4); }
+.modal { background: #fff; border-radius: 0.5rem; max-width: 28rem; width: 100%; max-height: 90vh; overflow: auto; }
+.modal__head { display: flex; justify-content: space-between; align-items: center; padding: var(--space-4); border-bottom: 1px solid var(--gray-200); }
+.modal__body { padding: var(--space-4); }
+.modal__foot { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--gray-200); display: flex; gap: var(--space-2); justify-content: flex-end; }
+.modal__close { background: none; border: none; font-size: 1.25rem; cursor: pointer; }
+
+/* ???? ???? ? ??? (?? ??????? ??) */
+.p24-overlay--floating {
+  background: transparent;
+  pointer-events: none;
+  align-items: flex-start;

@@ -1,0 +1,130 @@
+﻿{
+ "errs": [],
+ "apis": [
+  "/api/auth/me.php  → 200",
+  "/api/tutor/register.php masters → 200",
+  "/api/tutor/register.php load → 200",
+  "/api/board/posts.php  → 404",
+  "/api/board/posts.php  → 404",
+  "/api/board/posts.php  → 404"
+ ],
+ "hash": "#/register/basic",
+ "forms": [
+  {
+   "tag": "FORM",
+   "attrs": "data-form=basic data-input-fill=",
+   "fill": true,
+   "fields": [
+    {
+     "k": "tutor_display_name",
+     "t": "text",
+     "v": "김수학",
+     "d": false,
+     "ro": false,
+     "f": "filled",
+     "bg": "rgb(243, 244, 246)",
+     "img": false,
+     "vis": true
+    },
+    {
+     "k": "main_subject_note",
+     "t": "select-one",
+     "v": "수학",
+     "d": false,
+     "f": "filled",
+     "bg": "rgb(243, 244, 246)",
+     "img": false,
+     "vis": true
+    },
+    {
+     "k": "gender",
+     "t": "radio",
+     "v": "male",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": true
+    },
+    {
+     "k": "gender",
+     "t": "radio",
+     "v": "female",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": true
+    },
+    {
+     "k": "region_id",
+     "t": "hidden",
+     "v": "",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    },
+    {
+     "k": "scope_type",
+     "t": "hidden",
+     "v": "city",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    },
+    {
+     "k": "region_id",
+     "t": "hidden",
+     "v": "",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    },
+    {
+     "k": "scope_type",
+     "t": "hidden",
+     "v": "city",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    },
+    {
+     "k": "region_id",
+     "t": "hidden",
+     "v": "",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    },
+    {
+     "k": "scope_type",
+     "t": "hidden",
+     "v": "city",
+     "d": false,
+     "ro": false,
+     "f": null,
+     "bg": "rgba(0, 0, 0, 0)",
+     "img": false,
+     "vis": false
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,119 @@
+﻿ M preview/auth-ui/src/login-stage.js
+ M preview/auth-ui/src/register-enums.js
+ M preview/home-ui/src/auth-session.js
+ M preview/home-ui/src/board/board-backend.js
+ M preview/home-ui/src/concern/copy.js
+ M preview/home-ui/src/concern/screens.js
+ M preview/home-ui/src/concern/shell.js
+ M preview/home-ui/src/empty-state-copy.js
+ M preview/home-ui/src/exposure-render.js
+ M preview/home-ui/src/guide/screens.js
+ M preview/home-ui/src/guide/shell.js
+ M preview/home-ui/src/home-marketing-banner.js
+ M preview/home-ui/src/layout.js
+ M preview/home-ui/src/library/library-shell.js
+ M preview/home-ui/src/main.js
+ M preview/home-ui/src/messages/compose-flow.js
+ M preview/home-ui/src/messages/shell.js
+ M preview/home-ui/src/messages/thread-store.js
+ M preview/home-ui/src/mypage/mypage-copy.js
+ M preview/home-ui/src/mypage/plans-catalog.js
+ M preview/home-ui/src/mypage/screens.js
+ M preview/home-ui/src/mypage/shell.js
+ M preview/home-ui/src/nav-config.js
+ M preview/home-ui/src/plans/history-mock.js
+ M preview/home-ui/src/plans/hub-home.js
+ M preview/home-ui/src/plans/index.js
+ M preview/home-ui/src/plans/order-blocks.js
+ M preview/home-ui/src/plans/screens.js
+ M preview/home-ui/src/plans/shell.js
+ M preview/home-ui/src/plans/store-ui.js
+ M preview/home-ui/src/policy-shell.js
+ M preview/home-ui/src/promo/shell.js
+ M preview/home-ui/src/provider-reviews/copy.js
+ M preview/home-ui/src/registrations-backend.js
+ M preview/home-ui/src/state.js
+ M preview/home-ui/src/student-enums.js
+ M preview/home-ui/src/student-reg/router.js
+ M preview/home-ui/src/student-reg/student-reg-copy.js
+ M preview/home-ui/src/study-room-reg/embedded-panels.js
+ M preview/home-ui/src/study-room-reg/registration-check-copy.js
+ M preview/home-ui/src/study-room-reg/registration-check-model.js
+ M preview/home-ui/src/study-room-reg/router.js
+ M preview/home-ui/src/study-room-reg/screens.js
+ M preview/home-ui/src/study-room-reg/shop-completeness.js
+ M preview/home-ui/src/support/nav.js
+ M preview/home-ui/src/support/router.js
+ M preview/home-ui/src/support/screens.js
+ M preview/home-ui/src/support/shell.js
+ M preview/home-ui/src/support/support-copy.js
+ M preview/home-ui/src/tutor-activity-chart.js
+ M preview/home-ui/src/tutor-reg/inquiries-copy.js
+ M preview/home-ui/src/tutor-reg/registration-check-copy.js
+ M preview/home-ui/src/tutor-reg/screens.js
+ M preview/search-ui/src/search-find-surface.js
+ M preview/search-ui/src/student-hope-type.js
+ M preview/shared/korean-universities.js
+ M preview/shared/list-sort.js
+ M preview/shared/location-display.js
+ M preview/shared/site-chrome.js
+ M preview/shared/site-nav-config.js
+ M preview/shared/study-room-basic-form.js
+ M preview/study-room-ui/src/screens/step-lesson.js
+ M preview/study-room-ui/src/state.js
+ M preview/study-room-ui/src/summary.js
+ M preview/tutor-ui/src/state.js
+?? _164_review_export/164-rework-n4.diff
+?? _164_review_export/164-working-tree.diff
+?? _164_review_export/HEAD.txt
+?? _164_review_export/rework/164-full.diff
+?? _164_review_export/rework/HEAD.txt
+?? _164_review_export/rework/auth-role.js
+?? _164_review_export/rework/auth-session.js
+?? _164_review_export/rework/bundle.b64.txt
+?? _164_review_export/rework/concern-shell.js
+?? _164_review_export/rework/home-marketing-banner.js
+?? _164_review_export/rework/index.js
+?? _164_review_export/rework/layout.js
+?? _164_review_export/rework/main.js
+?? _164_review_export/rework/mypage-shell.js
+?? _164_review_export/rework/nav-config.js
+?? _164_review_export/rework/screens.js
+?? _164_review_export/rework/site-nav-config.js
+?? _164_review_export/rework/state.js
+?? _164_review_export/rework/status.txt
+?? _164_review_export/rework/student-hope-type.js
+?? _164_review_export/rework/support-shell.js
+?? _164_review_export/status.txt
+?? _165_review_export/165-claimed.diff
+?? _165_review_export/165-mode-audit-p1-acceptance-2026-09-28.md
+?? _165_review_export/HEAD.txt
+?? _165_review_export/auth-role.js
+?? _165_review_export/board-backend.js
+?? _165_review_export/board-channel-acl.js
+?? _165_review_export/board-engine-copy.js
+?? _165_review_export/claimed-files.txt
+?? _165_review_export/diffstat.txt
+?? _165_review_export/index.js
+?? _165_review_export/login-stage.js
+?? _165_review_export/nav.js
+?? _165_review_export/registrations-backend.js
+?? _165_review_export/router.js
+?? _165_review_export/screens.js
+?? _165_review_export/search-find-surface.js
+?? _165_review_export/site-chrome.js
+?? _165_review_export/state.js
+?? _165_review_export/state.js.diff
+?? _165_review_export/status.txt
+?? _166_review_export/HEAD.txt
+?? _166_review_export/diff-n11-n13.txt
+?? _166_review_export/diff-n14.txt
+?? _166_review_export/diff-n15-n21.txt
+?? _166_review_export/status.txt
+?? docs/046-studyroom-home-mapbox-detailsearch-ticket.md
+?? docs/047-studyroom-home-prime-basic-occupancy-ticket.md
+?? docs/164-mode-audit-p0-acceptance-2026-09-28.md
+?? docs/165-mode-audit-p1-acceptance-2026-09-28.md
+?? docs/README.md
+?? preview/home-ui/src/auth-role.js
+?? public/assets/teaser-B4PGj0F8.js

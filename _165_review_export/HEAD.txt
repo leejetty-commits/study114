@@ -1,0 +1,37 @@
+fa3762d6da16a3e47ae5a53ff600831d7facad93
+## feat/student-mypage-a-g...origin/main
+ M preview/auth-ui/src/login-stage.js
+ M preview/home-ui/src/auth-session.js
+ M preview/home-ui/src/board/board-backend.js
+ M preview/home-ui/src/concern/shell.js
+ M preview/home-ui/src/guide/shell.js
+ M preview/home-ui/src/home-marketing-banner.js
+ M preview/home-ui/src/layout.js
+ M preview/home-ui/src/library/library-shell.js
+ M preview/home-ui/src/main.js
+ M preview/home-ui/src/messages/shell.js
+ M preview/home-ui/src/mypage/screens.js
+ M preview/home-ui/src/mypage/shell.js
+ M preview/home-ui/src/nav-config.js
+ M preview/home-ui/src/plans/index.js
+ M preview/home-ui/src/plans/shell.js
+ M preview/home-ui/src/policy-shell.js
+ M preview/home-ui/src/promo/shell.js
+ M preview/home-ui/src/registrations-backend.js
+ M preview/home-ui/src/state.js
+ M preview/home-ui/src/support/nav.js
+ M preview/home-ui/src/support/router.js
+ M preview/home-ui/src/support/screens.js
+ M preview/home-ui/src/support/shell.js
+ M preview/search-ui/src/search-find-surface.js
+ M preview/search-ui/src/student-hope-type.js
+ M preview/shared/site-chrome.js
+ M preview/shared/site-nav-config.js
+?? _164_review_export/
+?? _165_review_export/
+?? docs/046-studyroom-home-mapbox-detailsearch-ticket.md
+?? docs/047-studyroom-home-prime-basic-occupancy-ticket.md
+?? docs/164-mode-audit-p0-acceptance-2026-09-28.md
+?? docs/README.md
+?? preview/home-ui/src/auth-role.js
+?? public/assets/teaser-B4PGj0F8.js

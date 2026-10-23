@@ -1,0 +1,137 @@
+﻿diff --git a/preview/home-ui/src/neighborhood-greeting-ui.js b/preview/home-ui/src/neighborhood-greeting-ui.js
+index e2516db..4162d3f 100644
+--- a/preview/home-ui/src/neighborhood-greeting-ui.js
++++ b/preview/home-ui/src/neighborhood-greeting-ui.js
+@@ -137,2 +137,3 @@ export function renderNeighborhoodGreetingEditor(opts) {
+       <textarea class="form-input ng-editor__input" maxlength="80" rows="2" data-ng-body>${esc(body)}</textarea>
++      <p class="ng-editor__status" data-ng-status role="status" hidden></p>
+       <p class="ng-editor__error" data-ng-error hidden></p>
+@@ -145,4 +146,6 @@ export function renderNeighborhoodGreetingEditor(opts) {
+ 
+-/** @param {HTMLElement} root @param {() => void} rerender */
+-export function bindNeighborhoodGreetingEditor(root, rerender) {
++const STATUS_HIDE_MS = 4000;
++
++/** @param {HTMLElement} root @param {() => void} [_rerender] ?깃났 ?ㅼ뿉???몄텧?섏? ?딅뒗?? ?쇱쓣 媛덉븘?쇱슦硫??덈궡媛 ?щ씪吏꾨떎. */
++export function bindNeighborhoodGreetingEditor(root, _rerender) {
+   const editor = root.querySelector('[data-ng-editor]');
+@@ -150,3 +153,18 @@ export function bindNeighborhoodGreetingEditor(root, rerender) {
+   const errorEl = editor.querySelector('[data-ng-error]');
++  const statusEl = editor.querySelector('[data-ng-status]');
++  /** @type {number} */
++  let statusTimer = 0;
++
++  const hideStatus = () => {
++    if (statusTimer) {
++      window.clearTimeout(statusTimer);
++      statusTimer = 0;
++    }
++    if (!statusEl) return;
++    statusEl.hidden = true;
++    statusEl.textContent = '';
++  };
++
+   const showError = (message) => {
++    hideStatus();
+     if (!errorEl) return;
+@@ -155,27 +173,73 @@ export function bindNeighborhoodGreetingEditor(root, rerender) {
+   };
+-  editor.querySelector('[data-ng-save]')?.addEventListener('click', async () => {
+-    const text = editor.querySelector('[data-ng-body]')?.value || '';
+-    const error = greetingError(text);
+-    if (error) {
+-      showError(error);
++
++  const showStatus = (message) => {
++    if (errorEl) {
++      errorEl.hidden = true;
++      errorEl.textContent = '';
++    }
++    if (!statusEl) return;
++    statusEl.hidden = false;
++    statusEl.textContent = message;
++    if (statusTimer) window.clearTimeout(statusTimer);
++    statusTimer = window.setTimeout(() => {
++      statusTimer = 0;
++      if (!statusEl.isConnected) return;
++      statusEl.hidden = true;
++      statusEl.textContent = '';
++    }, STATUS_HIDE_MS);
++  };
++
++  editor.querySelector('[data-ng-body]')?.addEventListener('input', () => {
++    hideStatus();
++  });
++
++  /** @param {boolean} up */
++  const syncActions = (up) => {
++    const saveBtn = editor.querySelector('[data-ng-save]');
++    if (saveBtn) saveBtn.textContent = up ? '?섏젙' : '?щ━湲?;
++    const downBtn = editor.querySelector('[data-ng-down]');
++    if (up) {
++      if (downBtn) return;
++      const btn = document.createElement('button');
++      btn.type = 'button';
++      btn.className = 'btn btn--secondary';
++      btn.setAttribute('data-ng-down', '');
++      btn.textContent = '?대━湲?;
++      editor.querySelector('.ng-editor__actions')?.appendChild(btn);
+       return;
+     }
+-    const saved = await publishGreeting({
+-      providerType: editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
+-      registrationId: Number(editor.getAttribute('data-ng-id') || 0),
+-      body: text,
+-      neighborhood: editor.getAttribute('data-ng-area') || '',
+-      displayName: editor.getAttribute('data-ng-name') || '',
+-    });
+-    if (!saved.ok) {
+-      showError(saved.error);
++    downBtn?.remove();
++    const bodyEl = editor.querySelector('[data-ng-body]');
++    if (bodyEl instanceof HTMLTextAreaElement) bodyEl.value = '';
++  };
++
++  editor.addEventListener('click', async (event) => {
++    const target = event.target instanceof Element ? event.target : null;
++    if (!target) return;
++    const providerType = editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room';
++    const registrationId = Number(editor.getAttribute('data-ng-id') || 0);
++    if (target.closest('[data-ng-save]')) {
++      const text = editor.querySelector('[data-ng-body]')?.value || '';
++      const error = greetingError(text);
++      if (error) {
++        showError(error);
++        return;
++      }
++      const saved = await publishGreeting({
++        providerType,
++        registrationId,
++        body: text,
++        neighborhood: editor.getAttribute('data-ng-area') || '',
++        displayName: editor.getAttribute('data-ng-name') || '',
++      });
++      if (!saved.ok) {
++        showError(saved.error);
++        return;
++      }
++      syncActions(true);
++      showStatus('??λ릺?덉뒿?덈떎');
+       return;
+     }
+-    rerender();
+-  });
+-  editor.querySelector('[data-ng-down]')?.addEventListener('click', async () => {
+-    const saved = await unpublishGreeting(
+-      editor.getAttribute('data-ng-type') === 'tutor' ? 'tutor' : 'study_room',
+-      Number(editor.getAttribute('data-ng-id') || 0),
+-    );
++    if (!target.closest('[data-ng-down]')) return;
++    const saved = await unpublishGreeting(providerType, registrationId);
+     if (!saved.ok) {
+@@ -184,3 +248,4 @@ export function bindNeighborhoodGreetingEditor(root, rerender) {
+     }
+-    rerender();
++    syncActions(false);
++    showStatus('?대졇?듬땲??);
+   });

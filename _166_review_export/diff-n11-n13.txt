@@ -1,0 +1,581 @@
+﻿diff --git a/preview/home-ui/src/concern/copy.js b/preview/home-ui/src/concern/copy.js
+index 0171fcb..1d98a43 100644
+--- a/preview/home-ui/src/concern/copy.js
++++ b/preview/home-ui/src/concern/copy.js
+@@ -56,7 +56,7 @@ export const SEED_COMMUNITY_BOARDS = [
+ 
+ export const COMMUNITY_BOARD_VISUAL = {
+   director: {
+-    kicker: 'Room',
++    kicker: '怨듬?諛?,
+     icon: '/assets/info-refresh/motif-room.svg',
+     desc: '?댁쁺쨌紐⑥쭛쨌怨듦컙 ?댁쁺 吏덈Ц???④린怨??댁썐 ?먯옣怨??섎닠 蹂댁꽭??',
+     cta: '?낆옣?섍린',
+@@ -67,7 +67,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: '',
+   },
+   tutor: {
+-    kicker: 'Tutor',
++    kicker: '怨쇱쇅??,
+     icon: '/assets/info-refresh/motif-tutor.svg',
+     desc: '?섏뾽 以鍮꽷룻븰遺紐??묐?쨌?쇱젙 議곗쑉 ???꾩옣 ?곸쓣 臾산퀬 ?듯빀?덈떎.',
+     cta: '?낆옣?섍린',
+@@ -78,7 +78,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: 'var(--role-tutor)',
+   },
+   parent: {
+-    kicker: 'Parent',
++    kicker: '?숈깮쨌?숇?紐?,
+     icon: '/assets/info-refresh/motif-parent.svg',
+     desc: '?숈뒿 怨꾪쉷쨌怨쇱쇅 ?좏깮쨌怨듬?諛??댁슜 寃쏀뿕??援ъ껜?곸쑝濡??섎닠 蹂댁꽭??',
+     cta: '?낆옣?섍린',
+@@ -89,7 +89,7 @@ export const COMMUNITY_BOARD_VISUAL = {
+     kickerColor: 'var(--role-student)',
+   },
+   solved: {
+-    kicker: 'Solved',
++    kicker: '?닿껐??,
+     icon: '/assets/info-refresh/motif-solved.svg',
+     desc: '怨좊????由?怨쇱젙??吏㏐쾶 ?④꺼, ?ㅼ쓬 ?щ엺?먭쾶 ?⑥꽌瑜??꾪빀?덈떎.',
+     cta: '?꾧린 蹂닿린',
+diff --git a/preview/home-ui/src/concern/screens.js b/preview/home-ui/src/concern/screens.js
+index 75a3c81..69ac40b 100644
+--- a/preview/home-ui/src/concern/screens.js
++++ b/preview/home-ui/src/concern/screens.js
+@@ -145,7 +145,7 @@ function renderCommunityHub(navRole) {
+     <div class="pattern-band" aria-hidden="true"></div>
+     <div class="section-head">
+       <div>
+-        <span class="section-chip">4 boards</span>
++        <span class="section-chip">寃뚯떆??4怨?/span>
+         <h2>??븷蹂?蹂대뱶濡?諛붾줈 ?ㅼ뼱媛湲?/h2>
+         <div class="section-underline"></div>
+       </div>
+diff --git a/preview/home-ui/src/guide/screens.js b/preview/home-ui/src/guide/screens.js
+index 55b3e93..dfa893b 100644
+--- a/preview/home-ui/src/guide/screens.js
++++ b/preview/home-ui/src/guide/screens.js
+@@ -94,7 +94,7 @@ function renderGuideHome() {
+       p2: '?댁슜 以?留됲엳??遺遺꾩씠 ?덈떎硫?怨좉컼?쇳꽣?먯꽌 怨듭?, FAQ, ?댁쁺臾몄쓽瑜??댁뼱???뺤씤?????덉뼱??',
+       art: `${A}/motif-guide.svg`,
+     })}
+-    ${sectionHead('Start here', '?대뵒???대떦?섎굹??')}
++    ${sectionHead('?ш린?먯꽌 ?쒖옉', '?대뵒???대떦?섎굹??')}
+     <div class="situation-grid">
+       <a class="situation-card card card--accent" href="#/guide/start" data-guide-nav="/guide/start">
+         <span class="icon-halo"><span class="icon-tile" aria-hidden="true"><img src="${A}/tile-search.svg" alt="" width="56" height="56" /></span></span>
+@@ -123,7 +123,7 @@ function renderGuideHome() {
+       <span class="aux-links__sep" aria-hidden="true">쨌</span>
+       <a href="#/support" data-guide-nav="/support">怨좉컼?쇳꽣 蹂닿린</a>
+     </div>
+-    ${sectionHead('FAQ', '?먯＜ 臾삳뒗 吏덈Ц')}
++    ${sectionHead('吏덈Ц', '?먯＜ 臾삳뒗 吏덈Ц')}
+     ${faqBlock([
+       {
+         q: '?댁슜?덈궡? 怨좉컼?쇳꽣??媛숈? 怨녹씤媛??',
+@@ -142,7 +142,7 @@ function renderGuideHome() {
+         a: '?꾨땲?? 履쎌????뚯썝?쇰━ 泥??곕씫?닿퀬, ?댁쁺臾몄쓽???댁쁺?먯뿉寃?蹂대궡??臾몄쓽?낅땲??',
+       },
+     ])}
+-    ${sectionHead('Go use', '諛붾줈 ?댁슜?섍린')}
++    ${sectionHead('諛붾줈 ?댁슜??蹂닿린', '諛붾줈 ?댁슜?섍린')}
+     <div class="slim-cta">
+       <span class="slim-cta__label">?ㅼ씠?⑹쑝濡?/span>
+       ${extLink(searchHref('room'), 'btn btn--primary', '怨듬?諛?李얘린 ?쒖옉')}
+@@ -159,7 +159,7 @@ function renderGuideStart() {
+       p2: '李얘린 ??議곌굔 ???곸꽭 ??李???鍮꾧탳 ??濡쒓렇????履쎌? ?쒖꽌濡??곕씪媛 蹂댁꽭?? 鍮꾧탳???꾩슂?????곕㈃ ?⑸땲??',
+       art: `${A}/motif-search.svg`,
+     })}
+-    ${sectionHead('Playbook', '?댁슜 ?쒖꽌')}
++    ${sectionHead('?쒖꽌', '?댁슜 ?쒖꽌')}
+     <p class="section-lead">??踰덉뿉 ???몄슱 ?꾩슂 ?놁뼱?? 李얘린 ??議곌굔 ???곸꽭 ??李???鍮꾧탳 ??濡쒓렇????履쎌? ?쒖꽌濡??곕씪媛硫??⑸땲??</p>
+     <p class="section-lead">紐⑸줉쨌?곸꽭??濡쒓렇???꾩뿉??蹂????덇퀬, 李쑣룹そ吏??濡쒓렇???꾩엯?덈떎.</p>
+     ${stepList([
+@@ -199,12 +199,12 @@ function renderGuideStart() {
+         body: '履쎌???濡쒓렇?????뚯썝?쇰━ 泥??곕씫???섎뒗 ?듬줈?덉슂. ?댁쁺???蹂대궡???댁쁺臾몄쓽????ㅻ쫭?덈떎.',
+       },
+     ])}
+-    ${sectionHead('Students', '?숈깮李얘린 (怨듬?諛㈑룰낵?몄뙟??')}
++    ${sectionHead('?숈깮', '?숈깮李얘린 (怨듬?諛㈑룰낵?몄뙟??')}
+     <p class="section-lead">?숈깮李얘린??怨듬?諛㈑룰낵?몄뙟??洹쇱쿂???щ씪???숈깮쨌?숇?紐??붿껌??李얠븘蹂대뒗 ?붾㈃?낅땲??</p>
+     <p class="section-lead">?숇?紐④? 怨듬?諛㈑룰낵?몄뙟??李얜뒗 ?뚭났遺諛⑹갼湲겹띲뚭낵?몄뙟李얘린?띿???諛⑺뼢??諛섎??덉슂.</p>
+     <p class="section-lead">湲곕낯?쇰줈 ???띾낫 吏??쓽 ?붿껌??蹂댁씠怨? 議곌굔??諛붽퓭 ???볤쾶 寃?됲븷 ???덉뒿?덈떎.</p>
+     <p class="section-lead">?덉쓽 ?뚯슦由щ룞???숈깮?띿? ?좉퉸 ?묐뒗 ?숇꽕 誘몃━蹂닿린?닿퀬, ?먯꽭??李얠쑝?ㅻ㈃ ?숈깮李얘린濡?媛硫??⑸땲??</p>
+-    ${sectionHead('FAQ', '?먯＜ 臾삳뒗 吏덈Ц')}
++    ${sectionHead('吏덈Ц', '?먯＜ 臾삳뒗 吏덈Ц')}
+     ${faqBlock([
+       {
+         q: '?숈깮李얘린???꾧뎄瑜??꾪븳 ?붾㈃?멸???',
+@@ -223,7 +223,7 @@ function renderGuideStart() {
+         a: '李얘린 ??議곌굔 ???곸꽭 ??李???鍮꾧탳 ??濡쒓렇????履쎌??낅땲?? ?꾨낫瑜?怨좊Ⅸ ?ㅼ뿉??李???鍮꾧탳 ??履쎌? ?쒖꽌媛 醫뗭뒿?덈떎.',
+       },
+     ])}
+-    ${sectionHead('Next', '?ㅼ쓬?쇰줈')}
++    ${sectionHead('?ㅼ쓬', '?ㅼ쓬?쇰줈')}
+     <div class="cta-row">
+       ${extLink(searchHref('room'), 'btn btn--primary', '怨듬?諛?李얘린 ?쒖옉')}
+       ${extLink(searchHref('tutor'), 'btn btn--secondary', '怨쇱쇅??李얘린 ?쒖옉')}
+@@ -240,7 +240,7 @@ function renderGuideRegister() {
+       p2: '?몄텧???꾪븳 ?댁쁺???ъ궗쨌?뱀씤 ?덉감???놁뒿?덈떎.',
+       art: `${A}/motif-register.svg`,
+     })}
+-    ${sectionHead('Playbook', '?깅줉 ?쒖꽌')}
++    ${sectionHead('?쒖꽌', '?깅줉 ?쒖꽌')}
+     <p class="section-lead">?뚯썝媛??怨꾩젙 留뚮뱾湲? ???꾩닔?뺣낫瑜??낅젰?섎㈃ 湲곕낯 ?몄텧???쒖옉?⑸땲?? 利앸튃?먮즺???ъ궗?섍굅??蹂댁쬆?섏? ?딆뒿?덈떎. ?좊ː?뺣낫???뚯썝???щ젮 ??李멸퀬 ?쒖떆?대ŉ, ?뚮옯?쇱쓽 ?몄쬆쨌蹂댁쬆???꾨떃?덈떎.</p>
+     ${stepList([
+       { icon: `${A}/step-login.svg`, title: '?뚯썝媛??怨꾩젙 留뚮뱾湲?', body: '怨듯넻媛?낆? 怨꾩젙??留뚮뱶???④퀎?덉슂. 怨꾩젙??留뚮뱺 ??濡쒓렇?명빐 二쇱꽭??' },
+@@ -253,7 +253,7 @@ function renderGuideRegister() {
+         body: '湲곕낯 ?몄텧???쒖옉???? ???덉뿉 ?꾧쾶 ?섍퀬 ?띕떎硫??좊즺?곹뭹???댄렣蹂????덉뼱?? ?꾩닔???꾨땲硫??먮룞 寃곗젣?섏? ?딆뒿?덈떎.',
+       },
+     ])}
+-    ${sectionHead('Checklist', '??븷蹂?泥댄겕')}
++    ${sectionHead('?먭?', '??븷蹂?泥댄겕')}
+     <p class="section-lead">怨듬?諛⑷낵 怨쇱쇅?ㅼ? ?몃? ??ぉ??議곌툑 ?щ씪?? ??쓣 諛붽퓭 ?뺤씤??蹂댁꽭??</p>
+     <div class="role-tabs" role="tablist" aria-label="??븷 ?좏깮">
+       <button type="button" class="role-tab" role="tab" id="tab-room" aria-selected="true" aria-controls="panel-room">怨듬?諛?/button>
+@@ -279,12 +279,12 @@ function renderGuideRegister() {
+       <li>????ъ쭊 ??????ъ쭊???덉쑝硫??꾨줈?꾩쓣 ???쎄쾶 ?댄빐?????덉뼱??/li>
+       <li>媛???꾩닔?뺣낫媛 ?낅젰?섏뼱 湲곕낯 ?몄텧 以묒씤吏 ?뺤씤</li>
+     </ul>
+-    ${sectionHead('Students', '?숈깮 ?깅줉')}
++    ${sectionHead('?숈깮', '?숈깮 ?깅줉')}
+     <p class="section-lead">?숈깮쨌?숇?紐⑤룄 ?뚯썝媛????湲곕낯 ?뺣낫瑜??낅젰?섎㈃, ?붿껌???숈깮李얘린 ?깆뿉 湲곕낯?쇰줈 ?몄텧?????덉뒿?덈떎.</p>
+     <p class="section-lead">?댁쁺???ъ궗쨌?뱀씤??湲곕떎由ъ? ?딆뒿?덈떎.</p>
+     <p class="section-lead">?곸꽭 ?뺣낫???섏쨷??蹂댁셿?대룄 ?⑸땲?? (??μ쓣 ?뚮윭???댁뼱吏묐땲????李쎈쭔 ?レ쑝硫???λ릺吏 ?딆븘??)</p>
+     <p class="section-lead">??以??붿껌臾맞룻씗留?吏??룰낵紐???李얜뒗 遺꾩씠 諛붾줈 ?댄빐?섎뒗 ?뺣낫瑜?癒쇱? 梨꾩슦硫?醫뗭뒿?덈떎.</p>
+-    ${sectionHead('FAQ', '?먯＜ 臾삳뒗 吏덈Ц')}
++    ${sectionHead('吏덈Ц', '?먯＜ 臾삳뒗 吏덈Ц')}
+     ${faqBlock([
+       {
+         q: '湲곕낯 ?뺣낫瑜??낅젰?섎㈃ 諛붾줈 ?몄텧?섎굹??',
+@@ -303,7 +303,7 @@ function renderGuideRegister() {
+         a: '蹂꾨룄?낅땲?? ?숈깮쨌?숇?紐⑤룄 ?뚯썝媛????湲곕낯 ?뺣낫瑜??낅젰?섎㈃, ?붿껌???숈깮李얘린 ?깆뿉 湲곕낯?쇰줈 ?몄텧?????덉뒿?덈떎. ?댁쁺???ъ궗쨌?뱀씤??湲곕떎由ъ? ?딆뒿?덈떎. ?숈깮? 李쑣룸퉬援???곸씠 ?꾨떃?덈떎.',
+       },
+     ])}
+-    ${sectionHead('After', '湲곕낯 ?몄텧 ?댄썑 ?좏깮')}
++    ${sectionHead('?댄썑', '湲곕낯 ?몄텧 ?댄썑 ?좏깮')}
+     <div class="cta-row">
+       ${extLink(STUDY_ROOM_REGISTER_URL, 'btn btn--primary', '怨듬?諛??깅줉')}
+       ${extLink(TUTOR_REGISTER_URL, 'btn btn--secondary', '怨쇱쇅???깅줉')}
+@@ -325,7 +325,7 @@ function renderGuideCompare() {
+     <div class="note-callout" role="note">
+       <strong>梨꾨꼸 援щ텇:</strong> 履쎌? = ?뚯썝?쇰━ 泥??곕씫 쨌 ?댁쁺臾몄쓽 = ?댁쁺?먯뿉寃?蹂대궡??臾몄쓽(??硫붿씪). 媛숈? ?쒕Ц?섃앸줈 臾띠? 留덉꽭??
+     </div>
+-    ${sectionHead('Features', '??媛吏 湲곕뒫')}
++    ${sectionHead('湲곕뒫', '??媛吏 湲곕뒫')}
+     <div class="chip-row" aria-label="李?쨌 鍮꾧탳 쨌 履쎌?">
+       <div class="feat-chip">
+         <span class="feat-chip__icon feat-chip__icon--teal" aria-hidden="true"><img src="${A}/step-bookmark.svg" alt="" width="40" height="40" /></span>
+@@ -349,7 +349,7 @@ function renderGuideCompare() {
+         </div>
+       </div>
+     </div>
+-    ${sectionHead('Playbook', '?댁슜 ?쒖꽌')}
++    ${sectionHead('?쒖꽌', '?댁슜 ?쒖꽌')}
+     <p class="section-lead">李???鍮꾧탳 ??履쎌? ?쒖쑝濡???踰덈쭔 ?곕씪媛 蹂댁꽭??</p>
+     ${stepList([
+       { icon: `${A}/step-pick.svg`, title: '寃??寃곌낵?먯꽌 ?꾨낫 怨좊Ⅴ湲?, body: '怨듬?諛㈑룰낵?몄뙟 紐⑸줉?먯꽌 愿???덈뒗 怨녹쓣 怨⑤씪 ?〓땲??' },
+@@ -358,7 +358,7 @@ function renderGuideCompare() {
+       { icon: `${A}/step-message.svg`, title: '?곸꽭 ?섏씠吏瑜??쎌? ??履쎌? 蹂대궡湲?, body: '吏㏃? ?몄궗? 沅곴툑???먮쭔 ?곸뼱??蹂대궡 蹂댁꽭?? 履쎌????뚯썝?쇰━ 泥??곕씫???섎뒗 ?듬줈?낅땲??' },
+       { icon: `${A}/step-inbox.svg`, title: '履쎌??⑥뿉???댁뼱媛湲?, body: '諛쏆?쨌蹂대궦 履쎌???履쎌??⑥뿉???뺤씤?????덉뼱?? (濡쒓렇???꾩슂)' },
+     ])}
+-    ${sectionHead('FAQ', '?먯＜ 臾삳뒗 吏덈Ц')}
++    ${sectionHead('吏덈Ц', '?먯＜ 臾삳뒗 吏덈Ц')}
+     ${faqBlock([
+       {
+         q: '鍮꾧탳??理쒕? 紐?媛쒖씤媛??',
+@@ -373,7 +373,7 @@ function renderGuideCompare() {
+         a: '李???鍮꾧탳 ??履쎌? ?쒖쑝濡??곕씪媛 蹂댁꽭?? 鍮꾧탳???먮떒???뺣뒗 ?④퀎?덉슂. ?곸꽭 ?섏씠吏瑜?蹂??ㅼ쓬, 履쎌?濡??뚯썝?쇰━ 泥??곕씫???댁뼱媛?몄슂.',
+       },
+     ])}
+-    ${sectionHead('Tip', '履쎌? 蹂대궡湲???)}
++    ${sectionHead('李멸퀬', '履쎌? 蹂대궡湲???)}
+     <ul class="checklist">
+       <li>?곷? ?곸꽭 ?뚭컻瑜???踰????쎌뼱 蹂댁꽭??/li>
+       <li>泥?履쎌??먯꽌??湲??먭린?뚭컻蹂대떎, 沅곴툑??議곌굔??吏㏐쾶 ?뺣━??臾쇱뼱蹂댁꽭??</li>
+@@ -395,7 +395,7 @@ function renderGuideSafe() {
+       p2: '怨듭떇 湲곗?怨??좉퀬쨌遺꾩웳? 怨좉컼?쇳꽣 ?뺤콉?먯꽌 ?뺤씤?????덉뼱??',
+       art: `${A}/motif-safe.svg`,
+     })}
+-    ${sectionHead('Do & Don\'t', '?대젃寃??섏꽭??쨌 ?섏? 留덉꽭??)}
++    ${sectionHead('?덈궡', '?대젃寃??섏꽭??쨌 ?섏? 留덉꽭??)}
+     <p class="section-lead">媛?대뱶???됰룞 ?섏튃?낅땲?? ?뺤콉 ?꾨Ц쨌?좉퀬 ?묒닔??怨좉컼?쇳꽣???덉뒿?덈떎.</p>
+     <p class="section-lead">?몄텧???좊ː?뺣낫???곷?媛 ?꾨줈?꾩뿉 蹂댁뿬 ???뚭컻쨌?먮즺?대ŉ, ?뚮옯?쇱씠 ?뺤씤쨌?몄쬆?덈떎???살씠 ?꾨떃?덈떎.</p>
+     <p class="section-lead">?숈깮쨌?숇?紐⑤룄 泥??곕씫, 媛쒖씤?뺣낫, ?좎엯湲덉뿉??媛숈? 二쇱쓽瑜??곕Ⅴ?몄슂.</p>
+@@ -419,7 +419,7 @@ function renderGuideSafe() {
+         </ul>
+       </div>
+     </div>
+-    ${sectionHead('FAQ', '?먯＜ 臾삳뒗 吏덈Ц')}
++    ${sectionHead('吏덈Ц', '?먯＜ 臾삳뒗 吏덈Ц')}
+     ${faqBlock([
+       {
+         q: '?몄텧???좊ː?뺣낫???몄쬆?멸???',
+@@ -434,7 +434,7 @@ function renderGuideSafe() {
+         a: '?? ?숈깮쨌?숇?紐⑤룄 泥??곕씫, 媛쒖씤?뺣낫, ?좎엯湲덉뿉??媛숈? 二쇱쓽瑜??곕Ⅴ?몄슂.',
+       },
+     ])}
+-    ${sectionHead('Help', '?꾩????꾩슂????)}
++    ${sectionHead('?꾩?', '?꾩????꾩슂????)}
+     <div class="help-block">
+       <h3><img src="${A}/icon-help.svg" alt="" width="32" height="32" aria-hidden="true" /> 怨좉컼?쇳꽣濡??댁뼱媛湲?/h3>
+       <p>?덈궡 蹂몃Ц???뺤콉쨌FAQ瑜?諛섎났?섏? ?딆뒿?덈떎. ?꾩슂??吏?먯뿉?쒕쭔 ?곌껐?⑸땲??</p>
+diff --git a/preview/home-ui/src/mypage/mypage-copy.js b/preview/home-ui/src/mypage/mypage-copy.js
+index a7b4f17..7148d6e 100644
+--- a/preview/home-ui/src/mypage/mypage-copy.js
++++ b/preview/home-ui/src/mypage/mypage-copy.js
+@@ -34,7 +34,7 @@ export const HOME_STATS_NOTE = '???곹깭???쒕룞???곕씪 ?щ씪?몄슂.';
+ 
+ export const WISHLIST_NOTE = '李쒗븳 怨듬?諛㈑룰낵?몄뙟??紐⑥븘 蹂닿퀬, 鍮꾧탳?먮룄 ?댁쓣 ???덉뼱??';
+ 
+-export const RECENT_NOTE = '15??짠6 [?꾩떆] 쨌 ?숇?紐? 怨듬?諛?怨쇱쇅/?숈깮(鍮꾧탳?대엺) 쨌 怨듦툒?? ?숈깮 ?섎ː ?ы븿';
++export const RECENT_NOTE = '15??짠6 [?꾩떆] 쨌 ?숇?紐? 怨듬?諛?怨쇱쇅/?숈깮(鍮꾧탳?대엺) 쨌 怨듦툒?? ?깅줉 ?ы븿';
+ 
+ export const STUDENT_REVIEW_NOTE = '愿???덈뒗 ?숈깮????ν빐 ?먭퀬, 以鍮꾧? ?섏뿀????履쎌?瑜??댁뼱媛?몄슂.';
+ 
+diff --git a/preview/home-ui/src/mypage/plans-catalog.js b/preview/home-ui/src/mypage/plans-catalog.js
+index 0be16be..c28329d 100644
+--- a/preview/home-ui/src/mypage/plans-catalog.js
++++ b/preview/home-ui/src/mypage/plans-catalog.js
+@@ -47,7 +47,7 @@ function toCatalogProduct(p) {
+ const FALLBACK_COPY = {
+   prime: {
+     id: 'prime',
+-    name: 'Prime ?몄텧',
++    name: '?꾨씪??,
+     tagline: '?좏깮??吏??룰낵紐⑹쓽 ????몄텧',
+     kind: /** @type {CatalogKind} */ ('position'),
+     bullets: ['湲곌컙???④굔 寃곗젣', '?먮룞?곗옣 ?놁쓬'],
+@@ -55,7 +55,7 @@ const FALLBACK_COPY = {
+   },
+   pick: {
+     id: 'pick',
+-    name: 'Pick ?몄텧',
++    name: '??,
+     tagline: '?섏씠吏 ?쒗솚??異붿쿇 ?몄텧',
+     kind: /** @type {CatalogKind} */ ('position'),
+     bullets: ['湲곌컙???④굔 寃곗젣', '?먮룞?곗옣 ?놁쓬'],
+@@ -71,7 +71,7 @@ const FALLBACK_COPY = {
+   },
+   hot: {
+     id: 'hot',
+-    name: 'Hot',
++    name: '二쇰ぉ',
+     tagline: '異붿쿇쨌????몄텧 ?댁슜 湲곌컙???④퍡 ?곸슜',
+     kind: /** @type {CatalogKind} */ ('badge_addon'),
+     bullets: ['愿묎퀬??二쇰ぉ 諛곗?', '?⑤룆 ?듭떖?곹뭹 ??],
+@@ -92,7 +92,7 @@ const FALLBACK_COPY = {
+   },
+   sky: {
+     id: 'sky',
+-    name: 'SKY',
++    name: '二쇱슂 ???,
+     tagline: '怨쇱쇅???좊즺 愿묎퀬異?쨌 ?몄텧?곹뭹 湲곌컙???④퍡 ?곸슜',
+     kind: /** @type {CatalogKind} */ ('badge_addon'),
+     bullets: ['怨쇱쇅???좊즺 二쇰ぉ 諛곗?', '??숇챸 ?먮룞異붾줎 諛곗? ?꾨떂'],
+diff --git a/preview/home-ui/src/plans/history-mock.js b/preview/home-ui/src/plans/history-mock.js
+index b51d3dd..2784e6b 100644
+--- a/preview/home-ui/src/plans/history-mock.js
++++ b/preview/home-ui/src/plans/history-mock.js
+@@ -121,7 +121,7 @@ export function orderStatusLabel(status) {
+     paid: '寃곗젣?꾨즺',
+     failed: '?ㅽ뙣',
+     canceled: '痍⑥냼',
+-    pending: '?湲?,
++    pending: '寃곗젣 ?湲?,
+   };
+   return map[status] || status;
+ }
+diff --git a/preview/home-ui/src/plans/hub-home.js b/preview/home-ui/src/plans/hub-home.js
+index e411709..30b740a 100644
+--- a/preview/home-ui/src/plans/hub-home.js
++++ b/preview/home-ui/src/plans/hub-home.js
+@@ -20,9 +20,9 @@ export function renderPlansHubCinema() {
+         <div class="cinema-bg__overlay"></div>
+       </div>
+       <div class="cinema-content">
+-        <div class="cinema-eyebrow">PAID 쨌 GUIDE HUB</div>
++        <div class="cinema-eyebrow">?좊즺 ?덈궡</div>
+         <h1>臾대즺濡??쒖옉?섍퀬,<br>?꾩슂???뚮쭔 ?щ┛??/h1>
+-        <p class="cinema-lead">留덉씠??袁몃?湲곗? Basic ?몄텧? 臾대즺?낅땲?? ???먯＜ 蹂댁씠怨??띠쓣 ?뚮뒗 ?몄텧?곹뭹, 癒쇱? ?곕씫?섍퀬 ?띠쓣 ?뚮뒗 履쎌?沅뚯쓣 ?좏깮?섏꽭??</p>
++        <p class="cinema-lead">?꾨줈??袁몃?湲곗? 踰좎씠吏곸뭅???몄텧? 臾대즺?낅땲?? ???먯＜ 蹂댁씠怨??띠쓣 ?뚮뒗 ?몄텧?곹뭹, 癒쇱? ?곕씫?섍퀬 ?띠쓣 ?뚮뒗 履쎌?沅뚯쓣 ?좏깮?섏꽭??</p>
+         <div class="cinema-actions">
+           <a class="btn-cinema-primary" href="#/plans/positions" data-plans-nav="/plans/positions">?몄텧?곹뭹 ?먯꽭??蹂닿린</a>
+           <a class="btn-cinema-ghost" href="#/plans/access" data-plans-nav="/plans/access">履쎌?沅??먯꽭??蹂닿린</a>
+@@ -67,13 +67,13 @@ export function renderPlansHomeBody(opts = {}) {
+ 
+       <div class="entry-grid" role="list">
+         <a class="entry-card" href="#/plans/positions" data-plans-nav="/plans/positions" role="listitem">
+-          <span class="entry-kicker">EXPOSURE</span>
++          <span class="entry-kicker">?몄텧</span>
+           <h3 class="entry-title">?몄텧?곹뭹</h3>
+-          <p class="entry-desc">Prime쨌Pick?쇰줈 ???먯＜ 諛쒓껄?섍쾶 留뚮벊?덈떎. ?댟룹텛泥??곸뿭?먯꽌 蹂댁씠??湲고쉶瑜?湲곌컙?쒕줈 ?щ┰?덈떎.</p>
++          <p class="entry-desc">?꾨씪?꽷룻뵿?쇰줈 ???먯＜ 諛쒓껄?섍쾶 留뚮벊?덈떎. ?댟룹텛泥??곸뿭?먯꽌 蹂댁씠??湲고쉶瑜?湲곌컙?쒕줈 ?щ┰?덈떎.</p>
+           <span class="entry-cta">?곸꽭?먯꽌 湲곌컙 ?좏깮 ??/span>
+         </a>
+         <a class="entry-card" href="#/plans/access" data-plans-nav="/plans/access" role="listitem">
+-          <span class="entry-kicker">MESSAGE</span>
++          <span class="entry-kicker">履쎌?</span>
+           <h3 class="entry-title">履쎌?沅?/h3>
+           <p class="entry-desc">?숈깮?먭쾶 癒쇱? 蹂대궡??泥?履쎌? 湲고쉶瑜??좏깮?⑸땲?? 媛숈? ??붿쓽 ?꾩냽 ?묐떟? 臾대즺?낅땲??</p>
+           <span class="entry-cta">?곸꽭?먯꽌 ?잛닔 ?좏깮 ??/span>
+@@ -98,7 +98,7 @@ export function renderPlansHomeBody(opts = {}) {
+           <li>紐⑸줉쨌異붿쿇?먯꽌 ???먯＜ 蹂댁씠怨??띠쓣 ????<strong>?몄텧?곹뭹</strong></li>
+           <li>愿???숈깮?먭쾶 癒쇱? 履쎌?瑜?蹂대궡怨??띠쓣 ????<strong>履쎌?沅?/strong></li>
+           <li>?몄텧?곹뭹??吏㏃? 媛뺤“ ?쒖떆瑜??뷀븯怨??띠쓣 ????<strong>?띾낫 諛곗?</strong>(?몄텧怨??④퍡쨌理쒕? 2媛?</li>
+-          <li>留덉씠??袁몃?湲걔텯asic ?몄텧留뚯쑝濡?異⑸텇???뚮뒗 ?좊즺 ?놁씠 ?댁슜?대룄 ?⑸땲??/li>
++          <li>?꾨줈??袁몃?湲걔룸쿋?댁쭅移대뱶 ?몄텧留뚯쑝濡?異⑸텇???뚮뒗 ?좊즺 ?놁씠 ?댁슜?대룄 ?⑸땲??/li>
+         </ul>
+       </section>
+ 
+@@ -107,11 +107,11 @@ export function renderPlansHomeBody(opts = {}) {
+         <div class="free-paid-grid">
+           <div class="fp-cell">
+             <strong>臾대즺</strong>
+-            <span>留덉씠??袁몃?湲?쨌 Basic 紐⑸줉 ?몄텧 쨌 諛쏆? 履쎌????듭옣</span>
++            <span>?꾨줈??袁몃?湲?쨌 踰좎씠吏곸뭅??紐⑸줉 ?몄텧 쨌 諛쏆? 履쎌????듭옣</span>
+           </div>
+           <div class="fp-cell">
+             <strong>?좏깮 ?좊즺</strong>
+-            <span>?몄텧?곹뭹(Prime/Pick) 쨌 履쎌?沅?쨌 ?띾낫 諛곗?(?몄텧?곹뭹怨??④퍡)</span>
++            <span>?몄텧?곹뭹(?꾨씪???? 쨌 履쎌?沅?쨌 ?띾낫 諛곗?(?몄텧?곹뭹怨??④퍡)</span>
+           </div>
+         </div>
+       </section>
+diff --git a/preview/home-ui/src/plans/order-blocks.js b/preview/home-ui/src/plans/order-blocks.js
+index 72e665b..97f84bf 100644
+--- a/preview/home-ui/src/plans/order-blocks.js
++++ b/preview/home-ui/src/plans/order-blocks.js
+@@ -104,7 +104,7 @@ export function studyRoomRegionPurchaseState(region, ctx) {
+     if (room.detail_completion_status !== 'expanded_complete') {
+       return {
+         purchasable: false,
+-        reason: productCode === 'prime' ? 'Prime ?뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?뺤씤' : 'Pick ?뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?뺤씤',
++        reason: productCode === 'prime' ? '?꾨씪???뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?뺤씤' : '???뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?뺤씤',
+         tone: 'warn',
+       };
+     }
+@@ -469,7 +469,7 @@ export function renderPolicyAccordion(family) {
+         <ul class="plans-tier-list">
+           <li>?쒖옉 ?? ?꾩븸 ?섎텋</li>
+           <li>?쒖옉 ?? ?붿껌???ㅼ쓬 ?좊????⑥? 誘몄궗??湲곌컙???ㅼ젣 寃곗젣湲덉븸 湲곗? ?쇳븷 怨꾩궛</li>
+-          <li>留뚮즺 ??Basic(湲곕낯 ?몄텧)?쇰줈 蹂듦? 쨌 留덉씠?돠룻봽濡쒗븘? ?좎?</li>
++          <li>留뚮즺 ??踰좎씠吏곸뭅??湲곕낯 ?몄텧)濡?蹂듦? 쨌 ?꾨줈??袁몃?湲곕뒗 ?좎?</li>
+           <li>?먮룞?곗옣 ?놁쓬</li>
+         </ul>
+         <p class="mypage-muted">?섎텋 湲덉븸? ?쒕쾭 ?뺣낯?쇰줈 ?곗젙?⑸땲?? ?붾㈃ ?덈궡??李멸퀬?⑹엯?덈떎.</p>
+@@ -480,7 +480,7 @@ export function renderPolicyAccordion(family) {
+ export function renderBasicFreeRow() {
+   return `
+     <div class="plans-basic-free" data-plans-basic-free>
+-      <strong>留덉씠??袁몃?湲곗? Basic ?몄텧? 臾대즺?낅땲??</strong>
++      <strong>?꾨줈??袁몃?湲곗? 踰좎씠吏곸뭅???몄텧? 臾대즺?낅땲??</strong>
+       <p>蹂꾨룄???뚯뼱?щ━湲?UP) ?곹뭹? ?쒓났?섏? ?딆뒿?덈떎. ??醫뗭? ?먮━媛 ?꾩슂?섎㈃ ?몄텧?곹뭹???좏깮?섏꽭??</p>
+     </div>`;
+ }
+diff --git a/preview/home-ui/src/plans/screens.js b/preview/home-ui/src/plans/screens.js
+index ad4753e..4c78f45 100644
+--- a/preview/home-ui/src/plans/screens.js
++++ b/preview/home-ui/src/plans/screens.js
+@@ -315,9 +315,9 @@ function isLowCredit(remaining) {
+ 
+ function productLabel(code) {
+   const normalized = String(code || '').toLowerCase();
+-  if (normalized.includes('prime')) return 'Prime ?몄텧';
+-  if (normalized.includes('pick')) return 'Pick ?몄텧';
+-  if (normalized.includes('basic')) return 'Basic ?몄텧';
++  if (normalized.includes('prime')) return '?꾨씪??;
++  if (normalized.includes('pick')) return '??;
++  if (normalized.includes('basic')) return '踰좎씠吏곸뭅??;
+   if (normalized.includes('memo')) return '履쎌?沅?;
+   return '?댁슜 ?곹뭹';
+ }
+@@ -364,10 +364,10 @@ function renderRoomPrimeBoard(prime) {
+   const tone = full ? 'is-full' : used > 0 ? 'is-partial' : 'is-open';
+   return `
+     <div class="plans-prime-board ${tone}" data-plans-prime-board>
+-      <h4 class="plans-prime-board__title">?좏깮 吏??Prime ?몄텧 ?꾪솴</h4>
++      <h4 class="plans-prime-board__title">?좏깮 吏???꾨씪???몄텧 ?꾪솴</h4>
+       <p class="plans-prime-board__occupancy">3?먮━ 以?${used}?먮━ ?댁슜 以?{remaining ? ` 쨌 ?⑥? ?먮━ ${remaining}` : ' 쨌 留뚯꽍'}</p>
+-      <p class="plans-prime-board__lead">?좏깮 吏??쓽 Prime ????몄텧 쨌 鍮덉옄由щ뒗 ?쇱そ遺???먮룞 諛곗젙?⑸땲?? ?щ’ 踰덊샇??怨좊Ⅴ吏 ?딆뒿?덈떎.</p>
+-      <ul class="plans-prime-board__cells" aria-label="Prime ?먮━ 3移?>
++      <p class="plans-prime-board__lead">?좏깮 吏??쓽 ?꾨씪??????몄텧 쨌 鍮덉옄由щ뒗 ?쇱そ遺???먮룞 諛곗젙?⑸땲?? ?щ’ 踰덊샇??怨좊Ⅴ吏 ?딆뒿?덈떎.</p>
++      <ul class="plans-prime-board__cells" aria-label="?꾨씪???먮━ 3移?>
+         ${cells
+           .map((c) => {
+             const st = c.status === 'held' ? 'held' : c.status;
+@@ -381,7 +381,7 @@ function renderRoomPrimeBoard(prime) {
+                     : '?댁슜 以?;
+             return `
+           <li class="plans-prime-cell is-${esc(st)}">
+-            <span class="plans-prime-cell__label">Prime ?먮━</span>
++            <span class="plans-prime-cell__label">?꾨씪???먮━</span>
+             <span class="plans-prime-cell__status">${esc(c.label)}</span>
+             <span class="plans-prime-cell__meta">${esc(meta)}</span>
+           </li>`;
+@@ -391,7 +391,7 @@ function renderRoomPrimeBoard(prime) {
+       ${
+         full
+           ? `<div class="plans-prime-waitlist" data-plans-waitlist>
+-              <p><strong>?꾩옱 ?좏깮 吏??쓽 Prime ?먮━??紐⑤몢 ?댁슜 以묒엯?덈떎.</strong></p>
++              <p><strong>?꾩옱 ?좏깮 吏??쓽 ?꾨씪???먮━??紐⑤몢 ?댁슜 以묒엯?덈떎.</strong></p>
+               <p>?덉빟?湲곕? ?깅줉?섎㈃ 鍮덉옄由ш? ?대┫ ???뚮젮?쒕┰?덈떎. ?湲??깅줉留뚯쑝濡??먮━???쒕쾲??蹂댁옣?섏????딆쑝硫?寃곗젣媛 ?꾨즺?섏뼱???뺤젙?⑸땲??</p>
+               <button type="button" class="btn btn--primary" data-plans-waitlist-register>?덉빟?湲??깅줉</button>
+               <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">???덉빟?湲?蹂닿린</a></p>
+@@ -404,12 +404,12 @@ function renderRoomPrimeBoard(prime) {
+ /** 怨듬?諛?Pick 5횞2=10 誘몃━蹂닿린 (?쒗솚 紐⑸줉쨌怨쇱쇅??誘몄궗?? */
+ function renderRoomPickPreview() {
+   return `
+-    <div class="plans-room-pick" aria-label="Pick ?몄텧 誘몃━蹂닿린 5??2??>
+-      <p class="plans-room-pick__title">Pick ?몄텧 誘몃━蹂닿린 쨌 ???섏씠吏 10紐?(5??횞 2??</p>
++    <div class="plans-room-pick" aria-label="???몄텧 誘몃━蹂닿린 5??2??>
++      <p class="plans-room-pick__title">???몄텧 誘몃━蹂닿린 쨌 ???섏씠吏 10紐?(5??횞 2??</p>
+       <ul class="plans-room-pick__grid">
+         ${ROOM_PICK_PREVIEW_TILES.map(
+           (p, i) => `
+-          <li class="plans-room-pick__tile" aria-label="Pick 誘몃━蹂닿린 ${i + 1}">
++          <li class="plans-room-pick__tile" aria-label="??誘몃━蹂닿린 ${i + 1}">
+             <span class="plans-room-pick__thumb" aria-hidden="true">P${i + 1}</span>
+             <span class="plans-room-pick__name">${esc(p.name)}</span>
+             <span class="plans-room-pick__stats">${esc(p.stats)}</span>
+@@ -464,12 +464,12 @@ function renderTutorCircTiles(tiles, prefix) {
+ 
+ function renderTutorPrimeCirculation() {
+   return `
+-    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="Prime ?몄텧 誘몃━蹂닿린 ?섏씠吏??3紐?>
++    <div class="plans-tutor-circ plans-tutor-circ--prime" aria-label="?꾨씪???몄텧 誘몃━蹂닿린 ?섏씠吏??3紐?>
+       <div class="plans-tutor-circ__head">
+         <span class="plans-tutor-circ__kicker">?듭떖 ?몄텧 쨌 ?쒗솚??/span>
+         <span class="plans-tutor-circ__count">3 / page</span>
+       </div>
+-      <p class="plans-tutor-circ__title">Prime ?쒗솚 誘몃━蹂닿린 쨌 ?섏씠吏??3紐?/p>
++      <p class="plans-tutor-circ__title">?꾨씪???쒗솚 誘몃━蹂닿린 쨌 ?섏씠吏??3紐?/p>
+       <p class="plans-tutor-circ__rotate">?좏깮 ?쑣룹＜?κ낵紐??욎そ ?몄텧 쨌 15遺꾨쭏??怨듭젙 ?쒗솚 쨌 ?섏씠吏 ?섍?</p>
+       <ul class="plans-tutor-circ__grid">
+         ${renderTutorCircTiles(TUTOR_PRIME_PREVIEW_TILES, 'T')}
+@@ -480,12 +480,12 @@ function renderTutorPrimeCirculation() {
+ 
+ function renderTutorPickCirculation() {
+   return `
+-    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="Pick ?몄텧 誘몃━蹂닿린 ?섏씠吏??10紐?>
++    <div class="plans-tutor-circ plans-tutor-circ--pick" aria-label="???몄텧 誘몃━蹂닿린 ?섏씠吏??10紐?>
+       <div class="plans-tutor-circ__head">
+         <span class="plans-tutor-circ__kicker">異붿쿇 ?몄텧 쨌 ?쒗솚??/span>
+         <span class="plans-tutor-circ__count">10 / page</span>
+       </div>
+-      <p class="plans-tutor-circ__title">Pick ?쒗솚 誘몃━蹂닿린 쨌 ?섏씠吏??10紐?/p>
++      <p class="plans-tutor-circ__title">???쒗솚 誘몃━蹂닿린 쨌 ?섏씠吏??10紐?/p>
+       <p class="plans-tutor-circ__rotate">?좏깮 ?쑣룹＜?κ낵紐?異붿쿇 ?몄텧 쨌 15遺꾨쭏??怨듭젙 ?쒗솚 쨌 ?섏씠吏 ?섍?</p>
+       <ul class="plans-tutor-circ__grid">
+         ${renderTutorCircTiles(TUTOR_PICK_PREVIEW_TILES, 'P')}
+@@ -602,7 +602,7 @@ function getEligibility(profile, productCode, family = 'position') {
+     if (productCode === 'prime' || productCode === 'pick') {
+       if (room.detail_completion_status !== 'expanded_complete') {
+         missing.push(
+-          `${productCode === 'prime' ? 'Prime' : 'Pick'} ?뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?⑥? ??ぉ??梨꾩슦硫?援щℓ媛 ?대┰?덈떎`,
++          `${productCode === 'prime' ? '?꾨씪?? : '??} ?뺣낫 遺議?쨌 ?깅줉?먭??먯꽌 ?⑥? ??ぉ??梨꾩슦硫?援щℓ媛 ?대┰?덈떎`,
+         );
+         canBuy = false;
+       }
+@@ -650,7 +650,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+   const isPick = product.productCode === 'pick';
+   const primaryCta = opts.primaryCta ?? isPrime;
+   const displayName =
+-    product.name || (isPrime ? 'Prime ?몄텧' : isPick ? 'Pick ?몄텧' : productLabel(product.productCode));
++    product.name || (isPrime ? '?꾨씪?? : isPick ? '?? : productLabel(product.productCode));
+   const isStorefront = layout === 'storefront' || layout === 'compact';
+ 
+   if (!implemented) {
+@@ -672,7 +672,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+     eligibility.canBuy = false;
+     eligibility.missing = [
+       ...eligibility.missing.filter((m) => !String(m).includes('?щ’') && !String(m).includes('留덇컧')),
+-      '?꾩옱 吏??Prime ?먮━媛 紐⑤몢 ?댁슜 以묒엯?덈떎. ?꾨옒?먯꽌 ?덉빟?湲곕? ?깅줉?섏꽭??',
++      '?꾩옱 吏???꾨씪???먮━媛 紐⑤몢 ?댁슜 以묒엯?덈떎. ?꾨옒?먯꽌 ?덉빟?湲곕? ?깅줉?섏꽭??',
+     ];
+   }
+   const missingHtml =
+@@ -686,14 +686,14 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
+     if (role === 'study_room' && isPick) return '?좏깮 吏??뿉??10媛쒖뵫 ?쒗솚 ?몄텧';
+     if (role === 'tutor' && isPrime) return '?좏깮 ?쑣룹＜?κ낵紐⑹뿉??3媛쒖뵫 ?쒗솚 ?몄텧';
+     if (role === 'tutor' && isPick) return '?좏깮 ?쑣룹＜?κ낵紐⑹뿉??10媛쒖뵫 ?쒗솚 ?몄텧';
+-    if (role === 'study_room' && isPrime) return '?좏깮 吏??쓽 Prime ????몄텧';
++    if (role === 'study_room' && isPrime) return '?좏깮 吏??쓽 ?꾨씪??????몄텧';
+     return '';
+   })();
+ 
+   const pickPreviewHtml =
+     embedPickPreview && isPick
+-      ? `<div class="plans-pick-preview" aria-label="Pick ?몄텧 誘몃━蹂닿린 5??2??>
+-        <p class="plans-pick-preview__label">Pick ?몄텧 誘몃━蹂닿린 쨌 5??횞 2??/p>
++      ? `<div class="plans-pick-preview" aria-label="???몄텧 誘몃━蹂닿린 5??2??>
++        <p class="plans-pick-preview__label">???몄텧 誘몃━蹂닿린 쨌 5??횞 2??/p>
+         <ul class="plans-pick-preview__grid">
+           ${Array.from({ length: 10 }, (_, i) => `<li class="plans-pick-preview__cell">P${i + 1}</li>`).join('')}
+         </ul>
+@@ -1102,8 +1102,8 @@ export function renderPlansPositions() {
+         ${renderPlansHero({
+           eyebrow: 'PAID PRODUCTS',
+           title: '?몄텧?곹뭹',
+-          lead: '??醫뗭? ?먮━?먯꽌 ?숇?紐㉱룻븰?앹뿉寃?諛쒓껄??湲고쉶瑜??쒓났?⑸땲??\n留덉씠?듭쓣 留뚮뱾怨?Basic 紐⑸줉???몄텧?섎뒗 寃껋? 臾대즺?낅땲??\n?꾩슂??湲곌컙留?寃곗젣?섎ŉ ?먮룞?쇰줈 ?곗옣?섏? ?딆뒿?덈떎.',
+-          sub: 'Prime ?몄텧怨?Pick ?몄텧? ?댟룹갼湲??붾㈃?먯꽌 ?꾨줈?꾩쓣 ????諛쒓껄?????덈룄濡??뺣뒗 ?좊즺 ?몄텧?곹뭹?낅땲??',
++          lead: '??醫뗭? ?먮━?먯꽌 ?숇?紐㉱룻븰?앹뿉寃?諛쒓껄??湲고쉶瑜??쒓났?⑸땲??\n?꾨줈??袁몃?湲곗? 踰좎씠吏곸뭅??紐⑸줉 ?몄텧? 臾대즺?낅땲??\n?꾩슂??湲곌컙留?寃곗젣?섎ŉ ?먮룞?쇰줈 ?곗옣?섏? ?딆뒿?덈떎.',
++          sub: '?꾨씪?꾧낵 ?쎌? ?댟룹갼湲??붾㈃?먯꽌 ?꾨줈?꾩쓣 ????諛쒓껄?????덈룄濡??뺣뒗 ?좊즺 ?몄텧?곹뭹?낅땲??',
+         })}
+         ${renderBasicFreeRow()}
+       </header>
+@@ -1122,8 +1122,8 @@ export function renderPlansPositions() {
+               ? `${renderOffer(
+                   primeProduct,
+                   role === 'tutor'
+-                    ? '?좏깮???쒖? 二쇰젰怨쇰ぉ??Prime ?곸뿭???섏씠吏??3紐낆뵫 ?몄텧?섎ŉ, 15遺꾨쭏??怨듭젙?섍쾶 ?쒗솚?⑸땲??'
+-                    : '?좏깮???⑥?쨌?됱젙?숈쓽 Prime ????먮━瑜??뺣낫?섏꽭?? Prime? ?좏깮 吏??뿉??3媛쒕쭔 ?댁쁺?섎뒗 ?쒖젙 ????몄텧?낅땲??',
++                    ? '?좏깮???쒖? 二쇰젰怨쇰ぉ???꾨씪???곸뿭???섏씠吏??3紐낆뵫 ?몄텧?섎ŉ, 15遺꾨쭏??怨듭젙?섍쾶 ?쒗솚?⑸땲??'
++                    : '?좏깮???⑥?쨌?됱젙?숈쓽 ?꾨씪??????먮━瑜??뺣낫?섏꽭?? ?꾨씪?꾩? ?좏깮 吏??뿉??3媛쒕쭔 ?댁쁺?섎뒗 ?쒖젙 ????몄텧?낅땲??',
+                   0,
+                 )}
+           ${renderOffer(
+@@ -1416,7 +1416,7 @@ export function renderPlansMy() {
+       }
+       ${
+         role === 'study_room' && profile
+-          ? `<h2 class="mypage-subhead">Prime ?덉빟?湲?/h2>
++          ? `<h2 class="mypage-subhead">?꾨씪???덉빟?湲?/h2>
+             <div class="plans-my-waitlist" data-plans-my-waitlist data-study-room-id="${esc(String(profile.id))}">
+               <p class="mypage-muted">?덉빟?湲?紐⑸줉??遺덈윭?ㅻ뒗 以묅?/p>
+             </div>`
+@@ -1789,18 +1789,18 @@ export function bindPlansScreenEvents(root, rerender) {
+         .then((res) => {
+           const items = Array.isArray(res?.items) ? res.items : [];
+           if (!items.length) {
+-            waitHost.innerHTML = `<p class="mypage-muted">?깅줉??Prime ?덉빟?湲곌? ?놁뒿?덈떎. 쨌 <a href="#/plans/positions" data-plans-nav="/plans/positions">?몄텧?곹뭹 蹂닿린</a></p>`;
++            waitHost.innerHTML = `<p class="mypage-muted">?깅줉???꾨씪???덉빟?湲곌? ?놁뒿?덈떎. 쨌 <a href="#/plans/positions" data-plans-nav="/plans/positions">?몄텧?곹뭹 蹂닿린</a></p>`;
+             return;
+           }
+           waitHost.innerHTML = `
+-            <table class="plans-table" aria-label="Prime ?덉빟?湲?>
++            <table class="plans-table" aria-label="?꾨씪???덉빟?湲?>
+               <thead><tr><th>?곹뭹</th><th>吏??/th><th>?곹깭</th><th>?깅줉??/th><th></th></tr></thead>
+               <tbody>
+                 ${items
+                   .map(
+                     (w) => `
+                   <tr>
+-                    <td>${esc(w.product || 'Prime ?몄텧')}</td>
++                    <td>${esc(w.product || '?꾨씪??)}</td>
+                     <td>${esc(w.region || '??)}</td>
+                     <td>${esc(w.status_label || w.status || '')}</td>
+                     <td>${esc(String(w.registered_at || '').slice(0, 10))}</td>
+diff --git a/preview/home-ui/src/plans/store-ui.js b/preview/home-ui/src/plans/store-ui.js
+index bb34146..dc0d61c 100644
+--- a/preview/home-ui/src/plans/store-ui.js
++++ b/preview/home-ui/src/plans/store-ui.js
+@@ -123,7 +123,7 @@ export function renderFreePaidCompare() {
+       { label: '湲곕낯 紐⑸줉 ?몄텧', cells: ['?ы븿', '?ы븿'] },
+       { label: '議고쉶 쨌 李?쨌 鍮꾧탳 ?닿?', cells: ['?ы븿', '?ы븿'] },
+       { label: '?숇?紐??좎뿰??쨌 ?듭옣', cells: ['臾대즺', '臾대즺'] },
+-      { label: 'Prime 쨌 Pick ?몄텧', cells: ['??, '湲곌컙??援щℓ'] },
++      { label: '?꾨씪??쨌 ??, cells: ['??, '湲곌컙??援щℓ'] },
+       { label: '怨듦툒?먥넂?숈깮 ?좎젣 履쎌?', cells: ['李⑤떒', '履쎌?沅?] },
+       { label: '?붿껌臾??곸꽭 ?대엺', cells: ['?ы븿', '?ы븿'] },
+       { label: '愿묎퀬??二쇰ぉ 諛곗?', cells: ['??, '?몄텧 ?곹뭹怨??④퍡'] },

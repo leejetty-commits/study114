@@ -1,0 +1,84 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 서버 (가짜 PDO) #####
+=== [P1·가] 운영 마스터: 카카오 주소검색 행(시도 서울 · 법정동코드 1168010600 · 대치동) ===
+PASS P1 운영 마스터: regionIds.room = 대치동 행 9001
+PASS P1 운영 마스터: 공부방 수 = 대치동 실카드 3
+PASS P1 운영 마스터: axes.room = 대치동
+PASS P4 운영 마스터: regionIds.tutor/student = 강남구 500
+PASS P4 운영 마스터: 과외쌤 5 · 학생 7
+=== [P1·가] 개발 시드 행(서울특별시 · 11680101 · 대치동) ===
+PASS P1 개발 시드: regionIds.room = 1
+PASS P1 개발 시드: 공부방 수 2
+=== [P1·가] 이름만 맞는 행(법정동코드 없이 만든 대체 코드) ===
+PASS P1 이름: regionIds.room = 9100
+PASS P1 이름: 공부방 수 4
+=== [P1·P7] 대치동 행 없음(대치1동·가능동만): 0 + 로그 1줄, 다른 지역으로 채우지 않음 ===
+PASS P1 없음: regionIds.room = null
+PASS P1 없음: 공부방 수 0
+PASS P1 없음: 공부방 검색을 다른 지역으로 부르지 않음
+PASS P1 없음: 로그 1줄
+PASS P1 없음: 대치1동으로 대체하지 않음(axes.room 빈 값)
+=== [P6] 실카드 0: 박스 수치 0(샘플은 서버 수치에 없다) ===
+PASS P6 실카드 0: 공부방·과외쌤·학생 0
+=== [P7] 비로그인 search.php 지역 조건 서버 고정 ===
+PASS P7 공부방: 다른 지역 요청 → 대치동 9001
+PASS P7 공부방: 지역 외 조건은 유지
+PASS P7 공부방: 지역 조건 없는 요청도 대치동
+PASS P7 과외쌤: 강남구 500 고정
+PASS P7 학생: 강남구 500 고정
+PASS P7 기준 행 없음: 공부방 null(지역 없이 부르지 않음)
+PASS P7 기준 행 없음: 과외쌤 null
+PASS P7 기준 행 없음: 학생 null
+PASS PHP 검사 프로세스 정상 종료
+PASS P7 search.php: 비로그인이면 guestScopedFilters 로 지역을 덮고, 기준 행이 없으면 빈 결과
+##### 프런트 (순수 모듈) #####
+PASS P2 GUEST_MAP_CENTER = 대치역 37.494511, 127.063369
+PASS P3 MAP_DEFAULT_ZOOM = 17 (21 − 4)
+PASS P2·P3 명시 중심이 있으면 핀 평균이 아니라 대치역 · 줌 17
+PASS P1 표기: 공부방 대치동
+PASS P4 표기: 과외쌤·학생 서울시 강남구
+PASS P1·P8 공부방 목록 필터 = 기준 행 id
+PASS P4·P8 과외쌤 목록 필터 = 강남구 id
+PASS P4·P8 학생 목록 필터 = 강남구 id
+PASS P6 박스 수치 = region-stats 실수 그대로
+PASS P6 실카드 0: 박스 수치 0(샘플 미포함)
+PASS P7 기준 행 없음: 공부방 필터 null(지역 없이 부르지 않음)
+PASS P7 기준 행 없음: 과외쌤 필터 null
+PASS P1·P11 기준 행 없음: 표기는 대치동 · 서울시 강남구(빈 값·안내문 아님)
+PASS P6 region-stats 실패: 수치 null(대시 유지, 더미 숫자 없음)
+PASS P7 region-stats 실패: 목록 필터 null
+PASS P11 region-stats 실패: 표기는 대치동 · 서울시 강남구
+##### 프런트 (화면 소스·옵션) #####
+PASS P2 홈 지도 data-map-lat/lng = GUEST_MAP_CENTER
+PASS P3 홈 지도 data-fit-bounds="false"
+PASS P2·P3 홈 지도 바인드 lat/lng = GUEST_MAP_CENTER · fitBounds: false
+PASS P1 홈 지도 지역 표기 = 기준 공부방 표기
+PASS P7·다 홈 지도 핀(비로그인) = 기준 지역 목록 풀, 반경으로 거르지 않음
+PASS P7 홈 목록 = 기준 행 id 필터로만 호출
+PASS P8·나 찾기 지도: GUEST_MAP_CENTER 를 naver-map 에서 가져온다
+PASS P8·나 찾기 지도(게스트): 중심 = GUEST_MAP_CENTER
+PASS P8·나 찾기 지도(게스트): data-fit-bounds="false" → 줌 17 유지
+PASS P8 찾기 지도(회원): fitBounds 속성을 새로 붙이지 않음
+PASS P3 naver-map: fitBounds=false 이면 setCenter(center) · setZoom(17)
+PASS P3 naver-map: data-fit-bounds="false" 를 fitBounds=false 로 읽음
+PASS P8 공부방찾기(게스트): 지도를 실제로 마운트한다
+PASS P8 찾기 지도 핀 = 게스트 지역 목록과 같은 풀
+PASS P5 찾기(게스트) 로딩 중: 샘플 대신 불러오는 중
+PASS P5 찾기(게스트) 실패: 샘플·다른 지역 대신 오류 안내
+PASS P5 찾기(게스트) 0건 확정 후 다시 그림(로딩 → 샘플 1장)
+PASS P7 찾기(게스트) 기준 행 없으면 부르지 않음
+PASS P9 찾기 첫 화면(실카드): 베이직 목록만(픽·프라임 블록 없음)
+PASS P9 찾기 첫 화면(실카드 0): 베이직 샘플만
+PASS P9 찾기 화면은 surfaceType search(홈 티어 문법 아님)
+PASS P10 검색 결과: 받은 결과 전부(프라임·픽 포함)를 그대로 그린다
+PASS P5 홈 목록: 샘플은 실목록을 받은 뒤(live)에만
+PASS P5 샘플 카드는 한 장
+PASS P5 실카드가 있으면 샘플 없음(pool.length === 0 일 때만)
+PASS P6 홈 박스 수치 = readGuestAxisCounts 만
+PASS P6 찾기 박스 수치 = readGuestAxisCounts 만
+PASS P11 찾기 지도 제목(게스트) = 기준 표기, 안내문으로 떨어지지 않음
+PASS P11 찾기 지역 막대(게스트) = guestServerPlace
+PASS P11 홈·찾기 게스트 화면 파일에 안내문 직접 사용 없음
+PASS 라 대치역 좌표 주석: 「최종검수」로 미루지 않음
+
+72/72 PASS · FAIL 0

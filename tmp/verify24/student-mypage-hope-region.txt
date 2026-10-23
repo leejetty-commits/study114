@@ -1,0 +1,76 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 1부 서버 (가짜 PDO · 단지 이름 → ComplexEnsure) #####
+PASS S1 단지 1건 생성
+PASS S1 INSERT 는 학생 UPDATE 와 같은 트랜잭션
+PASS S1 INSERT 파라미터 = 동 9101 · 한신아파트
+PASS S1 학생 동 = 9101
+PASS S1 학생 단지 = 새 id (샘플 55·56 아님)
+PASS S1 기준 = complex
+PASS S1 응답 단지 이름 = 한신아파트
+PASS S1 같은 이름은 다시 만들지 않음
+PASS S1 다시 저장해도 같은 단지 id
+PASS S2 INSERT 없음
+PASS S2 과외 지역 = 117
+PASS S2 공부방 동·단지·기준 NULL
+PASS S3 과외 지역 NULL
+PASS S3 공부방 동 9101 · 새 단지
+PASS S3 샘플 단지 55·56 을 고르지 않음
+PASS S4 INSERT 없음
+PASS S4 동 9101 · 단지 NULL · 기준 dong
+PASS S5 INSERT 없음
+PASS S5 동 NULL · 단지 NULL (55·56 아님)
+PASS S6 INSERT 없음
+PASS S6 단지 55 · 동은 단지 소속 9101
+PASS  php 실행
+##### 2부 화면 #####
+PASS  화면: 공용 render/bind/readStudentHopeRegion 을 가져온다
+PASS  화면: 공부방 칸이 renderStudentHopeRegion
+PASS  화면: 저장이 readStudentHopeRegion 후 complex_name 을 싣는다
+PASS  화면: 샘플 목록 함수를 쓰지 않는다
+PASS  화면: 공부방 희망지역 선택 상자 없음
+PASS  화면: 샘플 단지 이름 없음
+PASS  분기: 확인창 · 새 칸 비우기 · 저장값 복원 · 새로고침 안내
+PASS  문구: 검색 실패·빈칸은 student-reg-copy 한곳
+PASS  칸 색: 공용 input-fill 로 칠하고, 희망지역 주소검색 적용도 공용 refresh
+PASS  칸 색: 색 값은 공용 CSS 변수 한곳, data-input-fill 폼만, disabled 제외
+PASS  서버: complex_name 은 관계 키이고 ComplexEnsure::ensure 를 호출
+PASS  서버: 과외 분기에서는 단지 이름을 단지로 만들지 않음
+PASS  공용 컴포넌트: 학생 희망지역 함수가 그대로 있다
+PASS  렌더: 저장된 단지 이름이 입력값
+PASS  렌더: 주소 검색 버튼
+PASS  렌더: 샘플 단지 선택지 없음
+PASS  렌더: 빈 칸은 값을 지어내지 않음
+##### 3부 기본정보 칸 색 (스타일시트 계산) #####
+PASS  칸 색: 공용 모듈이 bind·paint·refresh 를 내보낸다
+PASS  칸 색: 채움 규칙 특이도가 부모 마이페이지 배경보다 높다
+PASS  색: 표시명 값 있음 → 회색
+PASS  색: 빈 텍스트 → 흰색
+PASS  색: 예산 숫자 있음 → 회색
+PASS  색: 예산 숫자 없음 → 흰색
+PASS  색: 학교급 선택됨 → 회색
+PASS  색: 희망과목 빈 선택 → 흰색
+PASS  색: 희망지역 단지명 있음 → 회색
+PASS  색: 희망지역 우편번호 없음 → 흰색
+PASS  색: textarea 값 있음 → 회색
+PASS  색: textarea 없음 → 흰색
+PASS  색: 포커스 중 채워진 칸 → 흰색
+PASS  색: 포커스 해제 → 다시 회색
+PASS  색: 입력 중(포커스)은 값이 있어도 흰색
+PASS  색: 입력 후 포커스 해제 → 회색
+PASS  색: 값을 지우면 흰색
+PASS  색: 공백만 있으면 빈칸(흰색)
+PASS  색: 선택을 바꾸면 회색
+PASS  색: 하위 지역을 고르면 회색
+PASS  색: 시·도 변경으로 비워진 하위 칸 → 흰색
+PASS  색: 주소값을 비우면 흰색
+PASS  색: 주소검색 적용(값 대입 후 paint) → 회색
+PASS  색: 분기 변경으로 갈아 끼운 빈 희망지역 → 흰색
+PASS  색: 저장 분기로 돌아오면 채워진 희망지역 → 회색
+PASS  색: 다시 그린 폼은 값 있으면 회색, 없으면 흰색
+PASS  색: 라디오·체크·숨김은 data-fill 없음
+PASS  색: disabled 학년은 값이 있어도 회색으로 덮지 않음
+PASS  색: 오류 테두리는 유지
+PASS  색: 적용 폼(상세정보)은 채우면 회색
+PASS  색: 제외 폼은 채워져도 회색 아님
+
+70 passed, 0 failed

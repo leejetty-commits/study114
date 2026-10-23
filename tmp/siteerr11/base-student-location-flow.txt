@@ -1,0 +1,241 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 1부 서버 (가짜 PDO) #####
+PASS S1 과외 라벨 = 경기도 의정부시
+PASS S1 공부방 라벨 = null
+PASS S1 region_label = 과외 라벨
+PASS S1 id 는 숫자 칸에만
+PASS S2 과외 라벨 = 서울특별시 도봉구
+PASS S3 과외 라벨 null
+PASS S3 공부방 라벨 null
+PASS S3 시군구 id·라벨 null
+PASS S4 공부방 라벨 = 경기도 의정부시 신곡동(약칭 펴짐)
+PASS S4 공부방 시군구 id = 424
+PASS S4 공부방 시군구 라벨 = 경기도 의정부시
+PASS S4 region_label = 공부방 라벨(가입 분기)
+PASS S5 region_label = 과외 라벨(희망 유형 우선, 공부방 우선 아님)
+PASS S5 공부방 라벨 = 서울특별시 도봉구 창동
+PASS R1 본인 지역 IN 의정부 동(9101,9102)
+PASS R1 홍보지역(study_room_regions)도 같은 동
+PASS R1 도봉구 동(9201) 제외
+PASS R2 1 = 0
+PASS R3 동 id 9101 → InvalidArgumentException
+PASS  php 실행
+PASS  서버 학생 행 4종(의정부·도봉·없음·공부방 분기)
+PASS  서버 guestScopedFilters 가 sigungu_region_id 를 지운다(게스트 범위 우회 불가)
+
+##### 2부 화면 (실제 모듈) #####
+=== (a) 서버 저장 = 경기도 의정부시(과외 분기) ===
+PASS  (a) 로그인 역할 = parent
+PASS  (a) 저장 지역 모듈이 서버 라벨·id 를 읽음
+PASS  (a) 찾기 room 현재위치 = 경기도 의정부시
+PASS  (a) 찾기 room 「대치동」 없음
+PASS  (a) 찾기 room 「서울시 강남구」 없음
+PASS  (a) 찾기 room 「위치를 선택해 주세요」 없음
+PASS  (a) 찾기 room region id 「424」 없음
+PASS  (a) 찾기 room region id 「117」 없음
+PASS  (a) 찾기 room 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 찾기 room 목록 = 시·군·구 전체(sigungu_region_id 424)
+PASS  (a) 찾기 room 0건 감성 문구
+PASS  (a) 찾기 tutor 현재위치 = 경기도 의정부시
+PASS  (a) 찾기 tutor 「대치동」 없음
+PASS  (a) 찾기 tutor 「서울시 강남구」 없음
+PASS  (a) 찾기 tutor 「위치를 선택해 주세요」 없음
+PASS  (a) 찾기 tutor region id 「424」 없음
+PASS  (a) 찾기 tutor region id 「117」 없음
+PASS  (a) 찾기 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 찾기 tutor 목록 = tutor_region_id 424
+PASS  (a) 찾기 student 현재위치 = 경기도 의정부시
+PASS  (a) 찾기 student 「대치동」 없음
+PASS  (a) 찾기 student 「서울시 강남구」 없음
+PASS  (a) 찾기 student 「위치를 선택해 주세요」 없음
+PASS  (a) 찾기 student region id 「424」 없음
+PASS  (a) 찾기 student region id 「117」 없음
+PASS  (a) 찾기 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 찾기 student 목록 = 과외 희망 학생 · preferred_region_id 424
+PASS  (a) 찾기 저장 선택(find-canonical)에 학생 위치를 쓰지 않음
+PASS  (a) 홈 study_room 저장 지역 라벨 표시
+PASS  (a) 홈 study_room 「대치동」 없음
+PASS  (a) 홈 study_room 「서울시 강남구」 없음
+PASS  (a) 홈 study_room 「위치를 선택해 주세요」 없음
+PASS  (a) 홈 study_room region id 「424」 없음
+PASS  (a) 홈 study_room region id 「117」 없음
+PASS  (a) 홈 study_room 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 홈 tutor 저장 지역 라벨 표시
+PASS  (a) 홈 tutor 「대치동」 없음
+PASS  (a) 홈 tutor 「서울시 강남구」 없음
+PASS  (a) 홈 tutor 「위치를 선택해 주세요」 없음
+PASS  (a) 홈 tutor region id 「424」 없음
+PASS  (a) 홈 tutor region id 「117」 없음
+PASS  (a) 홈 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 홈 tutor 희망 지역 칸이 비지 않음
+PASS  (a) 홈 student 저장 지역 라벨 표시
+PASS  (a) 홈 student 「대치동」 없음
+PASS  (a) 홈 student 「서울시 강남구」 없음
+PASS  (a) 홈 student 「위치를 선택해 주세요」 없음
+PASS  (a) 홈 student region id 「424」 없음
+PASS  (a) 홈 student region id 「117」 없음
+PASS  (a) 홈 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (a) 임시값 = 서버 라벨(숫자 없음)
+=== (b) 마이페이지 희망지역 변경(의정부 → 도봉구) ===
+PASS  (b) 저장 직후 임시값 = 서울특별시 도봉구
+PASS  (b) 마이페이지 기본·상세 저장 모두 임시값 갱신 함수를 부름
+PASS  (b) 새로고침 전 과외쌤 찾기 = 서울특별시 도봉구
+PASS  (b) 새로고침 전 의정부 잔존 없음
+PASS  (b) 새로고침 전 홈 과외쌤 탭 = 도봉구
+PASS  (b) 새로고침 후 찾기 room = 서울특별시 도봉구
+PASS  (b) 새로고침 후 찾기 room 의정부 없음
+PASS  (b) 찾기 room 「대치동」 없음
+PASS  (b) 찾기 room 「서울시 강남구」 없음
+PASS  (b) 찾기 room 「위치를 선택해 주세요」 없음
+PASS  (b) 찾기 room region id 「424」 없음
+PASS  (b) 찾기 room region id 「117」 없음
+PASS  (b) 찾기 room 저장 지역이 아닌 「신곡동」 없음
+PASS  (b) 새로고침 후 찾기 tutor = 서울특별시 도봉구
+PASS  (b) 새로고침 후 찾기 tutor 의정부 없음
+PASS  (b) 찾기 tutor 「대치동」 없음
+PASS  (b) 찾기 tutor 「서울시 강남구」 없음
+PASS  (b) 찾기 tutor 「위치를 선택해 주세요」 없음
+PASS  (b) 찾기 tutor region id 「424」 없음
+PASS  (b) 찾기 tutor region id 「117」 없음
+PASS  (b) 찾기 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (b) 새로고침 후 찾기 student = 서울특별시 도봉구
+PASS  (b) 새로고침 후 찾기 student 의정부 없음
+PASS  (b) 찾기 student 「대치동」 없음
+PASS  (b) 찾기 student 「서울시 강남구」 없음
+PASS  (b) 찾기 student 「위치를 선택해 주세요」 없음
+PASS  (b) 찾기 student region id 「424」 없음
+PASS  (b) 찾기 student region id 「117」 없음
+PASS  (b) 찾기 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (b) 새로고침 후 홈 study_room = 도봉구
+PASS  (b) 새로고침 후 홈 tutor = 도봉구
+PASS  (b) 새로고침 후 홈 student = 도봉구
+=== (c) 서버 저장 지역 없음 ===
+PASS  (c) 찾기 room 지역 등록 유도 문구
+PASS  (c) 찾기 room 「대치동」 없음
+PASS  (c) 찾기 room 「서울시 강남구」 없음
+PASS  (c) 찾기 room 「위치를 선택해 주세요」 없음
+PASS  (c) 찾기 room region id 「424」 없음
+PASS  (c) 찾기 room region id 「117」 없음
+PASS  (c) 찾기 room 저장 지역이 아닌 「신곡동」 없음
+PASS  (c) 찾기 tutor 지역 등록 유도 문구
+PASS  (c) 찾기 tutor 「대치동」 없음
+PASS  (c) 찾기 tutor 「서울시 강남구」 없음
+PASS  (c) 찾기 tutor 「위치를 선택해 주세요」 없음
+PASS  (c) 찾기 tutor region id 「424」 없음
+PASS  (c) 찾기 tutor region id 「117」 없음
+PASS  (c) 찾기 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (c) 찾기 student 지역 등록 유도 문구
+PASS  (c) 찾기 student 「대치동」 없음
+PASS  (c) 찾기 student 「서울시 강남구」 없음
+PASS  (c) 찾기 student 「위치를 선택해 주세요」 없음
+PASS  (c) 찾기 student region id 「424」 없음
+PASS  (c) 찾기 student region id 「117」 없음
+PASS  (c) 찾기 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (c) 지역 없으면 다른 지역으로 목록을 부르지 않음
+PASS  (c) 홈 study_room 지역 등록 유도 문구
+PASS  (c) 홈 study_room 「대치동」 없음
+PASS  (c) 홈 study_room 「서울시 강남구」 없음
+PASS  (c) 홈 study_room 「위치를 선택해 주세요」 없음
+PASS  (c) 홈 study_room region id 「424」 없음
+PASS  (c) 홈 study_room region id 「117」 없음
+PASS  (c) 홈 study_room 저장 지역이 아닌 「신곡동」 없음
+PASS  (c) 홈 tutor 지역 등록 유도 문구
+PASS  (c) 홈 tutor 「대치동」 없음
+PASS  (c) 홈 tutor 「서울시 강남구」 없음
+PASS  (c) 홈 tutor 「위치를 선택해 주세요」 없음
+PASS  (c) 홈 tutor region id 「424」 없음
+PASS  (c) 홈 tutor region id 「117」 없음
+PASS  (c) 홈 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (c) 홈 student 지역 등록 유도 문구
+PASS  (c) 홈 student 「대치동」 없음
+PASS  (c) 홈 student 「서울시 강남구」 없음
+PASS  (c) 홈 student 「위치를 선택해 주세요」 없음
+PASS  (c) 홈 student region id 「424」 없음
+PASS  (c) 홈 student region id 「117」 없음
+PASS  (c) 홈 student 저장 지역이 아닌 「신곡동」 없음
+=== (d) 옛 임시값 숫자 「424」 ===
+PASS  (d) 읽기: 숫자 임시값은 버림
+PASS  (d) 쓰기: 숫자는 저장하지 않음
+PASS  (d) 찾기 room = 서버 지역(경기도 의정부시)
+PASS  (d) 찾기 room 「대치동」 없음
+PASS  (d) 찾기 room 「서울시 강남구」 없음
+PASS  (d) 찾기 room 「위치를 선택해 주세요」 없음
+PASS  (d) 찾기 room region id 「424」 없음
+PASS  (d) 찾기 room region id 「117」 없음
+PASS  (d) 찾기 room 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 찾기 tutor = 서버 지역(경기도 의정부시)
+PASS  (d) 찾기 tutor 「대치동」 없음
+PASS  (d) 찾기 tutor 「서울시 강남구」 없음
+PASS  (d) 찾기 tutor 「위치를 선택해 주세요」 없음
+PASS  (d) 찾기 tutor region id 「424」 없음
+PASS  (d) 찾기 tutor region id 「117」 없음
+PASS  (d) 찾기 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 찾기 student = 서버 지역(경기도 의정부시)
+PASS  (d) 찾기 student 「대치동」 없음
+PASS  (d) 찾기 student 「서울시 강남구」 없음
+PASS  (d) 찾기 student 「위치를 선택해 주세요」 없음
+PASS  (d) 찾기 student region id 「424」 없음
+PASS  (d) 찾기 student region id 「117」 없음
+PASS  (d) 찾기 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 홈 study_room 「대치동」 없음
+PASS  (d) 홈 study_room 「서울시 강남구」 없음
+PASS  (d) 홈 study_room 「위치를 선택해 주세요」 없음
+PASS  (d) 홈 study_room region id 「424」 없음
+PASS  (d) 홈 study_room region id 「117」 없음
+PASS  (d) 홈 study_room 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 홈 tutor 「대치동」 없음
+PASS  (d) 홈 tutor 「서울시 강남구」 없음
+PASS  (d) 홈 tutor 「위치를 선택해 주세요」 없음
+PASS  (d) 홈 tutor region id 「424」 없음
+PASS  (d) 홈 tutor region id 「117」 없음
+PASS  (d) 홈 tutor 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 홈 student 「대치동」 없음
+PASS  (d) 홈 student 「서울시 강남구」 없음
+PASS  (d) 홈 student 「위치를 선택해 주세요」 없음
+PASS  (d) 홈 student region id 「424」 없음
+PASS  (d) 홈 student region id 「117」 없음
+PASS  (d) 홈 student 저장 지역이 아닌 「신곡동」 없음
+PASS  (d) 숫자 임시값이 서버 라벨로 바뀜
+=== (e) 공부방 찾기 주소찾기 → 과외쌤 찾기 ===
+PASS  (e) 카카오 우편번호 열림
+PASS  (e) 공부방 찾기 = 고른 동(보기 전용) · 시도 정식 이름
+PASS  (e) 약칭 「경기 의정부시」 표시 없음
+PASS  (e) 공부방 찾기 「대치동」 없음
+PASS  (e) 공부방 찾기 「서울시 강남구」 없음
+PASS  (e) 공부방 찾기 「위치를 선택해 주세요」 없음
+PASS  (e) 공부방 찾기 region id 「424」 없음
+PASS  (e) 공부방 찾기 region id 「117」 없음
+PASS  (e) 주소찾기가 저장 선택(find-canonical)에 쓰지 않음
+PASS  (e) 주소찾기가 임시값을 덮지 않음
+PASS  (e) 서버 저장 지역은 그대로
+PASS  (e) 탭 이동 URL 에 공부방 주소가 따라가지 않음
+PASS  (e) 과외쌤 찾기 = 서버 저장(경기도 의정부시)
+PASS  (e) 과외쌤 찾기 「대치동」 없음
+PASS  (e) 과외쌤 찾기 「서울시 강남구」 없음
+PASS  (e) 과외쌤 찾기 「위치를 선택해 주세요」 없음
+PASS  (e) 과외쌤 찾기 region id 「424」 없음
+PASS  (e) 과외쌤 찾기 region id 「117」 없음
+PASS  (e) 과외쌤 찾기 저장 지역이 아닌 「신곡동」 없음
+PASS  (e) 학생 찾기 = 서버 저장(경기도 의정부시)
+PASS  (e) 학생 찾기 「대치동」 없음
+PASS  (e) 학생 찾기 「서울시 강남구」 없음
+PASS  (e) 학생 찾기 「위치를 선택해 주세요」 없음
+PASS  (e) 학생 찾기 region id 「424」 없음
+PASS  (e) 학생 찾기 region id 「117」 없음
+PASS  (e) 학생 찾기 저장 지역이 아닌 「신곡동」 없음
+=== (f) 공부방 분기 학생(저장 동 경기도 의정부시 신곡동) ===
+PASS  (f) 공부방 찾기 = 저장 동 라벨
+PASS  (f) 목록 = 저장 동 region_id 9101
+PASS  (f) 지도: 대치역 고정 대신 저장 지역 지오코딩(동 줌 15)
+PASS  (f) 학생 찾기 희망 유형 기본 = 공부방(가입 분기)
+PASS  (a·지도) 과외 분기 공부방 지도 = 시·군·구 라벨 지오코딩(구 줌 13)
+PASS  (a·지도) 학생 지도에 대치역 좌표를 박지 않음
+=== 소스 계약 ===
+PASS  찾기: 학생은 canonical 저장 선택에 쓰지 않음
+PASS  찾기: 회원에게 GUEST_PLACE_PROMPT 를 쓰지 않음
+PASS  찾기: 지역 선택 :2070 은 라벨을 임시값에 저장
+PASS  지도: 게스트 대치역 중심·줌 17 유지
+PASS  지도: 지역 기준 지도는 대치역 기본값 대신 지오코딩
+PASS  새 문구에 「학부모」 없음
+
+228 passed, 0 failed

@@ -1,0 +1,128 @@
+{
+  "대입 준비(재수 이상)": [
+    "preview/auth-ui/src/register-enums.js:36:{ value: 'n_su', label: '대입 준비(재수 이상)' },",
+    "preview/home-ui/src/student-enums.js:54:n_su: '대입 준비(재수 이상)',",
+    "preview/shared/study-room-basic-form.js:15:{ value: 'n_su', label: '대입 준비(재수 이상)' },",
+    "preview/study-room-ui/src/state.js:33:{ value: 'n_su', label: '대입 준비(재수 이상)' },",
+    "preview/study-room-ui/src/state.js:63:{ value: 'N수', label: '대입 준비(재수 이상)' },",
+    "preview/tutor-ui/src/state.js:63:{ value: 'n_su', label: '대입 준비(재수 이상)' },"
+  ],
+  "결제 대기": [
+    "preview/home-ui/src/admin/a28-screens-state.js:13:pending: '결제 대기',",
+    "preview/home-ui/src/plans/history-mock.js:124:pending: '결제 대기',"
+  ],
+  "aria ko": [
+    "preview/home-ui/src/compare-modal.js:71:<div class=\"compare-policy-axis\" aria-label=\"카드 정책 비교축\">",
+    "preview/home-ui/src/detail-decision/detail-utils.js:102:<div class=\"p24-compare-aware\" aria-label=\"비교 상태\">",
+    "preview/home-ui/src/detail-decision/detail-utils.js:121:<div class=\"p24-compare-aware\" aria-label=\"비교 상태\">",
+    "preview/home-ui/src/guide/screens.js:329:<div class=\"chip-row\" aria-label=\"찜 · 비교 · 쪽지\">",
+    "preview/home-ui/src/messages/screens.js:124:return `<div class=\"msg-hub\" role=\"tablist\" aria-label=\"쪽지와 후기함\">",
+    "preview/home-ui/src/mypage/screens.js:878:? `<table class=\"plans-table\" aria-label=\"쪽지권\" data-plans-my-status=\"packs-ready\">",
+    "preview/home-ui/src/plans/screens.js:1248:<section class=\"plans-access-explain\" aria-label=\"쪽지권 핵심 안내\">",
+    "preview/home-ui/src/plans/screens.js:1394:? `<table class=\"plans-table\" aria-label=\"쪽지권\" data-plans-my-status=\"packs-ready\">",
+    "preview/home-ui/src/student-reg/screens.js:436:<div class=\"p21-inq-choices\" role=\"radiogroup\" aria-label=\"쪽지 수신\">",
+    "preview/home-ui/src/user-actions-ui.js:58:<aside class=\"compare-bar\" aria-label=\"비교 담기\">"
+  ],
+  "게시판 4곳": [
+    "preview/home-ui/src/concern/screens.js:148:<span class=\"section-chip\">게시판 4곳</span>"
+  ],
+  "마이샵": [
+    "preview/home-ui/src/detail-decision/index.js:56:* 공부방 학생 탐색 정책: 미니카드 → 여기(확대) → 마이샵(풀페이지 본편).",
+    "preview/home-ui/src/detail-decision/index.js:57:* 배너/카드 클릭은 확대만. 마이샵은 명시적 CTA로만. docs/internal/50-student-myshop-routing.md",
+    "preview/home-ui/src/main.js:142:// 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)",
+    "preview/home-ui/src/myshop/index.js:1:/** 공개 마이샵 — 라우트·셸·복귀 스냅샷 */",
+    "preview/home-ui/src/myshop/navigate.js:2:* 공개 마이샵 진입 — 스냅샷 저장 후 `#/myshop/study-room/:id` 로 이동",
+    "preview/home-ui/src/myshop/public-shell.js:2:* 공개 마이샵 풀페이지 셸",
+    "preview/home-ui/src/myshop/public-shell.js:3:* — 본문은 원장 「내 등록 → 마이샵」과 동일 렌더(renderMyshopShowcase)",
+    "preview/home-ui/src/myshop/return-snapshot.js:2:* 공개 마이샵 복귀 스냅샷 계약",
+    "preview/home-ui/src/myshop/router.js:2:* 공개 마이샵 라우트 — `#/myshop/study-room/:id`",
+    "preview/home-ui/src/provider-reviews/teaser.js:4:* 공부방 마이샵 1차. 과외쌤 공개 페이지가 생기면 같은 mount를 재사용한다.",
+    "preview/home-ui/src/provider-reviews/teaser.js:19:/** 마이샵 티저 노출 개수. 정렬은 최신순(summary와 동일). 향후 대표+최신 혼합 여지. */",
+    "preview/home-ui/src/spa-navigation.js:3:* 공부방찾기는 /search SPA라 해시만 바꾸면 마이샵·후기함·가이드가 안 열린다.",
+    "preview/home-ui/src/state.js:87:myshop: { label: '공개 마이샵', role: 'guest' },",
+    "preview/home-ui/src/state.js:145:// 커뮤니티·홍보·자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면",
+    "preview/home-ui/src/study-room-reg/inquiry-display.js:59:* 마이샵 본문용 — 이벤트 없는 읽기 전용 상태 문구 (CTA/버튼 카피 금지)",
+    "preview/home-ui/src/study-room-reg/registration-check-copy.js:3:* 마이샵/쇼케이스 문구와 섞지 않는다.",
+    "preview/home-ui/src/study-room-reg/screens.js:145:// 중간 목록 depth 제거 — 마이샵(hub)으로 직행",
+    "preview/home-ui/src/study-room-reg/shop-completeness.js:2:* 마이샵(ShopPage) 완성도 — 등록점검에 되먹임"
+  ],
+  "여기에서 시작": [
+    "preview/home-ui/src/guide/screens.js:97:${sectionHead('여기에서 시작', '어디에 해당하나요?')}"
+  ],
+  "바로 이용해 보기": [
+    "preview/home-ui/src/guide/screens.js:145:${sectionHead('바로 이용해 보기', '바로 이용하기')}"
+  ],
+  "title ko": [
+    "preview/home-ui/src/mypage/paid-screens.js:76:? `<span class=\"plans-status-badge\" title=\"쪽지권 잔여\">쪽지권 ${memoRemaining}회</span>`",
+    "preview/home-ui/src/mypage/paid-screens.js:136:<div class=\"mypage-stat\" title=\"선제 쪽지\">",
+    "preview/home-ui/src/mypage/screens.js:468:${muted ? 'disabled title=\"공개 중지된 의뢰\"' : ''}>쪽지</button>"
+  ],
+  "유료 안내": [
+    "preview/home-ui/src/plans/hub-home.js:23:<div class=\"cinema-eyebrow\">유료 안내</div>"
+  ],
+  "프로필 꾸미기": [
+    "preview/home-ui/src/plans/hub-home.js:25:<p class=\"cinema-lead\">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>",
+    "preview/home-ui/src/plans/hub-home.js:101:<li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>",
+    "preview/home-ui/src/plans/hub-home.js:110:<span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>",
+    "preview/home-ui/src/plans/order-blocks.js:472:<li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>",
+    "preview/home-ui/src/plans/order-blocks.js:483:<strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>",
+    "preview/home-ui/src/plans/screens.js:1105:lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',",
+    "preview/home-ui/src/study-room-reg/router.js:81:'P20-02': '프로필 꾸미기',",
+    "preview/home-ui/src/study-room-reg/router.js:110:{ key: 'hub', label: '프로필 꾸미기' },",
+    "preview/home-ui/src/study-room-reg/screens.js:343:<a href=\"#${studyRoomHubPath(room.id)}\" class=\"btn btn--ghost\" data-p20-nav=\"${studyRoomHubPath(room.id)}\">프로필 꾸미기</a>`,",
+    "preview/home-ui/src/study-room-reg/screens.js:412:<a href=\"#${studyRoomHubPath(room.id)}\" class=\"btn btn--ghost\" data-p20-nav=\"${studyRoomHubPath(room.id)}\">프로필 꾸미기</a>`,"
+  ],
+  "베이직카드": [
+    "preview/home-ui/src/plans/hub-home.js:25:<p class=\"cinema-lead\">프로필 꾸미기와 베이직카드 노출은 무료입니다. 더 자주 보이고 싶을 때는 노출상품, 먼저 연락하고 싶을 때는 쪽지권을 선택하세요.</p>",
+    "preview/home-ui/src/plans/hub-home.js:101:<li>프로필 꾸미기·베이직카드 노출만으로 충분할 때는 유료 없이 이용해도 됩니다</li>",
+    "preview/home-ui/src/plans/hub-home.js:110:<span>프로필 꾸미기 · 베이직카드 목록 노출 · 받은 쪽지에 답장</span>",
+    "preview/home-ui/src/plans/order-blocks.js:472:<li>만료 후 베이직카드(기본 노출)로 복귀 · 프로필 꾸미기는 유지</li>",
+    "preview/home-ui/src/plans/order-blocks.js:483:<strong>프로필 꾸미기와 베이직카드 노출은 무료입니다.</strong>",
+    "preview/home-ui/src/plans/screens.js:320:if (normalized.includes('basic')) return '베이직카드';",
+    "preview/home-ui/src/plans/screens.js:1105:lead: '더 좋은 자리에서 학부모·학생에게 발견될 기회를 제공합니다.\\n프로필 꾸미기와 베이직카드 목록 노출은 무료입니다.\\n필요한 기간만 결제하며 자동으로 연장하지 않습니다.',",
+    "preview/home-ui/src/study-room-reg/registration-check-copy.js:34:cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',",
+    "preview/home-ui/src/study-room-reg/registration-check-copy.js:37:basicKicker: '베이직카드',",
+    "preview/home-ui/src/tutor-reg/inquiries-copy.js:29:sampleLead: '홈과 같은 실제 베이직카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.',",
+    "preview/home-ui/src/tutor-reg/registration-check-copy.js:14:basicOk: '베이직카드 충족',",
+    "preview/home-ui/src/tutor-reg/registration-check-copy.js:15:basicNeed: (n) => `베이직카드 ${n}개 부족`,",
+    "preview/home-ui/src/tutor-reg/registration-check-copy.js:39:cardsTitle: '베이직카드/픽/프라임 이렇게 달라집니다',",
+    "preview/home-ui/src/tutor-reg/registration-check-copy.js:42:basicKicker: '베이직카드',",
+    "preview/home-ui/src/tutor-reg/screens.js:441:'프로필 사진은 아래에서 최대 3장까지 올릴 수 있습니다. 1번 사진이 베이직카드·픽·프라임 카드 대표 사진입니다.',"
+  ],
+  "PAID PRODUCTS": [
+    "preview/home-ui/src/plans/screens.js:1103:eyebrow: 'PAID PRODUCTS',",
+    "preview/home-ui/src/plans/screens.js:1240:eyebrow: 'PAID PRODUCTS',"
+  ],
+  "수업 스타일": [
+    "preview/home-ui/src/study-room-reg/embedded-panels.js:301:{ label: '수업 스타일', value: styles.length ? `${styles.length}개 선택` : '', required: true },",
+    "preview/home-ui/src/study-room-reg/embedded-panels.js:302:{ label: '수업 스타일 추가설명', value: s.teaching_style_note, required: true },",
+    "preview/home-ui/src/study-room-reg/registration-check-copy.js:112:{ id: 'teaching_style', label: '수업 스타일', hint: '수업 결을 한눈에 보여 줍니다', section: 'detail' },",
+    "preview/home-ui/src/study-room-reg/registration-check-copy.js:113:{ id: 'teaching_style_note', label: '수업 스타일 추가설명', hint: '칩만으로 부족한 설명을 보완합니다', section: 'detail' },",
+    "preview/home-ui/src/study-room-reg/registration-check-model.js:365:row('teaching_style', '수업 스타일', styles.join(' · '), styles.length ? 'filled' : 'empty'),",
+    "preview/home-ui/src/study-room-reg/registration-check-model.js:366:row('teaching_style_note', '수업 스타일 추가설명', s?.teaching_style_note, textStatus(s?.teaching_style_note)),",
+    "preview/home-ui/src/study-room-reg/registration-check-model.js:469:teaching_style: { step: 'lesson', type: 'styles', label: '수업 스타일' },",
+    "preview/home-ui/src/study-room-reg/registration-check-model.js:470:teaching_style_note: { step: 'lesson', type: 'textarea', label: '수업 스타일 추가설명', max: 200, rows: 3 },",
+    "preview/home-ui/src/study-room-reg/shop-completeness.js:47:label: '수업 스타일',",
+    "preview/home-ui/src/study-room-reg/shop-completeness.js:50:emptyShort: '수업 스타일 없음',",
+    "preview/home-ui/src/study-room-reg/shop-completeness.js:51:emptyWhy: '수업 스타일이 없어 「이 공부방의 매력」이 약하거나 숨겨집니다',",
+    "preview/study-room-ui/src/screens/step-lesson.js:259:${starLabel('', '수업 스타일')}",
+    "preview/study-room-ui/src/screens/step-lesson.js:263:${starLabel('teaching_style_note', '수업 스타일 추가설명')}",
+    "preview/study-room-ui/src/state.js:98:/** 수업 스타일 — 복수 선택 */",
+    "preview/study-room-ui/src/summary.js:170:{ label: '수업 스타일', value: str(s.teaching_style) },",
+    "preview/study-room-ui/src/summary.js:171:{ label: '수업 스타일 추가설명', value: str(s.teaching_style_note) },"
+  ],
+  "지금은 예시 지역": [
+    "preview/home-ui/src/tutor-activity-chart.js:90:<p class=\"act-bars__note\">지금은 예시 지역 기준으로 보여 드려요. 과목 필터는 아직 반영되지 않았어요.</p>"
+  ],
+  "선택하신 이유가": [
+    "preview/home-ui/src/tutor-reg/inquiries-copy.js:22:offReasonHint: '쪽지 안받음이면 이유를 고른 뒤 저장합니다. 선택하신 이유가 프로필과 안내에 반영됩니다.',"
+  ],
+  "주요 대학 출신 우선": [
+    "preview/shared/korean-universities.js:55:/** 주요 대학 출신 우선 — 학부 정식명 + 짧은 표기만 (university_note·대학원 문구 파싱 금지) */",
+    "preview/shared/list-sort.js:4:* — 주요 대학 출신 우선(과외쌤만): isSkyUniversityName(university_name)",
+    "preview/shared/list-sort.js:26:sky: '주요 대학 출신 우선',"
+  ],
+  "N수": [
+    "preview/study-room-ui/src/state.js:63:{ value: 'N수', label: '대입 준비(재수 이상)' },"
+  ]
+}

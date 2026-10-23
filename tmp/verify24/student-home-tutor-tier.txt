@@ -1,0 +1,27 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS  (M1) 지역 표시 border-bottom 유지 (home.css)
+PASS  (M1) 결과 구역 border-top 규칙 유지 (search.css .search-results)
+PASS  (M1) --pre 는 border-top:none 이지만 같은 특이도의 뒤 규칙에 진다
+PASS  (M1) 학생 홈 과외쌤 탭에서만 결과 border-top 을 끈다
+PASS  (M1) 전역 .search-results 의 border-top 을 none 으로 바꾸지 않는다
+PASS  (M1) 공부방 탭 지역 막대는 --tutor 가 없다
+PASS  (M1) --tier-section-gap 정의는 한 곳 · 2rem
+PASS  (M1·M2) var(--tier-section-gap) 사용처는 넷(픽·베이직 × 선 위·선 아래)
+PASS  (M1·M2) 픽: 선 위 margin-top, 구분선, 선 아래 padding-top
+PASS  (M1·M2) 베이직: 선 위 margin-top, 구분선, 선 아래 padding-top
+PASS  (M2·M3) 전역 픽 간격은 var(--space-4) 그대로
+PASS  (M2·M3) 전역 베이직 간격은 var(--space-3) 그대로
+PASS  (M3) 간격 변수는 parent·blue 규칙 안에만 있다
+PASS  (M4) 0건 베이직은 renderBrowseList 한 번
+PASS  (M4) 빈카드는 tailHtml 로 같은 목록에 붙는다
+PASS  (M4) tailHtml 은 browse-list 안, 샘플 뒤
+PASS  (M4) 빈카드는 data-basic-empty
+PASS  (M4) 데스크탑 그리드 2열
+PASS  (M4) 720px 이하 1열
+PASS  (M5) 학생 홈에서 searchTab 이 tutor 이면 배지를 그리지 않는다
+PASS  (M5) renderParentFindMoreLink 함수는 남는다
+PASS  (M5) 공급자 홈 학생 탭 배지 문구는 남는다
+PASS  (M5) 과외쌤 탭 배지 기대값 = 없음
+PASS  (M5) 학생 탭 배지 기대값은 유지
+
+24 passed, 0 failed

@@ -1,0 +1,10 @@
+﻿const fs = require('fs');
+const t = fs.readFileSync('preview/auth-ui/src/screens/signup-complete.js','utf8');
+const lines = t.split(/\n/);
+for (let i=80;i<=120;i++) console.log(String(i+1).padStart(4)+'|'+lines[i]);
+console.log('\n--- return/saved lead usage ---');
+const login = fs.readFileSync('preview/auth-ui/src/screens/login.js','utf8');
+login.split(/\n/).forEach((l,i)=>{ if(/returnLead|savedLead|credential|fail|AUTH_WELCOME|loginFailure/.test(l)) console.log((i+1)+'|'+l); });
+console.log('\n--- login-stage ---');
+const ls = fs.readFileSync('preview/auth-ui/src/login-stage.js','utf8');
+ls.split(/\n/).forEach((l,i)=>{ if(/returnLead|savedLead|AUTH_WELCOME|credential/.test(l)) console.log((i+1)+'|'+l); });

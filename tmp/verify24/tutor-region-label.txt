@@ -1,0 +1,109 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+##### 1부 정적 #####
+PASS  헬퍼 OfficialRegionLabel 존재
+PASS  헬퍼 sigunguLabel(): ?string
+PASS  TutorHub: sido_name 단독 조회 제거
+PASS  TutorHub: OfficialRegionLabel::sigunguLabel 사용
+PASS  TutorHub: primaryRegionLabel(): ?string
+PASS  TutorHub: 응답 키 primary_region_label 유지
+PASS  TutorHub: 응답 키 location_label 유지(대체 문자열 없음)
+PASS  TutorHub: '—' 대체값 제거
+PASS  Ticket: sido_name 단독 조회 제거
+PASS  Ticket: OfficialRegionLabel 사용
+PASS  Ticket: 공부방 분기 쿼리 그대로
+PASS  Student: 같은 헬퍼로 위임(중복 구현 없음)
+##### 2부 서버 (가짜 PDO · 073 공식 시드) #####
+PASS  073 시드 284행 파싱
+PASS  시드: 경기도 양주시
+PASS  시드: 서울특별시 강남구
+PASS  시드: 세종(시도=시군구 이름)
+PASS  시드: 수원시 영통구
+PASS  PHP 실행
+PASS  C1 경기도 양주시 · 오류 없음
+PASS  C1 경기도 양주시 · primary_region_label = "경기도 양주시"
+PASS  C1 경기도 양주시 · location_label = "경기도 양주시"
+PASS  C1 경기도 양주시 · has_primary_region = true
+PASS  C1 경기도 양주시 · 이용권 primaryRegionLabel('tutor') = "경기도 양주시"
+PASS  C1 경기도 양주시 · 옛 sido_name 단독 쿼리 미실행
+PASS  C1 경기도 양주시 · 라벨에 숫자(id) 없음
+PASS  C2 서울 강남구 · 오류 없음
+PASS  C2 서울 강남구 · primary_region_label = "서울특별시 강남구"
+PASS  C2 서울 강남구 · location_label = "서울특별시 강남구"
+PASS  C2 서울 강남구 · has_primary_region = true
+PASS  C2 서울 강남구 · 이용권 primaryRegionLabel('tutor') = "서울특별시 강남구"
+PASS  C2 서울 강남구 · 옛 sido_name 단독 쿼리 미실행
+PASS  C2 서울 강남구 · 라벨에 숫자(id) 없음
+PASS  C3 세종(반복 제거) · 오류 없음
+PASS  C3 세종(반복 제거) · primary_region_label = "세종특별자치시"
+PASS  C3 세종(반복 제거) · location_label = "세종특별자치시"
+PASS  C3 세종(반복 제거) · has_primary_region = true
+PASS  C3 세종(반복 제거) · 이용권 primaryRegionLabel('tutor') = "세종특별자치시"
+PASS  C3 세종(반복 제거) · 옛 sido_name 단독 쿼리 미실행
+PASS  C3 세종(반복 제거) · 라벨에 숫자(id) 없음
+PASS  C3 세종 · 「세종특별자치시 세종특별자치시」 아님
+PASS  C4 구가 있는 시(수원시 영통구) · 오류 없음
+PASS  C4 구가 있는 시(수원시 영통구) · primary_region_label = "경기도 수원시 영통구"
+PASS  C4 구가 있는 시(수원시 영통구) · location_label = "경기도 수원시 영통구"
+PASS  C4 구가 있는 시(수원시 영통구) · has_primary_region = true
+PASS  C4 구가 있는 시(수원시 영통구) · 이용권 primaryRegionLabel('tutor') = "경기도 수원시 영통구"
+PASS  C4 구가 있는 시(수원시 영통구) · 옛 sido_name 단독 쿼리 미실행
+PASS  C4 구가 있는 시(수원시 영통구) · 라벨에 숫자(id) 없음
+PASS  C5 활동지역 없음 · 오류 없음
+PASS  C5 활동지역 없음 · primary_region_label = null
+PASS  C5 활동지역 없음 · location_label = null
+PASS  C5 활동지역 없음 · has_primary_region = false
+PASS  C5 활동지역 없음 · 이용권 primaryRegionLabel('tutor') = null
+PASS  C5 활동지역 없음 · 옛 sido_name 단독 쿼리 미실행
+PASS  C5b 슬롯1만 있고 is_primary 아님 · 오류 없음
+PASS  C5b 슬롯1만 있고 is_primary 아님 · primary_region_label = "경기도 양주시"
+PASS  C5b 슬롯1만 있고 is_primary 아님 · location_label = "경기도 양주시"
+PASS  C5b 슬롯1만 있고 is_primary 아님 · has_primary_region = true
+PASS  C5b 슬롯1만 있고 is_primary 아님 · 이용권은 is_primary 행이 없어 null
+PASS  C5b 슬롯1만 있고 is_primary 아님 · 옛 sido_name 단독 쿼리 미실행
+PASS  C5c 대표 region_id 행이 regions 에 없음 · 오류 없음
+PASS  C5c 대표 region_id 행이 regions 에 없음 · primary_region_label = null
+PASS  C5c 대표 region_id 행이 regions 에 없음 · location_label = null
+PASS  C5c 대표 region_id 행이 regions 에 없음 · has_primary_region = false
+PASS  C5c 대표 region_id 행이 regions 에 없음 · 이용권 primaryRegionLabel('tutor') = null
+PASS  C5c 대표 region_id 행이 regions 에 없음 · 옛 sido_name 단독 쿼리 미실행
+PASS  C5c · 라벨에 region_id 777777 이 새지 않음
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · 오류 없음
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · primary_region_label = "경기도 양주시"
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · location_label = "경기도 양주시"
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · has_primary_region = true
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · 이용권 primaryRegionLabel('tutor') = "경기도 양주시"
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · 옛 sido_name 단독 쿼리 미실행
+PASS  C6 동 행(경기 양주시 옥정동) → 상위 시군구 · 라벨에 숫자(id) 없음
+PASS  C6 · 동 이름(옥정동) 미포함 · 약칭(경기) 펴짐
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · 오류 없음
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · primary_region_label = "경기도 수원시 영통구"
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · location_label = "경기도 수원시 영통구"
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · has_primary_region = true
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · 이용권 primaryRegionLabel('tutor') = "경기도 수원시 영통구"
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · 옛 sido_name 단독 쿼리 미실행
+PASS  C6b 동 행(수원시 영통구 매탄동) → 상위 구 · 라벨에 숫자(id) 없음
+PASS  C6c 시 대표 동 행 → 상위 시 · 오류 없음
+PASS  C6c 시 대표 동 행 → 상위 시 · primary_region_label = "경기도 양주시"
+PASS  C6c 시 대표 동 행 → 상위 시 · location_label = "경기도 양주시"
+PASS  C6c 시 대표 동 행 → 상위 시 · has_primary_region = true
+PASS  C6c 시 대표 동 행 → 상위 시 · 이용권 primaryRegionLabel('tutor') = "경기도 양주시"
+PASS  C6c 시 대표 동 행 → 상위 시 · 옛 sido_name 단독 쿼리 미실행
+PASS  C6c 시 대표 동 행 → 상위 시 · 라벨에 숫자(id) 없음
+PASS  C7 대표는 슬롯1 · 오류 없음
+PASS  C7 대표는 슬롯1 · primary_region_label = "경기도 양주시"
+PASS  C7 대표는 슬롯1 · location_label = "경기도 양주시"
+PASS  C7 대표는 슬롯1 · has_primary_region = true
+PASS  C7 대표는 슬롯1 · 이용권 primaryRegionLabel('tutor') = "경기도 수원시 영통구"
+PASS  C7 대표는 슬롯1 · 옛 sido_name 단독 쿼리 미실행
+PASS  C7 대표는 슬롯1 · 라벨에 숫자(id) 없음
+PASS  C7 · primary_region_id = 슬롯1 id
+PASS  Z1 이용권 providerId 0 (tutor) = null
+PASS  Z2 이용권 공부방 분기 = 홍보1 라벨 그대로
+##### 3부 화면 경로 (정적) #####
+PASS  API: GET /api/registrations/tutors.php → TutorHubService::listForOwner
+PASS  클라: registrations-api tutors 엔드포인트
+PASS  클라: hydrateRegistrationsCache 가 응답 행을 그대로 복사
+PASS  마이프로필: 과외지역 = 서버 primary_region_label 그대로
+FAIL  클라이언트 라벨은 용어 정정만 허용(로직·값 변경 금지) — 변경 줄 수 36−/7+
+
+102 passed, 1 failed

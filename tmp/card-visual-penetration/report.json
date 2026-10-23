@@ -1,0 +1,237 @@
+{
+  "generatedAt": "2026-10-02T11:49:08.964Z",
+  "verdict": "1차_완료_가능",
+  "pass": 36,
+  "fail": 0,
+  "info": 3,
+  "rows": [
+    {
+      "level": "PASS",
+      "id": "P01_removed_like_in_ssot",
+      "detail": "card-visual removed=[\"like\"]"
+    },
+    {
+      "level": "PASS",
+      "id": "P02_no_like_in_card_actions_html",
+      "detail": "renderItemActions HTML에 like 잔존 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "P03_stats_actions_split_html",
+      "detail": "통계(.card-stats) / 기능(.card-actions) DOM 분리"
+    },
+    {
+      "level": "PASS",
+      "id": "P03b_rail_order",
+      "detail": "recommend-toggle → open-review-sheet → wish-toggle → compare-toggle → open-detail-memo"
+    },
+    {
+      "level": "PASS",
+      "id": "P03c_no_write_in_rail",
+      "detail": "레일에 ✎ 작성 없음(후기수는 게이트, 작성은 확대카드 푸터)"
+    },
+    {
+      "level": "PASS",
+      "id": "P03d_study_room_login_full_rail",
+      "detail": "recommend-toggle → open-review-sheet → wish-toggle → compare-toggle → open-detail-memo"
+    },
+    {
+      "level": "PASS",
+      "id": "P03e_tutor_login_full_rail",
+      "detail": "recommend-toggle → open-review-sheet → wish-toggle → compare-toggle → open-detail-memo"
+    },
+    {
+      "level": "PASS",
+      "id": "P03f_parent_login_full_rail",
+      "detail": "recommend-toggle → open-review-sheet → wish-toggle → compare-toggle → open-detail-memo"
+    },
+    {
+      "level": "PASS",
+      "id": "P03g_provider_can_compare",
+      "detail": "공급자 로그인에서도 비교 가능 · 게스트만 불가"
+    },
+    {
+      "level": "PASS",
+      "id": "P03h_provider_to_provider_memo",
+      "detail": "공급자↔공급자·학부모→공급자 쪽지 허용, 게스트 불가"
+    },
+    {
+      "level": "PASS",
+      "id": "P03i_provider_review_write_blocked",
+      "detail": "can_write=false reason=role cta=false"
+    },
+    {
+      "level": "PASS",
+      "id": "P03j_parent_review_not_role_blocked",
+      "detail": "reason=no_thread"
+    },
+    {
+      "level": "PASS",
+      "id": "P04_recommend_in_stats_not_paid_badge",
+      "detail": "추천은 통계 그룹"
+    },
+    {
+      "level": "PASS",
+      "id": "P05_room_paid_only_hot_단과",
+      "detail": "[\"Hot\",\"단과\"]"
+    },
+    {
+      "level": "PASS",
+      "id": "P06_tutor_paid_hot_jjokjipge_sky",
+      "detail": "[\"hot\",\"jjokjipge\",\"sky\"]"
+    },
+    {
+      "level": "PASS",
+      "id": "P07_live_counts_into_card_visual",
+      "detail": "rec=4 reviewShown=true"
+    },
+    {
+      "level": "PASS",
+      "id": "P08_live_trust_edu_office",
+      "detail": "교육청등록,경력 8년"
+    },
+    {
+      "level": "PASS",
+      "id": "P09_new_from_published_at_client",
+      "detail": "New는 클라이언트 published_at 7일 판정 (서버 is_new 필드 없음)"
+    },
+    {
+      "level": "PASS",
+      "id": "P10_live_no_paid_without_api_field",
+      "detail": "paid_badges=[] 이면 유료 배지 미표시 (정상)"
+    },
+    {
+      "level": "PASS",
+      "id": "P11_paid_badges_api_contract",
+      "detail": "SearchService + PaidBadgeResolver → items[].paid_badges[] 계약 잠금 (운영 행 비면 [])"
+    },
+    {
+      "level": "INFO",
+      "id": "P12_badge_checkout_to_table_pending",
+      "detail": "badge_addon 주문→provider_paid_badges INSERT는 미연결 · createOrder는 포지션 선행 throw 유지"
+    },
+    {
+      "level": "PASS",
+      "id": "P13_detail_trust_ssot_only",
+      "detail": "countTrustItems=2 (facility/feature 제외 · SSOT=교육청+경력)"
+    },
+    {
+      "level": "PASS",
+      "id": "P14_detail_uses_card_visual_block",
+      "detail": "확대카드 배지 = renderCardVisualPolicyBlock · 추천/후기 통계는 미니와 동일 renderItemActions 레일"
+    },
+    {
+      "level": "PASS",
+      "id": "P15_catalog_no_sell_recommend_new",
+      "detail": "prime,pick,hot,subject_track,memo_ticket"
+    },
+    {
+      "level": "PASS",
+      "id": "P16_catalog_tutor_sky",
+      "detail": "memo_ticket,pick,prime,hot,jjokjipge,sky"
+    },
+    {
+      "level": "PASS",
+      "id": "P17_old_docs_deprecated_banner",
+      "detail": "18-paid-services-rough.md · 18b 상단에 구버전/대체 정본 배너 적용"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_basic_room_stats",
+      "detail": "html→D:\\work\\study114\\tmp\\card-visual-penetration/basic_room.html"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_basic_room_no_전문_promo",
+      "detail": "promo에 전문 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_pick_room_stats",
+      "detail": "html→D:\\work\\study114\\tmp\\card-visual-penetration/pick_room.html"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_pick_room_no_전문_promo",
+      "detail": "promo에 전문 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_prime_room_stats",
+      "detail": "html→D:\\work\\study114\\tmp\\card-visual-penetration/prime_room.html"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_prime_room_no_전문_promo",
+      "detail": "promo에 전문 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_basic_tutor_stats",
+      "detail": "html→D:\\work\\study114\\tmp\\card-visual-penetration/basic_tutor.html"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_basic_tutor_no_전문_promo",
+      "detail": "promo에 전문 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_pick_tutor_stats",
+      "detail": "html→D:\\work\\study114\\tmp\\card-visual-penetration/pick_tutor.html"
+    },
+    {
+      "level": "PASS",
+      "id": "SNAP_pick_tutor_no_전문_promo",
+      "detail": "promo에 전문 없음"
+    },
+    {
+      "level": "PASS",
+      "id": "P18_compare_policy_axis",
+      "detail": "compare-modal 상단 compare-policy-axis = card-visual 유료·신뢰·통계 (표형 유지)"
+    },
+    {
+      "level": "INFO",
+      "id": "P19_registration_check_rc_tier",
+      "detail": "등록점검 rc-tier는 Pick/Prime 상품 유도 샘플 — 운영 노출카드 SSOT 비적용이 의도"
+    },
+    {
+      "level": "INFO",
+      "id": "P20_inquiry_preview_uses_browse_list",
+      "detail": "쪽지설정 미리보기=renderBrowseList → card-visual 경로 공유 (단, room 필드 밀도에 의존)"
+    }
+  ],
+  "sourceMap": {
+    "recommend_count": {
+      "db": "study_rooms.recommend_count / tutors.recommend_count (+ user_recommendations 토글)",
+      "api": "POST /api/search/search.php → items[].recommend_count; POST /api/handoff/recommendations.php",
+      "adapter": "home-basic-live.mapRoom/mapTutor",
+      "cardVisual": "stats.recommend"
+    },
+    "review_count": {
+      "db": "COUNT(provider_reviews WHERE review_status='visible')",
+      "api": "search.php items[].review_count; reviews API review_count",
+      "adapter": "home-basic-live",
+      "cardVisual": "stats.review (0이면 숨김)"
+    },
+    "trust": {
+      "db": "education_office_registered, business_registration_available, career_years, university_status, proof_document_available",
+      "api": "search.php (일부 필드 2026-08-22 추가)",
+      "adapter": "home-basic-live / exposure-bridge(불완전)",
+      "cardVisual": "trustBadges[]"
+    },
+    "paid_badges": {
+      "db": "provider_paid_badges (055) · PaidBadgeResolver",
+      "api": "search.php items[].paid_badges[]",
+      "adapter": "home-basic-live pass-through",
+      "cardVisual": "promoBadges paid layer",
+      "liveNote": "checkout→INSERT 미연결 · 운영 행 없으면 []"
+    },
+    "new": {
+      "db": "published_at / created_at",
+      "api": "search.php published_at",
+      "adapter": "home-basic-live published_at",
+      "cardVisual": "client 7-day window"
+    }
+  }
+}

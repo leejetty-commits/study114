@@ -1,0 +1,67 @@
+npm warn Unknown env config "devdir". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+PASS: 비로그인 × #/parent = #/guest (got #/guest)
+PASS: 비로그인: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 비로그인 × #/study-room = #/guest (got #/guest)
+PASS: 비로그인: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 비로그인 × #/tutor = #/guest (got #/guest)
+PASS: 비로그인: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 비로그인 × #/guest 항상 허용
+PASS: 학부모 × #/parent = ok (got ok)
+PASS: 학부모 × #/study-room = #/parent (got #/parent)
+PASS: 학부모 × #/study-room 거부 대상이 roleHomeHashPath(#/parent)와 같다
+PASS: 학부모: #/parent 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 학부모 × #/tutor = #/parent (got #/parent)
+PASS: 학부모 × #/tutor 거부 대상이 roleHomeHashPath(#/parent)와 같다
+PASS: 학부모: #/parent 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 학부모 × #/guest 항상 허용
+PASS: 공부방 × #/parent = #/study-room (got #/study-room)
+PASS: 공부방 × #/parent 거부 대상이 roleHomeHashPath(#/study-room)와 같다
+PASS: 공부방: #/study-room 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 공부방 × #/study-room = ok (got ok)
+PASS: 공부방 × #/tutor = #/study-room (got #/study-room)
+PASS: 공부방 × #/tutor 거부 대상이 roleHomeHashPath(#/study-room)와 같다
+PASS: 공부방: #/study-room 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 공부방 × #/guest 항상 허용
+PASS: 과외쌤 × #/parent = #/tutor (got #/tutor)
+PASS: 과외쌤 × #/parent 거부 대상이 roleHomeHashPath(#/tutor)와 같다
+PASS: 과외쌤: #/tutor 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 과외쌤 × #/study-room = #/tutor (got #/tutor)
+PASS: 과외쌤 × #/study-room 거부 대상이 roleHomeHashPath(#/tutor)와 같다
+PASS: 과외쌤: #/tutor 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 과외쌤 × #/tutor = ok (got ok)
+PASS: 과외쌤 × #/guest 항상 허용
+PASS: 관리자 × #/parent = #/admin (got #/admin)
+PASS: 관리자 × #/parent 거부 대상이 roleHomeHashPath(#/admin)와 같다
+PASS: 관리자: 역할 홈 밖 대상은 #/admin 뿐 (got #/admin)
+PASS: 관리자 × #/study-room = #/admin (got #/admin)
+PASS: 관리자 × #/study-room 거부 대상이 roleHomeHashPath(#/admin)와 같다
+PASS: 관리자: 역할 홈 밖 대상은 #/admin 뿐 (got #/admin)
+PASS: 관리자 × #/tutor = #/admin (got #/admin)
+PASS: 관리자 × #/tutor 거부 대상이 roleHomeHashPath(#/admin)와 같다
+PASS: 관리자: 역할 홈 밖 대상은 #/admin 뿐 (got #/admin)
+PASS: 관리자 × #/guest 항상 허용
+PASS: 대기 가입자 × #/parent = #/guest (got #/guest)
+PASS: 대기 가입자 × #/parent 거부 대상이 roleHomeHashPath(#/guest)와 같다
+PASS: 대기 가입자: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 대기 가입자 × #/study-room = #/guest (got #/guest)
+PASS: 대기 가입자 × #/study-room 거부 대상이 roleHomeHashPath(#/guest)와 같다
+PASS: 대기 가입자: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 대기 가입자 × #/tutor = #/guest (got #/guest)
+PASS: 대기 가입자 × #/tutor 거부 대상이 roleHomeHashPath(#/guest)와 같다
+PASS: 대기 가입자: #/guest 로 보낸 뒤 다시 가드 통과(루프 없음)
+PASS: 대기 가입자 × #/guest 항상 허용
+PASS: navRole 생략 시 guest 로 보아 로그인만으로는 역할 홈을 열지 않는다
+PASS: main.js 가 navRoleFromAuthUser(getAuthUser()) 로 가드를 부른다
+PASS: main.js 의 관리자 → #/admin 별도 분기가 없다(가드로 통합)
+PASS: main.js 는 세션 확인 전 역할 홈을 그리거나 판정하지 않는다
+PASS: main.js shouldPaintBeforeSession 은 역할 홈을 세션 전에 그리지 않는다
+
+역할 \ 홈            navRole      #/parent        #/study-room    #/tutor
+비로그인         guest           거부→#/guest      거부→#/guest      거부→#/guest     
+학부모          parent          허용              거부→#/parent     거부→#/parent    
+공부방          study_room      거부→#/study-room 허용              거부→#/study-room
+과외쌤          tutor           거부→#/tutor      거부→#/tutor      허용             
+관리자          admin           거부→#/admin      거부→#/admin      거부→#/admin     
+대기 가입자       guest           거부→#/guest      거부→#/guest      거부→#/guest     
+
+통과 56 / 실패 0

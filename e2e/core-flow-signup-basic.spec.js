@@ -64,9 +64,9 @@ test.describe('[3단계] auth-ui 화면 플로우 (student)', () => {
     await page.locator('[data-form="basic-student"] button[type="submit"]').click();
     await page.waitForURL(/#\/signup\/complete/, { timeout: 15_000 });
 
-    await expect(page.getByText('가입 · 기본등록 완료')).toBeVisible();
-    await expect(page.locator('.success-info dd').filter({ hasText: email })).toBeVisible();
-    await expect(page.locator('.success-info dd').filter({ hasText: /student #\d+/ })).toBeVisible();
+    await expect(page.getByText('가입이 끝났어요')).toBeVisible();
+    await expect(page.getByText('적어 주신 내용은 학생 카드에 바로 반영돼요.')).toBeVisible();
+    await expect(page.locator('.success-info')).not.toContainText(/#\d+/);
   });
 
   test('완료 화면 → 메인 홈 분기 (student → parent)', async ({ page, context }) => {

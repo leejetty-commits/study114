@@ -156,9 +156,9 @@ member_external_links
 
 **권한 축 (런타임 ACL):** `discover`(채널명·공간 소개) · `list`(글 목록) · `detail` · `compose` · `comment` · `react` · `download`
 
-`list` 허용만으로 게시글 제목을 반환하지 않는다. 소개와 글 목록을 분리한다.
+`discover`만으로는 글 목록을 반환하지 않는다. 소개와 글 목록을 분리한다. 단, 고민방은 `discover`만 있어도 제목 항목(제목·방 이름·날짜·반응 합계·댓글 수, 본문·작성자 없음)을 반환한다 (2026-10-01, 정본 [09 §14-b](../ssot/09-main-screen-roles.md)).
 
-코드 정본: `board-channel-acl.js` · `BoardChannelAcl.php` (FE/서버 동일) · `BOARD_REGISTRY`는 보드 메타.
+코드 정본: `board-channel-acl.js` · `BoardChannelAcl.php` (FE/서버 동일) · `BOARD_REGISTRY`는 게시판 메타.
 
 ### 3-2. boardKey 목록 (권장안)
 
@@ -429,15 +429,15 @@ member_external_links
 > 런타임: seed → (API mode) DB overlay → admin sessionStorage.  
 > 필수 소비: `sourceBoardKeys` · `visibilityRule` · `roleTarget` · `guestFilter` · `mobileBehavior`.  
 > list/detail/compose/comment/reaction/download 분리는 `board-channel-acl.js` · `BoardChannelAcl.php`.  
-> guest·제한 역할 concern = **소개만** (게시글 배열 비반환). Board API는 세션+boardKey 재검증. HOT 전체 보드 fallback 금지. sourceBoardKeys가 있는 모든 슬롯은 동일 ACL.
+> 게스트·그 방 읽기 권한 없는 사람의 concern = **제목만** (제목·방 이름·날짜·반응 합계·댓글 수, 본문·작성자 비반환, 글쓰기·댓글·반응·신고 불가 — 정본 [09 §14-b](../ssot/09-main-screen-roles.md)). Board API는 세션+boardKey 재검증. HOT 전체 게시판 fallback 금지. sourceBoardKeys가 있는 모든 슬롯은 동일 ACL.
 
 ### D-3. 키·필터·구현 상태 구분 (2026-08-29)
 
 | 항목 | 정본 |
 |------|------|
 | 학부모 고민방 키 | `concern-parent`. `concern-family`는 별칭만 (중복 채널 금지) |
-| guestFilter | `intro_only` (채널 소개만). `summary_only`는 호환 별칭이며 글 제목·요약 공개가 아님 |
-| 고민방 참여 | ACL ○ · 프리뷰 localStorage ○ · **서버 저장 미구현** · 운영 게시판 미완료 |
+| guestFilter | `intro_only`는 글 카드를 막는 값이 아니라, 고민방이 걸린 칸에 값이 비었을 때 기본값으로 쓰이는 값(게스트 판정은 `allow`와 같음, 칸을 숨기는 값은 `block`뿐). `summary_only`는 호환 별칭. 서버가 준 제목 항목은 게스트에게도 카드로 노출 |
+| 고민방 참여 | ACL ○ · 글쓰기·댓글·반응·신고·삭제·수정 **서버 저장 구현 — 로컬 확인 단계(운영 DB `075` 적용 전)** · 운영 게시판 미완료 |
 | 해결후기 작성 | 기존값 유지 / 별도 최종 정책 확인. 확대 금지 |
 | 찜·비교 | 모든 로그인 역할 `#/mypage/wishlist`. **비교 전용 마이페이지 route 없음** — 찜 목록의 비교 담기만 |
 | 쪽지권 | 공급자→학생 **신규 thread만** 1회. 후속·학부모 선문의·답장은 잔여 0이어도 무료 |
