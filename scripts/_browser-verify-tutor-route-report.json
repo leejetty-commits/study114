@@ -1,0 +1,499 @@
+{
+  "summary": "PASS",
+  "failCount": 0,
+  "dialogsSeen": [],
+  "results": [
+    {
+      "id": "A:기본정보→상세정보",
+      "result": "PASS",
+      "note": "즉시 이동 (16ms)",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/detail",
+        "activeTab": "상세정보",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "detail",
+        "hasTabs": true,
+        "title": "김수학",
+        "elapsed": 16,
+        "click": {
+          "ok": true,
+          "text": "상세정보"
+        },
+        "newDialogs": []
+      }
+    },
+    {
+      "id": "A:상세정보→마이프로필",
+      "result": "PASS",
+      "note": "즉시 이동 (27ms)",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1",
+        "activeTab": "마이프로필",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "hub",
+        "hasTabs": true,
+        "title": "김수학",
+        "elapsed": 27,
+        "click": {
+          "ok": true,
+          "text": "마이프로필"
+        },
+        "newDialogs": []
+      }
+    },
+    {
+      "id": "A:마이프로필→쪽지설정",
+      "result": "PASS",
+      "note": "즉시 이동 (15ms)",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/inquiries",
+        "activeTab": "쪽지설정",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "inquiries",
+        "hasTabs": true,
+        "title": "김수학",
+        "elapsed": 15,
+        "click": {
+          "ok": true,
+          "text": "쪽지설정"
+        },
+        "newDialogs": []
+      }
+    },
+    {
+      "id": "A:쪽지설정→등록점검",
+      "result": "PASS",
+      "note": "즉시 이동 (25ms)",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/publish",
+        "activeTab": "등록점검",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "publish",
+        "hasTabs": true,
+        "title": "김수학",
+        "elapsed": 25,
+        "click": {
+          "ok": true,
+          "text": "등록점검"
+        },
+        "newDialogs": []
+      }
+    },
+    {
+      "id": "A:등록점검→기본정보",
+      "result": "PASS",
+      "note": "즉시 이동 (20ms)",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/basic",
+        "activeTab": "기본정보",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "basic",
+        "hasTabs": true,
+        "title": "김수학",
+        "elapsed": 20,
+        "click": {
+          "ok": true,
+          "text": "기본정보"
+        },
+        "newDialogs": []
+      }
+    },
+    {
+      "id": "B:history",
+      "result": "PASS",
+      "note": "뒤로/앞으로 동기",
+      "detail": {
+        "back1": {
+          "url": "/mypage/registrations/tutors/1/detail",
+          "activeTab": "상세정보",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "detail",
+          "hasTabs": true,
+          "title": "김수학"
+        },
+        "back2": {
+          "url": "/mypage/registrations/tutors/1/basic",
+          "activeTab": "기본정보",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "basic",
+          "hasTabs": true,
+          "title": "김수학"
+        },
+        "fwd1": {
+          "url": "/mypage/registrations/tutors/1/detail",
+          "activeTab": "상세정보",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "detail",
+          "hasTabs": true,
+          "title": "김수학"
+        }
+      }
+    },
+    {
+      "id": "C:refresh:basic",
+      "result": "PASS",
+      "note": "유지",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/basic",
+        "activeTab": "기본정보",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "basic",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "C:refresh:inquiries",
+      "result": "PASS",
+      "note": "유지",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/inquiries",
+        "activeTab": "쪽지설정",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "inquiries",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "C:refresh:publish",
+      "result": "PASS",
+      "note": "유지",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/publish",
+        "activeTab": "등록점검",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "publish",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "C:refresh:hub",
+      "result": "PASS",
+      "note": "유지",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1",
+        "activeTab": "마이프로필",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "hub",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "D:direct:hub",
+      "result": "PASS",
+      "note": "직접 진입 OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1",
+        "activeTab": "마이프로필",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "hub",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "D:direct:basic",
+      "result": "PASS",
+      "note": "직접 진입 OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/basic",
+        "activeTab": "기본정보",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "basic",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "D:direct:detail",
+      "result": "PASS",
+      "note": "직접 진입 OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/detail",
+        "activeTab": "상세정보",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "detail",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "D:direct:inquiries",
+      "result": "PASS",
+      "note": "직접 진입 OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/inquiries",
+        "activeTab": "쪽지설정",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "inquiries",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "D:direct:publish",
+      "result": "PASS",
+      "note": "직접 진입 OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/publish",
+        "activeTab": "등록점검",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "publish",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "E:menu:내 등록",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/registrations/tutors/1",
+          "activeTab": "마이프로필",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "hub",
+          "hasTabs": true,
+          "title": "김수학"
+        },
+        "direct": {
+          "url": "/mypage/registrations/tutors/1",
+          "activeTab": "마이프로필",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "hub",
+          "hasTabs": true,
+          "title": "김수학"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "E:menu:쪽지·후기함",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/messages",
+          "activeTab": null,
+          "activeNav": [
+            "✉\n        쪽지·후기함"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "쪽지·후기함"
+        },
+        "direct": {
+          "url": "/mypage/messages",
+          "activeTab": null,
+          "activeNav": [
+            "✉\n        쪽지·후기함"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "쪽지·후기함"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "E:menu:최근열람",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/recent",
+          "activeTab": null,
+          "activeNav": [
+            "◷\n        최근열람"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "최근열람"
+        },
+        "direct": {
+          "url": "/mypage/recent",
+          "activeTab": null,
+          "activeNav": [
+            "◷\n        최근열람"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "최근열람"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "E:menu:찜한학생",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/student-review",
+          "activeTab": null,
+          "activeNav": [
+            "☆\n        찜한학생"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "찜한학생"
+        },
+        "direct": {
+          "url": "/mypage/student-review",
+          "activeTab": null,
+          "activeNav": [
+            "☆\n        찜한학생"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "찜한학생"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "E:menu:구매이력",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/plans",
+          "activeTab": null,
+          "activeNav": [
+            "◌\n        구매이력"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "구매이력"
+        },
+        "direct": {
+          "url": "/mypage/plans",
+          "activeTab": null,
+          "activeNav": [
+            "◌\n        구매이력"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "구매이력"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "E:menu:계정설정",
+      "result": "PASS",
+      "note": "클릭·직접진입 일치",
+      "detail": {
+        "click": {
+          "url": "/mypage/account",
+          "activeTab": null,
+          "activeNav": [
+            "⚙\n        계정설정"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "계정설정"
+        },
+        "direct": {
+          "url": "/mypage/account",
+          "activeTab": null,
+          "activeNav": [
+            "⚙\n        계정설정"
+          ],
+          "marker": "unknown",
+          "hasTabs": false,
+          "title": "계정설정"
+        },
+        "activeOk": true
+      }
+    },
+    {
+      "id": "F:access",
+      "result": "PASS",
+      "note": "canonicalize OK",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/inquiries",
+        "activeTab": "쪽지설정",
+        "activeNav": [
+          "✎\n        내 등록"
+        ],
+        "marker": "inquiries",
+        "hasTabs": true,
+        "title": "김수학"
+      }
+    },
+    {
+      "id": "G:badId",
+      "result": "PASS",
+      "note": "대표로 정리 history 39→40",
+      "detail": {
+        "bad": {
+          "url": "/mypage/registrations/tutors/1/basic",
+          "activeTab": "기본정보",
+          "activeNav": [
+            "✎\n        내 등록"
+          ],
+          "marker": "basic",
+          "hasTabs": true,
+          "title": "김수학"
+        },
+        "histBefore": 39,
+        "histAfter": 40
+      }
+    },
+    {
+      "id": "H:unsaved",
+      "result": "OBSERVE",
+      "note": "경고 없이 이동, 값 소실(리렌더)",
+      "detail": {
+        "movedWithoutAlert": true,
+        "original": "김수학",
+        "dirty": "김수학__DIRTY_TEST__",
+        "after": "김수학",
+        "retained": false,
+        "lost": true
+      }
+    }
+  ]
+}

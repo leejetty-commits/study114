@@ -1,0 +1,114 @@
+{
+  "summary": "PASS",
+  "failCount": 0,
+  "dialogs": [],
+  "results": [
+    {
+      "id": "static:no-leave-alert",
+      "result": "PASS",
+      "note": "leave-gate alert string absent"
+    },
+    {
+      "id": "static:nav-no-persist",
+      "result": "PASS",
+      "note": "nav does not call persist"
+    },
+    {
+      "id": "setup:basic",
+      "result": "PASS",
+      "note": "{\"url\":\"/mypage/registrations/tutors/1/basic\",\"activeTab\":\"기본정보\",\"marker\":\"basic\",\"hasTabs\":true}",
+      "detail": {
+        "url": "/mypage/registrations/tutors/1/basic",
+        "activeTab": "기본정보",
+        "marker": "basic",
+        "hasTabs": true
+      }
+    },
+    {
+      "id": "leave:basic→마이프로필",
+      "result": "PASS",
+      "note": "즉시 이동 521ms (unitsHint={\"retry\":true,\"form\":true})",
+      "detail": {
+        "s": {
+          "url": "/mypage/registrations/tutors/1",
+          "activeTab": "마이프로필",
+          "marker": "hub",
+          "hasTabs": true
+        },
+        "newDialogs": [],
+        "unitsLen": {
+          "retry": true,
+          "form": true
+        },
+        "elapsed": 521
+      }
+    },
+    {
+      "id": "leave:basic→상세정보",
+      "result": "PASS",
+      "note": "즉시 이동 521ms (unitsHint={\"retry\":true,\"form\":true})",
+      "detail": {
+        "s": {
+          "url": "/mypage/registrations/tutors/1/detail",
+          "activeTab": "상세정보",
+          "marker": "detail",
+          "hasTabs": true
+        },
+        "newDialogs": [],
+        "unitsLen": {
+          "retry": true,
+          "form": true
+        },
+        "elapsed": 521
+      }
+    },
+    {
+      "id": "leave:basic→쪽지설정",
+      "result": "PASS",
+      "note": "즉시 이동 519ms (unitsHint={\"retry\":true,\"form\":true})",
+      "detail": {
+        "s": {
+          "url": "/mypage/registrations/tutors/1/inquiries",
+          "activeTab": "쪽지설정",
+          "marker": "inquiries",
+          "hasTabs": true
+        },
+        "newDialogs": [],
+        "unitsLen": {
+          "retry": true,
+          "form": true
+        },
+        "elapsed": 519
+      }
+    },
+    {
+      "id": "leave:basic→등록점검",
+      "result": "PASS",
+      "note": "즉시 이동 521ms (unitsHint={\"retry\":true,\"form\":true})",
+      "detail": {
+        "s": {
+          "url": "/mypage/registrations/tutors/1/publish",
+          "activeTab": "등록점검",
+          "marker": "publish",
+          "hasTabs": true
+        },
+        "newDialogs": [],
+        "unitsLen": {
+          "retry": true,
+          "form": true
+        },
+        "elapsed": 521
+      }
+    },
+    {
+      "id": "observe:unsaved",
+      "result": "OBSERVE",
+      "note": "경고 없이 이동, 값 소실(리렌더)",
+      "detail": {
+        "original": "김수학",
+        "after": "김수학",
+        "mid": []
+      }
+    }
+  ]
+}
