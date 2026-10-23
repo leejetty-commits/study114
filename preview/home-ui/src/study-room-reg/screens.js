@@ -24,6 +24,7 @@ import {
 } from './router.js';
 import {
   formatRoomSummaryLine,
+  formatTierMissingReason,
   profileStatusLabel,
   inquiryStatusLabel,
 } from './format.js';
@@ -55,9 +56,62 @@ import {
   renderNeighborhoodGreetingEditor,
 } from '../neighborhood-greeting-ui.js';
 import { KOREA_SIDOS } from '../../../shared/korea-sidos.js';
+import { getPaidOperationalStatus } from '../paid-backend.js';
+import { readTierCheck, scheduleTierCheckHydrate } from '../plans/screens.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+/** 구매 뒤 필수 비면 경고 띠 하나. 이용 중 값은 plans가 쓰는 status 캐시만. */
+function renderPaidTierMissingBanner(providerType, providerId) {
+  const ops = getPaidOperationalStatus();
+  const positions = ops?.exposure?.positions;
+  if (!Array.isArray(positions) || !positions.length) return '';
+  const mine = positions.filter(
+    (p) =>
+      (p.sku === 'pick' || p.sku === 'prime') &&
+      p.provider_type === providerType &&
+      String(p.provider_id) === String(providerId),
+  );
+  if (!mine.length) return '';
+  const entry = readTierCheck(providerType, providerId);
+  if (!entry || entry.phase !== 'ready') return '';
+  /** @type {string[]} */
+  const names = [];
+  /** @type {Array<{ id?: string, label?: string }|string>} */
+  const missing = [];
+  if (mine.some((p) => p.sku === 'pick') && entry.pick?.can_buy === false) {
+    names.push('픽');
+    if (Array.isArray(entry.pick.missing)) missing.push(...entry.pick.missing);
+  }
+  if (mine.some((p) => p.sku === 'prime') && entry.prime?.can_buy === false) {
+    names.push('프라임');
+    if (Array.isArray(entry.prime.missing)) missing.push(...entry.prime.missing);
+  }
+  // 픽·프라임 missing 라벨 중복 제거(이름 기준). 문구·띠 조건은 그대로.
+  const seenLabels = new Set();
+  const uniqueMissing = [];
+  for (const item of missing) {
+    const label = item && typeof item === 'object' ? String(item.label || '') : String(item || '');
+    if (!label || seenLabels.has(label)) continue;
+    seenLabels.add(label);
+    uniqueMissing.push(item);
+  }
+  const reason = formatTierMissingReason(uniqueMissing);
+  if (!names.length || !reason) return '';
+  const product = names.length === 2 ? '픽·프라임' : names[0];
+  const text = `${product} 카드에 필요한 항목이 비어 있어요: ${reason}. 채우지 않으면 카드가 덜 채워져 보여요.`;
+  return `<div class="mp-room__shop-nudge" data-tier-missing-warn role="status">
+    <p class="mp-room__shop-nudge__text">${esc(text)}</p>
+  </div>`;
+}
+
+function scheduleProviderTierHydrate(providerType, providerId) {
+  if (!providerId) return;
+  scheduleTierCheckHydrate({ providerType, id: providerId }, () => {
+    window.dispatchEvent(new Event('hashchange'));
+  });
 }
 
 /** load 실패 뒤 shouldReload이 같은 탭을 다시 로딩으로 넣지 않게 하는 종료 키 */
@@ -323,6 +377,7 @@ function renderList(tab) {
 
 
 function renderHub(room) {
+  scheduleProviderTierHydrate('study_room', room.id);
   if (hasEmbeddedLoadError(room.id, 'hub')) {
     markEmbeddedViewLoaded(room.id, 'hub');
     return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', embeddedLoadErrorHtml())}</section>`;
@@ -359,7 +414,8 @@ function renderHub(room) {
       </div>`
     : '';
   const hideLine = renderAdminHideOwnerLine(room.profile_status === 'hidden');
-  const body = `${hideLine}${greeting}${nudge}${renderMyshopShowcase(registerState, room)}`;
+  const warn = renderPaidTierMissingBanner('study_room', room.id);
+  const body = `${hideLine}${warn}${greeting}${nudge}${renderMyshopShowcase(registerState, room)}`;
   return `<section class="mypage-panel mp-room-panel">${renderRoomShell(room, 'hub', body)}</section>`;
 }
 

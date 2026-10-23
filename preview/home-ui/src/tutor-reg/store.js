@@ -129,8 +129,11 @@ export function getTutor(id) {
   return getTutors(true).find((r) => r.id === id) || null;
 }
 
-/** @param {TutorRecord} tutor */
-export function getPublishReadiness(tutor) {
+/**
+ * @param {TutorRecord} tutor
+ * @param {{ phase?: string, pick?: { can_buy?: boolean }|null }|null} [tierCheck] plans tier-check 캐시
+ */
+export function getPublishReadiness(tutor, tierCheck = null) {
   /**
    * 기본등록 완료 = 카드 노출 (정본 73 0절). 항목은 shared/tutor-basic-fields.js 한 목록
    * (서버 TutorBasicFields::missingForTutor 와 같음). 상세 항목은 노출 조건이 아니다.
@@ -143,8 +146,9 @@ export function getPublishReadiness(tutor) {
 
   /** @type {string[]} */
   const qualityHints = [];
-  if (tutor.detail_completion_status !== 'expanded_complete') {
-    qualityHints.push('상세등록 완료 시 추천 노출 신청 가능');
+  const pickCanBuy = tierCheck?.phase === 'ready' && tierCheck?.pick?.can_buy === true;
+  if (!pickCanBuy) {
+    qualityHints.push('픽·프라임에 필요한 항목은 등록점검에서 확인하세요');
   }
   if (!tutor.education_doc_public) qualityHints.push('학력정보 공개 시 신뢰정보 표시');
   if (!tutor.intro_long?.trim()) qualityHints.push('상세 소개 보강 권장');
@@ -152,7 +156,7 @@ export function getPublishReadiness(tutor) {
   return {
     canPublish: missing.length === 0,
     detailRecommended: tutor.detail_completion_status !== 'expanded_complete',
-    exposureBoostReady: tutor.detail_completion_status === 'expanded_complete',
+    exposureBoostReady: pickCanBuy,
     doneCount,
     totalCount: checks.length,
     missing,

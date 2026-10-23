@@ -67,7 +67,7 @@ const REGISTRATIONS = {
         tutor_display_name: t.tutor_display_name,
         profile_status: t.profile_status,
         detail_completion_status: t.detail_completion_status,
-        prime_eligible: t.detail_completion_status === 'expanded_complete',
+        prime_eligible: t.prime_eligible,
       }));
     },
   },

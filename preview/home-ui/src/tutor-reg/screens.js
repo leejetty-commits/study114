@@ -17,12 +17,13 @@ import { bindInputFill } from '../../../shared/input-fill.js';
 import { wonToCheonwonInput, cheonwonInputToWon } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
-import { getExposureMatrix } from './format.js';
+import { getExposureMatrix, formatTierMissingReason } from './format.js';
 import {
   getTutors,
   getTutor,
   getPublishReadiness,
 } from './store.js';
+import { getPaidOperationalStatus } from '../paid-backend.js';
 import { saveTutorBasicInline } from './inline-save.js';
 import {
   buildTutorRegistrationCheckModel,
@@ -57,6 +58,7 @@ import {
   bindNeighborhoodGreetingEditor,
   renderNeighborhoodGreetingEditor,
 } from '../neighborhood-greeting-ui.js';
+import { readTierCheck, scheduleTierCheckHydrate } from '../plans/screens.js';
 
 function lessonSelectHtml(options, selected) {
   const current = String(selected ?? '');
@@ -301,8 +303,60 @@ function renderExposureMatrixRows(rows) {
     .join('');
 }
 
+function scheduleProviderTierHydrate(providerType, providerId) {
+  if (!providerId) return;
+  scheduleTierCheckHydrate({ providerType, id: providerId }, () => {
+    window.dispatchEvent(new Event('hashchange'));
+  });
+}
+
+/** 구매 뒤 필수 비면 경고 띠 하나. 이용 중 값은 plans가 쓰는 status 캐시만. */
+function renderPaidTierMissingBanner(providerType, providerId) {
+  const ops = getPaidOperationalStatus();
+  const positions = ops?.exposure?.positions;
+  if (!Array.isArray(positions) || !positions.length) return '';
+  const mine = positions.filter(
+    (p) =>
+      (p.sku === 'pick' || p.sku === 'prime') &&
+      p.provider_type === providerType &&
+      String(p.provider_id) === String(providerId),
+  );
+  if (!mine.length) return '';
+  const entry = readTierCheck(providerType, providerId);
+  if (!entry || entry.phase !== 'ready') return '';
+  /** @type {string[]} */
+  const names = [];
+  /** @type {Array<{ id?: string, label?: string }|string>} */
+  const missing = [];
+  if (mine.some((p) => p.sku === 'pick') && entry.pick?.can_buy === false) {
+    names.push('픽');
+    if (Array.isArray(entry.pick.missing)) missing.push(...entry.pick.missing);
+  }
+  if (mine.some((p) => p.sku === 'prime') && entry.prime?.can_buy === false) {
+    names.push('프라임');
+    if (Array.isArray(entry.prime.missing)) missing.push(...entry.prime.missing);
+  }
+  // 픽·프라임 missing 라벨 중복 제거(이름 기준). 문구·띠 조건은 그대로.
+  const seenLabels = new Set();
+  const uniqueMissing = [];
+  for (const item of missing) {
+    const label = item && typeof item === 'object' ? String(item.label || '') : String(item || '');
+    if (!label || seenLabels.has(label)) continue;
+    seenLabels.add(label);
+    uniqueMissing.push(item);
+  }
+  const reason = formatTierMissingReason(uniqueMissing);
+  if (!names.length || !reason) return '';
+  const product = names.length === 2 ? '픽·프라임' : names[0];
+  const text = `${product} 카드에 필요한 항목이 비어 있어요: ${reason}. 채우지 않으면 카드가 덜 채워져 보여요.`;
+  return `<div class="mp-room__shop-nudge" data-tier-missing-warn role="status">
+    <p class="mp-room__shop-nudge__text">${esc(text)}</p>
+  </div>`;
+}
+
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderHub(tutor) {
+  scheduleProviderTierHydrate('tutor', tutor.id);
   const greeting = renderNeighborhoodGreetingEditor({
     providerType: 'tutor',
     registrationId: Number(tutor.id),
@@ -310,7 +364,8 @@ function renderHub(tutor) {
     displayName: tutor.tutor_display_name || '과외쌤',
   });
   const hideLine = renderAdminHideOwnerLine(tutor.profile_status === 'hidden');
-  const body = `${hideLine}${greeting}${renderTutorProfileRead(tutor)}`;
+  const warn = renderPaidTierMissingBanner('tutor', tutor.id);
+  const body = `${hideLine}${warn}${greeting}${renderTutorProfileRead(tutor)}`;
   return `<section class="mypage-panel mp-room-panel">${renderTutorShell(tutor, 'hub', body)}</section>`;
 }
 
@@ -512,8 +567,10 @@ function renderInquiries(tutor) {
 
 /** @param {import('./store.js').TutorRecord} tutor */
 function renderExposure(tutor) {
-  const readiness = getPublishReadiness(tutor);
-  const matrix = getExposureMatrix(tutor, readiness);
+  scheduleProviderTierHydrate('tutor', tutor.id);
+  const tierCheck = readTierCheck('tutor', tutor.id);
+  const readiness = getPublishReadiness(tutor, tierCheck);
+  const matrix = getExposureMatrix(tutor, readiness, tierCheck);
   const pickRow = matrix.find((m) => m.key === 'pick');
   const primeRow = matrix.find((m) => m.key === 'prime');
 
@@ -524,11 +581,11 @@ function renderExposure(tutor) {
         <div class="p20-matrix">${renderExposureMatrixRows(matrix)}</div>
       </section>
       <section class="p20-exposure-section p20-plans-cta">
-        <h3>추천·대표 노출</h3>
-        <p class="p19-form-section__lead">대표·추천 노출은 기간형 상품 · 쪽지권은 횟수형 상품</p>
+        <h3>픽·프라임 카드</h3>
+        <p class="p19-form-section__lead">픽·프라임은 기간형 상품 · 쪽지권은 횟수형 상품</p>
         <div class="p19-form-actions">
-          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '추천 노출')}</button>
-          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '대표 노출')}</button>
+          <button type="button" class="btn btn--secondary" ${pickRow?.ok ? '' : 'disabled'}>${esc(pickRow?.statusText || '픽 카드')}</button>
+          <button type="button" class="btn btn--secondary" ${primeRow?.ok ? '' : 'disabled'}>${esc(primeRow?.statusText || '프라임 카드')}</button>
           <a href="#/plans/positions?provider_type=tutor&provider_id=${tutor.id}" class="btn btn--primary" data-nav="/plans/positions?provider_type=tutor&provider_id=${tutor.id}">유료상품 · 노출</a>
         </div>
       </section>

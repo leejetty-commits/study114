@@ -78,33 +78,56 @@ export function studyRoomUiDeepLink(step, roomId, opts = {}) {
   return `${base}#/register/${step}?room_id=${roomId}&edit=1&return_to=${returnTo}`;
 }
 
-/** @param {StudyRoomRecord} room */
-function countProductConditions(room) {
-  let n = 0;
-  if (room.profile_status === 'hidden') n++;
-  if (room.detail_completion_status !== 'expanded_complete') n++;
-  return n;
+/**
+ * tier-check missing → 이유 문구 (최대 3개 + 「외 n」)
+ * @param {Array<{ id?: string, label?: string }|string>|null|undefined} missing
+ */
+export function formatTierMissingReason(missing) {
+  /** @type {string[]} */
+  const labels = [];
+  if (Array.isArray(missing)) {
+    for (const item of missing) {
+      const label = item && typeof item === 'object' ? String(item.label || '') : String(item || '');
+      if (label) labels.push(label);
+    }
+  }
+  if (!labels.length) return null;
+  if (labels.length <= 3) return labels.join(', ');
+  return `${labels.slice(0, 3).join(', ')} 외 ${labels.length - 3}`;
 }
 
 /**
  * @param {'prime'|'pick'} type
- * @param {StudyRoomRecord} room
+ * @param {{ can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null|undefined} side
+ * @param {'loading'|'ready'|'error'|string|undefined} phase
  */
-function productMatrixRow(type, room) {
-  const n = countProductConditions(room);
-  const ok = n === 0;
+function productMatrixRow(type, side, phase) {
+  const label = type === 'prime' ? '프라임 카드' : '픽 카드';
+  if (phase === 'loading' || (phase === 'ready' && !side) || !phase) {
+    return { key: type, label, ok: false, reason: '확인 중', statusText: '확인 중' };
+  }
+  if (phase === 'error') {
+    return { key: type, label, ok: false, reason: '확인 실패', statusText: '확인 실패' };
+  }
+  const reason = formatTierMissingReason(side?.missing);
+  const ok = side?.can_buy === true && !reason;
   return {
     key: type,
-    label: type === 'prime' ? '대표 노출' : '추천 노출',
+    label,
     ok,
-    reason: ok ? null : PRODUCT_APPLY.missing(n),
-    statusText: ok ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(n),
+    reason,
+    statusText: ok ? PRODUCT_APPLY.eligible : reason || '항목 부족',
   };
 }
 
-/** @param {StudyRoomRecord} room @param {import('./store.js').PublishReadiness} readiness */
-export function getExposureMatrix(room, readiness) {
+/**
+ * @param {StudyRoomRecord} room
+ * @param {import('./store.js').PublishReadiness} readiness
+ * @param {{ phase?: string, pick?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null, prime?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null }|null} [tierCheck]
+ */
+export function getExposureMatrix(room, readiness, tierCheck = null) {
   const visible = room.profile_status !== 'hidden';
+  const phase = tierCheck?.phase;
 
   return [
     {
@@ -121,16 +144,22 @@ export function getExposureMatrix(room, readiness) {
       reason: !visible ? '숨김 상태' : room.compare_eligible === false ? '비교 자격 미충족' : null,
       statusText: null,
     },
-    productMatrixRow('prime', room),
-    productMatrixRow('pick', room),
+    productMatrixRow('prime', tierCheck?.prime, phase),
+    productMatrixRow('pick', tierCheck?.pick, phase),
   ];
 }
 
-/** P20-05 §7-1 블록 순서용 상세 노출 행 */
-export function getExposureDetailBlocks(room, readiness) {
+/**
+ * P20-05 §7-1 블록 순서용 상세 노출 행
+ * @param {StudyRoomRecord} room
+ * @param {import('./store.js').PublishReadiness} readiness
+ * @param {{ phase?: string, pick?: object|null, prime?: object|null }|null} [tierCheck]
+ */
+export function getExposureDetailBlocks(room, readiness, tierCheck = null) {
   const visible = room.profile_status !== 'hidden';
-  const prime = productMatrixRow('prime', room);
-  const pick = productMatrixRow('pick', room);
+  const phase = tierCheck?.phase;
+  const prime = productMatrixRow('prime', tierCheck?.prime, phase);
+  const pick = productMatrixRow('pick', tierCheck?.pick, phase);
 
   const capacityHint =
     room.inquiry_status === 'capacity_full'

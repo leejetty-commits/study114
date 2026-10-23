@@ -118,12 +118,46 @@ export function getThreeGauges(tutor) {
   };
 }
 
-/** @param {TutorRecord} tutor */
-function countProductConditions(tutor) {
-  let n = 0;
-  if (tutor.profile_status === 'hidden') n++;
-  if (tutor.detail_completion_status !== 'expanded_complete') n++;
-  return n;
+/**
+ * tier-check missing → 이유 문구 (최대 3개 + 「외 n」)
+ * @param {Array<{ id?: string, label?: string }|string>|null|undefined} missing
+ */
+export function formatTierMissingReason(missing) {
+  /** @type {string[]} */
+  const labels = [];
+  if (Array.isArray(missing)) {
+    for (const item of missing) {
+      const label = item && typeof item === 'object' ? String(item.label || '') : String(item || '');
+      if (label) labels.push(label);
+    }
+  }
+  if (!labels.length) return null;
+  if (labels.length <= 3) return labels.join(', ');
+  return `${labels.slice(0, 3).join(', ')} 외 ${labels.length - 3}`;
+}
+
+/**
+ * @param {'pick'|'prime'} key
+ * @param {string} label
+ * @param {{ can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null|undefined} side
+ * @param {'loading'|'ready'|'error'|string|undefined} phase
+ */
+function tierProductRow(key, label, side, phase) {
+  if (phase === 'loading' || (phase === 'ready' && !side) || !phase) {
+    return { key, label, ok: false, reason: '확인 중', statusText: '확인 중' };
+  }
+  if (phase === 'error') {
+    return { key, label, ok: false, reason: '확인 실패', statusText: '확인 실패' };
+  }
+  const reason = formatTierMissingReason(side?.missing);
+  const ok = side?.can_buy === true && !reason;
+  return {
+    key,
+    label,
+    ok,
+    reason,
+    statusText: ok ? PRODUCT_APPLY.eligible : reason || '항목 부족',
+  };
 }
 
 /** 마이페이지 내부 — 관심 학생(찜) 목록 */
@@ -158,11 +192,15 @@ export function getMatchingVisibility(tutor) {
   return { conditions, status, limited, ok: !limited };
 }
 
-/** @param {TutorRecord} tutor */
-export function getAccessMatrix(tutor) {
+/**
+ * @param {TutorRecord} tutor
+ * @param {{ phase?: string, pick?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null, prime?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null }|null} [tierCheck]
+ */
+export function getAccessMatrix(tutor, tierCheck = null) {
   const paid = isPaidProvider();
   const memos = getMemoCreditsRemaining();
   const visible = tutor.profile_status !== 'hidden';
+  const phase = tierCheck?.phase;
 
   return [
     {
@@ -195,37 +233,19 @@ export function getAccessMatrix(tutor) {
       ok: visible,
       reason: !visible ? '숨김 상태' : null,
     },
-    {
-      key: 'pick',
-      label: '추천 노출',
-      ok: visible && tutor.detail_completion_status === 'expanded_complete',
-      reason:
-        tutor.detail_completion_status !== 'expanded_complete'
-          ? '상세등록 완료 필요'
-          : !visible
-            ? '숨김 상태'
-            : null,
-    },
-    {
-      key: 'prime',
-      label: '대표 노출 신청',
-      ok: paid && visible,
-      reason: !paid ? '유료 이용 자격 필요' : !visible ? '숨김 상태' : null,
-    },
+    tierProductRow('pick', '픽 카드', tierCheck?.pick, phase),
+    tierProductRow('prime', '프라임 카드', tierCheck?.prime, phase),
   ];
 }
 
-/** @param {TutorRecord} tutor @param {import('./store.js').PublishReadiness} readiness */
-export function getExposureMatrix(tutor, readiness) {
+/**
+ * @param {TutorRecord} tutor
+ * @param {import('./store.js').PublishReadiness} readiness
+ * @param {{ phase?: string, pick?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null, prime?: { can_buy?: boolean, missing?: Array<{ id?: string, label?: string }|string> }|null }|null} [tierCheck]
+ */
+export function getExposureMatrix(tutor, readiness, tierCheck = null) {
   const visible = tutor.profile_status !== 'hidden';
-  const expanded = tutor.detail_completion_status === 'expanded_complete';
-  const paid = isPaidProvider();
-  const pickN = countProductConditions(tutor);
-  const primeMissing = [
-    !paid && '유료',
-    !visible && '숨김',
-    !expanded && '상세 미완료',
-  ].filter(Boolean);
+  const phase = tierCheck?.phase;
 
   return [
     {
@@ -242,20 +262,8 @@ export function getExposureMatrix(tutor, readiness) {
       reason: !visible ? '숨김 상태' : tutor.compare_eligible === false ? '비교 자격 미충족' : null,
       statusText: null,
     },
-    {
-      key: 'pick',
-      label: '추천 노출',
-      ok: visible && expanded,
-      reason: pickN ? `조건 ${pickN}개 부족` : null,
-      statusText: pickN === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(pickN),
-    },
-    {
-      key: 'prime',
-      label: '대표 노출',
-      ok: paid && visible && expanded,
-      reason: primeMissing.length ? `조건 ${primeMissing.length}개 부족` : null,
-      statusText: primeMissing.length === 0 ? PRODUCT_APPLY.eligible : PRODUCT_APPLY.missing(primeMissing.length),
-    },
+    tierProductRow('pick', '픽 카드', tierCheck?.pick, phase),
+    tierProductRow('prime', '프라임 카드', tierCheck?.prime, phase),
   ];
 }
 
