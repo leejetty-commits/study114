@@ -56,6 +56,9 @@ export function renderStudyRoomDetailBody(item, viewer) {
         <dt>월 수강료</dt><dd>${esc(formatMonthlyWon(item.price_amount))}</dd>
         <dt>슬로건</dt><dd>${esc(item.slogan || '—')}</dd>
         <dt>특징</dt><dd>${esc(features)}</dd>
+        <dt>수업스타일</dt><dd>${esc(item.teaching_style || '—')}</dd>
+        <dt>수업스타일 추가설명</dt><dd>${esc(item.teaching_style_note || '—')}</dd>
+        <dt>주 회수</dt><dd>${esc(item.lessons_per_week ? `주 ${item.lessons_per_week}회` : '—')}</dd>
         <dt>소개</dt><dd>${esc(item.intro_long || '—')}</dd>
         <dt>쪽지 문의</dt><dd>${esc(studyRoomParentInquiryLine(item.inquiry_status))}</dd>
       </dl>

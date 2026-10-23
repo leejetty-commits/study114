@@ -115,6 +115,15 @@ Basic: §4-0 3행 구조 · 이미지 기본 제외
 
 `study_room_name` · `region_id|complex_id` · `main_subject_note` · `price_amount` · `study_room_subject_targets` 1건+ · `feature_1|intro_long`
 
+### 4-5. 픽·프라임 구매 필수 (282 확정)
+
+| 자리 | 필수 항목(`ROOM_PICK_IDS` / `ROOM_PRIME_IDS`) |
+| --- | --- |
+| **픽** | `cover` · `intro_long` · `fee` · `teaching_style` · `feature_1`(경력특징 1) |
+| **프라임** | 픽 전부 + `feature_2`(경력특징 2) · `feature_3`(경력특징 3) · `teaching_style_note` · `lessons_per_week` |
+
+서버: `TierRequirement.php` · 화면: `pickprime-requirements.js`
+
 ---
 
 ## 5. 과외쌤 노출 (8장)

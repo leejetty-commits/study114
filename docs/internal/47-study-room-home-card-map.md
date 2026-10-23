@@ -78,6 +78,15 @@ DB: 교습형태는 기존 `study_rooms.lesson_place_type`. 새 컬럼 없음. �
 
 **베이직에는 특징1~3이 없다.** 특징은 픽·프라임만.
 
+### 픽·프라임 구매 필수 조건 (282 확정)
+
+| 자리 | 필수 항목 | 비고 |
+| --- | --- | --- |
+| **픽 구매** | `cover` · `intro_long` · `fee` · `teaching_style` · **`feature_1`(경력특징 1)** | `ROOM_PICK_IDS` |
+| **프라임 구매** | 픽 전부 + **`feature_2`(경력특징 2)** · **`feature_3`(경력특징 3)** · `teaching_style_note` · `lessons_per_week` | `ROOM_PRIME_IDS` |
+
+서버: `src/Paid/TierRequirement.php`. 화면: `preview/shared/pickprime-requirements.js`. 둘이 항상 동기화.
+
 **제출함은 이 표에 넣지 않음.** 「증빙 n개」는 과외쌤 카드. 매핑은 [48](./48-tutor-home-card-map.md). 이번 버전 운영은 [49](./49-submission-role-split.md).
 
 ## 카드 「교습형태」
