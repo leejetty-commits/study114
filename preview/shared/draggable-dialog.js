@@ -23,6 +23,7 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
   }
 
   bar.classList.add('is-dialog-drag-handle');
+  dialog.dataset.dragBound = '1';
 
   let dragging = false;
   let positioned = false;
@@ -140,6 +141,7 @@ export function bindDraggableDialog(dialog, handle, options = {}) {
     window.removeEventListener('resize', onResize);
     observer.disconnect();
     bar.classList.remove('is-dialog-drag-handle');
+    delete dialog.dataset.dragBound;
   }
 
   return { reset, destroy };
