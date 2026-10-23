@@ -1,0 +1,6 @@
+{
+  "php": "unrun",
+  "reason": "php CLI not found",
+  "js": "pass",
+  "compared": false
+}

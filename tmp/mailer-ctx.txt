@@ -1,0 +1,25 @@
+﻿
+>     public function sendWithdrawFarewell(?array $snapshot): string
+      {
+          return $this->guard('withdraw_farewell', function () use ($snapshot): string {
+              if ($snapshot === null) {
+                  return 'skipped:recipient';
+              }
+              $userId = (int) $snapshot['user_id'];
+>     private function guard(string $label, callable $fn): string
+      {
+          if (!$this->enabled()) {
+              return 'skipped:disabled';
+          }
+          try {
+              return $fn();
+>     private function deliver(int $userId, string $kind, string $dedupeKey, string $to, array $mail): string
+      {
+          if (!$this->claim($userId, $kind, $dedupeKey)) {
+              return 'skipped:duplicate';
+          }
+          $ok = false;
+          try {
+
+
+

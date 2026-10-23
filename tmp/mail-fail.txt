@@ -1,0 +1,6 @@
+﻿
+PASS: dateLabel ?뺤떇 ?ㅻ쪟 ??鍮?媛?FAIL: pdo_sqlite ?꾩슂 ??php -d extension=pdo_sqlite 濡??ㅽ뻾
+ASSERT_FAIL pdo_sqlite ?꾩슂 ??php -d extension=pdo_sqlite 濡??ㅽ뻾
+SUMMARY passed=408 failed=1
+
+
