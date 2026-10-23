@@ -1040,3 +1040,15 @@
   margin-top: 12px;
 }
 
+.admin-shell .a28-reg-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-shell .a28-reg-table th,
+.admin-shell .a28-reg-table td {
+  border-bottom: 1px solid var(--line, #e5e7eb);
+  padding: 8px 10px;
+  text-align: left;
+}
+

@@ -218,6 +218,14 @@ export const A28_MENU = [
         help: '이메일·이름·휴대폰으로 찾고, 정지·다시 활성·탈퇴 처리를 합니다.',
         screenId: 'A28-02',
       },
+      {
+        id: 'registrations',
+        menuId: 'registrations',
+        label: '등록 목록',
+        path: '/admin/registrations',
+        help: '최근 1주 공부방·과외쌤·학생 등록을 봅니다.',
+        screenId: 'A28-159c',
+      },
     ],
   },
   {
@@ -509,6 +517,7 @@ export const A28_MENU_ID_LABELS = {
   settings: '사이트 기본',
   permissions: '권한·계정',
   members: '회원관리',
+  registrations: '등록 목록',
   notices: '공지·안내 글',
   commerce: '마켓·결제',
   settlement: '보고서',
