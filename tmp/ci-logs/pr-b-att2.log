@@ -1,0 +1,352 @@
+﻿verify:paid-pr-b	Set up job	癤?026-09-09T17:40:03.8368175Z Current runner version: '2.337.0'
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8392772Z ##[group]Runner Image Provisioner
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8393787Z Hosted Compute Agent
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8394407Z Version: 20260828.587
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8395132Z Commit: abac92662cab4cc7352de4f9f9d2e2419aad9c29
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8395964Z Build Date: 2026-08-28T16:44:25Z
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8397062Z Worker ID: {fc5294e1-c9d3-4959-82ea-8e5f9b6f6b83}
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8397903Z Azure Region: westus2
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8398506Z ##[endgroup]
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8399929Z ##[group]Operating System
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8400591Z Ubuntu
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8401170Z 24.04.5
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8401759Z LTS
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8402309Z ##[endgroup]
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8402893Z ##[group]Runner Image
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8403610Z Image: ubuntu-24.04
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8404240Z Version: 20260907.300.1
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8405401Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260907.300/images/ubuntu/Ubuntu2404-Readme.md
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8407333Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260907.300
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8408474Z ##[endgroup]
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8409747Z ##[group]GITHUB_TOKEN Permissions
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8411724Z Contents: read
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8412354Z Metadata: read
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8413034Z Packages: read
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8413662Z ##[endgroup]
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8415651Z Secret source: Actions
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8416930Z Cache mode: write
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8417614Z Prepare workflow directory
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8847972Z Prepare all required actions
+verify:paid-pr-b	Set up job	2026-09-09T17:40:03.8895803Z Getting action download info
+verify:paid-pr-b	Set up job	2026-09-09T17:40:04.2580480Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+verify:paid-pr-b	Set up job	2026-09-09T17:40:04.3552697Z Download action repository 'shivammathur/setup-php@v2' (SHA:f3e473d116dcccaddc5834248c87452386958240)
+verify:paid-pr-b	Set up job	2026-09-09T17:40:04.6794258Z Complete job name: verify:paid-pr-b
+verify:paid-pr-b	Initialize containers	癤?026-09-09T17:40:04.7297565Z ##[group]Checking docker version
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.7310733Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.7909295Z '1.48'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.7924861Z Docker daemon API version: '1.48'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.7925667Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8088879Z '1.48'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8122005Z Docker client API version: '1.48'
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8126785Z ##[endgroup]
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8129421Z ##[group]Clean up resources from previous jobs
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8134542Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=b85b71"
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8284904Z ##[command]/usr/bin/docker network prune --force --filter "label=b85b71"
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8416994Z ##[endgroup]
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8417548Z ##[group]Create local container network
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8426959Z ##[command]/usr/bin/docker network create --label b85b71 github_network_d599345819ca4ceb88755628f737209e
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8935651Z f489709de0b983d45d1811368b14d0676e78c387465c10278bf3d8d75daef9ac
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8956583Z ##[endgroup]
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.8981456Z ##[group]Starting mysql service container
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:04.9002291Z ##[command]/usr/bin/docker pull mysql:8.0
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:05.8465620Z 8.0: Pulling from library/mysql
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1267295Z edf85873f64e: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1272537Z 6ef6c7b50a93: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1272944Z e3e5d1ac74c1: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1273272Z 0d74d296605b: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1273620Z 297d04cfe470: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1273936Z 4c8a3e0d4e4b: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1274292Z a63160a5eda1: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1274619Z 7534d1db9f8d: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1274915Z 49ec2dab01d9: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1275238Z ab24264a27e9: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1275539Z 96d30d9fbee8: Pulling fs layer
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1275829Z 0d74d296605b: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1276772Z 297d04cfe470: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1277068Z 4c8a3e0d4e4b: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1277512Z a63160a5eda1: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1277790Z 7534d1db9f8d: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1278151Z 49ec2dab01d9: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1278435Z ab24264a27e9: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.1278716Z 96d30d9fbee8: Waiting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.3659106Z 6ef6c7b50a93: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.3660886Z 6ef6c7b50a93: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.3918203Z e3e5d1ac74c1: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.3919532Z e3e5d1ac74c1: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.5692142Z edf85873f64e: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.5695031Z edf85873f64e: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.6333077Z 297d04cfe470: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.6333661Z 297d04cfe470: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.6649012Z 0d74d296605b: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.8102774Z 4c8a3e0d4e4b: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.9000425Z 7534d1db9f8d: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:06.9001250Z 7534d1db9f8d: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.0707835Z a63160a5eda1: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.0709996Z a63160a5eda1: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.1368842Z ab24264a27e9: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.1370052Z ab24264a27e9: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.2985827Z 96d30d9fbee8: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.4877591Z 49ec2dab01d9: Verifying Checksum
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.4878162Z 49ec2dab01d9: Download complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:07.9114998Z edf85873f64e: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:08.3922881Z 6ef6c7b50a93: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:08.4355479Z e3e5d1ac74c1: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:08.6271413Z 0d74d296605b: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:08.6362504Z 297d04cfe470: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:08.6438392Z 4c8a3e0d4e4b: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:09.4339009Z a63160a5eda1: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:09.4449577Z 7534d1db9f8d: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.0961289Z 49ec2dab01d9: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1059263Z ab24264a27e9: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1132939Z 96d30d9fbee8: Pull complete
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1165115Z Digest: sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1173738Z Status: Downloaded newer image for mysql:8.0
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1181504Z docker.io/library/mysql:8.0
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1242890Z ##[command]/usr/bin/docker create --name d264cdc06c314c239bed2ea65adca2d9_mysql80_4be535 --label b85b71 --network github_network_d599345819ca4ceb88755628f737209e --network-alias mysql -p 3306:3306 --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest" --health-interval=5s --health-timeout=5s --health-retries=20 -e "MYSQL_ROOT_PASSWORD=test" -e "MYSQL_DATABASE=study114" -e "MYSQL_USER=study114" -e "MYSQL_PASSWORD=test" -e GITHUB_ACTIONS=true -e CI=true mysql:8.0
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1485315Z e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.1507071Z ##[command]/usr/bin/docker start e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4406326Z e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4428387Z ##[command]/usr/bin/docker ps --all --filter id=e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5 --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4552620Z e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5 Up Less than a second (health: starting)
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4575629Z ##[command]/usr/bin/docker port e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4709806Z 3306/tcp -> 0.0.0.0:3306
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4710302Z 3306/tcp -> [::]:3306
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4755546Z ##[endgroup]
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4764194Z ##[group]Waiting for all services to be ready
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4778254Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4923902Z starting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:17.4947786Z mysql service is starting, waiting 2 seconds before checking again.
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:19.4950229Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:19.5076487Z starting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:19.5113367Z mysql service is starting, waiting 3 seconds before checking again.
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:23.2589746Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:23.2727192Z starting
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:23.2740367Z mysql service is starting, waiting 8 seconds before checking again.
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:31.8347759Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:31.8469308Z healthy
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:31.8484960Z mysql service is healthy.
+verify:paid-pr-b	Initialize containers	2026-09-09T17:40:31.8485638Z ##[endgroup]
+verify:paid-pr-b	Checkout	癤?026-09-09T17:40:31.8839879Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8847432Z ##[group]Run actions/checkout@v4
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8847829Z with:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8848064Z   repository: leejetty-commits/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8850701Z   token: ***
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8850918Z   ssh-strict: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8851133Z   ssh-user: git
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8851357Z   persist-credentials: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8851595Z   clean: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8851811Z   sparse-checkout-cone-mode: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8852071Z   fetch-depth: 1
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8852286Z   fetch-tags: false
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8852510Z   show-progress: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8852722Z   lfs: false
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8852909Z   submodules: false
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8853166Z   set-safe-directory: true
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8853414Z   allow-unsafe-pr-checkout: false
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8853794Z env:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8853989Z   STUDY114_DB_HOST: 127.0.0.1
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8854229Z   STUDY114_DB_PORT: 3306
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8854453Z   STUDY114_DB_NAME: study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8854680Z   STUDY114_DB_USER: study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8854893Z   STUDY114_DB_PASS: test
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.8855109Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9853509Z Syncing repository: leejetty-commits/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9855503Z ##[group]Getting Git version info
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9856336Z Working directory is '/home/runner/work/study114/study114'
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9857238Z [command]/usr/bin/git version
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9895761Z git version 2.55.0
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9924342Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9930412Z Temporarily overriding HOME='/home/runner/work/_temp/e805d98b-339c-48b5-8084-212cb8f0c215' before making global git config changes
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9931689Z Adding repository directory to the temporary git global config as a safe directory
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9938339Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/study114/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9983516Z Deleting the contents of '/home/runner/work/study114/study114'
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9988163Z ##[group]Initializing the repository
+verify:paid-pr-b	Checkout	2026-09-09T17:40:31.9992196Z [command]/usr/bin/git init /home/runner/work/study114/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0066974Z hint: Using 'master' as the name for the initial branch. This default branch name
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0067827Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0068638Z hint: to use in all of your new repositories, which will suppress this warning,
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0069038Z hint: call:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0069231Z hint:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0069895Z hint: 	git config --global init.defaultBranch <name>
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0070411Z hint:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0070864Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0071519Z hint: 'development'. The just-created branch can be renamed via this command:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0071897Z hint:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0072120Z hint: 	git branch -m <name>
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0072354Z hint:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0072674Z hint: Disable this message with "git config set advice.defaultBranchName false"
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0073199Z Initialized empty Git repository in /home/runner/work/study114/study114/.git/
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0084929Z [command]/usr/bin/git remote add origin https://github.com/leejetty-commits/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0125089Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0125762Z ##[group]Disabling automatic garbage collection
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0131153Z [command]/usr/bin/git config --local gc.auto 0
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0167285Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0170507Z ##[group]Setting up auth
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0171158Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0205053Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0577823Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0618355Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0889002Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.0929861Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.1172122Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.1212878Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.1213411Z ##[group]Fetching the repository
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.1223925Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +031d948cf9b58cf9f1782e8f9975eb04c8458023:refs/remotes/pull/4/merge
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9116779Z From https://github.com/leejetty-commits/study114
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9117612Z  * [new ref]         031d948cf9b58cf9f1782e8f9975eb04c8458023 -> pull/4/merge
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9121461Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9122170Z ##[group]Determining the checkout info
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9124504Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9132391Z [command]/usr/bin/git sparse-checkout disable
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9191723Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9235381Z ##[group]Checking out the ref
+verify:paid-pr-b	Checkout	2026-09-09T17:40:32.9239917Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/4/merge
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0091236Z Note: switching to 'refs/remotes/pull/4/merge'.
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0091664Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0092289Z You are in 'detached HEAD' state. You can look around, make experimental
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0093047Z changes and commit them, and you can discard any commits you make in this
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0093788Z state without impacting any branches by switching back to a branch.
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0094231Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0094538Z If you want to create a new branch to retain commits you create, you may
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0095237Z do so (now or later) by using -c with the switch command. Example:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0095647Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0095810Z   git switch -c <new-branch-name>
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0096284Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0096431Z Or undo this operation with:
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0096689Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0096821Z   git switch -
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0097014Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0097611Z Turn off this advice by setting config variable advice.detachedHead to false
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0098094Z 
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0098651Z HEAD is now at 031d948 Merge 877357112f7c6a12f660f2dcaefebcea6d092852 into 67078fbf2cb6ac40fdbb4ced32bd8701667de3e8
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0106019Z ##[endgroup]
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0153276Z [command]/usr/bin/git log -1 --format=%H
+verify:paid-pr-b	Checkout	2026-09-09T17:40:33.0181874Z 031d948cf9b58cf9f1782e8f9975eb04c8458023
+verify:paid-pr-b	Setup PHP 8.2	癤?026-09-09T17:40:33.0401528Z ##[group]Run shivammathur/setup-php@v2
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0401847Z with:
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0402062Z   php-version: 8.2
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0402305Z   extensions: json, mbstring, pdo_mysql
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0402577Z   coverage: none
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0402783Z   tools: none
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0402995Z   ini-file: production
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0405557Z   github-token: ***
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0405780Z env:
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0405987Z   STUDY114_DB_HOST: 127.0.0.1
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0406400Z   STUDY114_DB_PORT: 3306
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0406648Z   STUDY114_DB_NAME: study114
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0406883Z   STUDY114_DB_USER: study114
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0407112Z   STUDY114_DB_PASS: test
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0407328Z ##[endgroup]
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.0824835Z [command]/usr/bin/bash /home/runner/work/_actions/shivammathur/setup-php/v2/src/scripts/run.sh
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.1259112Z 
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:33.1259976Z ^[[90;1m==> ^[[0m^[[37;1mSetup PHP^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:35.9808684Z ^[[32;1m??^[[0m^[[34;1mPHP ^[[0m^[[90;1mInstalled PHP 8.2.33^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:35.9809464Z 
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:35.9809767Z ^[[90;1m==> ^[[0m^[[37;1mSetup Extensions^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.0310852Z ^[[32;1m??^[[0m^[[34;1mjson ^[[0m^[[90;1mEnabled^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.0344589Z ^[[32;1m??^[[0m^[[34;1mmbstring ^[[0m^[[90;1mEnabled^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.0363285Z ^[[32;1m??^[[0m^[[34;1mpdo_mysql ^[[0m^[[90;1mEnabled^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.0364248Z 
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.0364507Z ^[[90;1m==> ^[[0m^[[37;1mSetup Coverage^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.2591085Z ^[[32;1m??^[[0m^[[34;1mnone ^[[0m^[[90;1mDisabled Xdebug and PCOV^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.2591756Z 
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.2593261Z ^[[90;1m==> ^[[0m^[[37;1mSponsor setup-php^[[0m
+verify:paid-pr-b	Setup PHP 8.2	2026-09-09T17:40:36.2593872Z ^[[32;1m??^[[0m^[[34;1msetup-php ^[[0m^[[90;1mhttps://setup-php.com/sponsor^[[0m
+verify:paid-pr-b	Install mysql client	癤?026-09-09T17:40:36.2781436Z ##[group]Run sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2782046Z ^[[36;1msudo apt-get update -qq && sudo apt-get install -y -qq mysql-client^[[0m
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2827753Z shell: /usr/bin/bash -e {0}
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2828028Z env:
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2828233Z   STUDY114_DB_HOST: 127.0.0.1
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2828491Z   STUDY114_DB_PORT: 3306
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2828737Z   STUDY114_DB_NAME: study114
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2828992Z   STUDY114_DB_USER: study114
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2829227Z   STUDY114_DB_PASS: test
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:36.2829459Z ##[endgroup]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4517441Z E: Failed to fetch https://dl.google.com/linux/chrome-stable/deb/dists/stable/main/binary-amd64/Packages.gz  Hash Sum mismatch
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4518656Z    Hashes of expected file:
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4519119Z     - Filesize:1405 [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4519776Z     - SHA256:233e56de019b57db89238fa7bcc3647718dbbea3a40c2dc1c633a8c8952aa9e9
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4520542Z     - SHA1:f25f722f552dc3fd510081e6b65a0e7174ec9321 [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4521376Z     - MD5Sum:2fc39e32c7bdf718a907c390338392ea [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4521921Z    Hashes of received file:
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4522585Z     - SHA256:bc1428ab27c6d76ee9bb76de07f1ded0ddb4aaabd958fc72855634ef5894a4b3
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4523326Z     - SHA1:f601c49edc3ea059583213f0be1589cb0fa6e2e5 [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4523857Z     - MD5Sum:2ce0a26fc7a49a488341fc13c6d05b52 [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4524300Z     - Filesize:1405 [weak]
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4524724Z    Last modification reported: Wed, 09 Sep 2026 09:41:12 +0000
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4525211Z    Release file created at: Wed, 09 Sep 2026 17:16:59 +0000
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4525675Z E: Some index files failed to download. They have been ignored, or old ones used instead.
+verify:paid-pr-b	Install mysql client	2026-09-09T17:40:41.4552626Z ##[error]Process completed with exit code 100.
+verify:paid-pr-b	Post Checkout	癤?026-09-09T17:40:41.4671636Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.4672796Z Post job cleanup.
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5505077Z [command]/usr/bin/git version
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5546984Z git version 2.55.0
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5581591Z Temporarily overriding HOME='/home/runner/work/_temp/73bf87f9-c93f-48da-9a35-4efefcc93dfe' before making global git config changes
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5582879Z Adding repository directory to the temporary git global config as a safe directory
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5586863Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/study114/study114
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5626498Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5690838Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5932020Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5958973Z http.https://github.com/.extraheader
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.5970491Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.6006310Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.6279976Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+verify:paid-pr-b	Post Checkout	2026-09-09T17:40:41.6319431Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+verify:paid-pr-b	Stop containers	癤?026-09-09T17:40:41.6696707Z Print service container logs: d264cdc06c314c239bed2ea65adca2d9_mysql80_4be535
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6700964Z ##[command]/usr/bin/docker logs --details e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6829311Z  2026-09-09T17:40:17.714530Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6831155Z  2026-09-09T17:40:17.714630Z 0 [System] [MY-013169] [Server] /usr/sbin/mysqld (mysqld 8.0.46) initializing of server in progress as process 80
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6832194Z  2026-09-09T17:40:17.719412Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6832789Z  2026-09-09T17:40:17.822963Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6833669Z  2026-09-09T17:40:18.299934Z 6 [Warning] [MY-010453] [Server] root@localhost is created with an empty password ! Please consider switching off the --initialize-insecure option.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6834865Z  2026-09-09T17:40:19.983969Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6835770Z  2026-09-09T17:40:19.985446Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 124
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6836701Z  2026-09-09T17:40:19.994791Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6837236Z  2026-09-09T17:40:20.069676Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6837789Z  2026-09-09T17:40:20.187709Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6838562Z  2026-09-09T17:40:20.187749Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6839952Z  2026-09-09T17:40:20.189277Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6840950Z  2026-09-09T17:40:20.201554Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Socket: /var/run/mysqld/mysqlx.sock
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6841895Z  2026-09-09T17:40:20.201657Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 0  MySQL Community Server - GPL.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6842726Z  Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6843289Z  Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6843834Z  Warning: Unable to load '/usr/share/zoneinfo/leapseconds' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6844417Z  2026-09-09 17:40:17+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6845013Z  Warning: Unable to load '/usr/share/zoneinfo/tzdata.zi' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6845521Z  Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6846029Z  Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6846925Z  2026-09-09T17:40:21.770850Z 13 [System] [MY-013172] [Server] Received SHUTDOWN from user root. Shutting down mysqld (Version: 8.0.46).
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6847768Z  2026-09-09T17:40:22.683104Z 0 [System] [MY-010910] [Server] /usr/sbin/mysqld: Shutdown complete (mysqld 8.0.46)  MySQL Community Server - GPL.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6848756Z  2026-09-09T17:40:22.953745Z 0 [Warning] [MY-011068] [Server] The syntax '--skip-host-cache' is deprecated and will be removed in a future release. Please use SET GLOBAL host_cache_size=0 instead.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6849651Z  2026-09-09T17:40:22.955201Z 0 [System] [MY-010116] [Server] /usr/sbin/mysqld (mysqld 8.0.46) starting as process 1
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6850461Z  2026-09-09T17:40:22.960443Z 1 [System] [MY-013576] [InnoDB] InnoDB initialization has started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6850993Z  2026-09-09T17:40:23.030267Z 1 [System] [MY-013577] [InnoDB] InnoDB initialization has ended.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6851543Z  2026-09-09T17:40:23.123277Z 0 [Warning] [MY-010068] [Server] CA certificate ca.pem is self signed.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6852311Z  2026-09-09T17:40:23.123314Z 0 [System] [MY-013602] [Server] Channel mysql_main configured to support TLS. Encrypted connections are now supported for this channel.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6853405Z  2026-09-09T17:40:23.124834Z 0 [Warning] [MY-011810] [Server] Insecure configuration for --pid-file: Location '/var/run/mysqld' in the path is accessible to all OS users. Consider choosing a different directory.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6854480Z  2026-09-09T17:40:23.138833Z 0 [System] [MY-011323] [Server] X Plugin ready for connections. Bind-address: '::' port: 33060, socket: /var/run/mysqld/mysqlx.sock
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6855516Z  2026-09-09T17:40:23.138993Z 0 [System] [MY-010931] [Server] /usr/sbin/mysqld: ready for connections. Version: '8.0.46'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  MySQL Community Server - GPL.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6856681Z  2026-09-09 17:40:17+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6857567Z  2026-09-09 17:40:17+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.46-1.el9 started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6858421Z  2026-09-09 17:40:17+00:00 [Note] [Entrypoint]: Initializing database files
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6859121Z  2026-09-09 17:40:19+00:00 [Note] [Entrypoint]: Database files initialized
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6859842Z  2026-09-09 17:40:19+00:00 [Note] [Entrypoint]: Starting temporary server
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6860706Z  2026-09-09 17:40:20+00:00 [Note] [Entrypoint]: Temporary server started.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6861374Z  '/var/lib/mysql/mysql.sock' -> '/var/run/mysqld/mysqld.sock'
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6862026Z  2026-09-09 17:40:21+00:00 [Note] [Entrypoint]: Creating database study114
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6862697Z  2026-09-09 17:40:21+00:00 [Note] [Entrypoint]: Creating user study114
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6863473Z  2026-09-09 17:40:21+00:00 [Note] [Entrypoint]: Giving user study114 access to schema study114
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6864121Z  
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6864539Z  2026-09-09 17:40:21+00:00 [Note] [Entrypoint]: Stopping temporary server
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6865212Z  2026-09-09 17:40:22+00:00 [Note] [Entrypoint]: Temporary server stopped
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6865803Z  
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6866465Z  2026-09-09 17:40:22+00:00 [Note] [Entrypoint]: MySQL init process done. Ready for start up.
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6867130Z  
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6874916Z Stop and remove container: d264cdc06c314c239bed2ea65adca2d9_mysql80_4be535
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:41.6880061Z ##[command]/usr/bin/docker rm --force e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:42.2434611Z e09b9a3ea880e04f6e7102105114f7d390908ac8fba5879b1b7fd5050d7d73c5
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:42.2461347Z Remove container network: github_network_d599345819ca4ceb88755628f737209e
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:42.2465911Z ##[command]/usr/bin/docker network rm github_network_d599345819ca4ceb88755628f737209e
+verify:paid-pr-b	Stop containers	2026-09-09T17:40:42.3380770Z github_network_d599345819ca4ceb88755628f737209e
+verify:paid-pr-b	Complete job	癤?026-09-09T17:40:42.3452214Z Cleaning up orphan processes
+verify:paid-pr-b	Complete job	2026-09-09T17:40:42.3814659Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

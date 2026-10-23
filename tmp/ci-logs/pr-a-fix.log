@@ -1,0 +1,27 @@
+﻿verify:paid-pr-a	Install mysql client	癤?026-09-09T17:48:24.3566132Z ##[group]Run sudo rm -f /etc/apt/sources.list.d/google-chrome*.list
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3566569Z ^[[36;1msudo rm -f /etc/apt/sources.list.d/google-chrome*.list^[[0m
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3566873Z ^[[36;1msudo apt-get update -qq^[[0m
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3567116Z ^[[36;1msudo apt-get install -y -qq mysql-client^[[0m
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3606271Z shell: /usr/bin/bash -e {0}
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3606493Z env:
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3606664Z   STUDY114_DB_HOST: 127.0.0.1
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3606869Z   STUDY114_DB_PORT: 3306
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3607061Z   STUDY114_DB_NAME: study114
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3607251Z   STUDY114_DB_USER: study114
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3607435Z   STUDY114_DB_PASS: test
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:24.3607616Z ##[endgroup]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6908265Z E: Failed to fetch https://dl.google.com/linux/chrome-stable/deb/dists/stable/main/binary-amd64/Packages.gz  Hash Sum mismatch
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6909192Z    Hashes of expected file:
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6909674Z     - Filesize:1405 [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6910129Z     - SHA256:233e56de019b57db89238fa7bcc3647718dbbea3a40c2dc1c633a8c8952aa9e9
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6910609Z     - SHA1:f25f722f552dc3fd510081e6b65a0e7174ec9321 [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6910950Z     - MD5Sum:2fc39e32c7bdf718a907c390338392ea [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6911202Z    Hashes of received file:
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6911544Z     - SHA256:bc1428ab27c6d76ee9bb76de07f1ded0ddb4aaabd958fc72855634ef5894a4b3
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6911941Z     - SHA1:f601c49edc3ea059583213f0be1589cb0fa6e2e5 [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6912277Z     - MD5Sum:2ce0a26fc7a49a488341fc13c6d05b52 [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6912520Z     - Filesize:1405 [weak]
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6912805Z    Last modification reported: Wed, 09 Sep 2026 09:41:12 +0000
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6913145Z    Release file created at: Wed, 09 Sep 2026 17:16:59 +0000
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6913595Z E: Some index files failed to download. They have been ignored, or old ones used instead.
+verify:paid-pr-a	Install mysql client	2026-09-09T17:48:30.6932120Z ##[error]Process completed with exit code 100.
