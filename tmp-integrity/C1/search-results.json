@@ -1,0 +1,60 @@
+{
+  "studentSearchPc": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "blockedMutations": [],
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "anomalies": []
+  },
+  "studentSearchMobile": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "blockedMutations": [],
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "anomalies": []
+  },
+  "tutorSearchPc": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "blockedMutations": [],
+    "allowedPosts": [],
+    "anomalies": []
+  },
+  "roomSearchPc": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "blockedMutations": [],
+    "allowedPosts": [],
+    "anomalies": []
+  }
+}

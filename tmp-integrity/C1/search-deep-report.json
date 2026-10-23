@@ -1,0 +1,22 @@
+{
+  "logs": {
+    "consoleErrors": [],
+    "pageErrors": [],
+    "failedRequests": [],
+    "blockedMutations": [],
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  }
+}

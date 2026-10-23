@@ -1,0 +1,33 @@
+{
+  "report": {
+    "steps": [],
+    "threadsCount": 0,
+    "threads": [],
+    "partnerCheck": {
+      "partnerFound": false,
+      "reason": "쪽지함이 비어 있음 (진행 중인 대화 스레드 0건)",
+      "replySent": false,
+      "status": "점검 못 함"
+    },
+    "tabsReaction": {
+      "reviewTabActive": true,
+      "messageTabActive": true
+    }
+  },
+  "apiLogs": [
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/messages/threads.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"threads\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/messages/threads.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"threads\":[]}"
+    }
+  ]
+}

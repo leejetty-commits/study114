@@ -1,0 +1,50 @@
+{
+  "isLoggedIn": true,
+  "blockedLogs": [],
+  "pageInfo": {
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "url": "https://study114.net/#/mypage/registrations/tutors/9",
+    "inputs": [
+      {
+        "name": "동네 이웃에게 전할 한 줄 인사를 적어보세요",
+        "id": "",
+        "tagName": "TEXTAREA",
+        "value": "",
+        "type": "textarea",
+        "disabled": false
+      }
+    ],
+    "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성별\n미입력\n수업인원\n미입력\n강의장소\n미입력\n가격 설명\n미입력\n학력 · 자격\n수정\n대학/대학원\n미입력\n전공\n미입력\n학적상태\n미입력\n소개 · 연락\n수정\n짧은 소개\n미입력\n상세 소개\n미입력\n특징 1\n미입력\n특징 2\n미입력\n특징 3\n미입력\n연락 가능 시간\n미입력\n추가 정보\n수정\n학생 대상\n중등\n강의스타일\n미입력\n경력\n미입력\n학력 제출자료\n미입력\n학력 공개 선택\n비공개\n경력 제출자료\n미입력\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동"
+  },
+  "consoleLogs": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 403 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 422 ()"
+    }
+  ],
+  "failedReqs": []
+}

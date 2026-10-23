@@ -1,0 +1,90 @@
+{
+  "report": {
+    "steps": [
+      {
+        "step": "toggle_open",
+        "status": 200,
+        "response": "{\"ok\":true,\"tutor\":{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"open\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"prim"
+      },
+      {
+        "step": "restore_paused",
+        "status": 200,
+        "response": "{\"ok\":true,\"tutor\":{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"pr"
+      }
+    ],
+    "isOpenPersisted": true,
+    "isPausedRestored": true
+  },
+  "apiLogs": [
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "PATCH",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": "{\"id\":9,\"action\":\"inquiry_status\",\"inquiry_status\":\"open\"}",
+      "responseBody": "{\"ok\":true,\"tutor\":{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"open\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":null,"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"open\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":nul"
+    },
+    {
+      "method": "PATCH",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": "{\"id\":9,\"action\":\"inquiry_status\",\"inquiry_status\":\"paused\"}",
+      "responseBody": "{\"ok\":true,\"tutor\":{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":nul"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    }
+  ]
+}

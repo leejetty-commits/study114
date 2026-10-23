@@ -1,0 +1,605 @@
+{
+  "pc": [
+    {
+      "name": "27_guard_students",
+      "targetPath": "#/mypage/registrations/students",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/students",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "마이프로필"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n마이프로필\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n아직 우리 아이 정보가 없어요\n\n기본정보를 입력해 주시면 베이직카드가 노출돼요. 천천히 시작해 보세요.\n\n기본정보 입력\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© ",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/27_guard_students.png"
+    },
+    {
+      "name": "28_guard_study_rooms",
+      "targetPath": "#/mypage/registrations/study-rooms",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "공부방 목록"
+        },
+        {
+          "tag": "h2",
+          "text": "공부방 운영"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n공부방 목록\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n공부방 운영\n\n공부방별로 공개·쪽지 상태를 관리합니다.\n\n+ 공부방 등록\n전체\n0\n저장\n0\n공개중\n0\n미공개\n0\n\n등록된 공부방이 없습니다. 아래에서 첫 공부방을 등록하세요.\n\n22장 · 운영자 심사·반려 없음 · 공개는 당사자가 직접 전환합니다.\n\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/28_guard_study_rooms.png"
+    },
+    {
+      "name": "29_other_tutor_1_hub",
+      "targetPath": "#/mypage/registrations/tutors/1",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성별\n미입력\n수업인원\n미입력\n강의장소\n미입력\n가격 설명\n미입력\n학력 · 자격\n수정\n대학/대학원\n미입력\n전공\n미입력\n학적상태\n미입력\n소개 · 연락\n수정\n짧은 소개\n미입력",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/29_other_tutor_1_hub.png"
+    },
+    {
+      "name": "30_other_tutor_1_basic",
+      "targetPath": "#/mypage/registrations/tutors/1/basic",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/30_other_tutor_1_basic.png"
+    },
+    {
+      "name": "31_other_tutor_8_basic",
+      "targetPath": "#/mypage/registrations/tutors/8/basic",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/31_other_tutor_8_basic.png"
+    },
+    {
+      "name": "32_other_tutor_10_basic",
+      "targetPath": "#/mypage/registrations/tutors/10/basic",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/32_other_tutor_10_basic.png"
+    },
+    {
+      "name": "33_other_tutor_999_basic",
+      "targetPath": "#/mypage/registrations/tutors/999/basic",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/33_other_tutor_999_basic.png"
+    }
+  ],
+  "mobile": [
+    {
+      "name": "27_guard_students",
+      "targetPath": "#/mypage/registrations/students",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/students",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "마이프로필"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n마이프로필\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n아직 우리 아이 정보가 없어요\n\n기본정보를 입력해 주시면 베이직카드가 노출돼요. 천천히 시작해 보세요.\n\n기본정보 입력\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · st",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/27_guard_students.png"
+    },
+    {
+      "name": "28_guard_study_rooms",
+      "targetPath": "#/mypage/registrations/study-rooms",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "공부방 목록"
+        },
+        {
+          "tag": "h2",
+          "text": "공부방 운영"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n공부방 목록\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n공부방 운영\n\n공부방별로 공개·쪽지 상태를 관리합니다.\n\n+ 공부방 등록\n전체\n0\n저장\n0\n공개중\n0\n미공개\n0\n\n등록된 공부방이 없습니다. 아래에서 첫 공부방을 등록하세요.\n\n22장 · 운영자 심사·반려 없음 · 공개는 당사자가 직접 전환합니다.\n\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 ",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/28_guard_study_rooms.png"
+    },
+    {
+      "name": "29_other_tutor_1_hub",
+      "targetPath": "#/mypage/registrations/tutors/1",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성별\n미입력\n수업인원\n미입력\n강의장소\n미입력\n가격 설명\n미입력\n학력 · 자격\n수정\n대학/대학원\n미입력\n전공\n미입력\n학적상태\n미입력\n소개 · 연락\n수정\n짧은 소개\n미입력\n상세 소개\n미",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/29_other_tutor_1_hub.png"
+    },
+    {
+      "name": "30_other_tutor_1_basic",
+      "targetPath": "#/mypage/registrations/tutors/1/basic",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대전광역시\n울산광",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/30_other_tutor_1_basic.png"
+    },
+    {
+      "name": "31_other_tutor_8_basic",
+      "targetPath": "#/mypage/registrations/tutors/8/basic",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대전광역시\n울산광",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/31_other_tutor_8_basic.png"
+    },
+    {
+      "name": "32_other_tutor_10_basic",
+      "targetPath": "#/mypage/registrations/tutors/10/basic",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대전광역시\n울산광",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/32_other_tutor_10_basic.png"
+    },
+    {
+      "name": "33_other_tutor_999_basic",
+      "targetPath": "#/mypage/registrations/tutors/999/basic",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물리\n화학\n생명과학\n지구과학\n한국사\n한문\n일본어\n중국어\n독일어\n프랑스어\n스페인어\n코딩\n논술\n예체능\n기타\n\n과외지역 필수\n\n지역 1이 대표입니다. 지역 2·3은 선택입니다. 구가 있는 곳은 구까지 고릅니다.\n\n지역 1 (필수) 대표\n\n지역을 다시 선택해 주세요\n\n시·도 \n시·도 선택\n서울특별시\n전남광주통합특별시\n부산광역시\n대구광역시\n인천광역시\n대전광역시\n울산광",
+      "hasBlockedIndicator": false,
+      "visibleTutorName": "",
+      "visibleInputs": [
+        {
+          "id": "",
+          "name": "tutor_display_name",
+          "value": "최고수학샘"
+        },
+        {
+          "id": "",
+          "name": "main_subject_note",
+          "value": "수학"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        },
+        {
+          "id": "",
+          "name": "",
+          "value": "city"
+        }
+      ],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/33_other_tutor_999_basic.png"
+    }
+  ],
+  "blockedRequests": []
+}

@@ -1,0 +1,113 @@
+{
+  "report": {
+    "steps": [
+      {
+        "step": "forbidden_word_check",
+        "rejected": true,
+        "message": "전화, 카톡, 주소는 넣을 수 없어요."
+      },
+      {
+        "step": "upload_greeting",
+        "status": 200,
+        "visibleInMypage": true
+      },
+      {
+        "step": "home_display_check",
+        "visibleInHomeBox": true,
+        "visibleInPopup": false,
+        "cardPopupWorked": false
+      },
+      {
+        "step": "unpublish_greeting",
+        "status": 200,
+        "unpublished": false
+      }
+    ]
+  },
+  "apiLogs": [
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"items\":[{\"provider_type\":\"tutor\",\"registration_id\":10,\"neighborhood\":\"경기도\",\"status\":\"up\",\"updated_at\":1790626735888,\"masked_name\":\"최○○\",\"teaser\":\"테스트\",\"display_name\":\"최고수학샘2\",\"body\":\"테스트\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"items\":[{\"provider_type\":\"tutor\",\"registration_id\":10,\"neighborhood\":\"경기도\",\"status\":\"up\",\"updated_at\":1790626735888,\"masked_name\":\"최○○\",\"teaser\":\"테스트\",\"display_name\":\"최고수학샘2\",\"body\":\"테스트\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"items\":[{\"provider_type\":\"tutor\",\"registration_id\":10,\"neighborhood\":\"경기도\",\"status\":\"up\",\"updated_at\":1790626735888,\"masked_name\":\"최○○\",\"teaser\":\"테스트\",\"display_name\":\"최고수학샘2\",\"body\":\"테스트\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php?mine=1&provider_type=tutor&registration_id=9",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"item\":null}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php?mine=1&provider_type=tutor&registration_id=9",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"item\":null}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": "{\"provider_type\":\"tutor\",\"registration_id\":9,\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"status\":\"up\"}",
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"up\",\"body\":\"[테스트] 동네인사 확인\",\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950022}],\"updated_at\":1791451950022}}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": "{\"provider_type\":\"tutor\",\"registration_id\":9,\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"status\":\"up\"}",
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"up\",\"body\":\"[테스트] 동네인사 확인\",\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950026}],\"updated_at\":1791451950026}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"items\":[{\"provider_type\":\"tutor\",\"registration_id\":9,\"neighborhood\":\"서울특별시\",\"status\":\"up\",\"updated_at\":1791451950026,\"masked_name\":\"최○○\",\"teaser\":\"[테스트] 동네인사 확인\",\"display_name\":\"최고수학샘\",\"body\":\"[테스트] 동네인사 확인\"},{\"provider_type\":\"tutor\",\"registration_id\":10,\"neighborhood\":\"경기도\",\"status\":\"up\",\"updated_at\":1790626735888,\"masked_name\":\"최○○\",\"teaser\":\"테스트\",\"display_name\":\"최고수학샘2\",\"body\":\"테스트\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php?mine=1&provider_type=tutor&registration_id=9",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"up\",\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"updated_at\":1791451950026,\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950026}]}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php?mine=1&provider_type=tutor&registration_id=9",
+      "status": 200,
+      "requestPostData": null,
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"up\",\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"updated_at\":1791451950026,\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950026}]}}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": "{\"provider_type\":\"tutor\",\"registration_id\":9,\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"status\":\"down\"}",
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"down\",\"body\":\"[테스트] 동네인사 확인\",\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950026}],\"updated_at\":1791451956568}}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "requestPostData": "{\"provider_type\":\"tutor\",\"registration_id\":9,\"body\":\"[테스트] 동네인사 확인\",\"neighborhood\":\"서울특별시\",\"display_name\":\"최고수학샘\",\"status\":\"down\"}",
+      "responseBody": "{\"ok\":true,\"item\":{\"provider_type\":\"tutor\",\"registration_id\":9,\"status\":\"down\",\"body\":\"[테스트] 동네인사 확인\",\"history\":[{\"id\":\"h_1791451950022_d8d0cd\",\"body\":\"[테스트] 동네인사 확인\",\"updated_at\":1791451950026}],\"updated_at\":1791451956572}}"
+    }
+  ]
+}

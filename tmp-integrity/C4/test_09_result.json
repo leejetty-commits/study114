@@ -1,0 +1,21 @@
+{
+  "test_item": "9. 제출함",
+  "steps": [
+    {
+      "step": "submit_post",
+      "title": "[테스트] 증빙자료 제출 확인_1791452618941",
+      "detailUrl": "https://study114.net/#/mypage/submission-board/submission-1791452620",
+      "isDetailView": true
+    },
+    {
+      "step": "verify_list",
+      "visible": true
+    },
+    {
+      "step": "delete_and_restore",
+      "deleted": true,
+      "success": true
+    }
+  ],
+  "result": "정상"
+}

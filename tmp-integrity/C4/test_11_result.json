@@ -1,0 +1,41 @@
+{
+  "test_item": "11. 차단 화면 가드 확인",
+  "results": [
+    {
+      "target": "#/admin",
+      "name": "admin_home",
+      "finalUrl": "https://study114.net/#/admin",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "isBlocked": false,
+      "bodySnippet": "우동공과 관리자\n관리자\n← 역할 홈으로 돌아가기\n운영\n/\n운영 홈\n\n자주 쓰는 메뉴로 바로 이동합니다.\n\n이종현과외\n← 역할 홈으로\n운영자 전용\n\n이 화면을 보려면 운영자 권한이 필요합니다.\n\n현재: leejetty+tutor@gmail.com · 운영자 권한 없음\n\n개발용 운영자 계정으로 화면을 확인할 수 있습니다.\n\n개발용 운영자 로그인 ← 운영 홈\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "tmp-integrity/C4/screenshots/11-admin_home.png"
+    },
+    {
+      "target": "#/admin/tickets",
+      "name": "admin_tickets",
+      "finalUrl": "https://study114.net/#/admin/tickets",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "isBlocked": false,
+      "bodySnippet": "우동공과 관리자\n관리자\n← 역할 홈으로 돌아가기\n운영\n/\n고객응대\n/\n문의\n\n이용·정책·오류 문의를 답변합니다. (영카트 상품문의 대응)\n\n이종현과외\n← 역할 홈으로\n운영자 전용\n\n이 화면을 보려면 운영자 권한이 필요합니다.\n\n현재: leejetty+tutor@gmail.com · 운영자 권한 없음\n\n개발용 운영자 계정으로 화면을 확인할 수 있습니다.\n\n개발용 운영자 로그인 ← 운영 홈\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "tmp-integrity/C4/screenshots/11-admin_tickets.png"
+    },
+    {
+      "target": "#/mypage/registrations/students",
+      "name": "mypage_reg_students",
+      "finalUrl": "https://study114.net/#/mypage/registrations/students",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "isBlocked": false,
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n마이프로필\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n아직 우리 아이 정보가 없어요\n\n기본정보를 입력해 주시면 베이직카드가 노출돼요. 천천히 시작해 보세요.\n\n기본정보 입력\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© ",
+      "screenshot": "tmp-integrity/C4/screenshots/11-mypage_reg_students.png"
+    },
+    {
+      "target": "#/mypage/registrations/study-rooms",
+      "name": "mypage_reg_study_rooms",
+      "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "isBlocked": false,
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n공부방 목록\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n공부방 운영\n\n공부방별로 공개·쪽지 상태를 관리합니다.\n\n+ 공부방 등록\n전체\n0\n저장\n0\n공개중\n0\n미공개\n0\n\n등록된 공부방이 없습니다. 아래에서 첫 공부방을 등록하세요.\n\n22장 · 운영자 심사·반려 없음 · 공개는 당사자가 직접 전환합니다.\n\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n",
+      "screenshot": "tmp-integrity/C4/screenshots/11-mypage_reg_study_rooms.png"
+    }
+  ]
+}

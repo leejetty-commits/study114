@@ -1,0 +1,179 @@
+{
+  "remaining": false,
+  "apiCalls": [
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=best",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"best\",\"boards\":{\"concern-director\":[],\"concern-tutor\":[],\"concern-parent\":[],\"concern-solved\":[]}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=hot&limit=10",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"hot\",\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":1,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 "
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-room&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-room\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=latest&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"latest\",\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":1,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-student&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-student\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=safe-guide",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"privacy\",\"boardKey\":\"safe-guide\",\"title\":\"연락처·개인정보 — 쪽지 밖 자율 교환\",\"description\":\"전체\",\"categoryId\":\"secondary\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-17\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"우동공과는 **안전번호·대리 통화·이메일 중계**를 제공하지 않습니다(6·14장).\",\"쪽지 밖 "
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-tutor&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-tutor\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=center",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=faq",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"faq-6\",\"boardKey\":\"faq\",\"title\":\"환불·과외비 분쟁은?\",\"description\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"categoryId\":\"dispute\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-17\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"answer\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"sortO"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=hot&limit=10",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"hot\",\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":1,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 "
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=latest&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"latest\",\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":1,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=best",
+      "status": 200,
+      "body": "{\"ok\":true,\"view\":\"best\",\"boards\":{\"concern-director\":[],\"concern-tutor\":[],\"concern-parent\":[],\"concern-solved\":[]}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-student&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-student\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-room&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-room\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-tutor&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-tutor\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=center",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=submission",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"sub-seed-room-1\",\"_numericId\":9,\"boardKey\":\"submission\",\"title\":\"시설 안전 점검 체크리스트\",\"description\":\"공부방 시설 안전 점검 기록.\",\"memo\":\"\",\"internalMemo\":\"\",\"categoryId\":\"facility\",\"fileLabel\":\"safety-checklist.pdf\",\"attachment\":null,\"hasAttachment\":false,\"status\":\"published\",\"authorRole"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"di"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&limit=20&sort=recent",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":1,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/comments.php?post_id=25",
+      "status": 200,
+      "body": "{\"ok\":true,\"comments\":[{\"id\":1,\"postId\":25,\"parentCommentId\":null,\"authorUserId\":20,\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"body\":\"[테스트] 과외샤 댓글 작성 확인\",\"status\":\"visible\",\"reactions\":{\"helpful\":0},\"myReaction\":null,\"createdAt\":\"2026-10-08 18:23:26\",\"replies\":[]}]}"
+    },
+    {
+      "method": "DELETE",
+      "url": "https://study114.net/api/board/comments.php?comment_id=1",
+      "status": 200,
+      "body": "{\"ok\":true,\"deleted\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&post_key=concern-tutor-1791451349-0b0959&id=concern-tutor-1791451349-0b0959&limit=1",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/comments.php?post_id=25",
+      "status": 200,
+      "body": "{\"ok\":true,\"comments\":[{\"id\":1,\"postId\":25,\"parentCommentId\":null,\"authorUserId\":20,\"authorRole\":\"tutor\",\"authorDisplayName\":\"\",\"body\":\"삭제된 댓글입니다.\",\"status\":\"deleted\",\"reactions\":{\"helpful\":0},\"myReaction\":null,\"createdAt\":\"2026-10-08 18:23:26\",\"replies\":[]}]}"
+    },
+    {
+      "method": "DELETE",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&post_key=concern-tutor-1791451349-0b0959",
+      "status": 200,
+      "body": "{\"ok\":true,\"deleted\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&limit=20&sort=recent",
+      "status": 200,
+      "body": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    }
+  ]
+}

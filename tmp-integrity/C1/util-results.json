@@ -1,0 +1,248 @@
+[
+  {
+    "name": "util-guide",
+    "selector": "button[data-action=\"util-guide\"]",
+    "finalUrl": "https://study114.net/#/guide",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-util-guide.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "util-messages",
+    "selector": "button[data-action=\"util-messages\"]",
+    "finalUrl": "https://study114.net/#/mypage/messages",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-util-messages.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "util-recent",
+    "selector": "button[data-action=\"util-recent\"]",
+    "finalUrl": "https://study114.net/#/mypage/recent",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-util-recent.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "util-mypage",
+    "selector": "button[data-action=\"util-mypage\"]",
+    "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-util-mypage.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "tutorbox-messages",
+    "selector": ".my-box a:has-text(\"쪽지 후기함\")",
+    "finalUrl": "https://study114.net/#/mypage/messages",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-tutorbox-messages.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "tutorbox-mypage",
+    "selector": ".my-box a:has-text(\"마이페이지\")",
+    "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-util-tutorbox-mypage.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  }
+]

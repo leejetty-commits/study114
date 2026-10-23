@@ -1,0 +1,37 @@
+{
+  "test_item": "8. 찜 및 최근열람",
+  "result": "정상",
+  "target_card": "최고수학샘2 (과외쌤 id: 10)",
+  "steps": [
+    {
+      "step": "1. 찜 추가",
+      "action": "홈/검색 카드에서 [data-action='wish-toggle'][data-item-id='10'] 클릭",
+      "result": "버튼 활성화 (♥ / is-active) 반영 확인",
+      "screenshot": "tmp-integrity/C4/screenshots/08-02-wish-clicked.png"
+    },
+    {
+      "step": "2. 마이페이지 찜 목록 확인",
+      "path": "#/mypage/wishlist",
+      "result": "과외쌤 섹션에 '최고수학샘2 [찜] 물리 · 한국외국어대학교 · 월 480천원~ · 주2회 · 90분' 정상 표시 확인",
+      "screenshot": "tmp-integrity/C4/screenshots/08-03-mypage-wishlist.png"
+    },
+    {
+      "step": "3. 마이페이지 최근열람 기록 확인",
+      "path": "#/mypage/recent",
+      "result": "상세 열람한 카드 '최고수학샘2 [찜] 검색에서 · 상세 열람' 정상 반영 확인",
+      "screenshot": "tmp-integrity/C4/screenshots/08-04-mypage-recent.png"
+    },
+    {
+      "step": "4. 찜 해제 (원복)",
+      "action": "홈 화면에서 찜 버튼 재클릭하여 해제",
+      "result": "찜 버튼 비활성화 (♡) 복원",
+      "screenshot": "tmp-integrity/C4/screenshots/08-05-unwished.png"
+    },
+    {
+      "step": "5. 원복 후 찜 목록 재확인",
+      "path": "#/mypage/wishlist",
+      "result": "과외쌤 섹션에 '아직 찜한 대상이 없습니다' 표시로 완전 원복 확인",
+      "screenshot": "tmp-integrity/C4/screenshots/08-06-mypage-wishlist-empty.png"
+    }
+  ]
+}

@@ -1,0 +1,185 @@
+{
+  "report": {
+    "steps": [
+      {
+        "step": "create_post",
+        "status": 200,
+        "title": "[테스트] 해결후기 글쓰기 확인_1791451518789"
+      },
+      {
+        "step": "view_detail",
+        "found": true,
+        "postAuthor": "최고수학샘"
+      },
+      {
+        "step": "delete_post",
+        "status": 200
+      }
+    ],
+    "remaining": false
+  },
+  "apiLogs": [
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-room&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-room\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=best",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"best\",\"boards\":{\"concern-director\":[],\"concern-tutor\":[],\"concern-parent\":[],\"concern-solved\":[]}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-tutor&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-tutor\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=hot&limit=10",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"hot\",\"posts\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=center",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=faq",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"faq-6\",\"boardKey\":\"faq\",\"title\":\"환불·과외비 분쟁은?\",\"description\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"categoryId\":\"dispute\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-17\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"answer\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"sortOrder\":60},\"q\":\"환불·과외비 분쟁은?\",\"a\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"answer\":\"당사자 간 협의가 우선이며, 플랫폼은 대리 조정하지 않습니다.\",\"sortOrder\":60},{\"id\":\"faq-5\",\"boardKey\":\"faq\",\"title\":\"Prime\\/Pick은 무엇인가요?\",\"description\":\"동네 노출 **기간형 포지션 상품**입니다. Hot·추천 등 광고배지는 포지션에 종속됩니다(11·18장).\",\"categoryId\":\"billing\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-17\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"answer\":\"동네 노출 **기간형 포지션 상품**입니다. Hot·추천 등 광고배지는 포지션에 종속됩니다(11·18장).\",\"sortOrder\":50},\"q\":\"Prime\\/Pick은 무엇인가요?\",\"a\":\"동네 노출 **기간형 포지션 상품**입니다. Hot·추천 등 광고배지는 포지션에 종속됩니다(11·18장).\",\"answer\":\"동네 노출 **기간형 포지션 상품**입니다. Hot·추천 등 광고배지는 포지션에 종속됩니다(11·18장).\",\"sortOrder\":50},{\"id\":\"faq-4\",\"boardKey\":\"faq\",\"title\":\"유료"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=latest&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"latest\",\"posts\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-student&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-student\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=safe-guide",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"privacy\",\"boardKey\":\"safe-guide\",\"title\":\"연락처·개인정보 — 쪽지 밖 자율 교환\",\"description\":\"전체\",\"categoryId\":\"secondary\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-17\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"우동공과는 **안전번호·대리 통화·이메일 중계**를 제공하지 않습니다(6·14장).\",\"쪽지 밖 연락처 교환은 **회원 간 자율**이며, 플랫폼은 내용·분쟁에 관여하지 않습니다.\"],\"slug\":\"privacy\",\"audience\":\"전체\",\"priority\":\"secondary\",\"checklist\":[{\"hint\":\"회원 ↔ 회원 · 플랫폼 전화·메일 노출 없음(16장)\",\"label\":\"공식 접촉 = 쪽지\"},{\"hint\":\"번호 중계·녹취·대리 통화 미제공\",\"label\":\"안전번호 없음\"},{\"hint\":\"충분히 조건 확인 후 당사자가 판단 · 플랫폼 비관여\",\"label\":\"연락처·카톡 교환\"},{\"hint\":\"필요한 범위만 · 학생 민감정보 보수적 공개\",\"label\":\"개인정보 최소 공유\"},{\"hint\":\"버그·정책·계정 = P17-07 티켓 · 회원 간 분쟁 ≠ 운영 CS\",\"label\":\"운영 문의와 구분\"},{\"hint\":\"쪽지함·상세에서 사후 조치(16·22장) — 사전 심사 없음\",\"label\":\"신고·차단\"}]},\"slug\":\"privacy\",\"priority\":\"secondary\",\"audience\":\"전체\",\"body\":[\"우동공과는 **안전번호·대리 통화·이메일 중계**를 제공하지 않습니다(6·14장).\",\"쪽지 밖 연락처 교환은 **회원 간 자율**이며, 플랫폼은 내용·분쟁에 관여하지 않습니다.\"],\"checklist\":[{\"hint\":\"회원 ↔ 회원 · 플랫폼 전화·메일 노출 없음(16장)\","
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-student&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-student\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=best",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"best\",\"boards\":{\"concern-director\":[],\"concern-tutor\":[],\"concern-parent\":[],\"concern-solved\":[]}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=hot&limit=10",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"hot\",\"posts\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/concern-hot.php?view=latest&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"view\":\"latest\",\"posts\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-room&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-room\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=info-tutor&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"access\":\"full\",\"boardKey\":\"info-tutor\",\"posts\":[],\"total\":0,\"limit\":3,\"offset\":0,\"category\":null,\"hasMore\":false,\"canCompose\":false}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=center",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=submission",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"sub-seed-room-1\",\"_numericId\":9,\"boardKey\":\"submission\",\"title\":\"시설 안전 점검 체크리스트\",\"description\":\"공부방 시설 안전 점검 기록.\",\"memo\":\"\",\"internalMemo\":\"\",\"categoryId\":\"facility\",\"fileLabel\":\"safety-checklist.pdf\",\"attachment\":null,\"hasAttachment\":false,\"status\":\"published\",\"authorRole\":\"study_room\",\"authorUserId\":0,\"meta\":[],\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-09\",\"format\":null,\"section\":null,\"audience\":[]},{\"id\":\"sub-seed-2\",\"_numericId\":8,\"boardKey\":\"submission\",\"title\":\"경력 확인 서류\",\"description\":\"경력 항목 보완용 첨부.\",\"memo\":\"\",\"internalMemo\":\"\",\"categoryId\":\"education\",\"fileLabel\":\"career-proof.jpg\",\"attachment\":null,\"hasAttachment\":false,\"status\":\"submitted\",\"authorRole\":\"tutor\",\"authorUserId\":0,\"meta\":[],\"createdAt\":\"2026-07-09\",\"updatedAt\":\"2026-07-09\",\"format\":null,\"section\":null,\"audience\":[]},{\"id\":\"sub-seed-1\",\"_numericId\":7,\"boardKey\":\"submission\",\"title\":\"학력 증명서 사본\",\"description\":\"과외 프로필 등록 시 참고용으로 제출한 학력 증빙입니다.\",\"memo\":\"tutor-ui 등록과 동일 항목\",\"internalMemo\":\""
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-solved&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/board/posts.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"post\":{\"id\":\"concern-solved-1791451519-2898b3\",\"boardKey\":\"concern-solved\",\"boardLabel\":\"해결후기\",\"title\":\"[테스트] 해결후기 글쓰기 확인_1791451518789\",\"type\":\"solved\",\"createdAt\":\"2026-10-08T18:25:19\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":26,\"description\":\"[테스트] 해결후기 무결성 점검 본문입니다. 자동화 검사 진행 중.\",\"status\":\"published\",\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"authorUserId\":20,\"reactions\":{\"empathy\":0,\"helpful\":0,\"cheer\":0,\"score\":0},\"myReaction\":null,\"score\":0,\"updatedAt\":\"2026-10-08T18:25:19\",\"edited\":false}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/comments.php?post_id=26",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"comments\":[]}"
+    },
+    {
+      "method": "DELETE",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-solved&post_key=concern-solved-1791451519-2898b3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"deleted\":true}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-solved&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    }
+  ]
+}

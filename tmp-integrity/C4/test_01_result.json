@@ -1,0 +1,224 @@
+{
+  "testReport": {
+    "steps": [
+      {
+        "step": "create_post",
+        "status": 200,
+        "title": "[테스트] 과외샤 채널 글쓰기 확인_1791451348958",
+        "responseBody": "{\"ok\":true,\"post\":{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화 검사 진행 중.\",\"status\":\"published\",\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"authorUserId\":20,\"reactions\":{\"empathy\":0,\"helpful\":0,\"cheer\":0,\"score\":0},\"myReaction\":null,\"score\":0,\"updatedAt\":\"2026-10-08T18:22:29\",\"edited\":false}}"
+      },
+      {
+        "step": "view_detail",
+        "postFound": true,
+        "authorName": "최고수학샘",
+        "url": "https://study114.net/#/community/tutor/concern-tutor-1791451349-0b0959"
+      },
+      {
+        "step": "edit_post",
+        "success": true,
+        "updatedTitle": "[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨",
+        "status": 200
+      },
+      {
+        "step": "comment",
+        "created": false,
+        "deleted": false
+      },
+      {
+        "step": "delete_post",
+        "deleted": true
+      }
+    ],
+    "readOnlyChecks": {
+      "directorChannel": {
+        "hasWriteButton": false
+      },
+      "parentChannel": {
+        "hasWriteButton": false
+      }
+    }
+  },
+  "blockedLogs": [],
+  "apiLogs": [
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tab\":\"student\",\"sort\":\"latest\",\"total\":2,\"rows\":[{\"left\":\"이종현학생2\\n2학년\",\"center\":\"지구과학\\n서울특별시 도봉구\\n그룹과외 · 2명\",\"right\":\"수업예산 200천원\\n메모 보내기\"},{\"left\":\"학생\\n5학년 · 남\",\"center\":\"수학\\n가능동\\n단독과외\",\"right\":\"수업예산 550천원\\n메모 보내기\"}],\"items\":[{\"id\":5,\"title\":\"이종현학생2\",\"grade_level\":\"2학년\",\"gender\":null,\"summary\":\"지구과학 · 서울특별시 도봉구 · 그룹과외 · 2명\",\"budget_label\":\"200천원\",\"subject_name\":\"지구과학\",\"region_label\":\"서울특별시 도봉구\",\"lesson_format\":\"group\",\"student_gender_group\":null,\"preferred_student_count_group\":\"two\",\"preferred_lesson_type\":\"tutor\",\"preferred_fee_amount\":200000,\"preferred_studyroom_fee_amount\":null,\"budget_amount\":200000,\"published_at\":\"2026-10-03 00:52:56\",\"created_at\":\"2026-09-25 01:44:54\",\"exposure_tier\":\"basic\",\"request_summary\":\"\",\"special_request_note\":\"\"},{\"id\":3,\"title\":\"학생\",\"grade_level\":\"5학년\",\"gender\":\"male\",\"summary\":\"수학 · 가능동 · 단독과외\",\"budget_label\":\"550천원\",\"subject_name\":\"수학\",\"region_label\":\"가능동\",\"lesson_format\":\"one_on_one\",\"student_gender_group\":null,\"preferred_student_count_gr"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tab\":\"tutor\",\"sort\":\"latest\",\"total\":2,\"rows\":[{\"left\":\"최고수학샘2\\n경기도 양주시\",\"center\":\"물리 · 한국외국어대학교\",\"right\":\"월 150천원 · 주2 · 90분\\nBASIC\"},{\"left\":\"최고수학샘\\n서울특별시 서울특별시\",\"center\":\"수학\",\"right\":\"가격 협의\\nBASIC\"}],\"items\":[{\"id\":10,\"title\":\"최고수학샘2\",\"region_label\":\"경기도 양주시\",\"summary\":\"물리 · 한국외국어대학교\",\"price_label\":\"월 150천원\",\"preferred_fee_amount\":150000,\"main_subject_note\":\"물리\",\"university_name\":\"한국외국어대학교\",\"major_name\":\"\",\"university_status\":null,\"proof_document_available\":false,\"career_year_band\":null,\"lessons_per_week\":2,\"minutes_per_lesson\":90,\"detail_completion_status\":\"expanded_complete\",\"profile_status\":\"draft\",\"prime_eligible\":true,\"position_sku\":null,\"exposure_tier\":\"basic\",\"published_at\":null,\"created_at\":\"2026-09-11 01:21:37\",\"is_new\":false,\"recommend_count\":0,\"review_count\":0,\"paid_badges\":[]},{\"id\":9,\"title\":\"최고수학샘\",\"region_label\":\"서울특별시 서울특별시\",\"summary\":\"수학\",\"price_label\":\"가격 협의\",\"preferred_fee_amount\":null,\"main_subject_note\":\"수학\",\"university_name\":\"\",\"major_name\":\"\",\"univ"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tab\":\"room\",\"sort\":\"latest\",\"total\":3,\"rows\":[{\"left\":\"가능동베스트2\\n의정부시 가능동\",\"center\":\"일본어\",\"right\":\"가격 협의\\nBASIC\"},{\"left\":\"가능동베스트\\n신곡동 · 신곡건영아파트\",\"center\":\"국영수사과\\n자상하게 수업합니다.\\n꼼꼼 \\/ 친절하게 수업\",\"right\":\"월 350천원\\nBASIC\"},{\"left\":\"우동공과 민락점\\n민락동 · 한라비발디아파트\",\"center\":\"지구과학\\n대치동 인근 소규모 맞춤 공부방\\n꼼꼼, 인내형\",\"right\":\"월 350천원\\nBASIC\"}],\"items\":[{\"id\":8,\"title\":\"가능동베스트2\",\"region_label\":\"의정부시 가능동\",\"summary\":\"일본어\",\"price_amount\":null,\"price_label\":\"가격 협의\",\"main_subject_note\":\"일본어\",\"grade_band\":\"중등\",\"intro_short\":\"\",\"intro_long\":\"\",\"feature_1\":\"\",\"feature_2\":\"\",\"feature_3\":\"\",\"slogan\":\"매일 성장하는 작은 공부방2\",\"teaching_style\":\"\",\"lesson_place_type\":\"study_room\",\"capacity_per_time\":null,\"lesson_operation_type\":\"group_by_time_slot\",\"facility_summary\":\"\",\"inquiry_status\":\"open\",\"profile_status\":\"draft\",\"education_office_registered\":false,\"career_years\":null,\"business_registration_available\":false,\"detail_completion_status\":\"expanded_complete\",\"prime_eligible\":true,\"position_sku\":null,\"exposure_tier\":\"ba"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/neighborhood-greetings.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"items\":[{\"provider_type\":\"tutor\",\"registration_id\":10,\"neighborhood\":\"경기도\",\"status\":\"up\",\"updated_at\":1790626735888,\"masked_name\":\"최○○\",\"teaser\":\"테스트\",\"display_name\":\"최고수학샘2\",\"body\":\"테스트\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=center",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=notice&view=home&limit=3",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"notice-002\",\"boardKey\":\"notice\",\"title\":\"쪽지함 프리뷰(16a) 안내\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"displayDate\":\"2026-06-15\"},\"date\":\"2026-06-15\",\"body\":[\"회원 간 공식 접촉은 쪽지함(16장)을 이용합니다.\",\"운영 문의는 고객센터 운영 문의 채널과 별도입니다.\"],\"pinned\":false,\"targetRole\":\"all\",\"targetLabel\":\"전체\"},{\"id\":\"notice-001\",\"boardKey\":\"notice\",\"title\":\"고객센터·안전과외 가이드 1차 오픈 (프리뷰)\",\"description\":\"\",\"categoryId\":\"general\",\"status\":\"published\",\"authorRole\":\"system\",\"createdAt\":\"2026-07-01\",\"updatedAt\":\"2026-07-17\",\"meta\":{\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"displayDate\":\"2026-07-01\"},\"date\":\"2026-07-01\",\"body\":[\"고객센터 좌측 메뉴·게시판형 FAQ\\/공지·안전과외 아코디언 UI를 프리뷰에 반영했습니다.\",\"1차는 정적 콘텐츠이며, 후순위에 관리자 게시판 연동 예정입니다.\"],\"pinned\":true,\"targetRole\":\"all\",\"targetLabel\":\"전체"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=submission",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"sub-seed-room-1\",\"_numericId\":9,\"boardKey\":\"submission\",\"title\":\"시설 안전 점검 체크리스트\",\"description\":\"공부방 시설 안전 점검 기록.\",\"memo\":\"\",\"internalMemo\":\"\",\"categoryId\":\"facility\",\"fileLabel\":\"safety-checklist.pdf\",\"attachment\":null,\"hasAttachment\":false,\"status\":\"published\",\"authorRole\":\"study_room\",\"authorUserId\":0,\"meta\":[],\"createdAt\":\"2026-06-15\",\"updatedAt\":\"2026-07-09\",\"format\":null,\"section\":null,\"audience\":[]},{\"id\":\"sub-seed-2\",\"_numericId\":8,\"boardKey\":\"submission\",\"title\":\"경력 확인 서류\",\"description\":\"경력 항목 보완용 첨부.\",\"memo\":\"\",\"internalMemo\":\"\",\"categoryId\":\"education\",\"fileLabel\":\"career-proof.jpg\",\"attachment\":null,\"hasAttachment\":false,\"status\":\"submitted\",\"authorRole\":\"tutor\",\"authorUserId\":0,\"meta\":[],\"createdAt\":\"2026-07-09\",\"updatedAt\":\"2026-07-09\",\"format\":null,\"section\":null,\"audience\":[]},{\"id\":\"sub-seed-1\",\"_numericId\":7,\"boardKey\":\"submission\",\"title\":\"학력 증명서 사본\",\"description\":\"과외 프로필 등록 시 참고용으로 제출한 학력 증빙입니다.\",\"memo\":\"tutor-ui 등록과 동일 항목\",\"internalMemo\":\""
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/paid/roi.php?days=7",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tier\":\"free\",\"days\":7,\"lifetime_views\":0,\"metrics\":[{\"id\":\"views\",\"label\":\"조회\",\"value\":0,\"period\":\"최근 7일\",\"hint\":\"상세·검색 카드 열람\"},{\"id\":\"wishlist\",\"label\":\"찜\",\"value\":0,\"period\":\"누적\",\"hint\":\"학부모 찜 목록\"},{\"id\":\"compare\",\"label\":\"비교 담김\",\"value\":0,\"period\":\"누적\",\"hint\":\"비교 후보함 (≤3)\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/paid/roi.php?days=7",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tier\":\"free\",\"days\":7,\"lifetime_views\":0,\"metrics\":[{\"id\":\"views\",\"label\":\"조회\",\"value\":0,\"period\":\"최근 7일\",\"hint\":\"상세·검색 카드 열람\"},{\"id\":\"wishlist\",\"label\":\"찜\",\"value\":0,\"period\":\"누적\",\"hint\":\"학부모 찜 목록\"},{\"id\":\"compare\",\"label\":\"비교 담김\",\"value\":0,\"period\":\"누적\",\"hint\":\"비교 후보함 (≤3)\"}]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/auth/regions.php?action=cities",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"cities\":[{\"id\":202,\"label\":\"종로구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1111000000\",\"city_name\":\"종로구\",\"gu_name\":\"종로구\",\"kind\":\"metro_gu\"},{\"id\":203,\"label\":\"중구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1114000000\",\"city_name\":\"중구\",\"gu_name\":\"중구\",\"kind\":\"metro_gu\"},{\"id\":204,\"label\":\"용산구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1117000000\",\"city_name\":\"용산구\",\"gu_name\":\"용산구\",\"kind\":\"metro_gu\"},{\"id\":205,\"label\":\"성동구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1120000000\",\"city_name\":\"성동구\",\"gu_name\":\"성동구\",\"kind\":\"metro_gu\"},{\"id\":206,\"label\":\"광진구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1121500000\",\"city_name\":\"광진구\",\"gu_name\":\"광진구\",\"kind\":\"metro_gu\"},{\"id\":207,\"label\":\"동대문구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1123000000\",\"city_name\":\"동대문구\",\"gu_name\":\"동대문구\",\"kind\":\"metro_gu\"},{\"id\":208,\"label\":\"중랑구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1126000000\",\"city_name\":\"중랑구\",\"gu_name\":\"중랑"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/auth/regions.php?action=cities",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"cities\":[{\"id\":202,\"label\":\"종로구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1111000000\",\"city_name\":\"종로구\",\"gu_name\":\"종로구\",\"kind\":\"metro_gu\"},{\"id\":203,\"label\":\"중구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1114000000\",\"city_name\":\"중구\",\"gu_name\":\"중구\",\"kind\":\"metro_gu\"},{\"id\":204,\"label\":\"용산구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1117000000\",\"city_name\":\"용산구\",\"gu_name\":\"용산구\",\"kind\":\"metro_gu\"},{\"id\":205,\"label\":\"성동구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1120000000\",\"city_name\":\"성동구\",\"gu_name\":\"성동구\",\"kind\":\"metro_gu\"},{\"id\":206,\"label\":\"광진구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1121500000\",\"city_name\":\"광진구\",\"gu_name\":\"광진구\",\"kind\":\"metro_gu\"},{\"id\":207,\"label\":\"동대문구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1123000000\",\"city_name\":\"동대문구\",\"gu_name\":\"동대문구\",\"kind\":\"metro_gu\"},{\"id\":208,\"label\":\"중랑구\",\"sido_code\":\"11\",\"sido_name\":\"서울특별시\",\"official_code\":\"1126000000\",\"city_name\":\"중랑구\",\"gu_name\":\"중랑"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/search/search.php",
+      "status": 422,
+      "responseBody": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/registrations/tutors.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"tutors\":[{\"id\":9,\"tutor_display_name\":\"최고수학샘\",\"profile_status\":\"draft\",\"inquiry_status\":\"paused\",\"detail_completion_status\":\"basic_only\",\"detail_missing\":[\"강의장소\",\"과외비\",\"과외비 산정방식\",\"주 횟수\\/월 총 횟수\",\"1회 수업 시간\",\"소개문\",\"대학\\/대학원\"],\"detail_checks\":{\"tutor_display_name\":true,\"primary_region\":true,\"primary_subject\":true,\"lesson_places\":false,\"preferred_fee_amount\":false,\"fee_basis_type\":false,\"schedule_count\":false,\"minutes_per_lesson\":false,\"intro\":false,\"university_name\":false},\"location_label\":\"서울특별시\",\"primary_region_label\":\"서울특별시\",\"primary_region_id\":\"19\",\"saved_regions\":[{\"region_id\":\"19\",\"scope_type\":\"city\",\"is_primary\":true},{\"region_id\":\"39\",\"scope_type\":\"city\",\"is_primary\":false},{\"region_id\":\"29\",\"scope_type\":\"city\",\"is_primary\":false}],\"main_subject_note\":\"수학\",\"grade_band\":\"중등\",\"preferred_fee_amount\":null,\"fee_basis_type\":null,\"lessons_per_week\":null,\"monthly_session_count\":null,\"minutes_per_lesson\":null,\"fee_description\":\"\",\"intro_short\":null,\"intro_long\":null,\"feature_1\":n"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/board/posts.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"post\":{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화 검사 진행 중.\",\"status\":\"published\",\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"authorUserId\":20,\"reactions\":{\"empathy\":0,\"helpful\":0,\"cheer\":0,\"score\":0},\"myReaction\":null,\"score\":0,\"updatedAt\":\"2026-10-08T18:22:29\",\"edited\":false}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/comments.php?post_id=25",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"comments\":[]}"
+    },
+    {
+      "method": "POST",
+      "url": "https://study114.net/api/board/posts.php",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"post\":{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화 검사 진행 중. (수정 완료)\",\"status\":\"published\",\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"authorUserId\":20,\"reactions\":{\"empathy\":0,\"helpful\":0,\"cheer\":0,\"score\":0},\"myReaction\":null,\"score\":0,\"updatedAt\":\"2026-10-08T18:22:35\",\"edited\":true}}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/comments.php?post_id=25",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"comments\":[]}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-director&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-parent&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[],\"total\":0,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    },
+    {
+      "method": "GET",
+      "url": "https://study114.net/api/board/posts.php?board_key=concern-tutor&limit=20&sort=recent",
+      "status": 200,
+      "responseBody": "{\"ok\":true,\"posts\":[{\"id\":\"concern-tutor-1791451349-0b0959\",\"boardKey\":\"concern-tutor\",\"boardLabel\":\"과외쌤 고민방\",\"title\":\"[테스트] 과외샤 채널 글쓰기 확인_1791451348958_수정됨\",\"type\":\"worry\",\"createdAt\":\"2026-10-08T18:22:29\",\"reactionTotal\":0,\"commentCount\":0,\"_numericId\":25,\"description\":\"[테스트] 과외샤 무결성 점검 본문입니다. 자동화 검사 진행 중. (수정 완료)\",\"status\":\"published\",\"authorRole\":\"tutor\",\"authorDisplayName\":\"최고수학샘\",\"authorUserId\":20,\"reactions\":{\"empathy\":0,\"helpful\":0,\"cheer\":0,\"score\":0},\"myReaction\":null,\"score\":0,\"updatedAt\":\"2026-10-08T18:22:35\",\"edited\":true}],\"total\":1,\"limit\":20,\"offset\":0,\"sort\":\"recent\",\"type\":null,\"hasMore\":false,\"access\":\"full\",\"intro\":null}"
+    }
+  ]
+}

@@ -1,0 +1,282 @@
+[
+  {
+    "name": "gnb-home",
+    "targetSelector": "header nav a:has-text(\"홈\"), .site-gnb a:has-text(\"홈\")",
+    "href": "#/tutor",
+    "finalUrl": "https://study114.net/#/tutor",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-nav-gnb-home.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-find-tutor",
+    "targetSelector": "header nav a:has-text(\"과외쌤찾기\"), .site-gnb a:has-text(\"과외쌤찾기\")",
+    "href": "https://study114.net/search/#/search/tutor?role=tutor",
+    "finalUrl": "https://study114.net/search/#/search/tutor?role=tutor",
+    "pageTitle": "우동공과 — 검색 프리뷰",
+    "screenshot": "02-nav-gnb-find-tutor.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-find-student",
+    "targetSelector": "header nav a:has-text(\"학생찾기\"), .site-gnb a:has-text(\"학생찾기\")",
+    "href": "https://study114.net/search/#/search/student?role=tutor",
+    "finalUrl": "https://study114.net/search/#/search/student?role=tutor",
+    "pageTitle": "우동공과 — 검색 프리뷰",
+    "screenshot": "02-nav-gnb-find-student.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-register-tutor",
+    "targetSelector": "header nav a:has-text(\"과외쌤상세등록\"), .site-gnb a:has-text(\"과외쌤상세등록\")",
+    "href": "https://study114.net/register/tutor/#/register/basic",
+    "finalUrl": "https://study114.net/register/tutor/#/register/basic",
+    "pageTitle": "우동공과 — 과외쌤 등록 프리뷰",
+    "screenshot": "02-nav-gnb-register-tutor.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: net::ERR_FAILED",
+      "pageerror: Failed to fetch"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-plans",
+    "targetSelector": "header nav a:has-text(\"유료상품\"), .site-gnb a:has-text(\"유료상품\")",
+    "href": "#/plans",
+    "finalUrl": "https://study114.net/#/plans",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-nav-gnb-plans.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-community",
+    "targetSelector": "header nav a:has-text(\"커뮤니티\"), .site-gnb a:has-text(\"커뮤니티\")",
+    "href": "#/community",
+    "finalUrl": "https://study114.net/#/community",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-nav-gnb-community.png",
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()",
+      "Failed to load resource: the server responded with a status of 422 ()"
+    ],
+    "failedRequests": [
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "status": 422,
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ]
+  },
+  {
+    "name": "gnb-support",
+    "targetSelector": "header nav a:has-text(\"고객센터\"), .site-gnb a:has-text(\"고객센터\")",
+    "href": "#/support",
+    "finalUrl": "https://study114.net/#/support",
+    "pageTitle": "우동공과 — 메인 화면 프리뷰",
+    "screenshot": "02-nav-gnb-support.png",
+    "consoleErrors": [],
+    "failedRequests": []
+  },
+  {
+    "name": "util-guide",
+    "status": "not_found"
+  },
+  {
+    "name": "util-messages",
+    "status": "not_found"
+  },
+  {
+    "name": "util-recent",
+    "status": "not_found"
+  },
+  {
+    "name": "util-mypage",
+    "status": "not_found"
+  }
+]

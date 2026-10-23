@@ -1,0 +1,2251 @@
+{
+  "pc": [
+    {
+      "name": "15_mypage_home",
+      "targetPath": "#/mypage/home",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/15_mypage_home.png"
+    },
+    {
+      "name": "16_messages",
+      "targetPath": "#/mypage/messages",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/messages",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "쪽지·후기함",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n쪽지·후기함\n쪽지·후기함\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n쪽지\n후기함\n\n쪽지가 없습니다\n\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/16_messages.png"
+    },
+    {
+      "name": "17_recent",
+      "targetPath": "#/mypage/recent",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/recent",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최근열람",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n최근열람\n최근열람\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n최고수학샘2\n검색에서 · 상세 열람\n과외쌤 · 2026. 9. 27. 오후 7:27:43\n다시 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/17_recent.png"
+    },
+    {
+      "name": "18_student_review",
+      "targetPath": "#/mypage/student-review",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/student-review",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "관심 학생",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n관심 학생\n관심 학생\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n검토 중인 학생이 없습니다\n\n마음에 드는 등록을 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.\n\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/18_student_review.png"
+    },
+    {
+      "name": "19_wishlist",
+      "targetPath": "#/mypage/wishlist",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/wishlist",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 5
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "찜한 공부방·과외쌤",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "공부방",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h2",
+          "text": "과외쌤",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근 본 목록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "최근 본 목록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n찜한 공부방·과외쌤\n찜한 공부방·과외쌤\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.\n\n공부방\n\n아직 찜한 대상이 없습니다\n\n관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.\n\n최근 본 목록\n과외쌤\n\n아직 찜한 대상이 없습니다\n\n관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.\n\n최근 본 목록\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/19_wishlist.png"
+    },
+    {
+      "name": "20_contact",
+      "targetPath": "#/mypage/contact",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/contact",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "내 문의 내역",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "새 운영문의 남기기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "고객센터 문의하기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 문의 내역\n내 문의 내역\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다.\n\n새 운영문의 남기기\n\n아직 남긴 운영문의가 없습니다.\n\n가입, 등록, 결제, 정책, 신고 관련 도움이 필요하면 고객센터에서 운영문의를 남겨 주세요.\n\n고객센터 문의하기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/20_contact.png"
+    },
+    {
+      "name": "21_plans",
+      "targetPath": "#/mypage/plans",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매이력",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "이용중인 노출광고",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 사용한 대상",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h2",
+          "text": "결제 내역",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매이력\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n이용중인 노출광고\n\n베이직 노출 이용중 - 무료광고\n\n쪽지 사용한 대상\n\n쪽지를 사용한 대상이 없습니다.\n\n결제 내역\n상품\t금액\t일시\t상태\n결제 내역이 없습니다.\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/21_plans.png"
+    },
+    {
+      "name": "22_plans_my",
+      "targetPath": "#/mypage/plans/my",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans/my",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매이력",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "쪽지권",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매이력\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n내 쪽지권 · 상품\n\n쪽지권\n\n이 프로필에 표시할 쪽지권이 없습니다. · 쪽지권 충전하기\n\n이용 현황 · 쪽지권 구매 · 노출상품\n\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/22_plans_my.png"
+    },
+    {
+      "name": "23_plans_history",
+      "targetPath": "#/mypage/plans/history",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans/history",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매내역",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매내역\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n결제내역\n\n서버 주문 내역과 이 기기의 임시 내역을 함께 표시\n\n주문번호\t상품\t프로필\t금액\t수단\t일시\t상태\t\n내역이 없습니다.\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/23_plans_history.png"
+    },
+    {
+      "name": "24_submission_docs",
+      "targetPath": "#/mypage/submission-docs",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/submission-docs",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "제출자료 상태",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "신뢰·증빙자료 제출",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "과외쌤 등록 화면에서 자료 등록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n제출자료 상태\n제출자료 상태\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n제출 여부와 공개 범위만 표시하며 플랫폼이 심사하거나 반려하지 않습니다.\n\n제출 3/4 · 미제출 1\n신뢰·증빙자료 제출\n과외쌤 등록 화면에서 자료 등록\n항목\t제출 상태\t공개 범위\n본인 확인 자료\t제출함\t본인 확인용\n학력 자료\t제출함\t공개함\n경력 자료\t선택 제출\t공개함\n자격증\t미제출\t비공개\n\n22장 · 승인·반려·검수중 UI 없음 · 공개된 자료를 보고 직접 판단합니다.\n\n제출자료는 등록자가 공개한 참고 정보입니",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/24_submission_docs.png"
+    },
+    {
+      "name": "25_submission_board",
+      "targetPath": "#/mypage/submission-board",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/submission-board",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "제출함",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "신뢰·증빙자료 제출",
+          "className": "mypage-panel__title"
+        },
+        {
+          "tag": "h3",
+          "text": "내 제출 목록",
+          "className": "sub-board-form__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "제출자료 상태",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "새 자료 제출",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "수정",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "삭제",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--quiet"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n제출함\n제출함\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n게시판 엔진 · 자료 제출 권한형 업로드\n\n과외쌤이 학력·경력 등 신뢰 증빙자료를 제출하는 공간입니다. 공개 자료실·공부방 등록 서류와는 별도로 운영됩니다.\n\n업로드 가능: 과외쌤 · 운영자\n열람: 본인 제출 목록 · 운영자 내부 확인\n신뢰·증빙자료 제출\n\n제출·공개 상태만 중립적으로 표시하며, 플랫폼이 자료를 보증하지 않습니다.\n\n권한형 업로드\n읽기: 가능\n올리기: 가능\n내 제출자료\n\n제출자료는 등록자가 공개한 참고 정보입니다",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/25_submission_board.png"
+    },
+    {
+      "name": "26_account",
+      "targetPath": "#/mypage/account",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/account",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "계정설정",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "이종현과외",
+          "className": "account-settings__name"
+        },
+        {
+          "tag": "h3",
+          "text": "표시 정보",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h3",
+          "text": "계정 정보",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h3",
+          "text": "로그인 관리",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h4",
+          "text": "비밀번호 변경",
+          "className": "account-panel__title"
+        },
+        {
+          "tag": "h3",
+          "text": "회원탈퇴",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h4",
+          "text": "탈퇴 확인",
+          "className": "account-panel__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "표시명 수정",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "표시명 저장",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "비밀번호 변경",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "변경 저장",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "회원탈퇴",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm mypage-withdraw-trigger"
+        },
+        {
+          "text": "탈퇴 확정",
+          "disabled": false,
+          "className": "btn btn--danger btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "display_name",
+          "id": "mypage-display-name",
+          "value": "이종현과외",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "current_password",
+          "id": "mypage-pw-current",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "password",
+          "id": "mypage-pw-new",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "password_confirm",
+          "id": "mypage-pw-confirm",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "ack_irreversible",
+          "id": "",
+          "value": "on",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "confirm_text",
+          "id": "mypage-withdraw-confirm",
+          "value": "",
+          "disabled": false,
+          "placeholder": "탈퇴합니다"
+        }
+      ],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n계정설정\n계정설정\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n사이트에 보이는 이름\n\n이종현과외\n\n표시명·로그인·보안을 한곳에서 관리합니다.\n\n표시 정보\n\n마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.\n\n사이트 표시명\n이종현과외\n표시명 수정\n계정 정보\n\n로그인·연동 요약입니다.\n\n연동된 소셜\n없음(이메일 계정)\n로그인 계정\nleejetty+tutor@gmail.com\n로그인 식별자입니다. 이 값은 변경할 수 없습니다.\n대표 지역\n서울특별시\n역할\n과외",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/26_account.png"
+    }
+  ],
+  "mobile": [
+    {
+      "name": "15_mypage_home",
+      "targetPath": "#/mypage/home",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/15_mypage_home.png"
+    },
+    {
+      "name": "16_messages",
+      "targetPath": "#/mypage/messages",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/messages",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "쪽지·후기함",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n쪽지·후기함\n쪽지·후기함\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n쪽지\n후기함\n\n쪽지가 없습니다\n\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/16_messages.png"
+    },
+    {
+      "name": "17_recent",
+      "targetPath": "#/mypage/recent",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/recent",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최근열람",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n최근열람\n최근열람\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n최고수학샘2\n검색에서 · 상세 열람\n과외쌤 · 2026. 9. 27. 오후 7:27:43\n다시 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/17_recent.png"
+    },
+    {
+      "name": "18_student_review",
+      "targetPath": "#/mypage/student-review",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/student-review",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "관심 학생",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n관심 학생\n관심 학생\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n검토 중인 학생이 없습니다\n\n마음에 드는 등록을 검토함에 넣어 두고, 준비가 되면 쪽지를 이어가세요.\n\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/18_student_review.png"
+    },
+    {
+      "name": "19_wishlist",
+      "targetPath": "#/mypage/wishlist",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/wishlist",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 5
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "찜한 공부방·과외쌤",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "공부방",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h2",
+          "text": "과외쌤",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근 본 목록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "최근 본 목록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n찜한 공부방·과외쌤\n찜한 공부방·과외쌤\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.\n\n공부방\n\n아직 찜한 대상이 없습니다\n\n관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.\n\n최근 본 목록\n과외쌤\n\n아직 찜한 대상이 없습니다\n\n관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.\n\n최근 본 목록\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/19_wishlist.png"
+    },
+    {
+      "name": "20_contact",
+      "targetPath": "#/mypage/contact",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/contact",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "내 문의 내역",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "새 운영문의 남기기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "고객센터 문의하기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm state-card__cta"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 문의 내역\n내 문의 내역\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다.\n\n새 운영문의 남기기\n\n아직 남긴 운영문의가 없습니다.\n\n가입, 등록, 결제, 정책, 신고 관련 도움이 필요하면 고객센터에서 운영문의를 남겨 주세요.\n\n고객센터 문의하기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 ",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/20_contact.png"
+    },
+    {
+      "name": "21_plans",
+      "targetPath": "#/mypage/plans",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매이력",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "이용중인 노출광고",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 사용한 대상",
+          "className": "mypage-subhead"
+        },
+        {
+          "tag": "h2",
+          "text": "결제 내역",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매이력\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n이용중인 노출광고\n\n베이직 노출 이용중 - 무료광고\n\n쪽지 사용한 대상\n\n쪽지를 사용한 대상이 없습니다.\n\n결제 내역\n상품\t금액\t일시\t상태\n결제 내역이 없습니다.\n상품 이용 안내\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/21_plans.png"
+    },
+    {
+      "name": "22_plans_my",
+      "targetPath": "#/mypage/plans/my",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans/my",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매이력",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "쪽지권",
+          "className": "mypage-subhead"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매이력\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n내 쪽지권 · 상품\n\n쪽지권\n\n이 프로필에 표시할 쪽지권이 없습니다. · 쪽지권 충전하기\n\n이용 현황 · 쪽지권 구매 · 노출상품\n\n상품 이용 안내\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/22_plans_my.png"
+    },
+    {
+      "name": "23_plans_history",
+      "targetPath": "#/mypage/plans/history",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/plans/history",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "구매내역",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": true,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n구매이력\n구매내역\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n결제내역\n\n서버 주문 내역과 이 기기의 임시 내역을 함께 표시\n\n주문번호\t상품\t프로필\t금액\t수단\t일시\t상태\t\n내역이 없습니다.\n상품 이용 안내\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/23_plans_history.png"
+    },
+    {
+      "name": "24_submission_docs",
+      "targetPath": "#/mypage/submission-docs",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/submission-docs",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "제출자료 상태",
+          "className": "mypage-content__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "신뢰·증빙자료 제출",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "과외쌤 등록 화면에서 자료 등록",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n제출자료 상태\n제출자료 상태\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n제출 여부와 공개 범위만 표시하며 플랫폼이 심사하거나 반려하지 않습니다.\n\n제출 3/4 · 미제출 1\n신뢰·증빙자료 제출\n과외쌤 등록 화면에서 자료 등록\n항목\t제출 상태\t공개 범위\n본인 확인 자료\t제출함\t본인 확인용\n학력 자료\t제출함\t공개함\n경력 자료\t선택 제출\t공개함\n자격증\t미제출\t비공개\n\n22장 · 승인·반려·검수중 UI 없음 · 공개된 자료를 보고 직접 판단합니다.\n\n제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/24_submission_docs.png"
+    },
+    {
+      "name": "25_submission_board",
+      "targetPath": "#/mypage/submission-board",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/submission-board",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "제출함",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "신뢰·증빙자료 제출",
+          "className": "mypage-panel__title"
+        },
+        {
+          "tag": "h3",
+          "text": "내 제출 목록",
+          "className": "sub-board-form__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "제출자료 상태",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "새 자료 제출",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "수정",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "삭제",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "다시 보기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--quiet"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n제출함\n제출함\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n게시판 엔진 · 자료 제출 권한형 업로드\n\n과외쌤이 학력·경력 등 신뢰 증빙자료를 제출하는 공간입니다. 공개 자료실·공부방 등록 서류와는 별도로 운영됩니다.\n\n업로드 가능: 과외쌤 · 운영자\n열람: 본인 제출 목록 · 운영자 내부 확인\n신뢰·증빙자료 제출\n\n제출·공개 상태만 중립적으로 표시하며, 플랫폼이 자료를 보증하지 않습니다.\n\n권한형 업로드\n읽기: 가능\n올리기: 가능\n내 제출자료\n\n제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는 ",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/25_submission_board.png"
+    },
+    {
+      "name": "26_account",
+      "targetPath": "#/mypage/account",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/account",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 1
+        }
+      ],
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "계정설정",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "이종현과외",
+          "className": "account-settings__name"
+        },
+        {
+          "tag": "h3",
+          "text": "표시 정보",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h3",
+          "text": "계정 정보",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h3",
+          "text": "로그인 관리",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h4",
+          "text": "비밀번호 변경",
+          "className": "account-panel__title"
+        },
+        {
+          "tag": "h3",
+          "text": "회원탈퇴",
+          "className": "account-card__title"
+        },
+        {
+          "tag": "h4",
+          "text": "탈퇴 확인",
+          "className": "account-panel__title"
+        }
+      ],
+      "tabsState": [],
+      "subTabsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "표시명 수정",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "표시명 저장",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "비밀번호 변경",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm"
+        },
+        {
+          "text": "변경 저장",
+          "disabled": false,
+          "className": "btn btn--primary btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "회원탈퇴",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm mypage-withdraw-trigger"
+        },
+        {
+          "text": "탈퇴 확정",
+          "disabled": false,
+          "className": "btn btn--danger btn--sm"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "btn btn--ghost btn--sm"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "display_name",
+          "id": "mypage-display-name",
+          "value": "이종현과외",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "current_password",
+          "id": "mypage-pw-current",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "password",
+          "id": "mypage-pw-new",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "name": "password_confirm",
+          "id": "mypage-pw-confirm",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "ack_irreversible",
+          "id": "",
+          "value": "on",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "confirm_text",
+          "id": "mypage-withdraw-confirm",
+          "value": "",
+          "disabled": false,
+          "placeholder": "탈퇴합니다"
+        }
+      ],
+      "emptyStateDetected": false,
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n계정설정\n계정설정\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n\n사이트에 보이는 이름\n\n이종현과외\n\n표시명·로그인·보안을 한곳에서 관리합니다.\n\n표시 정보\n\n마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.\n\n사이트 표시명\n이종현과외\n표시명 수정\n계정 정보\n\n로그인·연동 요약입니다.\n\n연동된 소셜\n없음(이메일 계정)\n로그인 계정\nleejetty+tutor@gmail.com\n로그인 식별자입니다. 이 값은 변경할 수 없습니다.\n대표 지역\n서울특별시\n역할\n과외쌤\n로그인 관리",
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/26_account.png"
+    }
+  ],
+  "blockedRequests": []
+}

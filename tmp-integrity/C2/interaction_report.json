@@ -1,0 +1,358 @@
+{
+  "currentValues": {
+    "hub": {
+      "title": "최고수학샘",
+      "profileTextSnippet": "최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성별\n미입력\n수업인원\n미입력\n강의장소\n미입력\n가격 설명\n미입력\n학력 · 자격\n수정\n대학/대학원\n미입력\n전공\n미입력\n학적상태\n미입력\n소개 · 연락\n수정\n짧은 소개\n미입력\n상세 소개\n미입력\n특징 1\n미입력\n특징 2\n미입력\n특징 3\n미입력\n연락 가능 시간\n미입력\n추가 정보\n수정\n학생 대상\n중등\n강의스타일\n미입력\n경력\n미입력\n학력 제출자료\n미입력\n학력 공개 선택\n비공개\n경력 제출자료\n미입력"
+    },
+    "basic": {
+      "inputs": [
+        {
+          "name": "tutor_display_name",
+          "value": "최고수학샘",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "main_subject_note",
+          "value": "수학",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_0_sido",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_0_city",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_0_gu",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "city",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_1_sido",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_1_city",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_1_gu",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "city",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_2_sido",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_2_city",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_region_2_gu",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "city",
+          "type": "hidden",
+          "disabled": false
+        }
+      ],
+      "saveButton": {
+        "text": "기본정보 저장",
+        "disabled": false
+      }
+    },
+    "detail": {
+      "inputs": [
+        {
+          "name": "preferred_fee_amount",
+          "value": "",
+          "type": "number",
+          "disabled": false
+        },
+        {
+          "name": "fee_basis_type",
+          "value": "monthly_by_weekly_schedule",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "lessons_per_week",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "monthly_session_count",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "minutes_per_lesson",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "student_gender_group",
+          "value": "mixed",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "student_count_group",
+          "value": "solo",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "lesson_places",
+          "value": "student_home_visit",
+          "type": "checkbox",
+          "disabled": false
+        },
+        {
+          "name": "lesson_places",
+          "value": "public_place",
+          "type": "checkbox",
+          "disabled": false
+        },
+        {
+          "name": "lesson_places",
+          "value": "tutor_home",
+          "type": "checkbox",
+          "disabled": false
+        },
+        {
+          "name": "fee_description",
+          "value": "",
+          "type": "textarea",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "p21_univ_9",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "university_name",
+          "value": "",
+          "type": "hidden",
+          "disabled": false
+        },
+        {
+          "name": "major_name",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "university_status",
+          "value": "",
+          "type": "select-one",
+          "disabled": false
+        },
+        {
+          "name": "feature_1",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "feature_2",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "feature_3",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        },
+        {
+          "name": "intro_short",
+          "value": "",
+          "type": "textarea",
+          "disabled": false
+        },
+        {
+          "name": "p21-profile-photo-file",
+          "value": "",
+          "type": "file",
+          "disabled": false
+        },
+        {
+          "name": "intro_long",
+          "value": "",
+          "type": "textarea",
+          "disabled": false
+        },
+        {
+          "name": "contact_time_note",
+          "value": "",
+          "type": "text",
+          "disabled": false
+        }
+      ],
+      "saveButton": {
+        "text": "상세정보 저장",
+        "disabled": false
+      }
+    },
+    "inquiries": {
+      "radios": [
+        {
+          "name": "p21_inquiry_receiving",
+          "value": "1",
+          "checked": false,
+          "id": "",
+          "labelText": "쪽지 받는 중"
+        },
+        {
+          "name": "p21_inquiry_receiving",
+          "value": "0",
+          "checked": true,
+          "id": "",
+          "labelText": "쪽지 안받음"
+        },
+        {
+          "name": "p21_inquiry_reason",
+          "value": "paused",
+          "checked": true,
+          "id": "",
+          "labelText": "잠시 쉼\n일시 중단입니다. 나중에 다시 받을 수 있습니다."
+        },
+        {
+          "name": "p21_inquiry_reason",
+          "value": "not_accepting",
+          "checked": false,
+          "id": "",
+          "labelText": "신규 학생 안 받음\n신규 모집을 닫은 상태입니다. 잠시 쉼이 아닙니다."
+        }
+      ],
+      "textareas": [],
+      "statusBoxText": "",
+      "saveButton": {
+        "text": "저장하기",
+        "disabled": false
+      },
+      "bodyTextSnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n\n지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.\n\n현재상태\n\n저장값: 쪽지 안받음 · 잠시 쉼\n\n지금은 쪽지 안받음\n현재상태 수정\n쪽지 받는 중\n쪽지 안받음\n저장하기\n저장은 쪽지 상태만 바꿉니다.\n안받는 이유\n\n쪽지 안받음이면 이유를 고른 뒤 저장합니다. 선택하신 이유가 프로필과 안내에 반영됩니다.\n\n 잠시 쉼\n일시 중단입니다. 나중에 다시 받을 수 있습니다.\n 신규 학생 안 받음\n신규 모집을 닫은 상태입니다. 잠시 쉼이 아닙니다.\n쪽지 설정시 카드 샘플\n\n홈과 같은 실제 베이직카드입니다. 화살표가 쪽지 관련 표시 위치를 가리킵니다.\n\n쪽지 받는 중\n중·고\n졸업\n경력 4~6년\n증빙\n여김하린\n서울 강남구\n\n월 450천원~ · 주2회 · 90분\n\n과목수학\n원생수혼성 · 단독\n수업장소학생자택방문 · 공공장소\n주2·90분\n내신 1등급 관리\n약점 유형 반복\n주간 학습 리포트\n\n개념이 잡히면 점수는 따라옵니다\n\n👍\n18\n💬\n7\n♡\n11\n⇄\n2\n✉\n4\n상세\n\n여기가 쪽지 관련 표시 위치입니다"
+    },
+    "publish": {
+      "cards": [],
+      "checklistSnippet": [
+        "경력특징 1\n\n픽 카드 강조 한 줄입니다\n\n입력하러 가기",
+        "학생구성\n\n지도 대상 성별·인원을 보여 줍니다\n\n입력하러 가기",
+        "상세 소개\n\n프라임 상세에서 과외를 설명합니다\n\n입력하러 가기",
+        "경력특징 2\n\n프라임 카드에 특징을 더 보여 줍니다\n\n입력하러 가기",
+        "경력특징 3\n\n프라임 카드에 특징을 더 보여 줍니다\n\n입력하러 가기",
+        "과목수학",
+        "원생수혼성 · 단독",
+        "수업장소학생자택방문 · 공공장소",
+        "주2·90분"
+      ],
+      "bodyTextSnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n등록점검\n\n필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다\n\n다음 · 강의장소 입력하러 가기\n베이직카드 8개 부족\n픽 추가 2개\n프라임 추가 3개\n베이직 노출과 픽·프라임은 단계가 다릅니다\n\n베이직 검색 노출은 필수 항목이 채워지면 따라옵니다.\n\n픽·프라임은 그 위에 카드 정보량·신뢰를 더하는 추가 입력입니다.\n\n[픽] 추가 입력\n경력특징 1\n\n픽 카드 강조 한 줄입니다\n\n입력하러 가기\n학생구성\n\n지도 대상 성별·인원을 보여 줍니다\n\n입력하러 가기\n[프라임] 추가 입력\n상세 소개\n\n프라임 상세에서 과외를 설명합니다\n\n입력하러 가기\n경력특징 2\n\n프라임 카드에 특징을 더 보여 줍니다\n\n입력하러 가기\n경력특징 3\n\n프라임 카드에 특징을 더 보여 줍니다\n\n입력하러 가기\n베이직카드/픽/프라임 이렇게 달라집니다\n\n샘플은 홈 실제 카드와 같은 크기·구성입니다. 1행은 베이직 목록 카드, 2행은 픽·프라임 유료 노출 카드입니다. 확대카드 보기로 상세를 엽니다.\n\n베이직카드\n중·고\n졸업\n경력 4~6년\n증빙\n여김하린\n서울 강남구\n\n월 450천원~ · 주2회 · 90분\n\n과목수학\n원생수혼성 · 단독\n수업장소학생자택방문 · 공공장소\n주2·90분\n내신 1등급 관리\n약점 유형 반복\n주간 학습 리포트\n\n개념이 잡히면 점수는 따라옵니다\n\n👍\n없음\n💬\n없음\n♡\n없음\n⇄\n없음\n✉\n없음\n상세\n확대카드 보기\n픽\n서울 강남구\n졸업\n연세대학교 수학과\n4~6년\n주 2회, "
+    }
+  },
+  "interactions": {
+    "basicInputFill": "success",
+    "sidoOptionsCount": 25,
+    "detailTextareaFill": "success",
+    "contactModalOpened": false,
+    "accountEditInputVisible": true,
+    "accountEditCancelled": true
+  },
+  "dialogs": [],
+  "consoleErrors": [
+    {
+      "url": "https://study114.net/#/mypage/registrations/tutors/9",
+      "text": "Failed to load resource: the server responded with a status of 403 ()"
+    }
+  ],
+  "pageErrors": []
+}

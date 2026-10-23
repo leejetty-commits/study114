@@ -1,0 +1,978 @@
+[
+  {
+    "test": "Community Hub via Menu",
+    "viewport": "pc",
+    "menuClicked": true,
+    "state": {
+      "url": "https://study114.net/#/community",
+      "hash": "#/community",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodyText": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n현장형 커뮤니티\n남기고 · 답하고 · 해결후기로 이어가기\n\n공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.\n\n게시판 둘러보기\n해결후기 보기\n게시판 4곳\n역할별 게시판으로 바로 들어가기\n\n공부방\n\n공부방 고민방\n\n운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.\n\n입장하기 →\n\n과외쌤\n\n과외쌤 고민방\n\n수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.\n\n입장하기 →\n\n학생·학부모\n\n학",
+      "navItems": [
+        {
+          "text": "홈",
+          "href": "#/tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤찾기",
+          "href": "https://study114.net/search/#/search/tutor?role=tutor",
+          "active": false
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤상세등록",
+          "href": "https://study114.net/register/tutor/#/register/basic",
+          "active": false
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "active": false
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        },
+        {
+          "text": "홈",
+          "href": "#/tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤찾기",
+          "href": "https://study114.net/search/#/search/tutor?role=tutor",
+          "active": false
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤상세등록",
+          "href": "https://study114.net/register/tutor/#/register/basic",
+          "active": false
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "active": false
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        },
+        {
+          "text": "커뮤니티 홈",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "공부방 고민방",
+          "href": "#/community/director",
+          "active": false
+        },
+        {
+          "text": "과외쌤 고민방",
+          "href": "#/community/tutor",
+          "active": false
+        },
+        {
+          "text": "학생/학부모 고민방",
+          "href": "#/community/parent",
+          "active": false
+        },
+        {
+          "text": "해결후기",
+          "href": "#/community/solved",
+          "active": false
+        },
+        {
+          "text": "약관",
+          "href": "#/support/policies/terms",
+          "active": false
+        },
+        {
+          "text": "개인정보",
+          "href": "#/support/policies/privacy",
+          "active": false
+        },
+        {
+          "text": "플랫폼 고지",
+          "href": "#/support/policies/platform",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        }
+      ]
+    },
+    "screenshot": "c3-01-community-hub-via-menu-pc.png"
+  },
+  {
+    "test": "Direct 커뮤니티 허브",
+    "target": {
+      "id": "hub",
+      "path": "/#/community",
+      "label": "커뮤니티 허브"
+    },
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community",
+      "hash": "#/community",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n현장형 커뮤니티\n남기고 · 답하고 · 해결후기로 이어가기\n\n공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.\n\n게시판 둘러보기\n해결후기 보기\n게시판 4곳\n역할별 게시판으로 바로 들어가기\n\n공부방\n\n공부방 고민방\n\n운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.\n\n입장하기 →\n\n과외쌤\n\n과외쌤 고민방\n\n수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.\n\n입장하기 →\n\n학생·학부모\n\n학"
+    },
+    "screenshot": "c3-direct-hub-pc.png"
+  },
+  {
+    "test": "Direct 과외쌤 고민방",
+    "target": {
+      "id": "tutor",
+      "path": "/#/community/tutor",
+      "label": "과외쌤 고민방"
+    },
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/tutor",
+      "hash": "#/community/tutor",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": {
+        "text": "글쓰기",
+        "href": "#/community/tutor/new"
+      },
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n과외쌤\n과외쌤 고민방\n\n프로필·첫 상담·수업 전환\n\n글쓰기\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-direct-tutor-pc.png"
+  },
+  {
+    "test": "Direct 공부방 고민방",
+    "target": {
+      "id": "director",
+      "path": "/#/community/director",
+      "label": "공부방 고민방"
+    },
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/director",
+      "hash": "#/community/director",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n공부방\n공부방 고민방\n\n공부방 운영·모집·학부모 응대\n\n공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 글은 읽을 수 있어요. 새 글·댓글·반응은 자기 역할 고민방에서만 남길 수 있어요.\n\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕"
+    },
+    "screenshot": "c3-direct-director-pc.png"
+  },
+  {
+    "test": "Direct 학생/학부모 고민방",
+    "target": {
+      "id": "parent",
+      "path": "/#/community/parent",
+      "label": "학생/학부모 고민방"
+    },
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/parent",
+      "hash": "#/community/parent",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n학생·학부모\n학생/학부모 고민방\n\n공부방·과외 선택·루틴·안전\n\n공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다. 글은 읽을 수 있어요. 새 글·댓글·반응은 자기 역할 고민방에서만 남길 수 있어요.\n\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 "
+    },
+    "screenshot": "c3-direct-parent-pc.png"
+  },
+  {
+    "test": "Direct 해결후기",
+    "target": {
+      "id": "solved",
+      "path": "/#/community/solved",
+      "label": "해결후기"
+    },
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/solved",
+      "hash": "#/community/solved",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": {
+        "text": "글쓰기",
+        "href": "#/community/solved/new"
+      },
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n해결됨\n해결후기\n\n바꿔보니 효과 있었던 경험·운영 노하우\n\n글쓰기\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 해결후기가 없습니다. 문제와 결과를 짧게 남겨보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-direct-solved-pc.png"
+  },
+  {
+    "test": "Tutor Concern Detail",
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/tutor/new",
+      "hash": "#/community/tutor/new",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "hasCommentBox": true,
+      "commentBoxPlaceholder": "짧은 경험이나 고민을 적어주세요",
+      "hasCommentSubmitBtn": false,
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n← 과외쌤 고민방\n\n제목은 생동감 있게, 본문은 부담 없이. 이미지 1~3장까지 가능 · 개인정보·얼굴·실명·연락처는 올리지 마세요.\n\n글 종류\n고민\n조언\n해결\n부탁\n제목\n본문\n올리기\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-tutor-detail-pc.png"
+  },
+  {
+    "test": "Tutor Concern Compose Screen",
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/tutor/new",
+      "hash": "#/community/tutor/new",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "inputs": [
+        {
+          "tag": "select",
+          "type": null,
+          "name": null,
+          "id": "concern-nav-select",
+          "placeholder": null,
+          "required": false
+        },
+        {
+          "tag": "select",
+          "type": null,
+          "name": "type",
+          "id": null,
+          "placeholder": null,
+          "required": true
+        },
+        {
+          "tag": "input",
+          "type": null,
+          "name": "title",
+          "id": null,
+          "placeholder": "말 걸고 싶은 제목",
+          "required": true
+        },
+        {
+          "tag": "textarea",
+          "type": null,
+          "name": "body",
+          "id": null,
+          "placeholder": "짧은 경험이나 고민을 적어주세요",
+          "required": true
+        }
+      ],
+      "buttons": [
+        {
+          "text": "이용안내",
+          "type": "button"
+        },
+        {
+          "text": "쪽지·후기함",
+          "type": "button"
+        },
+        {
+          "text": "최근열람",
+          "type": "button"
+        },
+        {
+          "text": "마이페이지",
+          "type": "button"
+        },
+        {
+          "text": "로그아웃",
+          "type": "button"
+        },
+        {
+          "text": "올리기",
+          "type": "submit"
+        },
+        {
+          "text": "↑맨위",
+          "type": "button"
+        }
+      ],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n← 과외쌤 고민방\n\n제목은 생동감 있게, 본문은 부담 없이. 이미지 1~3장까지 가능 · 개인정보·얼굴·실명·연락처는 올리지 마세요.\n\n글 종류\n고민\n조언\n해결\n부탁\n제목\n본문\n올리기\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-tutor-compose-new-pc.png"
+  },
+  {
+    "test": "Forbidden Director Compose Screen",
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/director/new",
+      "hash": "#/community/director/new",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n← 공부방 고민방\n\n공부방 고민방\n\n이 게시판에 글을 쓸 권한이 없습니다.\n\n목록으로\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "hasForm": false
+    },
+    "screenshot": "c3-forbidden-director-compose-pc.png"
+  },
+  {
+    "test": "Forbidden Parent Compose Screen",
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/parent/new",
+      "hash": "#/community/parent/new",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n← 학생/학부모 고민방\n\n학생/학부모 고민방\n\n이 게시판에 글을 쓸 권한이 없습니다.\n\n목록으로\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "hasForm": false
+    },
+    "screenshot": "c3-forbidden-parent-compose-pc.png"
+  },
+  {
+    "test": "Solved Compose Screen",
+    "viewport": "pc",
+    "state": {
+      "url": "https://study114.net/#/community/solved/new",
+      "hash": "#/community/solved/new",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n← 해결후기\n\n제목은 생동감 있게, 본문은 부담 없이. 이미지 1~3장까지 가능 · 개인정보·얼굴·실명·연락처는 올리지 마세요.\n\n글 종류\n고민\n조언\n해결\n부탁\n제목\n본문\n올리기\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+      "hasForm": true
+    },
+    "screenshot": "c3-solved-compose-pc.png"
+  },
+  {
+    "test": "Info Board 자료실 허브",
+    "viewport": "pc",
+    "target": {
+      "id": "library",
+      "path": "/#/library",
+      "label": "자료실 허브"
+    },
+    "state": {
+      "url": "https://study114.net/#/library",
+      "hash": "#/library",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-pc.png"
+  },
+  {
+    "test": "Info Board 양식·체크리스트",
+    "viewport": "pc",
+    "target": {
+      "id": "library-templates",
+      "path": "/#/library/templates",
+      "label": "양식·체크리스트"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/templates",
+      "hash": "#/library/templates",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-templates-pc.png"
+  },
+  {
+    "test": "Info Board 가이드 PDF",
+    "viewport": "pc",
+    "target": {
+      "id": "library-guides",
+      "path": "/#/library/guides",
+      "label": "가이드 PDF"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/guides",
+      "hash": "#/library/guides",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-guides-pc.png"
+  },
+  {
+    "test": "Info Board 공부방 쏙쏙정보",
+    "viewport": "pc",
+    "target": {
+      "id": "info-room",
+      "path": "/#/library/room-info",
+      "label": "공부방 쏙쏙정보"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/room-info",
+      "hash": "#/library/room-info",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n공부방 쏙쏙정보\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요\n\n전체\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프"
+    },
+    "screenshot": "c3-ib-info-room-pc.png"
+  },
+  {
+    "test": "Info Board 과외쌤 따끈 팁가이드",
+    "viewport": "pc",
+    "target": {
+      "id": "info-tutor",
+      "path": "/#/library/tutor-tips",
+      "label": "과외쌤 따끈 팁가이드"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/tutor-tips",
+      "hash": "#/library/tutor-tips",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n과외쌤 따끈 팁가이드\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요\n\n전체\n수업 노하우\n상담·학생 매칭\n계약·정산·세무\n입시·교육 소식\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 "
+    },
+    "screenshot": "c3-ib-info-tutor-pc.png"
+  },
+  {
+    "test": "Info Board 학생 꿀팁 가이드",
+    "viewport": "pc",
+    "target": {
+      "id": "info-student",
+      "path": "/#/library/student-tips",
+      "label": "학생 꿀팁 가이드"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/student-tips",
+      "hash": "#/library/student-tips",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n학생 꿀팁 가이드\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n공부·시험·진로에 도움이 되는 꿀팁을 나눠요.\n\n공부방·과외쌤 글쓰기는 픽·프라임을 이용 중일 때 할 수 있어요\n\n전체\n공부 노하우\n시험·내신\n입시·진로\n습관·마음관리\n과외쌤·공부방 고르기\n선배 이야기\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한"
+    },
+    "screenshot": "c3-ib-info-student-pc.png"
+  },
+  {
+    "test": "Info Board 신뢰·증빙자료 제출",
+    "viewport": "pc",
+    "target": {
+      "id": "submission",
+      "path": "/#/submission",
+      "label": "신뢰·증빙자료 제출"
+    },
+    "state": {
+      "url": "https://study114.net/#/submission",
+      "hash": "#/submission",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 63,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n공부방 카달로그\n내가 찾는 공부방\n가까운 곳부터 비교하고, 등록은 가볍게 시작하세요\n과외쌤 카달로그\n나의 과외쌤은 어디에?\n과외지역·주력 과목으로 프로필을 분명하게\n우리동네 학생\n학생, 인재로 만들기\n가까운 곳부터 비교하고, 쪽지로 시작하세요\n공지\n더보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026.06.15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026.07.01\n우리 동네에 새로 왔어"
+    },
+    "screenshot": "c3-ib-submission-pc.png"
+  },
+  {
+    "summary": "Viewport pc network & errors",
+    "viewport": "pc",
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "blockedRequests": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/region-stats.php",
+        "postData": "{}"
+      }
+    ],
+    "consoleErrors": [
+      {
+        "url": "https://study114.net/#/mypage/registrations/students",
+        "text": "Failed to load resource: the server responded with a status of 403 ()"
+      },
+      {
+        "url": "https://study114.net/#/submission",
+        "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+      }
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      {
+        "url": "https://study114.net/api/support/tickets.php",
+        "status": 403
+      }
+    ]
+  },
+  {
+    "test": "Community Hub via Menu",
+    "viewport": "mobile",
+    "menuClicked": true,
+    "state": {
+      "url": "https://study114.net/#/community",
+      "hash": "#/community",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodyText": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n현장형 커뮤니티\n남기고 · 답하고 · 해결후기로 이어가기\n\n공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.\n\n게시판 둘러보기\n해결후기 보기\n게시판 4곳\n역할별 게시판으로 바로 들어가기\n\n공부방\n\n공부방 고민방\n\n운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.\n\n입장하기 →\n\n과외쌤\n\n과외쌤 고민방\n\n수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.\n\n입장하기 →\n\n학",
+      "navItems": [
+        {
+          "text": "홈",
+          "href": "#/tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤찾기",
+          "href": "https://study114.net/search/#/search/tutor?role=tutor",
+          "active": false
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤상세등록",
+          "href": "https://study114.net/register/tutor/#/register/basic",
+          "active": false
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "active": false
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        },
+        {
+          "text": "홈",
+          "href": "#/tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤찾기",
+          "href": "https://study114.net/search/#/search/tutor?role=tutor",
+          "active": false
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=tutor",
+          "active": false
+        },
+        {
+          "text": "과외쌤상세등록",
+          "href": "https://study114.net/register/tutor/#/register/basic",
+          "active": false
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "active": false
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        },
+        {
+          "text": "커뮤니티 홈",
+          "href": "#/community",
+          "active": false
+        },
+        {
+          "text": "공부방 고민방",
+          "href": "#/community/director",
+          "active": false
+        },
+        {
+          "text": "과외쌤 고민방",
+          "href": "#/community/tutor",
+          "active": false
+        },
+        {
+          "text": "학생/학부모 고민방",
+          "href": "#/community/parent",
+          "active": false
+        },
+        {
+          "text": "해결후기",
+          "href": "#/community/solved",
+          "active": false
+        },
+        {
+          "text": "약관",
+          "href": "#/support/policies/terms",
+          "active": false
+        },
+        {
+          "text": "개인정보",
+          "href": "#/support/policies/privacy",
+          "active": false
+        },
+        {
+          "text": "플랫폼 고지",
+          "href": "#/support/policies/platform",
+          "active": false
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "active": false
+        }
+      ]
+    },
+    "screenshot": "c3-01-community-hub-via-menu-mobile.png"
+  },
+  {
+    "test": "Direct 커뮤니티 허브",
+    "target": {
+      "id": "hub",
+      "path": "/#/community",
+      "label": "커뮤니티 허브"
+    },
+    "viewport": "mobile",
+    "state": {
+      "url": "https://study114.net/#/community",
+      "hash": "#/community",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n현장형 커뮤니티\n남기고 · 답하고 · 해결후기로 이어가기\n\n공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.\n\n게시판 둘러보기\n해결후기 보기\n게시판 4곳\n역할별 게시판으로 바로 들어가기\n\n공부방\n\n공부방 고민방\n\n운영·모집·공간 운영 질문을 남기고 이웃 원장과 나눠 보세요.\n\n입장하기 →\n\n과외쌤\n\n과외쌤 고민방\n\n수업 준비·학부모 응대·일정 조율 등 현장 팁을 묻고 답합니다.\n\n입장하기 →\n\n학"
+    },
+    "screenshot": "c3-direct-hub-mobile.png"
+  },
+  {
+    "test": "Direct 과외쌤 고민방",
+    "target": {
+      "id": "tutor",
+      "path": "/#/community/tutor",
+      "label": "과외쌤 고민방"
+    },
+    "viewport": "mobile",
+    "state": {
+      "url": "https://study114.net/#/community/tutor",
+      "hash": "#/community/tutor",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": {
+        "text": "글쓰기",
+        "href": "#/community/tutor/new"
+      },
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n과외쌤\n과외쌤 고민방\n\n프로필·첫 상담·수업 전환\n\n글쓰기\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-direct-tutor-mobile.png"
+  },
+  {
+    "test": "Direct 공부방 고민방",
+    "target": {
+      "id": "director",
+      "path": "/#/community/director",
+      "label": "공부방 고민방"
+    },
+    "viewport": "mobile",
+    "state": {
+      "url": "https://study114.net/#/community/director",
+      "hash": "#/community/director",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n공부방\n공부방 고민방\n\n공부방 운영·모집·학부모 응대\n\n공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 글은 읽을 수 있어요. 새 글·댓글·반응은 자기 역할 고민방에서만 남길 수 있어요.\n\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을"
+    },
+    "screenshot": "c3-direct-director-mobile.png"
+  },
+  {
+    "test": "Direct 학생/학부모 고민방",
+    "target": {
+      "id": "parent",
+      "path": "/#/community/parent",
+      "label": "학생/학부모 고민방"
+    },
+    "viewport": "mobile",
+    "state": {
+      "url": "https://study114.net/#/community/parent",
+      "hash": "#/community/parent",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": null,
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n학생·학부모\n학생/학부모 고민방\n\n공부방·과외 선택·루틴·안전\n\n공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다. 글은 읽을 수 있어요. 새 글·댓글·반응은 자기 역할 고민방에서만 남길 수 있어요.\n\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 올라온 글이 없습니다. 첫 글을 남겨 보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정"
+    },
+    "screenshot": "c3-direct-parent-mobile.png"
+  },
+  {
+    "test": "Direct 해결후기",
+    "target": {
+      "id": "solved",
+      "path": "/#/community/solved",
+      "label": "해결후기"
+    },
+    "viewport": "mobile",
+    "state": {
+      "url": "https://study114.net/#/community/solved",
+      "hash": "#/community/solved",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "postCount": 0,
+      "samplePosts": [],
+      "composeBtn": {
+        "text": "글쓰기",
+        "href": "#/community/solved/new"
+      },
+      "hasLoginBtn": false,
+      "guestBanner": [],
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n커뮤니티 메뉴\n커뮤니티 홈\n공부방 고민방\n과외쌤 고민방\n학생/학부모 고민방\n해결후기\n해결됨\n해결후기\n\n바꿔보니 효과 있었던 경험·운영 노하우\n\n글쓰기\n전체\n고민\n조언\n해결\n부탁\n최신\n공감·HOT\n댓글많은\n\n아직 해결후기가 없습니다. 문제와 결과를 짧게 남겨보세요.\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n약관\n개인정보\n플랫폼 고지\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+    },
+    "screenshot": "c3-direct-solved-mobile.png"
+  },
+  {
+    "test": "Info Board 자료실 허브",
+    "viewport": "mobile",
+    "target": {
+      "id": "library",
+      "path": "/#/library",
+      "label": "자료실 허브"
+    },
+    "state": {
+      "url": "https://study114.net/#/library",
+      "hash": "#/library",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-mobile.png"
+  },
+  {
+    "test": "Info Board 양식·체크리스트",
+    "viewport": "mobile",
+    "target": {
+      "id": "library-templates",
+      "path": "/#/library/templates",
+      "label": "양식·체크리스트"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/templates",
+      "hash": "#/library/templates",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-templates-mobile.png"
+  },
+  {
+    "test": "Info Board 가이드 PDF",
+    "viewport": "mobile",
+    "target": {
+      "id": "library-guides",
+      "path": "/#/library/guides",
+      "label": "가이드 PDF"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/guides",
+      "hash": "#/library/guides",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 3,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요.\n\n공부방 쏙쏙정보\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n들어가기\n과외쌤 따끈 팁가이드\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n수업 노하우\n상담·학생 매칭\n계약·정산·"
+    },
+    "screenshot": "c3-ib-library-guides-mobile.png"
+  },
+  {
+    "test": "Info Board 공부방 쏙쏙정보",
+    "viewport": "mobile",
+    "target": {
+      "id": "info-room",
+      "path": "/#/library/room-info",
+      "label": "공부방 쏙쏙정보"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/room-info",
+      "hash": "#/library/room-info",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n공부방 쏙쏙정보\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n공부방 운영에 바로 쓰는 정보를 나눠요.\n\n글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요\n\n전체\n운영 노하우\n학생 모집·홍보\n시설·행정·세무\n입시·교육 소식\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 행동\n프"
+    },
+    "screenshot": "c3-ib-info-room-mobile.png"
+  },
+  {
+    "test": "Info Board 과외쌤 따끈 팁가이드",
+    "viewport": "mobile",
+    "target": {
+      "id": "info-tutor",
+      "path": "/#/library/tutor-tips",
+      "label": "과외쌤 따끈 팁가이드"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/tutor-tips",
+      "hash": "#/library/tutor-tips",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n과외쌤 따끈 팁가이드\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n과외 수업·상담에 바로 쓰는 팁을 나눠요.\n\n글쓰기는 픽·프라임을 이용 중인 공부방·과외쌤이 할 수 있어요\n\n전체\n수업 노하우\n상담·학생 매칭\n계약·정산·세무\n입시·교육 소식\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한 안내\n이번 시즌 추천 "
+    },
+    "screenshot": "c3-ib-info-tutor-mobile.png"
+  },
+  {
+    "test": "Info Board 학생 꿀팁 가이드",
+    "viewport": "mobile",
+    "target": {
+      "id": "info-student",
+      "path": "/#/library/student-tips",
+      "label": "학생 꿀팁 가이드"
+    },
+    "state": {
+      "url": "https://study114.net/#/library/student-tips",
+      "hash": "#/library/student-tips",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 0,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n자료실\n학생 꿀팁 가이드\n자료실 입구\n정보 게시판\n공부방 쏙쏙정보\n과외쌤 따끈 팁가이드\n학생 꿀팁 가이드\n← 고객센터\n\n공부·시험·진로에 도움이 되는 꿀팁을 나눠요.\n\n공부방·과외쌤 글쓰기는 픽·프라임을 이용 중일 때 할 수 있어요\n\n전체\n공부 노하우\n시험·내신\n입시·진로\n습관·마음관리\n과외쌤·공부방 고르기\n선배 이야기\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n← 메인 홈으로\n지금 필요한"
+    },
+    "screenshot": "c3-ib-info-student-mobile.png"
+  },
+  {
+    "test": "Info Board 신뢰·증빙자료 제출",
+    "viewport": "mobile",
+    "target": {
+      "id": "submission",
+      "path": "/#/submission",
+      "label": "신뢰·증빙자료 제출"
+    },
+    "state": {
+      "url": "https://study114.net/#/submission",
+      "hash": "#/submission",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "itemCount": 63,
+      "hasComposeBtn": true,
+      "composeBtnText": "과외쌤상세등록",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n공부방 카달로그\n내가 찾는 공부방\n가까운 곳부터 비교하고, 등록은 가볍게 시작하세요\n과외쌤 카달로그\n나의 과외쌤은 어디에?\n과외지역·주력 과목으로 프로필을 분명하게\n우리동네 학생\n학생, 인재로 만들기\n가까운 곳부터 비교하고, 쪽지로 시작하세요\n공지\n더보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026.06.15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026.07.01\n우리 동네에 새로 왔어"
+    },
+    "screenshot": "c3-ib-submission-mobile.png"
+  },
+  {
+    "summary": "Viewport mobile network & errors",
+    "viewport": "mobile",
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "blockedRequests": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/region-stats.php",
+        "postData": "{}"
+      }
+    ],
+    "consoleErrors": [
+      {
+        "url": "https://study114.net/#/mypage/registrations/students",
+        "text": "Failed to load resource: the server responded with a status of 403 ()"
+      },
+      {
+        "url": "https://study114.net/#/submission",
+        "text": "Failed to load resource: net::ERR_BLOCKED_BY_CLIENT.Inspector"
+      }
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      {
+        "url": "https://study114.net/api/support/tickets.php",
+        "status": 403
+      }
+    ]
+  }
+]

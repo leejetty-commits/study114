@@ -1,0 +1,497 @@
+{
+  "pc": {
+    "consoleErrors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://study114.net/api/support/tickets.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      {
+        "status": 403,
+        "statusText": "",
+        "url": "https://study114.net/api/support/tickets.php",
+        "method": "GET",
+        "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap CSS -->\r\n    <link href=\"/errorpage/static/css/bootstrap.min.css\" rel=\"stylesheet\">\r\n    <link href=\"/errorpage/static/css/httperror.css\" rel=\"stylesheet\">\r\n</head>\r\n<body>\r\n    <!-- Navbar with only a brand logo -->\r\n    <nav class=\"navbar navbar-expand-lg\">\r\n        <a class=\"navbar-brand\" href=\"ht"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      }
+    ],
+    "blockedMutations": [],
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/region-stats.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "urlAfterLoad": "https://study114.net/#/tutor",
+    "anomalies": [],
+    "gnbItems": [
+      {
+        "text": "홈",
+        "href": "#/tutor",
+        "visible": true
+      },
+      {
+        "text": "과외쌤찾기",
+        "href": "https://study114.net/search/#/search/tutor?role=tutor",
+        "visible": true
+      },
+      {
+        "text": "학생찾기",
+        "href": "https://study114.net/search/#/search/student?role=tutor",
+        "visible": true
+      },
+      {
+        "text": "과외쌤상세등록",
+        "href": "https://study114.net/register/tutor/#/register/basic",
+        "visible": true
+      },
+      {
+        "text": "유료상품",
+        "href": "#/plans",
+        "visible": true
+      },
+      {
+        "text": "커뮤니티",
+        "href": "#/community",
+        "visible": true
+      },
+      {
+        "text": "고객센터",
+        "href": "#/support",
+        "visible": true
+      },
+      {
+        "text": "홈",
+        "href": "#/tutor",
+        "visible": false
+      },
+      {
+        "text": "과외쌤찾기",
+        "href": "https://study114.net/search/#/search/tutor?role=tutor",
+        "visible": false
+      },
+      {
+        "text": "학생찾기",
+        "href": "https://study114.net/search/#/search/student?role=tutor",
+        "visible": false
+      },
+      {
+        "text": "과외쌤상세등록",
+        "href": "https://study114.net/register/tutor/#/register/basic",
+        "visible": false
+      },
+      {
+        "text": "유료상품",
+        "href": "#/plans",
+        "visible": false
+      },
+      {
+        "text": "커뮤니티",
+        "href": "#/community",
+        "visible": false
+      },
+      {
+        "text": "고객센터",
+        "href": "#/support",
+        "visible": false
+      },
+      {
+        "text": "공부방 카달로그\n        내가 찾는 공부방\n        가까운 곳부터 비교하고, 등록은 가볍게 시작하세요",
+        "href": "#/promo/study-room",
+        "visible": true
+      },
+      {
+        "text": "과외쌤 카달로그\n        나의 과외쌤은 어디에?\n        과외지역·주력 과목으로 프로필을 분명하게",
+        "href": "#/promo/tutor",
+        "visible": true
+      },
+      {
+        "text": "우리동네 학생\n        학생, 인재로 만들기\n        가까운 곳부터 비교하고, 쪽지로 시작하세요",
+        "href": "#/promo/parent",
+        "visible": true
+      },
+      {
+        "text": "약관",
+        "href": "#/support/policies/terms",
+        "visible": true
+      },
+      {
+        "text": "개인정보",
+        "href": "#/support/policies/privacy",
+        "visible": true
+      },
+      {
+        "text": "플랫폼 고지",
+        "href": "#/support/policies/platform",
+        "visible": true
+      },
+      {
+        "text": "고객센터",
+        "href": "#/support",
+        "visible": true
+      }
+    ],
+    "utilItems": []
+  },
+  "mobile": {
+    "consoleErrors": [
+      {
+        "text": "Failed to load resource: the server responded with a status of 403 ()",
+        "location": {
+          "url": "https://study114.net/api/support/tickets.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      },
+      {
+        "text": "Failed to load resource: the server responded with a status of 422 ()",
+        "location": {
+          "url": "https://study114.net/api/search/search.php",
+          "line": 0,
+          "column": 0,
+          "lineNumber": 0,
+          "columnNumber": 0
+        }
+      }
+    ],
+    "pageErrors": [],
+    "failedRequests": [
+      {
+        "status": 403,
+        "statusText": "",
+        "url": "https://study114.net/api/support/tickets.php",
+        "method": "GET",
+        "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap CSS -->\r\n    <link href=\"/errorpage/static/css/bootstrap.min.css\" rel=\"stylesheet\">\r\n    <link href=\"/errorpage/static/css/httperror.css\" rel=\"stylesheet\">\r\n</head>\r\n<body>\r\n    <!-- Navbar with only a brand logo -->\r\n    <nav class=\"navbar navbar-expand-lg\">\r\n        <a class=\"navbar-brand\" href=\"ht"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      },
+      {
+        "status": 422,
+        "statusText": "",
+        "url": "https://study114.net/api/search/search.php",
+        "method": "POST",
+        "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, but was unable to process the\ncontained instructions.</p>\n</body></html>\n"
+      }
+    ],
+    "blockedMutations": [],
+    "allowedPosts": [
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/region-stats.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      },
+      {
+        "method": "POST",
+        "url": "https://study114.net/api/search/search.php"
+      }
+    ],
+    "urlAfterLoad": "https://study114.net/#/tutor",
+    "anomalies": []
+  }
+}

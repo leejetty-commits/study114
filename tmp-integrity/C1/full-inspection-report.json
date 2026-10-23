@@ -1,0 +1,1269 @@
+{
+  "tutorModalInfo": {
+    "title": "최고수학샘2",
+    "text": "과외쌤 상세\n\n최고수학샘2\n×\n경기도 양주시\n물리 · 한국외국어대학교\n학생자택방문 · 공공장소\n쪽지 가능\n월 480천원~ · 주2회 · 90분\nHot\n졸업\n경력 7~10년\n증빙\n\n플랫폼 보증 아님\n\n👍\n없음\n💬\n없음\n♡\n없음\n⇄\n없음\n✉\n없음\n핵심 조건\n과목\n물리 · 한국외국어대학교\n과외지역\n경기도 양주시\n수업장소\n학생자택방문 · 공공장소\n대상\n혼성 · 단독\n수업료\n월 480천원~ · 주2회 · 90분\n일정\n주 2회 · 90분\n강의스타일\n꼼꼼 · 개념중심\n특징\n내신 1등급 다수\n학력\n한국외국어대학교 수학과 졸업\n경력\n7~10년\n후기\n\n실제 이용자들이 남긴 이야기\n\n아직 등록된 후기가 없습니다.\n\n외부 홍보 링크\n유튜브 보기\n인스타그램\n접촉 가능성\n✓ 쪽지 시작 가능\n사용 팁\n지금 필요한 안내\n첫 연락 전 체크\n노출 정보·가격·위치를 다시 확인하고, 첫 연락은 쪽지로 시작하세요\n쪽지 이용 알아보기\n안전이용\n개인정보·선입금 전 확인할 내용을 안내해요\n안전이용 보기\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n\n제출자료는 등록자가 공개한 참고 정보입니다. 우동공과는 해당 서류를 인증하거나 보증하지 않으며, 중요한 서류는 필요한 경우 발급기관 기준으로 직접 다시 확인해 주세요.\n\n닫기",
+    "buttons": [
+      "×",
+      "👍없음",
+      "💬없음",
+      "♡없음",
+      "⇄없음",
+      "✉없음",
+      "",
+      "유튜브 보기",
+      "인스타그램",
+      "첫 연락 전 체크\n      노출 정보·가격·위치를 다시 확인하고, 첫 연락은 쪽지로 시작하세요\n      쪽지 이용 알아보기",
+      "안전이용\n      개인정보·선입금 전 확인할 내용을 안내해요\n      안전이용 보기",
+      "더보기",
+      "더보기",
+      "더보기",
+      "닫기"
+    ]
+  },
+  "studyRooms": {
+    "6": {
+      "pc": {
+        "url": "https://study114.net/#/myshop/study-room/6",
+        "shopFound": true,
+        "shopSectionsAttr": "hero,facts,signature,gallery,classes,career,trust,facilities,livingArea,social,reviews,inquiry",
+        "sections": [
+          {
+            "tag": "HEADER",
+            "id": "",
+            "className": "shop-hero",
+            "dataset": {
+              "shopSection": "hero"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-bento",
+            "dataset": {
+              "shopSection": "facts"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--signature",
+            "dataset": {
+              "shopSection": "signature"
+            },
+            "title": "이 공부방의 매력"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--classes",
+            "dataset": {
+              "shopSection": "classes"
+            },
+            "title": "수업 안내"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--livingArea",
+            "dataset": {
+              "shopSection": "livingArea"
+            },
+            "title": "위치 · 생활권"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--reviews",
+            "dataset": {
+              "shopSection": "reviews"
+            },
+            "title": "후기"
+          },
+          {
+            "tag": "FOOTER",
+            "id": "",
+            "className": "shop-inquiry",
+            "dataset": {
+              "shopSection": "inquiry"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--best",
+            "dataset": {
+              "railBest": "",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-tutor",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-director",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-parent",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--field",
+            "dataset": {
+              "railHot": "",
+              "railState": "empty"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--action",
+            "dataset": {}
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-room",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-tutor",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-student",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          }
+        ],
+        "bodyText": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n← 이전 목록으로 돌아가기\n\n동네의 작은 공부방\n\n우동공과 민락점\n\n매일 성장하는 작은 공부방\n\n대치동 인근 소규모 맞춤 공부방\n\n의정부시 · 민락동 · 한라비발디아파트 생활권 · 해운대구 · 센텀동 · 센텀자이 · 의정부시 · 신곡동 · 건영아파트\n\n중등 고등 N수\n지구과학\n공부방\n과목\n지구과학\n대상\n중등 고등 N수\n교습형태\n공부방\n원생수\n1~4명\n가격대\n월 350천원대\n수업형태\n타임별 무학년 수업\n주당 회수\n주 1회\n이 공부방의 매력\n꼼꼼\n인내형\n\n학생 개별 수준에 맞춘 관리형 공부방입니다. 자기주도와 피드백을 병행합니다.\n\n수업 안내\n초등\n\n초등 · 전과목 · 주 1회 · 월 350천원\n\n학년\n3학년\n출석\n월·수·금\n수업료\n주3회\n위치 · 생활권\n\n의정부시 · 민락동 · 한라비발디아파트 생활권\n\n해운대구 · 센텀동 · 센텀자이\n의정부시 · 신곡동 · 건영아파트\n후기\n\n아직 등록된 후기가 없어요\n\n문의 안내\n현재는 잠시 쉬는 중입니다\n이달의 베스트\n\n이달의 베스트, 아직 글이 미도착중...\n\n과외쌤 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n공부방 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n학생/학부모 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n오늘의 현장\n지금 고민 HOT\n\n아직 뜨거운 글이 도착하지 않았어요\n\n과외쌤 고민방 더 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n학생 접근 흐름\n요청문·쪽지 전 확인\n과외쌤 고민방\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+      },
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    },
+    "7": {
+      "pc": {
+        "url": "https://study114.net/#/myshop/study-room/7",
+        "shopFound": true,
+        "shopSectionsAttr": "hero,facts,signature,gallery,classes,career,trust,facilities,livingArea,social,reviews,inquiry",
+        "sections": [
+          {
+            "tag": "HEADER",
+            "id": "",
+            "className": "shop-hero",
+            "dataset": {
+              "shopSection": "hero"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-bento",
+            "dataset": {
+              "shopSection": "facts"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--signature",
+            "dataset": {
+              "shopSection": "signature"
+            },
+            "title": "이 공부방의 매력"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--classes",
+            "dataset": {
+              "shopSection": "classes"
+            },
+            "title": "수업 안내"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--career",
+            "dataset": {
+              "shopSection": "career"
+            },
+            "title": "원장 소개 · 경력"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--livingArea",
+            "dataset": {
+              "shopSection": "livingArea"
+            },
+            "title": "위치 · 생활권"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--reviews",
+            "dataset": {
+              "shopSection": "reviews"
+            },
+            "title": "후기"
+          },
+          {
+            "tag": "FOOTER",
+            "id": "",
+            "className": "shop-inquiry",
+            "dataset": {
+              "shopSection": "inquiry"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--best",
+            "dataset": {
+              "railBest": "",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-tutor",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-director",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-parent",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--field",
+            "dataset": {
+              "railHot": "",
+              "railState": "empty"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--action",
+            "dataset": {}
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-room",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-tutor",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-student",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          }
+        ],
+        "bodyText": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n← 이전 목록으로 돌아가기\n\n동네의 작은 공부방\n\n가능동베스트\n\n매일 성장하는 작은 공부방\n\n자상하게 수업합니다.\n\n의정부시 · 신곡동 · 신곡건영아파트 생활권 · 의정부시 · 가능동\n\n초등 중등\n국영수사과\n공부방\n과목\n국영수사과\n대상\n초등 중등\n교습형태\n공부방\n원생수\n1~4명\n가격대\n월 350천원대\n수업형태\n그룹별 타임수업\n1일 수업\n60분\n주당 회수\n주 4회\n이 공부방의 매력\n꼼꼼\n친절하게 수업\n\n친절하게 수업\n\n조용합니다.\n\n수업 안내\n국영수사과\n\n중등 · 국영수사과\n\n원장 소개 · 경력\n개념+심화 병행\n위치 · 생활권\n\n의정부시 · 신곡동 · 신곡건영아파트 생활권\n\n의정부시 · 가능동\n후기\n\n아직 등록된 후기가 없어요\n\n문의 안내\n현재는 잠시 쉬는 중입니다\n이달의 베스트\n\n이달의 베스트, 아직 글이 미도착중...\n\n과외쌤 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n공부방 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n학생/학부모 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n오늘의 현장\n지금 고민 HOT\n\n아직 뜨거운 글이 도착하지 않았어요\n\n과외쌤 고민방 더 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n학생 접근 흐름\n요청문·쪽지 전 확인\n과외쌤 고민방\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+      },
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    },
+    "8": {
+      "pc": {
+        "url": "https://study114.net/#/myshop/study-room/8",
+        "shopFound": true,
+        "shopSectionsAttr": "hero,facts,signature,gallery,classes,career,trust,facilities,livingArea,social,reviews,inquiry",
+        "sections": [
+          {
+            "tag": "HEADER",
+            "id": "",
+            "className": "shop-hero",
+            "dataset": {
+              "shopSection": "hero"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-bento",
+            "dataset": {
+              "shopSection": "facts"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--classes",
+            "dataset": {
+              "shopSection": "classes"
+            },
+            "title": "수업 안내"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--livingArea",
+            "dataset": {
+              "shopSection": "livingArea"
+            },
+            "title": "위치 · 생활권"
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "shop-sec shop-sec--reviews",
+            "dataset": {
+              "shopSection": "reviews"
+            },
+            "title": "후기"
+          },
+          {
+            "tag": "FOOTER",
+            "id": "",
+            "className": "shop-inquiry",
+            "dataset": {
+              "shopSection": "inquiry"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--best",
+            "dataset": {
+              "railBest": "",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-tutor",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-director",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--room",
+            "dataset": {
+              "railRoom": "concern-parent",
+              "railState": "empty",
+              "concernRailNav": "tutor",
+              "concernRailGuest": "intro_only",
+              "concernRailHome": "https://study114.net",
+              "concernRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--field",
+            "dataset": {
+              "railHot": "",
+              "railState": "empty"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--action",
+            "dataset": {}
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-room",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-tutor",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          },
+          {
+            "tag": "SECTION",
+            "id": "",
+            "className": "live-rail-slot live-rail-slot--info",
+            "dataset": {
+              "railInfo": "info-student",
+              "railState": "empty",
+              "infoRailNav": "tutor",
+              "infoRailHome": "https://study114.net",
+              "infoRailLeave": "hash"
+            }
+          }
+        ],
+        "bodyText": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n← 이전 목록으로 돌아가기\n\n동네의 작은 공부방\n\n가능동베스트2\n\n매일 성장하는 작은 공부방2\n\n의정부시 · 가능동 생활권\n\n중등\n일본어\n공부방\n과목\n일본어\n대상\n중등\n교습형태\n공부방\n수업형태\n그룹별 타임수업\n수업 안내\n일본어\n\n중등 · 일본어\n\n위치 · 생활권\n\n의정부시 · 가능동 생활권\n\n후기\n\n아직 등록된 후기가 없어요\n\n문의 안내\n현재 쪽지 가능\n이달의 베스트\n\n이달의 베스트, 아직 글이 미도착중...\n\n과외쌤 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n공부방 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n학생/학부모 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n오늘의 현장\n지금 고민 HOT\n\n아직 뜨거운 글이 도착하지 않았어요\n\n과외쌤 고민방 더 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n학생 접근 흐름\n요청문·쪽지 전 확인\n과외쌤 고민방\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위"
+      },
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    }
+  },
+  "invalidUrls": {
+    "invalid-room-999999": {
+      "requestedUrl": "https://study114.net/#/myshop/study-room/999999",
+      "finalUrl": "https://study114.net/#/myshop/study-room/999999",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n← 이전 목록으로 돌아가기\n\n소개를 불러오는 중…\n\n이달의 베스트\n\n이달의 베스트, 아직 글이 미도착중...\n\n과외쌤 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n공부방 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n학생/학부모 고민방\n\n아직 글이 미도착중... 첫 이야기를 기다려요\n\n더보기\n오늘의 현장\n지금 고민 HOT\n\n아직 뜨거운 글이 도착하지 않았어요\n\n과외쌤 고민방 더 보기\n지금 필요한 안내\n이번 시즌 추천 행동\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n학생 접근 흐름\n요청문·쪽지 전 확인\n과외쌤 고민방\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착",
+      "anomalies": [],
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 404 ()",
+            "location": {
+              "url": "https://study114.net/api/study-room/public.php?id=999999",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 404 ()",
+            "location": {
+              "url": "https://study114.net/api/study-room/public.php?id=999999",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          },
+          {
+            "status": 404,
+            "url": "https://study114.net/api/study-room/public.php?id=999999",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>페이지를 표시할 수 없습니다.</title>\r\n    <!-- Bootstr"
+          },
+          {
+            "status": 404,
+            "url": "https://study114.net/api/study-room/public.php?id=999999",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>페이지를 표시할 수 없습니다.</title>\r\n    <!-- Bootstr"
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    },
+    "invalid-tutor-reg-999999": {
+      "requestedUrl": "https://study114.net/#/mypage/registrations/tutors/999999",
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력",
+      "anomalies": [],
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    },
+    "invalid-tutor-999999": {
+      "requestedUrl": "https://study114.net/#/tutor/999999",
+      "finalUrl": "https://study114.net/#/tutor",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n공부방 카달로그\n내가 찾는 공부방\n가까운 곳부터 비교하고, 등록은 가볍게 시작하세요\n과외쌤 카달로그\n나의 과외쌤은 어디에?\n과외지역·주력 과목으로 프로필을 분명하게\n우리동네 학생\n학생, 인재로 만들기\n가까운 곳부터 비교하고, 쪽지로 시작하세요\n공지\n더보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026.06.15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026.07.01\n우리 동네에 새로 왔어요\n더보기\n\n우리 동네에 아직 인사가 도착하지 않았어요. 올려 주시면 이웃들이 반가워할 거예요\n\n우리동네 과외쌤\n우리동네 학생\n최고수학샘\n과외쌤 박스\n쪽지 후기함\n마이페이지\n과외지역\n서울특별시\n대표\n미선택\n미선택\n\n과외지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.\n\n과목\n수학\n상태\n쪽지 안받음 · 0개 미확인\n\n쪽지설정을 수정하려면 마이",
+      "anomalies": [],
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/region-stats.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    },
+    "invalid-route-xyz": {
+      "requestedUrl": "https://study114.net/#/some-nonexistent-route-xyz",
+      "finalUrl": "https://study114.net/#/tutor",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "bodySnippet": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n공부방 카달로그\n내가 찾는 공부방\n가까운 곳부터 비교하고, 등록은 가볍게 시작하세요\n과외쌤 카달로그\n나의 과외쌤은 어디에?\n과외지역·주력 과목으로 프로필을 분명하게\n우리동네 학생\n학생, 인재로 만들기\n가까운 곳부터 비교하고, 쪽지로 시작하세요\n공지\n더보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026.06.15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026.07.01\n우리 동네에 새로 왔어요\n더보기\n\n우리 동네에 아직 인사가 도착하지 않았어요. 올려 주시면 이웃들이 반가워할 거예요\n\n우리동네 과외쌤\n우리동네 학생\n최고수학샘\n과외쌤 박스\n쪽지 후기함\n마이페이지\n과외지역\n서울특별시\n대표\n미선택\n미선택\n\n과외지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.\n\n과목\n수학\n상태\n쪽지 안받음 · 0개 미확인\n\n쪽지설정을 수정하려면 마이",
+      "anomalies": [],
+      "logs": {
+        "consoleErrors": [
+          {
+            "text": "Failed to load resource: the server responded with a status of 403 ()",
+            "location": {
+              "url": "https://study114.net/api/support/tickets.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          },
+          {
+            "text": "Failed to load resource: the server responded with a status of 422 ()",
+            "location": {
+              "url": "https://study114.net/api/search/search.php",
+              "line": 0,
+              "column": 0,
+              "lineNumber": 0,
+              "columnNumber": 0
+            }
+          }
+        ],
+        "pageErrors": [],
+        "failedRequests": [
+          {
+            "status": 403,
+            "url": "https://study114.net/api/support/tickets.php",
+            "method": "GET",
+            "body": "<!DOCTYPE html>\r\n<html lang=\"ko\">\r\n<head>\r\n    <meta charset=\"UTF-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\r\n    <title>접근이 거부되었습니다.</title>\r\n    <!-- Bootstrap C"
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          },
+          {
+            "status": 422,
+            "url": "https://study114.net/api/search/search.php",
+            "method": "POST",
+            "body": "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>422 Unknown Reason</title>\n</head><body>\n<h1>Unknown Reason</h1>\n<p>The server understands the media type of the\nrequest entity, "
+          }
+        ],
+        "blockedMutations": [],
+        "allowedPosts": [
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/region-stats.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          },
+          {
+            "method": "POST",
+            "url": "https://study114.net/api/search/search.php"
+          }
+        ]
+      }
+    }
+  },
+  "ownTutor": {
+    "url": "https://study114.net/#/mypage/registrations/tutors/9",
+    "text": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수정\n표시명\n최고수학샘\n주력과목\n수학\n과외지역\n서울특별시\n수업 · 가격\n수정\n월 과외비\n미입력\n산정방식\n미입력\n주 회수\n미입력\n월 총 횟수\n미입력\n1회 수업시간\n미입력\n지도 대상 성별\n미입력\n수업인원\n미입력\n강의장소\n미입력\n가격 설명\n미입력\n학력 · 자격\n수정\n대학/대학원\n미입력\n전공\n미입력\n학적상태\n미입력\n소개 · 연락\n수정\n짧은 소개\n미입력\n상세 소개\n미입력\n특징 1\n미입력\n특징 2\n미입력\n특징 3\n미입력\n연락 가능 시간\n미입력\n추가 정보\n수정\n학생 대상\n중등\n강의스타일\n미입력\n경력\n미입력\n학력 제출자료\n미입력\n학력 공개 선택\n비공개\n경력 제출자료\n미입력\n작성 도움\n지금 필요한 안내\n프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법\n공부방 쏙쏙정보\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n과외쌤 따끈 팁가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n학생 꿀팁 가이드\n\n아직 글이 도착하지 않았어요. 첫 정보를 기다려요\n\n더보기\n약관\n·\n개인정보\n·\n플랫폼 고지\n·\n고객센터\n\n우동공과는 회원 간 정보 탐색과 접촉을 돕는 플랫폼이며, 수업 계약이나 과외비 지급을 직접 중개하지 않습니다.\n\n© 2026 우동공과 · study114\n\n↑\n맨위",
+    "anomalies": []
+  }
+}

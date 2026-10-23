@@ -1,0 +1,20 @@
+{
+  "report": {
+    "steps": [
+      {
+        "step": "create_ticket",
+        "status": 200,
+        "ticketId": "TKT-20261008-002",
+        "responseSnippet": "{\"ok\":true,\"ticket\":{\"id\":\"TKT-20261008-002\",\"email\":\"leejetty+tutor@gmail.com\",\"category\":\"bug\",\"type\":\"bug\",\"body\":\"[테스트] 과외샤 무결성 점검 문의_1791452105327\\n과외샤 로그인 상태에서 고객센터 1:1 문의 작성 테스트입니다.\",\"message\":\"[테스트] 과외샤 무결성 점검 문의_1791452105327\\n과외샤 로그인 상태에서 고객센터 1:1 문의 작성 테스트입니다.\",\"role\":\"tutor\",\"status\":\"open\",\"createdAt\":\"2026-10-08T09:35:05+00:00\",\"updatedAt\":\"2026-10-08T09:35:05+00:00\"}}"
+      },
+      {
+        "step": "verify_history",
+        "visibleInHistory": true,
+        "historyItemText": "[테스트] 과외샤 무결성 점검 문의_1791452105327 과외샤 로그인 상태에서 고…",
+        "statusLabel": "접수 (아직 운영자 답변 없음)",
+        "hasDeleteFunction": false,
+        "ticketId": "TKT-20261008-002"
+      }
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "test_item": "10. 버튼 반응 전수",
+  "sidebar": [
+    {
+      "label": "내 등록",
+      "href": "#/mypage/registrations/tutors/9",
+      "currentUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "success": true
+    },
+    {
+      "label": "쪽지·후기함",
+      "href": "#/mypage/messages",
+      "currentUrl": "https://study114.net/#/mypage/messages",
+      "success": true
+    },
+    {
+      "label": "최근열람",
+      "href": "#/mypage/recent",
+      "currentUrl": "https://study114.net/#/mypage/recent",
+      "success": true
+    },
+    {
+      "label": "관심 학생",
+      "href": "#/mypage/student-review",
+      "currentUrl": "https://study114.net/#/mypage/student-review",
+      "success": true
+    },
+    {
+      "label": "찜한 공부방·과외쌤",
+      "href": "#/mypage/wishlist",
+      "currentUrl": "https://study114.net/#/mypage/wishlist",
+      "success": true
+    },
+    {
+      "label": "내 문의 내역",
+      "href": "#/mypage/contact",
+      "currentUrl": "https://study114.net/#/mypage/contact",
+      "success": true
+    },
+    {
+      "label": "구매이력",
+      "href": "#/mypage/plans",
+      "currentUrl": "https://study114.net/#/mypage/plans",
+      "success": false
+    },
+    {
+      "label": "계정설정",
+      "href": "#/mypage/account",
+      "currentUrl": "https://study114.net/#/mypage/account",
+      "success": true
+    }
+  ],
+  "rightRail": [
+    {
+      "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+      "action": null,
+      "modalOpened": false
+    }
+  ],
+  "plansScreen": {
+    "tabs": [],
+    "purchaseButtons": [],
+    "mypagePlansButtons": []
+  },
+  "tabsAndControls": [
+    {
+      "button": "더보기",
+      "urlAfterClick": "https://study114.net/#/support/notice"
+    }
+  ],
+  "findings": [
+    {
+      "area": "Sidebar",
+      "button": "구매이력",
+      "symptom": "예상 경로(/mypage/plans/history)와 다른 경로(https://study114.net/#/mypage/plans)로 이동 또는 무반응"
+    }
+  ],
+  "result": "정상"
+}

@@ -1,0 +1,527 @@
+{
+  "pc": [
+    {
+      "name": "tutor_hub",
+      "path": "#/mypage/registrations/tutors/9",
+      "h1Style": {
+        "text": "최고수학샘",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 등록",
+      "sideActiveText": "✎\n내 등록",
+      "subTabs": [
+        {
+          "text": "마이프로필",
+          "active": true
+        },
+        {
+          "text": "기본정보",
+          "active": false
+        },
+        {
+          "text": "상세정보",
+          "active": false
+        },
+        {
+          "text": "쪽지설정",
+          "active": false
+        },
+        {
+          "text": "등록점검",
+          "active": false
+        }
+      ],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "tutor_basic",
+      "path": "#/mypage/registrations/tutors/9/basic",
+      "h1Style": {
+        "text": "최고수학샘",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 등록",
+      "sideActiveText": "✎\n내 등록",
+      "subTabs": [
+        {
+          "text": "마이프로필",
+          "active": false
+        },
+        {
+          "text": "기본정보",
+          "active": true
+        },
+        {
+          "text": "상세정보",
+          "active": false
+        },
+        {
+          "text": "쪽지설정",
+          "active": false
+        },
+        {
+          "text": "등록점검",
+          "active": false
+        }
+      ],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "tutor_detail",
+      "path": "#/mypage/registrations/tutors/9/detail",
+      "h1Style": {
+        "text": "최고수학샘",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 등록",
+      "sideActiveText": "✎\n내 등록",
+      "subTabs": [
+        {
+          "text": "마이프로필",
+          "active": false
+        },
+        {
+          "text": "기본정보",
+          "active": false
+        },
+        {
+          "text": "상세정보",
+          "active": true
+        },
+        {
+          "text": "쪽지설정",
+          "active": false
+        },
+        {
+          "text": "등록점검",
+          "active": false
+        }
+      ],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "tutor_inquiries",
+      "path": "#/mypage/registrations/tutors/9/inquiries",
+      "h1Style": {
+        "text": "최고수학샘",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 등록",
+      "sideActiveText": "✎\n내 등록",
+      "subTabs": [
+        {
+          "text": "마이프로필",
+          "active": false
+        },
+        {
+          "text": "기본정보",
+          "active": false
+        },
+        {
+          "text": "상세정보",
+          "active": false
+        },
+        {
+          "text": "쪽지설정",
+          "active": true
+        },
+        {
+          "text": "등록점검",
+          "active": false
+        }
+      ],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "tutor_publish",
+      "path": "#/mypage/registrations/tutors/9/publish",
+      "h1Style": {
+        "text": "최고수학샘",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 등록",
+      "sideActiveText": "✎\n내 등록",
+      "subTabs": [
+        {
+          "text": "마이프로필",
+          "active": false
+        },
+        {
+          "text": "기본정보",
+          "active": false
+        },
+        {
+          "text": "상세정보",
+          "active": false
+        },
+        {
+          "text": "쪽지설정",
+          "active": false
+        },
+        {
+          "text": "등록점검",
+          "active": true
+        }
+      ],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "messages",
+      "path": "#/mypage/messages",
+      "h1Style": {
+        "text": "쪽지·후기함",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n쪽지·후기함",
+      "sideActiveText": "✉\n쪽지·후기함",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "recent",
+      "path": "#/mypage/recent",
+      "h1Style": {
+        "text": "최근열람",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n최근열람",
+      "sideActiveText": "◷\n최근열람",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "student_review",
+      "path": "#/mypage/student-review",
+      "h1Style": {
+        "text": "관심 학생",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n관심 학생",
+      "sideActiveText": "☆\n관심 학생",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "wishlist",
+      "path": "#/mypage/wishlist",
+      "h1Style": {
+        "text": "찜한 공부방·과외쌤",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n찜한 공부방·과외쌤",
+      "sideActiveText": "♡\n찜한 공부방·과외쌤",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "contact",
+      "path": "#/mypage/contact",
+      "h1Style": {
+        "text": "내 문의 내역",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n내 문의 내역",
+      "sideActiveText": "▤\n내 문의 내역",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "plans",
+      "path": "#/mypage/plans",
+      "h1Style": {
+        "text": "구매이력",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n구매이력",
+      "sideActiveText": "◌\n구매이력",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "plans_my",
+      "path": "#/mypage/plans/my",
+      "h1Style": {
+        "text": "구매이력",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n구매이력",
+      "sideActiveText": "◌\n구매이력",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "plans_history",
+      "path": "#/mypage/plans/history",
+      "h1Style": {
+        "text": "구매내역",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n구매이력",
+      "sideActiveText": "◌\n구매이력",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "submission_docs",
+      "path": "#/mypage/submission-docs",
+      "h1Style": {
+        "text": "제출자료 상태",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n제출자료 상태",
+      "sideActiveText": null,
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "submission_board",
+      "path": "#/mypage/submission-board",
+      "h1Style": {
+        "text": "제출함",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n제출함",
+      "sideActiveText": null,
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    },
+    {
+      "name": "account",
+      "path": "#/mypage/account",
+      "h1Style": {
+        "text": "계정설정",
+        "fontSize": "28px",
+        "fontWeight": "700",
+        "textAlign": "start",
+        "color": "rgb(28, 25, 23)",
+        "margin": "0px",
+        "padding": "0px"
+      },
+      "breadcrumbText": "마이페이지\n-\n계정설정",
+      "sideActiveText": "⚙\n계정설정",
+      "subTabs": [],
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0
+    }
+  ],
+  "mobile": [
+    {
+      "name": "tutor_hub",
+      "path": "#/mypage/registrations/tutors/9",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최고수학샘",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "tutor_basic",
+      "path": "#/mypage/registrations/tutors/9/basic",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최고수학샘",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "tutor_detail",
+      "path": "#/mypage/registrations/tutors/9/detail",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최고수학샘",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "tutor_inquiries",
+      "path": "#/mypage/registrations/tutors/9/inquiries",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최고수학샘",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "tutor_publish",
+      "path": "#/mypage/registrations/tutors/9/publish",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최고수학샘",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "messages",
+      "path": "#/mypage/messages",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "쪽지·후기함",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "recent",
+      "path": "#/mypage/recent",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "최근열람",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "student_review",
+      "path": "#/mypage/student-review",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "관심 학생",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "wishlist",
+      "path": "#/mypage/wishlist",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "찜한 공부방·과외쌤",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "contact",
+      "path": "#/mypage/contact",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "내 문의 내역",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "plans",
+      "path": "#/mypage/plans",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "구매이력",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "plans_my",
+      "path": "#/mypage/plans/my",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "구매이력",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "plans_history",
+      "path": "#/mypage/plans/history",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "구매내역",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "submission_docs",
+      "path": "#/mypage/submission-docs",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "제출자료 상태",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "submission_board",
+      "path": "#/mypage/submission-board",
+      "hasHorizontalScroll": true,
+      "scrollDiff": 62,
+      "h1Text": "제출함",
+      "h1FontSize": "22px"
+    },
+    {
+      "name": "account",
+      "path": "#/mypage/account",
+      "hasHorizontalScroll": false,
+      "scrollDiff": 0,
+      "h1Text": "계정설정",
+      "h1FontSize": "22px"
+    }
+  ]
+}

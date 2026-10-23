@@ -1,0 +1,4889 @@
+{
+  "pc": [
+    {
+      "name": "01_reg_index",
+      "targetPath": "#/mypage/registrations",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/01_reg_index.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "02_tutors_list",
+      "targetPath": "#/mypage/registrations/tutors",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/02_tutors_list.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "03_tutors_tab_all",
+      "targetPath": "#/mypage/registrations/tutors/tab/all",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/03_tutors_tab_all.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "04_tutors_tab_draft",
+      "targetPath": "#/mypage/registrations/tutors/tab/draft",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/04_tutors_tab_draft.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "05_tutors_tab_published",
+      "targetPath": "#/mypage/registrations/tutors/tab/published",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/05_tutors_tab_published.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "06_tutors_tab_hidden",
+      "targetPath": "#/mypage/registrations/tutors/tab/hidden",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/06_tutors_tab_hidden.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "07_tutors_tab_not_ready",
+      "targetPath": "#/mypage/registrations/tutors/tab/not_ready",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/07_tutors_tab_not_ready.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "08_tutor_9_hub",
+      "targetPath": "#/mypage/registrations/tutors/9",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/08_tutor_9_hub.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요."
+    },
+    {
+      "name": "09_tutor_9_basic",
+      "targetPath": "#/mypage/registrations/tutors/9/basic",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "",
+          "name": "tutor_display_name",
+          "id": "",
+          "value": "최고수학샘",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "main_subject_note",
+          "id": "",
+          "value": "수학",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "기본정보 저장",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "상세정보로",
+          "disabled": false,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "등록점검",
+          "disabled": false,
+          "className": "btn btn--ghost"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/09_tutor_9_basic.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역",
+          "className": "p19-form-section__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐"
+    },
+    {
+      "name": "10_tutor_9_detail",
+      "targetPath": "#/mypage/registrations/tutors/9/detail",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/detail",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "number",
+          "name": "preferred_fee_amount",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "fee_basis_type",
+          "id": "",
+          "value": "monthly_by_weekly_schedule",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "lessons_per_week",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "monthly_session_count",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "minutes_per_lesson",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "student_gender_group",
+          "id": "",
+          "value": "mixed",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "student_count_group",
+          "id": "",
+          "value": "solo",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "student_home_visit",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "public_place",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "tutor_home",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "fee_description",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "",
+          "id": "p21_univ_9",
+          "value": "",
+          "disabled": false,
+          "placeholder": "대학 검색·선택"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "대학원 또는 목록에 없는 학교"
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "university_name",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "major_name",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "학과명 (서술형)"
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "university_status",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_1",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_2",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_3",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "intro_short",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "file",
+          "name": "",
+          "id": "p21-profile-photo-file",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "intro_long",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "contact_time_note",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "상세정보 저장",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "등록점검",
+          "disabled": false,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "마이프로필",
+          "disabled": false,
+          "className": "btn btn--ghost"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/10_tutor_9_detail.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p19-form-section__title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 소개 · 연락",
+          "className": "p19-form-section__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n수업 · 가격\n\n주력과목은 기본등록에서 수정합니다. 여기서는 수업·가격 상세를 채웁니다.\n\n월 과외비 (천원) 필수\n산정방식 필수\n주간 일정 기준 월액\n월 총 횟수 기준\n주 회수 필수\n선택\n1회\n2회\n"
+    },
+    {
+      "name": "11_tutor_9_publish",
+      "targetPath": "#/mypage/registrations/tutors/9/publish",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/publish",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "1개 공개 · 상세",
+          "disabled": false,
+          "className": "expo-link-btn"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "2개 공개 · 상세",
+          "disabled": false,
+          "className": "expo-link-btn"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "접기",
+          "disabled": false,
+          "className": "rc-fold-btn"
+        },
+        {
+          "text": "펼치기",
+          "disabled": false,
+          "className": "rc-fold-btn"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/11_tutor_9_publish.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "등록점검",
+          "className": "rc-head__title"
+        },
+        {
+          "tag": "h3",
+          "text": "베이직 노출과 픽·프라임은 단계가 다릅니다",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "[픽] 추가 입력",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "[프라임] 추가 입력",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "베이직카드/픽/프라임 이렇게 달라집니다",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "전체 프로필 현황",
+          "className": "rc-board__title"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "rc-section__title"
+        },
+        {
+          "tag": "h3",
+          "text": "상세정보",
+          "className": "rc-section__title"
+        },
+        {
+          "tag": "h4",
+          "text": "수업 · 가격",
+          "className": "rc-subsection__title"
+        },
+        {
+          "tag": "h4",
+          "text": "학력 · 소개 · 연락",
+          "className": "rc-subsection__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n등록점검\n\n필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다\n\n다음 · 강의장소 입력하러 가기\n베이직카드 8개 부족\n픽 추가 2개\n프라임 추가 3개\n베이직 노출과 픽·프라임은 단계가 다"
+    },
+    {
+      "name": "12_tutor_9_access",
+      "targetPath": "#/mypage/registrations/tutors/9/access",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/inquiries",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        },
+        {
+          "pattern": "/학부모/g",
+          "count": 1
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "1",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "0",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "paused",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "not_accepting",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "저장하기",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n4",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/12_tutor_9_access.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태 수정",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h4",
+          "text": "안받는 이유",
+          "className": "p21-inq-reasons__title"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 설정시 카드 샘플",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n\n지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.\n\n현재상태\n\n저장값: 쪽지 안받음 · 잠시 쉼\n\n지금은 쪽지 안받음\n현재상태 수정\n쪽지 받는 중\n쪽지 안받음\n저장하기\n저장은 쪽지 "
+    },
+    {
+      "name": "13_tutor_9_inquiries",
+      "targetPath": "#/mypage/registrations/tutors/9/inquiries",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/inquiries",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        },
+        {
+          "pattern": "/학부모/g",
+          "count": 1
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "1",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "0",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "paused",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "not_accepting",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "저장하기",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n4",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/13_tutor_9_inquiries.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태 수정",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h4",
+          "text": "안받는 이유",
+          "className": "p21-inq-reasons__title"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 설정시 카드 샘플",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n\n지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.\n\n현재상태\n\n저장값: 쪽지 안받음 · 잠시 쉼\n\n지금은 쪽지 안받음\n현재상태 수정\n쪽지 받는 중\n쪽지 안받음\n저장하기\n저장은 쪽지 "
+    },
+    {
+      "name": "14_tutor_9_exposure",
+      "targetPath": "#/mypage/registrations/tutors/9/exposure",
+      "device": "pc",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/exposure",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "조건 1개 부족",
+          "disabled": true,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "조건 2개 부족",
+          "disabled": true,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "유료상품 · 노출",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/pc/14_tutor_9_exposure.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "노출 가능 조건 (§4-5)",
+          "className": ""
+        },
+        {
+          "tag": "h3",
+          "text": "추천·대표 노출",
+          "className": ""
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n\n마이페이지\n\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n노출 가능 조건 (§4-5)\n기본 검색 노출\n가능\n비교검색\n가능\n추천 노출\n조건 1개 부족\n대표 노출\n조건 2개 부족\n추천·대표 노출\n\n대표·추천 노출은 기간형 상품 · 쪽지권은 횟수형 상품\n\n조건 1"
+    }
+  ],
+  "mobile": [
+    {
+      "name": "01_reg_index",
+      "targetPath": "#/mypage/registrations",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/01_reg_index.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "02_tutors_list",
+      "targetPath": "#/mypage/registrations/tutors",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/02_tutors_list.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "03_tutors_tab_all",
+      "targetPath": "#/mypage/registrations/tutors/tab/all",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/03_tutors_tab_all.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "04_tutors_tab_draft",
+      "targetPath": "#/mypage/registrations/tutors/tab/draft",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/04_tutors_tab_draft.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "05_tutors_tab_published",
+      "targetPath": "#/mypage/registrations/tutors/tab/published",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/05_tutors_tab_published.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "06_tutors_tab_hidden",
+      "targetPath": "#/mypage/registrations/tutors/tab/hidden",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/06_tutors_tab_hidden.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "07_tutors_tab_not_ready",
+      "targetPath": "#/mypage/registrations/tutors/tab/not_ready",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/07_tutors_tab_not_ready.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "08_tutor_9_hub",
+      "targetPath": "#/mypage/registrations/tutors/9",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "동네 이웃에게 전할 한 줄 인사를 적어보세요"
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "올리기",
+          "disabled": false,
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "disabled": false,
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/08_tutor_9_hub.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "동네 인사",
+          "className": "ng-editor__title"
+        },
+        {
+          "tag": "h2",
+          "text": "최고수학샘",
+          "className": "p21-profile__name"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 자격",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "소개 · 연락",
+          "className": "p21-profile__section-title"
+        },
+        {
+          "tag": "h3",
+          "text": "추가 정보",
+          "className": "p21-profile__section-title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n동네 인사\n올리기\n\n한 줄, 80자. 전화·카톡·주소는 넣지 않아요.\n\n아직 올린 인사가 없어요.\n\n최고수학샘\n\n입력한 프로필 정보를 그대로 확인합니다. 각 항목의 수정을 누르면 바로 고칠 수 있어요.\n\n기본정보\n수"
+    },
+    {
+      "name": "09_tutor_9_basic",
+      "targetPath": "#/mypage/registrations/tutors/9/basic",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/basic",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "",
+          "name": "tutor_display_name",
+          "id": "",
+          "value": "최고수학샘",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "main_subject_note",
+          "id": "",
+          "value": "수학",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_0_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_1_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_sido",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_city",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "p21_region_2_gu",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "",
+          "id": "",
+          "value": "city",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "기본정보 저장",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "상세정보로",
+          "disabled": false,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "등록점검",
+          "disabled": false,
+          "className": "btn btn--ghost"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/09_tutor_9_basic.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보 · 과외지역",
+          "className": "p19-form-section__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n기본정보 · 과외지역\n\n표시명·주력과목과 과외지역을 한 화면에서 수정합니다. 구가 있는 곳은 구까지 고릅니다.\n\n표시명 필수\n주력과목 필수\n과목 선택\n국어\n영어\n수학\n과학\n사회\n국영수\n국영수사과\n과학탐구\n사회탐구\n물"
+    },
+    {
+      "name": "10_tutor_9_detail",
+      "targetPath": "#/mypage/registrations/tutors/9/detail",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/detail",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "number",
+          "name": "preferred_fee_amount",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "fee_basis_type",
+          "id": "",
+          "value": "monthly_by_weekly_schedule",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "lessons_per_week",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "monthly_session_count",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "minutes_per_lesson",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "student_gender_group",
+          "id": "",
+          "value": "mixed",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "student_count_group",
+          "id": "",
+          "value": "solo",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "student_home_visit",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "public_place",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "name": "lesson_places",
+          "id": "",
+          "value": "tutor_home",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "fee_description",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "",
+          "id": "p21_univ_9",
+          "value": "",
+          "disabled": false,
+          "placeholder": "대학 검색·선택"
+        },
+        {
+          "tag": "input",
+          "type": "text",
+          "name": "",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "대학원 또는 목록에 없는 학교"
+        },
+        {
+          "tag": "input",
+          "type": "hidden",
+          "name": "university_name",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "major_name",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": "학과명 (서술형)"
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "name": "university_status",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_1",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_2",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "feature_3",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "intro_short",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "file",
+          "name": "",
+          "id": "p21-profile-photo-file",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "name": "intro_long",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "name": "contact_time_note",
+          "id": "",
+          "value": "",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "상세정보 저장",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "등록점검",
+          "disabled": false,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "마이프로필",
+          "disabled": false,
+          "className": "btn btn--ghost"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/10_tutor_9_detail.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "수업 · 가격",
+          "className": "p19-form-section__title"
+        },
+        {
+          "tag": "h3",
+          "text": "학력 · 소개 · 연락",
+          "className": "p19-form-section__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n수업 · 가격\n\n주력과목은 기본등록에서 수정합니다. 여기서는 수업·가격 상세를 채웁니다.\n\n월 과외비 (천원) 필수\n산정방식 필수\n주간 일정 기준 월액\n월 총 횟수 기준\n주 회수 필수\n선택\n1회\n2회\n3회\n4회\n5회"
+    },
+    {
+      "name": "11_tutor_9_publish",
+      "targetPath": "#/mypage/registrations/tutors/9/publish",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/publish",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "1개 공개 · 상세",
+          "disabled": false,
+          "className": "expo-link-btn"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "2개 공개 · 상세",
+          "disabled": false,
+          "className": "expo-link-btn"
+        },
+        {
+          "text": "👍\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "확대카드 보기",
+          "disabled": false,
+          "className": "hcs-sample__expand"
+        },
+        {
+          "text": "접기",
+          "disabled": false,
+          "className": "rc-fold-btn"
+        },
+        {
+          "text": "펼치기",
+          "disabled": false,
+          "className": "rc-fold-btn"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/11_tutor_9_publish.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h2",
+          "text": "등록점검",
+          "className": "rc-head__title"
+        },
+        {
+          "tag": "h3",
+          "text": "베이직 노출과 픽·프라임은 단계가 다릅니다",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "[픽] 추가 입력",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "[프라임] 추가 입력",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "베이직카드/픽/프라임 이렇게 달라집니다",
+          "className": "rc-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "전체 프로필 현황",
+          "className": "rc-board__title"
+        },
+        {
+          "tag": "h3",
+          "text": "기본정보",
+          "className": "rc-section__title"
+        },
+        {
+          "tag": "h3",
+          "text": "상세정보",
+          "className": "rc-section__title"
+        },
+        {
+          "tag": "h4",
+          "text": "수업 · 가격",
+          "className": "rc-subsection__title"
+        },
+        {
+          "tag": "h4",
+          "text": "학력 · 소개 · 연락",
+          "className": "rc-subsection__title"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n등록점검\n\n필수 입력과 픽·프라임에 더 필요한 항목을 한 화면에서 확인합니다\n\n다음 · 강의장소 입력하러 가기\n베이직카드 8개 부족\n픽 추가 2개\n프라임 추가 3개\n베이직 노출과 픽·프라임은 단계가 다릅니다\n\n베이직"
+    },
+    {
+      "name": "12_tutor_9_access",
+      "targetPath": "#/mypage/registrations/tutors/9/access",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/inquiries",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        },
+        {
+          "pattern": "/학부모/g",
+          "count": 1
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "1",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "0",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "paused",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "not_accepting",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "저장하기",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n4",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/12_tutor_9_access.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태 수정",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h4",
+          "text": "안받는 이유",
+          "className": "p21-inq-reasons__title"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 설정시 카드 샘플",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n\n지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.\n\n현재상태\n\n저장값: 쪽지 안받음 · 잠시 쉼\n\n지금은 쪽지 안받음\n현재상태 수정\n쪽지 받는 중\n쪽지 안받음\n저장하기\n저장은 쪽지 상태만 바꿉니다"
+    },
+    {
+      "name": "13_tutor_9_inquiries",
+      "targetPath": "#/mypage/registrations/tutors/9/inquiries",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/inquiries",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        },
+        {
+          "pattern": "/학부모/g",
+          "count": 1
+        }
+      ],
+      "inputsState": [
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "1",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_receiving",
+          "id": "",
+          "value": "0",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "paused",
+          "disabled": false,
+          "placeholder": ""
+        },
+        {
+          "tag": "input",
+          "type": "radio",
+          "name": "p21_inquiry_reason",
+          "id": "",
+          "value": "not_accepting",
+          "disabled": false,
+          "placeholder": ""
+        }
+      ],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "저장하기",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n4",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "👍\n18",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "💬\n7",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--stat"
+        },
+        {
+          "text": "♡\n11",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "⇄\n2",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "✉\n없음",
+          "disabled": false,
+          "className": "item-actions__btn item-actions__btn--action"
+        },
+        {
+          "text": "상세",
+          "disabled": false,
+          "className": "expo-hcard__detail"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/13_tutor_9_inquiries.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "현재상태 수정",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h4",
+          "text": "안받는 이유",
+          "className": "p21-inq-reasons__title"
+        },
+        {
+          "tag": "h3",
+          "text": "쪽지 설정시 카드 샘플",
+          "className": "p21-inq-block__title"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        },
+        {
+          "tag": "h3",
+          "text": "여김하린",
+          "className": "expo-hcard__name"
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n\n지금 학부모 쪽지를 받을지 확인하고, 필요하면 바꾼 뒤 저장합니다.\n\n현재상태\n\n저장값: 쪽지 안받음 · 잠시 쉼\n\n지금은 쪽지 안받음\n현재상태 수정\n쪽지 받는 중\n쪽지 안받음\n저장하기\n저장은 쪽지 상태만 바꿉니다"
+    },
+    {
+      "name": "14_tutor_9_exposure",
+      "targetPath": "#/mypage/registrations/tutors/9/exposure",
+      "device": "mobile",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "httpFailures": [],
+      "finalUrl": "https://study114.net/#/mypage/registrations/tutors/9/exposure",
+      "title": "우동공과 — 메인 화면 프리뷰",
+      "suspiciousStrings": [
+        {
+          "pattern": "/공부방/g",
+          "count": 2
+        }
+      ],
+      "inputsState": [],
+      "buttonsState": [
+        {
+          "text": "이용안내",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "disabled": false,
+          "className": "home-util__link"
+        },
+        {
+          "text": "조건 1개 부족",
+          "disabled": true,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "조건 2개 부족",
+          "disabled": true,
+          "className": "btn btn--secondary"
+        },
+        {
+          "text": "유료상품 · 노출",
+          "disabled": false,
+          "className": "btn btn--primary"
+        },
+        {
+          "text": "프로필 보완\n문의 전환을 높이는 소개 흐름\n등록방법",
+          "disabled": false,
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "disabled": false,
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "↑\n맨위",
+          "disabled": false,
+          "className": "back-to-top"
+        }
+      ],
+      "tabsState": [],
+      "screenshot": "d:/work/study114/.wt/integrity-tutor/tmp-integrity/C2/screenshots/mobile/14_tutor_9_exposure.png",
+      "headings": [
+        {
+          "tag": "h1",
+          "text": "최고수학샘",
+          "className": "mypage-content__title"
+        },
+        {
+          "tag": "h3",
+          "text": "노출 가능 조건 (§4-5)",
+          "className": ""
+        },
+        {
+          "tag": "h3",
+          "text": "추천·대표 노출",
+          "className": ""
+        }
+      ],
+      "textPreview": "로그인: 이종현과외\n이용안내\n쪽지·후기함\n최근열람\n마이페이지\n로그아웃\n홈\n과외쌤찾기\n학생찾기\n과외쌤상세등록\n유료상품\n커뮤니티\n고객센터\n이\n이종현과외\n과외쌤\n✎\n내 등록\n✉\n쪽지·후기함\n◷\n최근열람\n☆\n관심 학생\n♡\n찜한 공부방·과외쌤\n▤\n내 문의 내역\n◌\n구매이력\n⚙\n계정설정\n마이페이지\n-\n내 등록\n최고수학샘\n내 공지\n더 보기\n전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15\n전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01\n마이프로필\n기본정보\n상세정보\n쪽지설정\n등록점검\n노출 가능 조건 (§4-5)\n기본 검색 노출\n가능\n비교검색\n가능\n추천 노출\n조건 1개 부족\n대표 노출\n조건 2개 부족\n추천·대표 노출\n\n대표·추천 노출은 기간형 상품 · 쪽지권은 횟수형 상품\n\n조건 1개 부족\n조건 "
+    }
+  ],
+  "blockedRequests": []
+}
