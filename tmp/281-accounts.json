@@ -1,0 +1,50 @@
+{
+  "tutorEmpty": {
+    "email": "281_tutor_empty_1792769725898_yce2@test.local",
+    "password": "TestPass123!",
+    "role": "tutor",
+    "id": 21,
+    "userId": 52,
+    "cookies": "PHPSESSID=ee99b2bb8b7bd03d35f0d621c523dbdf"
+  },
+  "tutorPick": {
+    "email": "281_tutor_pick_1792769727473_ogfm@test.local",
+    "password": "TestPass123!",
+    "role": "tutor",
+    "id": 22,
+    "userId": 53,
+    "cookies": "PHPSESSID=a86e10ca22641bf72607e2602fc93e42"
+  },
+  "roomEmpty": {
+    "email": "281_room_empty_1792769729387_guat@test.local",
+    "password": "TestPass123!",
+    "role": "study_room",
+    "id": 17,
+    "userId": 54,
+    "cookies": "PHPSESSID=6def92295b5ba1920d405935b653c3ca"
+  },
+  "roomPick": {
+    "email": "281_room_pick_1792769731541_4387@test.local",
+    "password": "TestPass123!",
+    "role": "study_room",
+    "id": 18,
+    "userId": 55,
+    "cookies": "PHPSESSID=82585e352340d23ee9300865ef965530"
+  },
+  "tutorWarn": {
+    "email": "281_tutor_warn_1792769735255_6vne@test.local",
+    "password": "TestPass123!",
+    "role": "tutor",
+    "id": 23,
+    "userId": 56,
+    "cookies": "PHPSESSID=c9d515e3db30cf9e044c56d57b0ff51e"
+  },
+  "roomWarn": {
+    "email": "281_room_warn_1792769736602_dq00@test.local",
+    "password": "TestPass123!",
+    "role": "study_room",
+    "id": 19,
+    "userId": 57,
+    "cookies": "PHPSESSID=f66d7a83a138321f8b5f5b4c6f244dcc"
+  }
+}
