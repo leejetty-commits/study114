@@ -71,15 +71,14 @@ function renderMissingList(items) {
   return `<ul class="rc-missing__list">${rows}</ul>`;
 }
 
-function renderMissingBlock(title, items, emptyText, extraHtml = '') {
+function renderMissingBlock(title, items, emptyText) {
   const body = items?.length
     ? renderMissingList(items)
     : `<p class="rc-missing__ok">${esc(emptyText)}</p>`;
   return `
-    <section class="rc-block">
+    <section class="rc-block rc-block--action">
       <h3 class="rc-block__title">${esc(title)}</h3>
       ${body}
-      ${extraHtml}
     </section>`;
 }
 
@@ -94,19 +93,24 @@ function renderPreviewTier(tier, kicker, innerHtml) {
 function renderCards(vm) {
   const item = vm.previewItem;
   const opts = { showCompare: false, showWish: false };
+  // 홈 실노출 카드 HTML 재사용 — 임의 썸네일/가짜 카드 금지
   const basic = renderBrowseList('study_room', [item], opts);
   const pick = renderExposureBox('study_room', 'pick', item, '', opts);
   const prime = renderExposureBox('study_room', 'prime', item, '', opts);
   return `
-    <div class="rc-compare">
-      <p class="rc-block__sub">${esc(vm.promo.cardsTitle)}</p>
+    <section class="rc-block rc-block--compare" aria-label="${esc(vm.promo.cardsTitle)}">
+      <h3 class="rc-block__title">${esc(vm.promo.cardsTitle)}</h3>
       <p class="rc-block__hint">${esc(vm.promo.cardsLead)}</p>
-      <div class="rc-compare__grid">
-        ${renderPreviewTier('basic', vm.promo.basicKicker, basic)}
-        ${renderPreviewTier('pick', vm.promo.pickKicker, pick)}
-        ${renderPreviewTier('prime', vm.promo.primeKicker, prime)}
+      <div class="rc-compare">
+        <div class="rc-compare__row rc-compare__row--basic">
+          ${renderPreviewTier('basic', vm.promo.basicKicker, basic)}
+        </div>
+        <div class="rc-compare__row rc-compare__row--upgrade">
+          ${renderPreviewTier('pick', vm.promo.pickKicker, pick)}
+          ${renderPreviewTier('prime', vm.promo.primeKicker, prime)}
+        </div>
       </div>
-    </div>`;
+    </section>`;
 }
 
 function statusCell(row) {
@@ -122,21 +126,41 @@ function noteCell(row) {
   return `<span class="rc-note rc-note--${miss ? 'miss' : 'ok'}">${esc(RC_COPY.board.required)}</span>`;
 }
 
+function sectionSummary(sec) {
+  const total = sec.rows.length;
+  const filled = sec.rows.filter((r) => r.status === 'filled').length;
+  const missing = total - filled;
+  const missLabels = sec.rows
+    .filter((r) => r.status === 'empty')
+    .slice(0, 2)
+    .map((r) => r.label);
+  return {
+    filled,
+    total,
+    missing,
+    missLabels,
+    line: `${sec.title} · 완료 ${filled}/${total} · 부족 ${missing}`,
+  };
+}
+
 function renderBoard(vm) {
   const sections = vm.board
     .map((sec) => {
       const isPlain = sec.variant === 'plain';
+      const accordion = sec.id === 'detail' || sec.id === 'detail2';
       const editHref = sec.editSection ? registrationCheckTabHref(vm.roomId, sec.editSection) : '';
       const editPath = editHref.replace(/^#/, '');
       const editBtn =
         editPath
           ? `<a class="rc-section__edit" href="#${esc(editPath)}" data-p20-nav="${esc(editPath)}" aria-label="${esc(RC_COPY.board.editAria(sec.title))}" title="수정">${editIconSvg()}</a>`
           : '';
-      const head = `
-          <div class="rc-section__head">
-            <h3 class="rc-section__title">${esc(sec.title)}</h3>
-            ${editBtn}
-          </div>`;
+      const summary = sectionSummary(sec);
+      const missPreview = summary.missLabels.length
+        ? `<span class="rc-section__miss-preview">${esc(summary.missLabels.join(' · '))}</span>`
+        : summary.missing === 0
+          ? `<span class="rc-section__miss-preview rc-section__miss-preview--ok">핵심 항목 충족</span>`
+          : '';
+
       const rows = sec.rows
         .map((r) => {
           const empty = r.status === 'empty';
@@ -164,15 +188,35 @@ function renderBoard(vm) {
                   <th>${esc(RC_COPY.board.cols.status)}</th>
                   <th>${esc(RC_COPY.board.cols.note)}</th>
                 </tr>`;
-      return `
-        <section class="rc-section" data-rc-section="${esc(sec.id)}">
-          ${head}
+      const table = `
           <div class="rc-table-wrap">
             <table class="rc-table${isPlain ? ' rc-table--plain' : ''}">
               <thead>${thead}</thead>
               <tbody>${rows}</tbody>
             </table>
+          </div>`;
+
+      if (accordion) {
+        return `
+        <details class="rc-section rc-section--accordion" data-rc-section="${esc(sec.id)}">
+          <summary class="rc-section__summary">
+            <span class="rc-section__summary-main">
+              <span class="rc-section__title">${esc(summary.line)}</span>
+              ${missPreview}
+            </span>
+            ${editBtn}
+          </summary>
+          ${table}
+        </details>`;
+      }
+
+      return `
+        <section class="rc-section" data-rc-section="${esc(sec.id)}">
+          <div class="rc-section__head">
+            <h3 class="rc-section__title">${esc(sec.title)}</h3>
+            ${editBtn}
           </div>
+          ${table}
         </section>`;
     })
     .join('');
@@ -191,7 +235,8 @@ export function renderRegistrationCheck(vm) {
       ${renderHeader(vm)}
       ${renderPromoCopy(vm)}
       ${renderMissingBlock(vm.promo.pickMissingTitle, vm.promo.pickMissing, vm.promo.pickReadyBody)}
-      ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody, renderCards(vm))}
+      ${renderMissingBlock(vm.promo.primeMissingTitle, vm.promo.primeMissing, vm.promo.primeReadyBody)}
+      ${renderCards(vm)}
       ${renderBoard(vm)}
     </div>`;
 }

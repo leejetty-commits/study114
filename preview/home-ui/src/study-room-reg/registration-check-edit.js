@@ -336,4 +336,11 @@ export function bindRegistrationCheckEvents(root, rerender) {
       }
     });
   });
+
+  // accordion summary 안의 수정 링크 클릭 시 details 토글 방지
+  page.querySelectorAll('.rc-section--accordion .rc-section__edit').forEach((el) => {
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  });
 }
