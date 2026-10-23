@@ -1,0 +1,14 @@
+{
+  "test": "2. 쪽지설정",
+  "originalValue": "쪽지 안받음 · 잠시 쉼 (value: 0, reason: paused)",
+  "changedValue": "쪽지 받는 중 (value: 1)",
+  "revertedValue": "문의 안내\n현재는 잠시 쉬는 중입니다",
+  "shots": {
+    "before": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-01-before.png",
+    "publicBefore": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-02-public-before.png",
+    "saved": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-03-saved.png",
+    "publicChanged": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-04-public-changed.png",
+    "reverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-05-reverted.png",
+    "publicReverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write2-inquiry-06-public-reverted.png"
+  }
+}

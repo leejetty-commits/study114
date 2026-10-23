@@ -1,0 +1,1672 @@
+[
+  {
+    "id": "B-01-home",
+    "mode": "pc",
+    "url": "https://study114.net/",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-01-home-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-02-mypage-hub",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-02-mypage-hub-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-02b-mypage-home",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/home",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-02b-mypage-home-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-03-mypage-account",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/account",
+    "finalUrl": "https://study114.net/#/mypage/account",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 계정설정 계정설정 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 사이트에 보이는 이름 이종현룸 표시명·로그인·보안을 한곳에서 관리합니",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-03-mypage-account-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-04-mypage-contact",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/contact",
+    "finalUrl": "https://study114.net/#/mypage/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 문의 내역 내 문의 내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다. ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-04-mypage-contact-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-05-mypage-messages",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/messages",
+    "finalUrl": "https://study114.net/#/mypage/messages",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 쪽지·후기함 쪽지·후기함 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 쪽지 후기함 쪽지가 없습니다 지금 필요한 안내 이번 시즌 추천 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-05-mypage-messages-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-06-mypage-registrations",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/registrations",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-06-mypage-registrations-pc.png",
+    "extraData": {
+      "links": [
+        {
+          "text": "이용안내",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "홈",
+          "href": "#/study-room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방찾기",
+          "href": "https://study114.net/search/#/search/room?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방상세등록",
+          "href": "https://study114.net/register/room/#/register/basic",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "홈",
+          "href": "#/study-room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방찾기",
+          "href": "https://study114.net/search/#/search/room?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방상세등록",
+          "href": "https://study114.net/register/room/#/register/basic",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "✎\n내 등록",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": "mypage-nav__link is-active is-emphasis"
+        },
+        {
+          "text": "✉\n쪽지·후기함",
+          "href": "#/mypage/messages",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "◷\n최근열람",
+          "href": "#/mypage/recent",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "☆\n관심 학생",
+          "href": "#/mypage/student-review",
+          "id": "",
+          "className": "mypage-nav__link is-emphasis"
+        },
+        {
+          "text": "♡\n찜한 공부방·과외쌤",
+          "href": "#/mypage/wishlist",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "▤\n내 문의 내역",
+          "href": "#/mypage/contact",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "◌\n구매이력",
+          "href": "#/mypage/plans",
+          "id": "",
+          "className": "mypage-nav__link is-emphasis"
+        },
+        {
+          "text": "⚙\n계정설정",
+          "href": "#/mypage/account",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "마이페이지",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "더 보기",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__more"
+        },
+        {
+          "text": "전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__row"
+        },
+        {
+          "text": "전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__row"
+        },
+        {
+          "text": "프로필 꾸미기",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": "mp-room__tab is-active"
+        },
+        {
+          "text": "기본정보",
+          "href": "#/mypage/registrations/study-rooms/7/basic",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "상세정보1",
+          "href": "#/mypage/registrations/study-rooms/7/detail",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "상세정보2",
+          "href": "#/mypage/registrations/study-rooms/7/detail2",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "쪽지설정",
+          "href": "#/mypage/registrations/study-rooms/7/inquiries",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "등록점검",
+          "href": "#/mypage/registrations/study-rooms/7/publish",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "올리기",
+          "href": null,
+          "id": "",
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "href": null,
+          "id": "",
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "×",
+          "href": null,
+          "id": "",
+          "className": "shop-lightbox__close"
+        },
+        {
+          "text": "작성 전 체크\n노출 정보와 쪽지 설정을 확인하세요\n등록방법",
+          "href": null,
+          "id": "",
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "약관",
+          "href": "#/support/policies/terms",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "개인정보",
+          "href": "#/support/policies/privacy",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "플랫폼 고지",
+          "href": "#/support/policies/platform",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "↑\n맨위",
+          "href": null,
+          "id": "study114-back-to-top",
+          "className": "back-to-top"
+        }
+      ]
+    }
+  },
+  {
+    "id": "B-07-mypage-plans",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/plans",
+    "finalUrl": "https://study114.net/#/mypage/plans",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매이력 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 이용중인 노출광고 베이직 노출 이용중 - 무료광고 쪽지 사용한 대상 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-07-mypage-plans-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-08-mypage-plans-my",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/plans/my",
+    "finalUrl": "https://study114.net/#/mypage/plans/my",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매이력 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 내 쪽지권 · 상품 쪽지권 이 프로필에 표시할 쪽지권이 없습니다. ·",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-08-mypage-plans-my-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-09-mypage-plans-history",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/plans/history",
+    "finalUrl": "https://study114.net/#/mypage/plans/history",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 결제내역 서버 주문 내역과 이 기기의 임시 내역을 함께 표시 주문번호",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-09-mypage-plans-history-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-10-mypage-recent",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/recent",
+    "finalUrl": "https://study114.net/#/mypage/recent",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 최근열람 최근열람 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 가능동베스트 지금은 쪽지 안 받음 · 잠시 쉼 study_room · 상세",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-10-mypage-recent-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-11-mypage-wishlist",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/wishlist",
+    "finalUrl": "https://study114.net/#/mypage/wishlist",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 찜한 공부방·과외쌤 찜한 공부방·과외쌤 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-11-mypage-wishlist-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-12-mypage-student-review",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/student-review",
+    "finalUrl": "https://study114.net/#/mypage/student-review",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 관심 학생 관심 학생 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 검토 중인 학생이 없습니다 마음에 드는 등록을 검토함에 넣어 두고,",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-12-mypage-student-review-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-13-mypage-submission-board",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/submission-board",
+    "finalUrl": "https://study114.net/#/mypage/submission-board",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 제출함 제출함 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-13-mypage-submission-board-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-14-mypage-submission-docs",
+    "mode": "pc",
+    "url": "https://study114.net/#/mypage/submission-docs",
+    "finalUrl": "https://study114.net/#/mypage/submission-docs",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 제출자료 상태 제출자료 상태 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-14-mypage-submission-docs-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-15-myshop-owner",
+    "mode": "pc",
+    "url": "https://study114.net/#/myshop",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-15-myshop-owner-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-17-community-hub",
+    "mode": "pc",
+    "url": "https://study114.net/#/community",
+    "finalUrl": "https://study114.net/#/community",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 현장형 커뮤니티 남기고 · 답하고 · 해결후기로 이어가기 공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다. 게시판 둘러보기 해결후기 보기 게시판 4곳 역할별 게시판으로 바로 들어가기 공부방 공부방 고민방 운영·모집·공간 운영 질",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-17-community-hub-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-18-community-director",
+    "mode": "pc",
+    "url": "https://study114.net/#/community/director",
+    "finalUrl": "https://study114.net/#/community/director",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 공부방 공부방 고민방 공부방 운영·모집·학부모 응대 이 게시판은 공부방 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방 운영·모집·학부모 응대 공부방 고민방 공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 공부방 고민방 공부방 운영·모집·학부",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-18-community-director-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-19-community-parent",
+    "mode": "pc",
+    "url": "https://study114.net/#/community/parent",
+    "finalUrl": "https://study114.net/#/community/parent",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 학생·학부모 학생/학부모 고민방 공부방·과외 선택·루틴·안전 이 게시판은 학생·학부모 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방·과외 선택·루틴·안전 학생/학부모 고민방 공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다. 학생/학부모 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-19-community-parent-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-20-community-tutor",
+    "mode": "pc",
+    "url": "https://study114.net/#/community/tutor",
+    "finalUrl": "https://study114.net/#/community/tutor",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 과외쌤 과외쌤 고민방 프로필·첫 상담·수업 전환 이 게시판은 과외쌤 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 프로필·첫 상담·수업 전환 과외쌤 고민방 프로필·첫 상담·수업 전환에 대한 고민을 나누는 공간입니다. 과외쌤 고민방 프로필·첫 상담·수업 전환에 대한",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-20-community-tutor-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-21-community-admission",
+    "mode": "pc",
+    "url": "https://study114.net/#/community/admission",
+    "finalUrl": "https://study114.net/#/community/director",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 공부방 공부방 고민방 공부방 운영·모집·학부모 응대 이 게시판은 공부방 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방 운영·모집·학부모 응대 공부방 고민방 공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 공부방 고민방 공부방 운영·모집·학부",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-21-community-admission-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-22-community-solved",
+    "mode": "pc",
+    "url": "https://study114.net/#/community/solved",
+    "finalUrl": "https://study114.net/#/community/solved",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 해결됨 해결후기 바꿔보니 효과 있었던 경험·운영 노하우 이 게시판은 로그인한 회원 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 바꿔보니 효과 있었던 경험·운영 노하우 해결후기 바꿔보니 효과 있었던 경험과 운영 노하우를 나누는 공간입니다. 해결후기 바꿔보니 효과 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-22-community-solved-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-23-support-hub",
+    "mode": "pc",
+    "url": "https://study114.net/#/support",
+    "finalUrl": "https://study114.net/#/support",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 필요한 답을 빠르게 자주 묻는 질문에서 먼저 찾아 보세요. 쓰는 방법은 이용안내, 운영팀에 보낼 내용은 운영문의입니다. 쪽지와 운영문의는 다릅니다. 자주 묻는 질문 운영문의 남기기 QUICK LINKS 바로가기 공지사항 서비스 변경·운영 안내 자주 묻는 질문 자주 묻는 질문에서 먼저 약관·정책 이용약관 · 개인정보 등 자료실 역할별 팁",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-23-support-hub-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-24-support-notice",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/notice",
+    "finalUrl": "https://study114.net/#/support/notice",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 필요한 답을 빠르게 자주 묻는 질문에서 먼저 찾아 보세요. 쓰는 방법은 이용안내, 운영팀에 보낼 내용은 운영문의입니다. 쪽지와 운영문의는 다릅니다. 자주 묻는 질문 운영문의 남기기 QUICK LINKS 바로가기 공지사항 서비스 변경·운영 안내 자주 묻는 질문 자주 묻는 질문에서 먼저 약관·정책 이용약관 · 개인정보 등 자료실 역할별 팁",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-24-support-notice-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-25-support-faq",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/faq",
+    "finalUrl": "https://study114.net/#/support/faq",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 FAQ 자주 묻는 질문 최신 질문을 표시합니다. 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다. 가입·로그인 등록·카드 검색·쪽지 결제·상품 안전·신고 Q 회원끼리 연락은 어떻게 하나요? − 회원 간 공식 접촉은 쪽지(16장) 입니다. 플랫폼 전화·이메일 중계는 없습니다. Q 운영·서비스 문의는 어디로 하나요? + Q 유료 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-25-support-faq-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-26-support-contact",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/contact",
+    "finalUrl": "https://study114.net/#/support/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 CONTACT 운영문의 운영문의는 운영팀에 보내는 채널입니다. 오류·정책·계정 문제를 남기세요. 수업 상담은 쪽지입니다. 접수한 뒤에는 마이페이지의 내 문의 내역에서 확인합니다. 문의 유형 오류·장애 정책·이용 문의 계정·로그인 기타 숨김 해제 요청 이메일 로그인 계정 이메일로 답변 확인 문의 내용 운영문의 남기기 제출하면 문의 번호가 안내됩니다",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-26-support-contact-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-27-support-tickets",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/contact/tickets",
+    "finalUrl": "https://study114.net/#/mypage/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 마이페이지 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 문의 내역 내 문의 내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다. ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-27-support-tickets-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-28-support-library",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/library",
+    "finalUrl": "https://study114.net/#/support/library",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 LIBRARY 자료실 역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요. 공부방 쏙쏙정보 공부방 운영에 바로 쓰는 정보를 나눠요. 운영 노하우 학생 모집·홍보 시설·행정·세무 입시·교육 소식 들어가기 과외쌤 따끈 팁가이드 과외 수업·상담에 바로 쓰는 팁을 나눠요. 수업 노하우 상담·학생 매칭 계약·정산·세무 입시·교육 소식 들어가기",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-28-support-library-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-29-support-policies",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/policies",
+    "finalUrl": "https://study114.net/#/support/policies",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 DOCUMENT HUB 약관·정책 약관과 운영 정책을 확인합니다. 자료실은 별도 메뉴입니다. 약관 개인정보 플랫폼 신뢰정보 안전과외 학생정보 신고·제재 계정연락처 DOC 이용약관 서비스 이용 기본 조건 목적 본 약관은 우동공과가 제공하는 지역 공부방·과외 정보 탐색, 등록, 비교, 쪽지 등 관련 서비스의 이용 조건과 절차, 회사와 회원의 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-29-support-policies-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-30-search-room",
+    "mode": "pc",
+    "url": "https://study114.net/search/#/search/room",
+    "finalUrl": "https://study114.net/search/#/search/room",
+    "title": "우동공과 — 검색 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 우동공과 · 우리동네 공부방 과외쌤 우리동네 공부방·과외, 한눈에 비교하고 찾으세요 지역별로 모아 보고, 수업방식·대상·강점까지 비교해 우리 아이에게 맞는 공부방과 과외쌤을 더 쉽게 찾을 수 있어요 우리동네 과외쌤 찾기 홈으로 공부방 찾기 현재위치 신곡동 · 신곡건영아파트 50m © NAVER Corp. 신곡동 신곡동 공부방 현황입니다 공부방 2 우리동네의 공부방은 하단의 '우동공과 ",
+    "consoleLogs": [],
+    "networkErrors": [],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-30-search-room-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-31-search-tutor",
+    "mode": "pc",
+    "url": "https://study114.net/search/#/search/tutor",
+    "finalUrl": "https://study114.net/search/#/search/room?role=study_room",
+    "title": "우동공과 — 검색 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 우동공과 · 우리동네 공부방 과외쌤 우리동네 공부방·과외, 한눈에 비교하고 찾으세요 지역별로 모아 보고, 수업방식·대상·강점까지 비교해 우리 아이에게 맞는 공부방과 과외쌤을 더 쉽게 찾을 수 있어요 우리동네 과외쌤 찾기 홈으로 공부방 찾기 현재위치 신곡동 · 신곡건영아파트 50m © NAVER Corp. 신곡동 신곡동 공부방 현황입니다 공부방 2 우리동네의 공부방은 하단의 '우동공과 ",
+    "consoleLogs": [],
+    "networkErrors": [],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-31-search-tutor-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-32-forbidden-admin-notices",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/admin/notices",
+    "finalUrl": "https://study114.net/#/support/admin/notices",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 운영 홈 공지 관리 티켓 관리 ← 고객센터 공지 관리 운영 공지 추가·수정·삭제 · 사용자 공지사항에 즉시 반영 날짜\t제목\t 2026-07-01\t고객센터·안전과외 가이드 1차 오픈 (프리뷰)\t 수정 삭제 2026-06-15\t쪽지함 프리뷰(16a) 안내\t 수정 삭제 공지 작성 · 수정 날짜 제목 본문 (줄바꿈 = 문단) 저장 새 공지 시드 복원 ←",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-32-forbidden-admin-notices-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-33-forbidden-admin-tickets",
+    "mode": "pc",
+    "url": "https://study114.net/#/support/admin/tickets",
+    "finalUrl": "https://study114.net/#/support/admin/tickets",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 운영 홈 공지 관리 티켓 관리 ← 고객센터 티켓 관리 운영 접수 문의 상태 변경과 운영자 답변 등록 요청을 처리하지 못했습니다. 번호\t유형\t이메일\t상태\t답변\t접수일 요청을 처리하지 못했습니다. ← 메인 홈으로 지금 필요한 안내 이번 시즌 추천 행동 3분 등록부터 기본등록으로 가볍게 시작 등록방법 약관 · 개인정보 · 플랫폼 고지 · 고객센터 우",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()",
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php",
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-33-forbidden-admin-tickets-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-34-forbidden-register-tutor",
+    "mode": "pc",
+    "url": "https://study114.net/#/register/tutor",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-34-forbidden-register-tutor-pc.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-01-home",
+    "mode": "m",
+    "url": "https://study114.net/",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-01-home-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-02-mypage-hub",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인사 올리기 한",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-02-mypage-hub-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-02b-mypage-home",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/home",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인사 올리기 한",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-02b-mypage-home-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-03-mypage-account",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/account",
+    "finalUrl": "https://study114.net/#/mypage/account",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 계정설정 계정설정 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 사이트에 보이는 이름 이종현룸 표시명·로그인·보안을 한곳에서 관리합니다. 표시 정",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-03-mypage-account-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-04-mypage-contact",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/contact",
+    "finalUrl": "https://study114.net/#/mypage/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 문의 내역 내 문의 내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다. 새 운영문의 남",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-04-mypage-contact-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-05-mypage-messages",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/messages",
+    "finalUrl": "https://study114.net/#/mypage/messages",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 쪽지·후기함 쪽지·후기함 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 쪽지 후기함 쪽지가 없습니다 지금 필요한 안내 이번 시즌 추천 행동 3분 등록",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-05-mypage-messages-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-06-mypage-registrations",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/registrations",
+    "finalUrl": "https://study114.net/#/mypage/registrations/study-rooms/7",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 등록 가능동베스트 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 프로필 꾸미기 기본정보 상세정보1 상세정보2 쪽지설정 등록점검 동네 인사 올리기 한",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-06-mypage-registrations-m.png",
+    "extraData": {
+      "links": [
+        {
+          "text": "이용안내",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "쪽지·후기함",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "최근열람",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "마이페이지",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "로그아웃",
+          "href": null,
+          "id": "",
+          "className": "home-util__link"
+        },
+        {
+          "text": "홈",
+          "href": "#/study-room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방찾기",
+          "href": "https://study114.net/search/#/search/room?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방상세등록",
+          "href": "https://study114.net/register/room/#/register/basic",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "홈",
+          "href": "#/study-room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방찾기",
+          "href": "https://study114.net/search/#/search/room?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "학생찾기",
+          "href": "https://study114.net/search/#/search/student?role=study_room",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "공부방상세등록",
+          "href": "https://study114.net/register/room/#/register/basic",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "유료상품",
+          "href": "#/plans",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "커뮤니티",
+          "href": "#/community",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": "home-gnb__item"
+        },
+        {
+          "text": "✎\n내 등록",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": "mypage-nav__link is-active is-emphasis"
+        },
+        {
+          "text": "✉\n쪽지·후기함",
+          "href": "#/mypage/messages",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "◷\n최근열람",
+          "href": "#/mypage/recent",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "☆\n관심 학생",
+          "href": "#/mypage/student-review",
+          "id": "",
+          "className": "mypage-nav__link is-emphasis"
+        },
+        {
+          "text": "♡\n찜한 공부방·과외쌤",
+          "href": "#/mypage/wishlist",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "▤\n내 문의 내역",
+          "href": "#/mypage/contact",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "◌\n구매이력",
+          "href": "#/mypage/plans",
+          "id": "",
+          "className": "mypage-nav__link is-emphasis"
+        },
+        {
+          "text": "⚙\n계정설정",
+          "href": "#/mypage/account",
+          "id": "",
+          "className": "mypage-nav__link"
+        },
+        {
+          "text": "마이페이지",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "더 보기",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__more"
+        },
+        {
+          "text": "전체\n쪽지함 프리뷰(16a) 안내\n2026-06-15",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__row"
+        },
+        {
+          "text": "전체\n고객센터·안전과외 가이드 1차 오픈 (프리뷰)\n2026-07-01",
+          "href": "#/support/notice",
+          "id": "",
+          "className": "mypage-notice__row"
+        },
+        {
+          "text": "프로필 꾸미기",
+          "href": "#/mypage/registrations/study-rooms/7",
+          "id": "",
+          "className": "mp-room__tab is-active"
+        },
+        {
+          "text": "기본정보",
+          "href": "#/mypage/registrations/study-rooms/7/basic",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "상세정보1",
+          "href": "#/mypage/registrations/study-rooms/7/detail",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "상세정보2",
+          "href": "#/mypage/registrations/study-rooms/7/detail2",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "쪽지설정",
+          "href": "#/mypage/registrations/study-rooms/7/inquiries",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "등록점검",
+          "href": "#/mypage/registrations/study-rooms/7/publish",
+          "id": "",
+          "className": "mp-room__tab"
+        },
+        {
+          "text": "올리기",
+          "href": null,
+          "id": "",
+          "className": "btn btn--secondary btn--sm ng-editor__submit-btn"
+        },
+        {
+          "text": "취소",
+          "href": null,
+          "id": "",
+          "className": "ng-editor__cancel-edit"
+        },
+        {
+          "text": "×",
+          "href": null,
+          "id": "",
+          "className": "shop-lightbox__close"
+        },
+        {
+          "text": "작성 전 체크\n노출 정보와 쪽지 설정을 확인하세요\n등록방법",
+          "href": null,
+          "id": "",
+          "className": "live-rail-action live-rail-action--signal"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "더보기",
+          "href": null,
+          "id": "",
+          "className": "live-rail-slot__cta live-rail-info__more"
+        },
+        {
+          "text": "약관",
+          "href": "#/support/policies/terms",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "개인정보",
+          "href": "#/support/policies/privacy",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "플랫폼 고지",
+          "href": "#/support/policies/platform",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "고객센터",
+          "href": "#/support",
+          "id": "",
+          "className": ""
+        },
+        {
+          "text": "↑\n맨위",
+          "href": null,
+          "id": "study114-back-to-top",
+          "className": "back-to-top"
+        }
+      ]
+    }
+  },
+  {
+    "id": "B-07-mypage-plans",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/plans",
+    "finalUrl": "https://study114.net/#/mypage/plans",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매이력 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 이용중인 노출광고 베이직 노출 이용중 - 무료광고 쪽지 사용한 대상 쪽지를 사용한 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-07-mypage-plans-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-08-mypage-plans-my",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/plans/my",
+    "finalUrl": "https://study114.net/#/mypage/plans/my",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매이력 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 내 쪽지권 · 상품 쪽지권 이 프로필에 표시할 쪽지권이 없습니다. · 쪽지권 충전하",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-08-mypage-plans-my-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-09-mypage-plans-history",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/plans/history",
+    "finalUrl": "https://study114.net/#/mypage/plans/history",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 구매이력 구매내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 결제내역 서버 주문 내역과 이 기기의 임시 내역을 함께 표시 주문번호\t상품\t프로필\t",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-09-mypage-plans-history-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-10-mypage-recent",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/recent",
+    "finalUrl": "https://study114.net/#/mypage/recent",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 최근열람 최근열람 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 가능동베스트 지금은 쪽지 안 받음 · 잠시 쉼 study_room · 상세 열람 공부방 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-10-mypage-recent-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-11-mypage-wishlist",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/wishlist",
+    "finalUrl": "https://study114.net/#/mypage/wishlist",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 찜한 공부방·과외쌤 찜한 공부방·과외쌤 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요. 공",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-11-mypage-wishlist-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-12-mypage-student-review",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/student-review",
+    "finalUrl": "https://study114.net/#/mypage/student-review",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 관심 학생 관심 학생 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 검토 중인 학생이 없습니다 마음에 드는 등록을 검토함에 넣어 두고, 준비가 되면 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-12-mypage-student-review-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-13-mypage-submission-board",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/submission-board",
+    "finalUrl": "https://study114.net/#/mypage/submission-board",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 제출함 제출함 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 체크합니다. 과",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-13-mypage-submission-board-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-14-mypage-submission-docs",
+    "mode": "m",
+    "url": "https://study114.net/#/mypage/submission-docs",
+    "finalUrl": "https://study114.net/#/mypage/submission-docs",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 제출자료 상태 제출자료 상태 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-14-mypage-submission-docs-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-15-myshop-owner",
+    "mode": "m",
+    "url": "https://study114.net/#/myshop",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-15-myshop-owner-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-17-community-hub",
+    "mode": "m",
+    "url": "https://study114.net/#/community",
+    "finalUrl": "https://study114.net/#/community",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 현장형 커뮤니티 남기고 · 답하고 · 해결후기로 이어가기 공부방·과외쌤·학생/학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다. 게시판 둘러보기 해결후기 보기 게시판 4곳 역할별 게시판으로 바로 들어가기 공부방 공부방 고민방 운영·모집",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-17-community-hub-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-18-community-director",
+    "mode": "m",
+    "url": "https://study114.net/#/community/director",
+    "finalUrl": "https://study114.net/#/community/director",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 공부방 공부방 고민방 공부방 운영·모집·학부모 응대 이 게시판은 공부방 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방 운영·모집·학부모 응대 공부방 고민방 공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 공부방 고민방 공부방 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-18-community-director-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-19-community-parent",
+    "mode": "m",
+    "url": "https://study114.net/#/community/parent",
+    "finalUrl": "https://study114.net/#/community/parent",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 학생·학부모 학생/학부모 고민방 공부방·과외 선택·루틴·안전 이 게시판은 학생·학부모 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방·과외 선택·루틴·안전 학생/학부모 고민방 공부방·과외 선택, 학습 루틴, 안전에 대한 고민을 나누는 공간입니다. ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-19-community-parent-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-20-community-tutor",
+    "mode": "m",
+    "url": "https://study114.net/#/community/tutor",
+    "finalUrl": "https://study114.net/#/community/tutor",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 과외쌤 과외쌤 고민방 프로필·첫 상담·수업 전환 이 게시판은 과외쌤 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 프로필·첫 상담·수업 전환 과외쌤 고민방 프로필·첫 상담·수업 전환에 대한 고민을 나누는 공간입니다. 과외쌤 고민방 프로필·첫 상담·수",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-20-community-tutor-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-21-community-admission",
+    "mode": "m",
+    "url": "https://study114.net/#/community/admission",
+    "finalUrl": "https://study114.net/#/community/director",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 공부방 공부방 고민방 공부방 운영·모집·학부모 응대 이 게시판은 공부방 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 공부방 운영·모집·학부모 응대 공부방 고민방 공부방 운영·모집·학부모 응대에 대한 고민을 나누는 공간입니다. 공부방 고민방 공부방 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-21-community-admission-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-22-community-solved",
+    "mode": "m",
+    "url": "https://study114.net/#/community/solved",
+    "finalUrl": "https://study114.net/#/community/solved",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 커뮤니티 메뉴 커뮤니티 홈 공부방 고민방 과외쌤 고민방 학생/학부모 고민방 해결후기 해결됨 해결후기 바꿔보니 효과 있었던 경험·운영 노하우 이 게시판은 로그인한 회원 회원에게 열려 있어요. 지금은 제목만 볼 수 있어요. 전체 고민 조언 해결 부탁 최신 공감·HOT 댓글많은 바꿔보니 효과 있었던 경험·운영 노하우 해결후기 바꿔보니 효과 있었던 경험과 운영 노하우를 나누는 공간입니다. 해결후기 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-22-community-solved-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-23-support-hub",
+    "mode": "m",
+    "url": "https://study114.net/#/support",
+    "finalUrl": "https://study114.net/#/support",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 고객센터 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 필요한 답을 빠르게 자주 묻는 질문에서 먼저 찾아 보세요. 쓰는 방법은 이용안내, 운영팀에 보낼 내용은 운영문의입니다. 쪽지와 운영문의는 다릅니다. 자주 묻는 질문 운영문의 남기기 QUICK LINKS 바로가기 공지사항 서비스 변경·운영 안내 자주 묻는 질문 자주 묻는 질문에서 먼저 약관·정책 이용약관 · 개인정보 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-23-support-hub-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-24-support-notice",
+    "mode": "m",
+    "url": "https://study114.net/#/support/notice",
+    "finalUrl": "https://study114.net/#/support/notice",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 필요한 답을 빠르게 자주 묻는 질문에서 먼저 찾아 보세요. 쓰는 방법은 이용안내, 운영팀에 보낼 내용은 운영문의입니다. 쪽지와 운영문의는 다릅니다. 자주 묻는 질문 운영문의 남기기 QUICK LINKS 바로가기 공지사항 서비스 변경·운영 안내 자주 묻는 질문 자주 묻는 질문에서 먼저 약관·정책 이용약관 · 개인정보 등 자료",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-24-support-notice-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-25-support-faq",
+    "mode": "m",
+    "url": "https://study114.net/#/support/faq",
+    "finalUrl": "https://study114.net/#/support/faq",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 FAQ 자주 묻는 질문 최신 질문을 표시합니다. 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다. 가입·로그인 등록·카드 검색·쪽지 결제·상품 안전·신고 Q 회원끼리 연락은 어떻게 하나요? − 회원 간 공식 접촉은 쪽지(16장) 입니다. 플랫폼 전화·이메일 중계는 없습니다. Q 운영·서비스 문의는 어디로 하나요?",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-25-support-faq-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-26-support-contact",
+    "mode": "m",
+    "url": "https://study114.net/#/support/contact",
+    "finalUrl": "https://study114.net/#/support/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 CONTACT 운영문의 운영문의는 운영팀에 보내는 채널입니다. 오류·정책·계정 문제를 남기세요. 수업 상담은 쪽지입니다. 접수한 뒤에는 마이페이지의 내 문의 내역에서 확인합니다. 문의 유형 오류·장애 정책·이용 문의 계정·로그인 기타 숨김 해제 요청 이메일 로그인 계정 이메일로 답변 확인 문의 내용 운영문의 남기기 제출하면 문의 번",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-26-support-contact-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-27-support-tickets",
+    "mode": "m",
+    "url": "https://study114.net/#/support/contact/tickets",
+    "finalUrl": "https://study114.net/#/mypage/contact",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 이 이종현룸 공부방 ✎ 내 등록 ✉ 쪽지·후기함 ◷ 최근열람 ☆ 관심 학생 ♡ 찜한 공부방·과외쌤 ▤ 내 문의 내역 ◌ 구매이력 ⚙ 계정설정 마이페이지 - 내 문의 내역 내 문의 내역 내 공지 더 보기 전체 쪽지함 프리뷰(16a) 안내 2026-06-15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026-07-01 고객센터에 남긴 운영문의와 답변, 진행 상태를 확인합니다. 새 운영문의 남",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-27-support-tickets-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-28-support-library",
+    "mode": "m",
+    "url": "https://study114.net/#/support/library",
+    "finalUrl": "https://study114.net/#/support/library",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 LIBRARY 자료실 역할별 팁 게시판을 모았어요. 게시판을 골라 들어가 보세요. 공부방 쏙쏙정보 공부방 운영에 바로 쓰는 정보를 나눠요. 운영 노하우 학생 모집·홍보 시설·행정·세무 입시·교육 소식 들어가기 과외쌤 따끈 팁가이드 과외 수업·상담에 바로 쓰는 팁을 나눠요. 수업 노하우 상담·학생 매칭 계약·정산·세무 입시·교육",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-28-support-library-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-29-support-policies",
+    "mode": "m",
+    "url": "https://study114.net/#/support/policies",
+    "finalUrl": "https://study114.net/#/support/policies",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 DOCUMENT HUB 약관·정책 약관과 운영 정책을 확인합니다. 자료실은 별도 메뉴입니다. 약관 개인정보 플랫폼 신뢰정보 안전과외 학생정보 신고·제재 계정연락처 DOC 이용약관 서비스 이용 기본 조건 목적 본 약관은 우동공과가 제공하는 지역 공부방·과외 정보 탐색, 등록, 비교, 쪽지 등 관련 서비스의 이용 조건과 절차, ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-29-support-policies-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-30-search-room",
+    "mode": "m",
+    "url": "https://study114.net/search/#/search/room",
+    "finalUrl": "https://study114.net/search/#/search/room",
+    "title": "우동공과 — 검색 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 우동공과 · 우리동네 공부방 과외쌤 우리동네 공부방·과외, 한눈에 비교하고 찾으세요 지역별로 모아 보고, 수업방식·대상·강점까지 비교해 우리 아이에게 맞는 공부방과 과외쌤을 더 쉽게 찾을 수 있어요 우리동네 과외쌤 찾기 홈으로 공부방 찾기 현재위치 신곡동 · 신곡건영아파트 50m © NAVER Corp. 신곡동 신곡동 공부방 현황입니다 공부방 2 우리동네의 공부방은 하단의 '우동공과 ",
+    "consoleLogs": [],
+    "networkErrors": [],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-30-search-room-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-31-search-tutor",
+    "mode": "m",
+    "url": "https://study114.net/search/#/search/tutor",
+    "finalUrl": "https://study114.net/search/#/search/room?role=study_room",
+    "title": "우동공과 — 검색 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 우동공과 · 우리동네 공부방 과외쌤 우리동네 공부방·과외, 한눈에 비교하고 찾으세요 지역별로 모아 보고, 수업방식·대상·강점까지 비교해 우리 아이에게 맞는 공부방과 과외쌤을 더 쉽게 찾을 수 있어요 우리동네 과외쌤 찾기 홈으로 공부방 찾기 현재위치 신곡동 · 신곡건영아파트 50m © NAVER Corp. 신곡동 신곡동 공부방 현황입니다 공부방 2 우리동네의 공부방은 하단의 '우동공과 ",
+    "consoleLogs": [],
+    "networkErrors": [],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-31-search-tutor-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-32-forbidden-admin-notices",
+    "mode": "m",
+    "url": "https://study114.net/#/support/admin/notices",
+    "finalUrl": "https://study114.net/#/support/admin/notices",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 운영 홈 공지 관리 티켓 관리 ← 고객센터 공지 관리 운영 공지 추가·수정·삭제 · 사용자 공지사항에 즉시 반영 날짜\t제목\t 2026-07-01\t고객센터·안전과외 가이드 1차 오픈 (프리뷰)\t 수정 삭제 2026-06-15\t쪽지함 프리뷰(16a) 안내\t 수정 삭제 공지 작성 · 수정 날짜 제목 본문 (줄바꿈 = 문단) 저장 새 공지",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-32-forbidden-admin-notices-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-33-forbidden-admin-tickets",
+    "mode": "m",
+    "url": "https://study114.net/#/support/admin/tickets",
+    "finalUrl": "https://study114.net/#/support/admin/tickets",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 고객센터 메뉴 공지사항 자주 묻는 질문 약관·정책 자료실 운영문의 운영 홈 공지 관리 티켓 관리 ← 고객센터 티켓 관리 운영 접수 문의 상태 변경과 운영자 답변 등록 요청을 처리하지 못했습니다. 번호\t유형\t이메일\t상태\t답변\t접수일 요청을 처리하지 못했습니다. ← 메인 홈으로 지금 필요한 안내 이번 시즌 추천 행동 3분 등록부터 기본등록으로 가볍게 시작 등록방법 약관 개인정보 플랫폼 고지 고객센터 ",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()",
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php",
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-33-forbidden-admin-tickets-m.png",
+    "extraData": {}
+  },
+  {
+    "id": "B-34-forbidden-register-tutor",
+    "mode": "m",
+    "url": "https://study114.net/#/register/tutor",
+    "finalUrl": "https://study114.net/#/study-room",
+    "title": "우동공과 — 메인 화면 프리뷰",
+    "bodyTextSnippet": "로그인: 이종현룸 이용안내 쪽지·후기함 최근열람 마이페이지 로그아웃 홈 공부방찾기 학생찾기 공부방상세등록 유료상품 커뮤니티 고객센터 공부방 카달로그 내가 찾는 공부방 가까운 곳부터 비교하고, 등록은 가볍게 시작하세요 과외쌤 카달로그 나의 과외쌤은 어디에? 과외지역·주력 과목으로 프로필을 분명하게 우리동네 학생 학생, 인재로 만들기 가까운 곳부터 비교하고, 쪽지로 시작하세요 공지 더보기 전체 쪽지함 프리뷰(16a) 안내 2026.06.15 전체 고객센터·안전과외 가이드 1차 오픈 (프리뷰) 2026.07.01 우리 동네에 새로 왔어요",
+    "consoleLogs": [
+      "[console.error] Failed to load resource: the server responded with a status of 403 ()"
+    ],
+    "networkErrors": [
+      "[403] https://study114.net/api/support/tickets.php"
+    ],
+    "shotPath": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-34-forbidden-register-tutor-m.png",
+    "extraData": {}
+  }
+]

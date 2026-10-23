@@ -1,0 +1,20 @@
+{
+  "test": "3. 커뮤니티 글쓰기",
+  "originalValue": "(글 없음)",
+  "createdPost": {
+    "title": "[테스트] 무결성 점검 — 곧 삭제",
+    "body": "[테스트] 자동 점검 글입니다."
+  },
+  "updatedBody": "[테스트] 자동 점검 글입니다. (수정)",
+  "commentCreated": false,
+  "commentDeleted": false,
+  "postDeleted": false,
+  "shots": {
+    "listBefore": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write3-comm-01-list-before.png",
+    "composeForm": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write3-comm-02-compose-form.png",
+    "detailCreated": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write3-comm-03-detail-created.png",
+    "listWithPost": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write3-comm-04-list-with-post.png",
+    "listReverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write3-comm-09-list-reverted.png"
+  },
+  "revertedValue": "목록에서 삭제됨 (성공)"
+}

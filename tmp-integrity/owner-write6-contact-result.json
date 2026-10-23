@@ -1,0 +1,13 @@
+{
+  "test": "6. 1:1 문의",
+  "ticketText": "[테스트] 무결성 점검 — 답변 불필요",
+  "submitted": true,
+  "historyVerified": true,
+  "cancelAvailable": false,
+  "reverted": false,
+  "shots": {
+    "before": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write6-contact-01-before.png",
+    "submitted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write6-contact-02-submitted.png",
+    "history": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write6-contact-03-history.png"
+  }
+}

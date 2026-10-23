@@ -1,0 +1,15 @@
+{
+  "test": "4. 마이샵/내 등록 편집",
+  "field": "intro_long (공부방 소개 / 자랑)",
+  "originalValue": "조용합니다.",
+  "changedValue": "조용합니다. [테스트]",
+  "revertedValue": "조용합니다. (원복 성공)",
+  "shots": {
+    "before": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-01-before.png",
+    "publicBefore": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-02-public-before.png",
+    "saved": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-03-saved.png",
+    "publicChanged": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-04-public-changed.png",
+    "reverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-05-reverted.png",
+    "publicReverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write4-reg-06-public-reverted.png"
+  }
+}

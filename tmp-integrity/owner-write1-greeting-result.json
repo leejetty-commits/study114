@@ -1,0 +1,13 @@
+{
+  "test": "1. 동네 인사",
+  "originalValue": "아직 올린 인사가 없어요.",
+  "changedValue": "[테스트] 무결성 점검",
+  "revertedValue": "아직 올린 인사가 없어요.",
+  "shots": {
+    "before": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write1-greeting-01-before.png",
+    "posted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write1-greeting-02-posted.png",
+    "home": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write1-greeting-03-home.png",
+    "reverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write1-greeting-04-reverted.png",
+    "homeReverted": "d:\\work\\study114\\.wt\\integrity\\tmp-integrity\\shots\\owner\\B-write1-greeting-05-home-reverted.png"
+  }
+}
