@@ -683,11 +683,18 @@ final class SearchService
             ? 'sr.business_registration_available'
             : 'NULL';
 
+        $tsIdsExpr = $this->columnCache($pdo, 'study_rooms', 'teaching_style_ids') ? 'sr.teaching_style_ids' : 'NULL';
+        $tsNoteExpr = $this->columnCache($pdo, 'study_rooms', 'teaching_style_note') ? 'sr.teaching_style_note' : 'NULL';
+        $lpwExpr = $this->columnCache($pdo, 'study_rooms', 'lessons_per_week') ? 'sr.lessons_per_week' : 'NULL';
+
         $sql = "
             SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
                    sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band,
                    {$audienceExpr} AS audience_label,
                    sr.feature_1, sr.feature_2, sr.feature_3, sr.slogan,
+                   {$tsIdsExpr} AS teaching_style_ids,
+                   {$tsNoteExpr} AS teaching_style_note,
+                   {$lpwExpr} AS lessons_per_week,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
                    sr.facility_note, sr.inquiry_status, sr.profile_status,
                    sr.education_office_registered, sr.detail_completion_status,
@@ -770,6 +777,11 @@ final class SearchService
                 'feature_3'                  => (string) ($row['feature_3'] ?? ''),
                 'slogan'                     => (string) ($row['slogan'] ?? ''),
                 'teaching_style'             => (string) ($row['teaching_style'] ?? ''),
+                'teaching_style_ids'         => $row['teaching_style_ids'] !== null && $row['teaching_style_ids'] !== ''
+                    ? array_values(array_filter(array_map('trim', explode(',', (string) $row['teaching_style_ids']))))
+                    : [],
+                'teaching_style_note'        => (string) ($row['teaching_style_note'] ?? ''),
+                'lessons_per_week'           => $row['lessons_per_week'] !== null ? (string) $row['lessons_per_week'] : '',
                 'lesson_place_type'          => $row['lesson_place_type'] ?? null,
                 'capacity_per_time'          => $row['capacity_per_time'] ?? null,
                 'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
@@ -780,7 +792,15 @@ final class SearchService
                 'career_years'               => $row['career_years'] !== null ? (int) $row['career_years'] : null,
                 'business_registration_available' => (bool) ($row['business_registration_available'] ?? false),
                 'detail_completion_status'   => $detailStatus,
-                'prime_eligible'             => $detailStatus === 'expanded_complete',
+                'prime_eligible'             => trim((string) ($row['image_path_prime'] ?? '')) !== ''
+                    && trim((string) ($row['intro_long'] ?? '')) !== ''
+                    && trim((string) ($row['teaching_style'] ?? '')) !== ''
+                    && trim((string) ($row['teaching_style_note'] ?? '')) !== ''
+                    && (int) ($row['price_amount'] ?? 0) > 0
+                    && !empty($row['lessons_per_week'])
+                    && trim((string) ($row['feature_1'] ?? '')) !== ''
+                    && trim((string) ($row['feature_2'] ?? '')) !== ''
+                    && trim((string) ($row['feature_3'] ?? '')) !== '',
                 'position_sku'               => $positionSku,
                 'exposure_tier'              => $exposureTier,
                 'latitude'                   => $row['latitude'] !== null ? (float) $row['latitude'] : null,

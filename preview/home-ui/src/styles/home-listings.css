@@ -1378,6 +1378,12 @@
   color: var(--gray-600);
 }
 
+.expo-tbl__cell--intro .expo-tbl__val {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .expo-tbl--card .expo-tbl__cell {
   border-left: none;
   border-right: none;

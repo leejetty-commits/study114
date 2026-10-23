@@ -283,10 +283,6 @@ export function renderLessonFormHtml(opts = {}) {
           </label>
         </div>
       </div>
-      <div class="form-group" data-rc-field="intro_short">
-        ${tierLabel('intro_short', '한 줄 소개')}
-        <input class="form-input" id="intro_short" name="intro_short" maxlength="80" value="${esc(s.intro_short)}" placeholder="프라임 카드에 보이는 한 줄입니다." />
-      </div>
       <div class="form-group" data-rc-field="intro_long">
         ${tierLabel('intro_long', '공부방·교습소 소개와 자랑')}
         <textarea class="form-input form-textarea register-intro-long" id="intro_long" name="intro_long" rows="8" placeholder="공부방·교습소를 소개하고 자랑해 주세요.">${esc(s.intro_long)}</textarea>

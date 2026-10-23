@@ -186,8 +186,8 @@ ok('(1) 홈·찜 변환: 슬로건 그대로', mapped.slogan === '잘 가르쳐�
 }
 
 const ROOM_LABELS_BASIC = ['교습형태', '대상', '과목', '원생수', '수업운영방식', '슬로건'];
-const ROOM_LABELS_PICK = [...ROOM_LABELS_BASIC, '특징'];
-const ROOM_LABELS_PRIME = [...ROOM_LABELS_PICK, '소개'];
+const ROOM_LABELS_PICK = [...ROOM_LABELS_BASIC, '특징', '수업스타일', '소개'];
+const ROOM_LABELS_PRIME = [...ROOM_LABELS_BASIC, '특징', '수업스타일', '수업스타일 추가설명', '주 회수', '소개'];
 const EMPTY_ROOM = { id: 7101, study_room_name: '빈공부방', location_label: '' };
 const ROOM_RENDERS = {
   basic: [(it) => renderBrowseList('study_room', [it], { guest: false }), ROOM_LABELS_BASIC],

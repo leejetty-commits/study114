@@ -865,7 +865,7 @@ final class StudyRoomRegisterService
 
                 one_on_one_available = ?,
 
-                intro_short = ?,
+                intro_short = COALESCE(?, intro_short),
 
                 intro_long = ?,
 

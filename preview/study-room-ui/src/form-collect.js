@@ -290,7 +290,6 @@ export function syncLessonFromForm(form, state) {
   state.minutes_per_lesson = String(fd.get('minutes_per_lesson') ?? '');
   state.monthly_fee_manwon = String(fd.get('monthly_fee_manwon') ?? '');
   state.price_amount = cheonwonToPriceAmount(state.monthly_fee_manwon);
-  state.intro_short = String(fd.get('intro_short') ?? '');
   state.intro_long = String(fd.get('intro_long') ?? '');
 
   state.classes = [];
@@ -434,7 +433,6 @@ export function payloadForStep(step, state) {
         price_amount: state.price_amount,
         price_description: state.price_description,
         price_items: state.price_items,
-        intro_short: state.intro_short,
         intro_long: state.intro_long,
         classes: state.classes || [],
         lesson_extra: packLessonExtra(state),

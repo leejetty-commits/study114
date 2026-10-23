@@ -14,16 +14,17 @@ export const TUTOR_PICK_IDS = ['school_or_career', 'teaching_style_badges'];
 export const TUTOR_PRIME_IDS = [...TUTOR_PICK_IDS, 'intro_long', 'feature_2', 'feature_3'];
 
 /** 등록점검 RC_PICK/PRIME 순서 그대로 */
-export const ROOM_PICK_IDS = ['cover', 'intro_short', 'fee', 'teaching_style'];
+export const ROOM_PICK_IDS = ['cover', 'intro_long', 'fee', 'teaching_style', 'feature_1'];
 export const ROOM_PRIME_IDS = [
   'cover',
-  'intro_short',
   'intro_long',
   'teaching_style',
   'teaching_style_note',
   'fee',
   'lessons_per_week',
   'feature_1',
+  'feature_2',
+  'feature_3',
 ];
 
 const SCHOOL_OR_CAREER_LABEL = '학교·학과 또는 경력';
@@ -39,13 +40,14 @@ const TUTOR_HINTS = {
 
 const ROOM_META = {
   cover: { label: '대표사진', focus: 'cover', tab: 'detail' },
-  intro_short: { label: '한 줄 소개', focus: 'intro_short', tab: 'detail' },
+  intro_long: { label: '공부방 소개 / 자랑', focus: 'intro_long', tab: 'detail' },
   fee: { label: '월 평균 수업료', focus: 'fee', tab: 'detail' },
   teaching_style: { label: '수업 스타일', focus: 'teaching_style', tab: 'detail' },
-  intro_long: { label: '공부방 소개 / 자랑', focus: 'intro_long', tab: 'detail' },
   teaching_style_note: { label: '수업 스타일 추가설명', focus: 'teaching_style_note', tab: 'detail' },
   lessons_per_week: { label: '주 회수', focus: 'lessons_per_week', tab: 'detail' },
   feature_1: { label: '경력특징 1', focus: 'feature_1', tab: 'detail2' },
+  feature_2: { label: '경력특징 2', focus: 'feature_2', tab: 'detail2' },
+  feature_3: { label: '경력특징 3', focus: 'feature_3', tab: 'detail2' },
 };
 
 const ROOM_STYLES = {
@@ -174,6 +176,8 @@ function roomFieldFilled(room, id) {
   if (id === 'fee') return roomFeeFilled(room);
   if (id === 'lessons_per_week') return lessonWeeklyLabel(room?.lessons_per_week) !== '';
   if (id === 'feature_1') return text(room?.feature_1) !== '';
+  if (id === 'feature_2') return text(room?.feature_2) !== '';
+  if (id === 'feature_3') return text(room?.feature_3) !== '';
   return false;
 }
 

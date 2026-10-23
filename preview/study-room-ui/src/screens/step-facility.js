@@ -122,12 +122,12 @@ export function renderFacilityFormHtml(opts = {}) {
           ${tierLabel('feature_1', '경력특징 1')}
           <input class="form-input" id="feature_1" name="feature_1" value="${esc(s.feature_1)}" />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="feature_2">경력특징 2</label>
+        <div class="form-group" data-rc-field="feature_2">
+          ${tierLabel('feature_2', '경력특징 2')}
           <input class="form-input" id="feature_2" name="feature_2" value="${esc(s.feature_2)}" />
         </div>
-        <div class="form-group">
-          <label class="form-label" for="feature_3">경력특징 3</label>
+        <div class="form-group" data-rc-field="feature_3">
+          ${tierLabel('feature_3', '경력특징 3')}
           <input class="form-input" id="feature_3" name="feature_3" value="${esc(s.feature_3)}" />
         </div>
       </div>

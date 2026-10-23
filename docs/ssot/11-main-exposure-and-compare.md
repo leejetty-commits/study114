@@ -72,7 +72,8 @@
 - **표형태** 카드 · 가로 **균등 배분** (Basic 특히)
 - 괄호 항목명 미표시 · **값만**
 - Prime/Pick 이미지 **우하단 비교 오버레이**
-- Pick: `intro_short` 숨김 · `feature_1` 1개만
+- **픽 13칸**: 베이직 9 + 특징1 + 신뢰배지 + 수업스타일 + 소개(긴 소개 한 줄) + 슬로건 + 액션
+- **프라임 15칸**: 베이직 9 + 특징1~3 + 신뢰배지 + 수업스타일 + 수업스타일 추가설명 + 주 회수 + 소개(긴 소개 한 줄) + 슬로건 + 액션
 - Basic 3행:
   1. 공부방명 / 대상 / 과목 / 가격 / 비교
   2. 위치 / 수업장소 / 원생수 / 수업형태 / 특징1
@@ -80,7 +81,7 @@
 
 ### 4-1. Prime
 
-위치 상단 1줄 → 이미지(16:9) → 공부방명·가격 → 신뢰배지 → 대상·과목 → 수업장소·원생수·수업운영형태 → 특징 → 소개 → 슬로건 → 액션
+위치 상단 1줄 → 이미지(16:9) → 공부방명·가격 → 신뢰배지 → 대상·과목 → 수업장소·원생수·수업운영형태 → 특징1~3 → 수업스타일 → 수업스타일 추가설명 → 주 회수 → 소개(긴 소개 한 줄) → 슬로건 → 액션
 
 | UI | DB |
 |----|-----|
@@ -94,13 +95,16 @@
 | 원생수 | `capacity_per_time` |
 | 수업형태 | `lesson_operation_type` |
 | 특징 | `feature_1~3` |
-| 소개 | `intro_short` |
+| 수업스타일 | `teaching_style` |
+| 수업스타일 추가설명 | `teaching_style_note` |
+| 주 회수 | `lessons_per_week` |
+| 소개 | `intro_long` |
 | 슬로건 | `slogan` |
 | 배지 | `study_room_badges` · 교육청등록 등 |
 
 ### 4-2. Pick / Basic
 
-Pick: Prime에서 소개 제외 · 특징1 · 슬로건 유지  
+픽: 프라임에서 특징을 1개로, 수업스타일 추가설명·주 회수 제외. 소개(긴 소개 한 줄) 유지. 13칸.  
 Basic: §4-0 3행 구조 · 이미지 기본 제외
 
 ### 4-3. 비교검색 표
@@ -109,7 +113,16 @@ Basic: §4-0 3행 구조 · 이미지 기본 제외
 
 ### 4-4. 비교 자격 (§7)
 
-`study_room_name` · `region_id|complex_id` · `main_subject_note` · `price_amount` · `study_room_subject_targets` 1건+ · `feature_1|intro_short`
+`study_room_name` · `region_id|complex_id` · `main_subject_note` · `price_amount` · `study_room_subject_targets` 1건+ · `feature_1|intro_long`
+
+### 4-5. 픽·프라임 구매 필수 (282 확정)
+
+| 자리 | 필수 항목(`ROOM_PICK_IDS` / `ROOM_PRIME_IDS`) |
+| --- | --- |
+| **픽** | `cover` · `intro_long` · `fee` · `teaching_style` · `feature_1`(경력특징 1) |
+| **프라임** | 픽 전부 + `feature_2`(경력특징 2) · `feature_3`(경력특징 3) · `teaching_style_note` · `lessons_per_week` |
+
+서버: `TierRequirement.php` · 화면: `pickprime-requirements.js`
 
 ---
 
