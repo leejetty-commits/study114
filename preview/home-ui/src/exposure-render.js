@@ -1,4 +1,5 @@
 import { renderSectionHeading, renderSectionToolbar, renderSectionTitleBar } from './section-headings.js';
+import { lessonWeeklyLabel } from '../../shared/lesson-weekly-options.js';
 import {
   formatMonthlyWon,
   formatTutorFeeCard,
@@ -491,6 +492,7 @@ function studyRoomPriceCell(item) {
 function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = false }, actions = '') {
   const badgeCell = `${renderPromoBadgeRow(resolveCardVisualLayers('study_room', item).promoBadges, esc)}${renderTrustBadges(trustBadgesForItem('study_room', item))}`;
   if (stack) {
+    // 픽 카드 (13개 = 베이직9 + 특징1 + 신뢰배지 + 수업스타일 + 소개)
     const rows = [
       [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
       [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
@@ -500,10 +502,15 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
       [labeled('원생수', formatStudyRoomCapacity(item.capacity_per_time), { col: 2 })],
       [labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
       [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],
+      [labeled('수업스타일', item.teaching_style, { col: 2, cls: 'expo-tbl__cell--style' })],
     ];
+    if (showIntro) {
+      rows.push([labeled('소개', item.intro_long, { col: 2, cls: 'expo-tbl__cell--intro' })]);
+    }
     return appendSloganAndActions(rows, item, actions, { showIntro });
   }
 
+  // 프라임 카드 (15개 = 베이직9 + 특징1~3 + 신뢰배지 + 수업스타일 + 수업스타일 추가설명 + 주회수 + 소개)
   const rows = [
     [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
     [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
@@ -512,9 +519,12 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
     [labeled('교습형태', formatLessonPlace(item.lesson_place_type)), labeled('원생수', formatStudyRoomCapacity(item.capacity_per_time))],
     [labeled('수업운영방식', formatLessonOperationType(item.lesson_operation_type), { col: 2 })],
     [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],
+    [labeled('수업스타일', item.teaching_style, { col: 2, cls: 'expo-tbl__cell--style' })],
+    [labeled('수업스타일 추가설명', item.teaching_style_note, { col: 2 })],
+    [labeled('주 회수', lessonWeeklyLabel(item.lessons_per_week), { col: 2 })],
   ];
   if (showIntro) {
-    rows.push([labeled('소개', item.intro_short || '—', { col: 2, cls: 'expo-tbl__cell--intro' })]);
+    rows.push([labeled('소개', item.intro_long, { col: 2, cls: 'expo-tbl__cell--intro' })]);
   }
   return appendSloganAndActions(rows, item, actions, { showIntro });
 }
@@ -592,7 +602,7 @@ function renderPrimeTutor(item, actions, opts) {
 }
 
 function renderPickStudyRoom(item, actions, opts) {
-  const rows = studyRoomTableRows(item, { showIntro: false, featureMax: 1, stack: true }, actions);
+  const rows = studyRoomTableRows(item, { showIntro: true, featureMax: 1, stack: true }, actions);
   return `
     <article class="expo-card expo-card--pick expo-card--study_room" ${cardIdentityAttrs(item, 'study_room')}>
       ${renderPickStudyRoomMedia(item)}
