@@ -45,8 +45,8 @@ function providerDisplayName(role, basic) {
 function renderGreetingModal() {
   return `
     <div class="ng-prompt-modal" data-ng-prompt role="dialog" aria-modal="true" aria-labelledby="ng-prompt-title">
-      <div class="ng-prompt-modal__card">
-        <h2 id="ng-prompt-title" class="ng-prompt-modal__title">동네에 인사할까요?</h2>
+      <div class="ng-prompt-modal__card" data-drag-box>
+        <h2 id="ng-prompt-title" class="ng-prompt-modal__title" data-drag-handle>동네에 인사할까요?</h2>
         <p class="ng-prompt-modal__lead">같은 동네 학생에게 한 줄만 보여요. 건너뛰어도 바로 쓸 수 있어요.</p>
         <label class="form-label" for="ng-body">한 줄</label>
         <textarea class="form-input" id="ng-body" maxlength="80" rows="2" data-ng-body></textarea>
