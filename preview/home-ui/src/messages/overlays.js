@@ -59,11 +59,11 @@ export function showPaidGateOverlay(opts = {}) {
 
     <div class="msg-overlay" data-overlay="gate" role="dialog" aria-modal="true" aria-labelledby="msg-gate-title">
 
-      <div class="msg-overlay__panel msg-gate">
+      <div class="msg-overlay__panel msg-gate" data-drag-box>
 
         <p class="msg-overlay__screen-id">쪽지 보내기</p>
 
-        <h2 id="msg-gate-title" class="msg-gate__title">${esc(copy.title)}</h2>
+        <h2 id="msg-gate-title" class="msg-gate__title" data-drag-handle>${esc(copy.title)}</h2>
 
         <p class="msg-gate__body">${esc(copy.body)}</p>
 
@@ -169,11 +169,11 @@ export function showComposeModal(opts) {
 
     <div class="msg-overlay" data-overlay="compose" role="dialog" aria-modal="true" aria-labelledby="msg-compose-title">
 
-      <div class="msg-overlay__panel msg-compose">
+      <div class="msg-overlay__panel msg-compose" data-drag-box>
 
         <p class="msg-overlay__screen-id">쪽지 상세</p>
 
-        <h2 id="msg-compose-title" class="msg-compose__title">첫 메모 보내기</h2>
+        <h2 id="msg-compose-title" class="msg-compose__title" data-drag-handle>첫 메모 보내기</h2>
 
         <p class="msg-compose__target">대상: <strong>${esc(opts.targetName)}</strong> · ${esc(opts.contextLabel)}</p>
 
@@ -349,11 +349,11 @@ export function showReportOverlay(opts) {
 
     <div class="msg-overlay" data-overlay="report" role="dialog" aria-modal="true">
 
-      <div class="msg-overlay__panel msg-compose">
+      <div class="msg-overlay__panel msg-compose" data-drag-box>
 
         <p class="msg-overlay__screen-id">신고하기</p>
 
-        <h2 class="msg-compose__title">신고하기</h2>
+        <h2 class="msg-compose__title" data-drag-handle>신고하기</h2>
 
         <label class="msg-compose__field">
 
