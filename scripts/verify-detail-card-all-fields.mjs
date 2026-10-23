@@ -194,7 +194,7 @@ function unlabeledItems(kind, html, item) {
   if (/expo-hcard__slogan/.test(html)) out.add('슬로건');
   if (kind === 'tutor') {
     if (/expo-hcard__gender|expo-tbl__val-only/.test(html)) out.add('성별');
-    if (/expo-hcard__badge/.test(html)) out.add('대상');
+    if (/class="expo-hcard__k">대상<\/span>/.test(html) || /expo-hcard__badge/.test(html)) out.add('대상');
     if (item.lessons_per_week && html.includes(`주${item.lessons_per_week}`)) out.add('일정');
     if (item.lessons_per_week && html.includes(`주 ${item.lessons_per_week}회`)) out.add('일정');
     if (/expo-overlay-bl-grid/.test(html)) ['학적상태', '학교·학과', '경력', '수업료', '일정'].forEach((l) => out.add(l));

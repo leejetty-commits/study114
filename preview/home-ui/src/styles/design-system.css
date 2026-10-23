@@ -1109,7 +1109,7 @@ body {
 }
 
 .expo-card--pick.expo-card--tutor .expo-media-overlay__bl {
-  right: 3.875rem;
+  right: .25rem;
 }
 
 .expo-card--tutor .expo-overlay-bl-grid {

@@ -38,6 +38,7 @@ import './styles/promo-catalog.css';
 import './styles/inquiry-settings-catalog.css';
 /* 학생 마이페이지·내 등록만. 홈·타역할 선택자는 없음 */
 import './styles/student-mypage-stage5b.css';
+import { bindCardTrustRailFit } from './exposure-render.js';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
@@ -264,6 +265,7 @@ function renderScreen() {
     }
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
+    bindCardTrustRailFit(app);
     mountOpsChrome(app);
     mountHomePopup(app);
     return;
@@ -280,6 +282,7 @@ function renderScreen() {
   const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
   app.innerHTML = screen.render();
   screen.bind(app, render);
+  bindCardTrustRailFit(app);
   mountOpsChrome(app);
   mountHomePopup(app);
 }

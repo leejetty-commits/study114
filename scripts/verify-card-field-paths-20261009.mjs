@@ -55,8 +55,6 @@ function slots(html) {
   if (price) out['(가격)'] = price[1].trim();
   const loc = html.match(/class="expo-hcard__loc">([^<]*)</);
   if (loc) out['(위치)'] = loc[1].trim();
-  const badge = html.match(/class="expo-hcard__badge">([^<]*)</);
-  if (badge) out['(대상 배지)'] = badge[1].trim();
   const gender = html.match(/class="expo-hcard__gender">([^<]*)</);
   if (gender) out['(성별)'] = gender[1].trim();
   return out;
@@ -113,8 +111,8 @@ const ROOM_DETAIL = { ...ROOM_EXPECT, '월 수강료': F.formatMonthlyWon(SERVER
 
 const tutorTarget = F.formatTutorStudentTarget(SERVER_TUTOR);
 const TUTOR_BASIC = {
-  과목: '국어', 원생수: tutorTarget, 수업장소: '학생자택방문', 특징: '특징가 특징나 특징다', 슬로건: '과외슬로건',
-  '(대상 배지)': '중등', '(성별)': '여', '(가격)': F.formatTutorFeeCard(SERVER_TUTOR),
+  대상: '중등', 과목: '국어', 원생수: tutorTarget, 수업장소: '학생자택방문', 특징: '특징가 특징나 특징다', 슬로건: '과외슬로건',
+  '(성별)': '여', '(가격)': F.formatTutorFeeCard(SERVER_TUTOR),
 };
 const TUTOR_TABLE = { 대상: '중등', 과목: '국어', 수업장소: '학생자택방문', 원생수: tutorTarget, 주교재: '주교재X', 슬로건: '과외슬로건' };
 const TUTOR_PICK = { ...TUTOR_TABLE, 특징: '특징가', 강의스타일: '열정' };
@@ -127,8 +125,8 @@ const TUTOR_DETAIL = {
 const studentStyle = F.formatTeachingStyleBadges(SERVER_STUDENT.teaching_style_badges, 2);
 const STUDENT_BASIC = {
   과목: '수학', 수업장소: '학생자택 · 공공장소', 원생수: F.formatStudentLessonTarget(SERVER_STUDENT), 일정: '주2·60분',
-  '한 줄 요청': '요청문구', 특이요청: '특이문구', 강의스타일: studentStyle,
-  '(대상 배지)': '중2', '(가격)': F.formatStudentBudgetCard(SERVER_STUDENT),
+  학년: '중2', '한 줄 요청': '요청문구', 특이요청: '특이문구', 강의스타일: studentStyle,
+  '(가격)': F.formatStudentBudgetCard(SERVER_STUDENT),
 };
 const STUDENT_DETAIL = {
   학년: '중2', '희망 과목': '수학', '희망 수업장소': '학생자택 · 공공장소', 수업형태: '그룹과외', '그룹 구성': '남',
@@ -239,8 +237,8 @@ console.log('\n===== 학생 빈 값 · 요청문 잠금 =====');
   const want = ['과목', '수업장소', '원생수', '일정', '한 줄 요청', '특이요청', '강의스타일'];
   const tutorView = slots(R.renderBrowseList('student', [EMPTY], { guest: false, viewerRole: 'tutor' }));
   check('빈 학생 베이직: 항목제목 7개 모두 보임', want.every((k) => k in tutorView), `빠짐: ${want.filter((k) => !(k in tutorView)).join(', ')}`);
-  const plain = ['과목', '수업장소', '원생수', '일정', '강의스타일', '(대상 배지)', '(위치)'];
-  check('빈 학생 베이직: 값 자리 「—」(학년 배지·위치 포함)', plain.every((k) => tutorView[k] === '—'), plain.map((k) => `${k}=${tutorView[k]}`).join(', '));
+  const plain = ['과목', '수업장소', '원생수', '일정', '강의스타일', '학년', '(위치)'];
+  check('빈 학생 베이직: 값 자리 「—」(학년·위치 포함)', plain.every((k) => tutorView[k] === '—'), plain.map((k) => `${k}=${tutorView[k]}`).join(', '));
   check('빈 학생 베이직: 「(선택)」 없음', !R.renderBrowseList('student', [EMPTY], { guest: false, viewerRole: 'tutor' }).includes('(선택)'));
 
   const providerEmpty = isPaidProviderViewer('tutor') ? '—' : LOCK.unpaidProvider;

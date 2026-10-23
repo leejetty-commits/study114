@@ -517,6 +517,28 @@
   background: transparent;
 }
 
+.expo-hcard__side .card-visual__trust--rail {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  overflow: hidden;
+  min-width: 0;
+  flex: 1 1 0;
+  margin: 0 0.5rem 0 0;
+  align-items: center;
+}
+.card-visual__trust--rail .card-visual__trust-badge {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.card-visual__trust--rail .card-visual__trust-badge[hidden] {
+  display: none;
+}
+.card-visual__trust--rail .card-visual__trust-more {
+  font-size: 0.6875rem;
+  color: #4B5563;
+}
+
 .expo-hcard__actions {
   width: auto;
   flex-shrink: 0;
@@ -631,6 +653,40 @@
 
   .expo-hcard__loc {
     white-space: normal;
+  }
+}
+
+@media (max-width: 600px) {
+  .expo-hcard__media-wrap {
+    grid-row: 1;
+    align-self: start;
+  }
+  .expo-hcard__side {
+    grid-column: 1 / -1;
+  }
+  .card-visual__trust--rail {
+    gap: 0.2rem;
+    margin-right: 0.35rem;
+  }
+  .card-visual__trust--rail .card-visual__trust-badge {
+    padding: 0.1rem 0.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .expo-basic--tutor.expo-hcard {
+    position: relative;
+  }
+  .expo-basic--tutor .expo-hcard__side .card-visual__trust--rail {
+    position: absolute;
+    left: 0.6rem;
+    top: calc(0.55rem + 5.75rem + 0.2rem);
+    width: 5.75rem;
+    margin: 0;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    overflow: visible;
+    z-index: 1;
   }
 }
 

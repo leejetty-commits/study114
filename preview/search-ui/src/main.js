@@ -16,6 +16,7 @@ import '@home-ui/styles/home-marketing-banner.css';
 import './styles/search-visily.css';
 import '@home-ui/styles/udx-std-apply.css';
 
+import { bindCardTrustRailFit } from '@home-ui/exposure-render.js';
 import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js';
 import { replaceSearchRightRail } from './layout.js';
 import { mountOpsChrome } from '@home-ui/site-ops-chrome.js';
@@ -52,6 +53,7 @@ function render() {
   if (!paintBlocked) {
     app.innerHTML = html;
     bindSearchPageEvents(app, render, { allowFindBoot });
+    bindCardTrustRailFit(app);
     mountOpsChrome(app);
     paintedHash = hashBefore;
     return;
