@@ -73,6 +73,21 @@
 
 **5과제 검수 완료·배포 열 (10-08 07:40):** 5과제 모두 메인 검수 통과·push. 159c = `cursor/admin-159c-on-hold-20261008` `a1129f8`(코드 `a105f12`, 검수 기록 포함; 162 검사 FAIL 4건·등록 목록 FAIL 1건은 159c 전에도 같은 「옛 기준 커밋 대비 파일 목록」 오탐). 레일·동네 인사·시·도를 159c 위에 cherry-pick한 **배포 열** `.wt\train` / `cursor/deploy-train-20261008` 끝 **`49a6174`**(충돌 0, 원래 브랜치와 파일 내용 동일, 끝에서 전체 검사·`build:dothome` 통과, CSS 경고 2건은 기존). `main` fast-forward 순서: `7d4de59`(주소 통일) → `a1129f8`(159c) → `f25de2a`(레일) → `214e609`(동네 인사) → `49a6174`(시·도) → 사용자 시·도 SQL. 각 단계 승인 카드 + Actions + 운영 확인. 기록: 배포 열 브랜치 `docs/worklog/2026/10/2026-10-08-deploy-train.md`.
 
+**배포 완료 (10-08 13:05~13:35, 사용자 승인 카드):** `main` = **`44ea9f7`**. 순서 `7d4de59`(주소 통일) → `47c4d7b`(159c; 첫 시도 `a1129f8`은 159c 기록의 비밀키 접두어 글자 때문에 Actions 비밀키 검사 실패 → 문구 정정 후 재push, 운영 영향 없음) → `3ac88a6`(레일) → `3f5985a`(동네 인사) → `44ea9f7`(시·도 + 배포 열 기록, 열 브랜치 `cursor/deploy-train-20261008b`). 단계마다 Actions 3개(배포·ShopPage·Board ACL) 성공 + 운영 확인(새 문구·CSS 반영, API 401/200, 화면 JS 오류 0). 시·도 SQL 13:50 사용자 실행 완료: ① 「경기」 3행(id 123·124·485, 의정부시 가능동·신곡동·민락동) ② 중복 0행 ③ UPDATE 3행. 이후 공부방 6·7·8 공개 API 200·화면 JS 오류 0. 참고: 이 PC는 Git Bash(`C:\Program Files\Git\bin\bash.exe`)로 비밀키 검사 실행 가능.
+
+**새 채팅 시작점 — 무결성 검사 B편 (10-08 13:55):** 5과제 배포·시·도 SQL 모두 끝. 남은 일 = 공부방 모드 무결성 B편(원장 로그인 시점)만.
+1. 보고서: worktree `d:\work\study114\.wt\integrity` / 브랜치 `cursor/integrity-studyroom-20261008`, 파일 `docs/worklog/2026/10/2026-10-08-integrity-studyroom-mode.md`. A편(손님 시점) 완료 `c43abe3` — 형식(요약표·발견 표·재현 순서·원인·증거·메인 검수 정정표)을 B편도 그대로 따른다. 맨 아래 「B편」 칸을 채운다.
+2. 로그인: `d:\work\study114\.wt\_integrity-auth\login.mjs`(커밋 안 함). 비밀 파일을 직접 읽어 `/api/auth/login.php` 로그인 → 같은 폴더 `state.json`(세션)만 저장, 출력은 성공 여부·역할만. 실행 전 `$env:PLAYWRIGHT_BROWSERS_PATH="C:\Users\jetty\AppData\Local\ms-playwright"` 필수(샌드박스 경로 오류 방지). Auto-review가 막으면 같은 명령을 승인 카드로 재요청 → 사용자가 승인.
+3. 탐색: 저가 모델(Gemini 3.8 Flash) 하위 에이전트에 **`state.json` 경로만** 넘김(Playwright `storageState`). 계정·비밀 파일 경로 전달 금지. 범위 = 공부방 원장 화면 전부(마이페이지·내 등록·마이샵·쪽지함·쪽지설정·동네 인사·커뮤니티 글쓰기 등), **결제 제외**. 쓰기 시험 허용: 글은 「[테스트]」 표시 후 원복·삭제, 쪽지·문의는 `study114-secrets\test-recipients.txt`의 본인 계정에만(파일 내용은 메인이 읽어 수신자 이름만 전달), 탈퇴·공부방 삭제 금지. 바꾼 것·원복한 것 목록을 보고서에 남기고, 수신 계정에서 사용자가 확인할 항목을 따로 적는다.
+4. 화면 점검 보조: `.wt\_integrity-auth\smoke.mjs <태그> <경로...>` (손님 시점 화면 찍기·JS 오류 수집).
+5. 검수: 하위 에이전트 보고는 코드·스크린샷으로 직접 확인(A편에서 오독 1건·심각도 과장 3건 정정). 무결성 수정은 배포 위임 대상 아님 — 보고만.
+6. 끝나면 `state.json` 삭제(세션 파일).
+
+**10-08 15:35 갱신 (B편·학생 마이페이지 디자인 1차 완료):**
+- 무결성 B편 완료: 보고서 `cursor/integrity-studyroom-20261008` **`dd53b04`**. 장애 1(원장 고민방 글쓰기 422 — `study_rooms.operator_display_name` 빈칸 추정, 확인 SELECT 보고서에 있음), 정책 경미 1(고객센터 관리 화면이 원장에게 보임, 서버는 거절), 문구 2. 원장 세션 파일 삭제. 사용자 할 일: 시험 1:1 문의(14:19) 종결, SELECT 실행 후 고칠 방향 결정. 무결성 수정은 배포 위임 대상 아님.
+- 학생 마이페이지 디자인 1차(그록봇 SPEC v2) **운영 반영·사용자 승인 `4fcb5ea`** (`main` = `4fcb5ea`, Actions 4개 성공). 기록 브랜치 `cursor/student-mypage-design-20261008` `f7fb847`. 검수 방식: 운영에 시험 학생 로그인 + 브랜치 빌드 산출물 가로채기(`.wt\student-mypage-design\tmp-design\real-overlay.mjs`). 학생 로그인 파일 `study114-secrets\student-login.txt`(사용자 저장), 세션 파일은 삭제함. 남은 것: 공부방·과외쌤 마이페이지 운영 눈확인(사용자), 2차(계정설정·찜·최근·문의·쪽지 하위탭) 별도 과제.
+- 작업 폴더: `.wt\integrity`, `.wt\student-mypage-design`, `.wt\_base-main`(운영 기준 비교용 detached) — 정리는 사용자 승인 후.
+
 **무결성 검사 진행 (10-08 07:40):** worktree `.wt\integrity` / `cursor/integrity-studyroom-20261008`(from `b249ccc`). A. 손님 시점 공개 화면 = Gemini 3.8 Flash 하위 에이전트(읽기 전용) 진행, 산출 `tmp-integrity\guest-report.md`. B. 로그인 시점 = 비밀 파일을 읽어 로그인하고 세션 파일만 남기는 스크립트 `.wt\_integrity-auth\login.mjs`(커밋 안 함) 실행이 Cursor 자동 검토에 막힘(「운영 로그인은 사용자 승인 필요」) → 기상 후 승인 카드로 실행. 세션 파일만 하위 에이전트에 넘김(계정 전달 없음).
 
 예상 소요(10-08 03:55 사용자에게 보고): 주소 통일 배포 직전까지 1.5~2시간, 마이페이지 디자인까지 5~6시간(승인 대기 제외).
