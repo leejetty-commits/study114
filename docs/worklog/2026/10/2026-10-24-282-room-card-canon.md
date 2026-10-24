@@ -8,8 +8,8 @@
 
 ## 지시서 원문 요약 (v2)
 
-- 공부방 픽 13칸: 베이직 9 + 특징 1 + 신뢰배지 + 수업스타일 + 소개(긴 소개 한 줄) + 슬로건 + 액션
-- 공부방 프라임 15칸: 베이직 9 + 특징 1~3 + 신뢰배지 + 소개(긴 소개 한 줄) + 수업스타일 + 수업스타일 추가설명 + 주당 수업회수 + 슬로건 + 액션
+- 공부방 픽 13칸: 베이직 9 + 특징 1 + 신뢰배지 + 수업스타일 + 소개(긴 소개 한 줄) + 액션
+- 공부방 프라임 15칸: 베이직 9 + 특징 1~3 + 신뢰배지 + 소개(긴 소개 한 줄) + 수업스타일 + 수업스타일 추가설명 + 주당 수업회수 + 액션
 - 픽/프라임 필수 목록: PHP↔JS 동기화
 - intro_short 입력칸 제거 (서버 COALESCE로 기존값 보존)
 - 검색 응답에 teaching_style/teaching_style_note/lessons_per_week 추가
@@ -117,7 +117,7 @@
 | 6 | 가격 | `price_amount` |
 | 7 | 원생수 | `capacity_per_time` |
 | 8 | 수업운영방식 | `lesson_operation_type` |
-| 9 | 등록일 | `published_at` |
+| 9 | 슬로건 | `slogan` |
 | 10 | 특징 1 | `feature_1` |
 | 11 | 신뢰배지 | `education_office_registered` |
 | 12 | 수업스타일 | `teaching_style` |
@@ -128,16 +128,15 @@
 | # | 칸 이름 | DB 필드 |
 | --- | --- | --- |
 | 1~9 | 베이직 9칸 (위와 동일) | |
-| 10 | 특징 1 | `feature_1` |
-| 11 | 특징 2 | `feature_2` |
-| 12 | 특징 3 | `feature_3` |
-| 13 | 신뢰배지 | `education_office_registered` |
-| 14 | 수업스타일 | `teaching_style` |
-| 15 | 수업스타일 추가설명 | `teaching_style_note` |
-| 16 → (슬로건·액션 제외 순수 데이터) | 주 회수 | `lessons_per_week` |
-| 17 | 소개 | `intro_long` |
+| 10 | 특징 1~3 | `feature_1` · `feature_2` · `feature_3` |
+| 11 | 신뢰배지 | `education_office_registered` |
+| 12 | 수업스타일 | `teaching_style` |
+| 13 | 수업스타일 추가설명 | `teaching_style_note` |
+| 14 | 주 회수 | `lessons_per_week` |
+| 15 | 소개 | `intro_long` |
 
 > 슬로건·액션(추천·후기·찜·비교·쪽지)은 모든 카드 공통. 칸 세기는 노출 정보 행만.
+> 2026-10-25 보정 (295): 픽 9번 등록일→슬로건(slogan), 프라임 특징 1~3 한 칸으로 합쳐 15칸, 요약의 슬로건 중복 제거.
 
 ## 구매 막힘 확인표
 
