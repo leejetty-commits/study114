@@ -496,7 +496,7 @@ function renderParentV2(c) {
 
   <section class="pv2-safe">
     <div>
-      <h3 class="pv2-h2">${esc(c.finalCta.title)}</h3>
+      <h3 class="pv2-h2">${esc(c.finalCta.titleBefore)}<span class="pv2-hand pv2-mark">${esc(c.finalCta.titleMark)}</span>${esc(c.finalCta.titleAfter)}</h3>
       ${guest ? `<p style="margin-top:10px;color:rgba(255,248,239,.75)">${esc(c.finalCta.sub)}</p>` : ''}
     </div>
     ${ctaAnchor(pick(c.finalCta.cta), start, 'pv2-btn')}

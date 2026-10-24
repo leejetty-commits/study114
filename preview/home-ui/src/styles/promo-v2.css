@@ -261,7 +261,9 @@
 
 /* C FAQ·END */
 .pv2--student .pv2-faqw{display:grid;grid-template-columns:340px 1fr;gap:60px}
-.pv2--student .pv2-safe{margin:0 80px 90px;background:#1C1917;color:#FFF8EF;border-radius:12px;padding:60px;display:flex;justify-content:space-between;align-items:center}
+.pv2--student .pv2-safe{margin:0 80px 90px;color:#FFF8EF;border-radius:12px;padding:60px;display:flex;justify-content:space-between;align-items:center;gap:24px;
+  background:linear-gradient(90deg,rgba(11,23,48,.94) 0%,rgba(11,23,48,.82) 45%,rgba(11,23,48,.45) 100%),url('/assets/promo/room-band-desk.webp') center 68%/cover no-repeat;background-color:#0B1730;
+  --pv2-hand:#FFB36B;--pv2-mark:#FFB36B}
 
 /* 293-6: 본문 ≈800~984px(우측 레일 옆) 대응 */
 .pv2--student .pv2-hero{grid-template-columns:1fr;padding:56px 48px 32px}
@@ -338,6 +340,8 @@
   .pv2--room .pv2-cards{grid-template-columns:1fr}
   .pv2--tutor .pv2-sg{grid-template-columns:1fr}
   .pv2--tutor .pv2-tg{grid-template-columns:1fr}
+  .pv2--student .pv2-safe{padding:36px 22px;background:linear-gradient(180deg,rgba(11,23,48,.92) 0%,rgba(11,23,48,.85) 100%),url('/assets/promo/room-band-desk.webp') center 70%/cover no-repeat}
+  .pv2--student .pv2-safe .pv2-h2{font-size:clamp(22px,6.4vw,28px);line-height:1.35;word-break:keep-all}
 }
 
 /* ── prefers-reduced-motion ─────────────────────────────── */
