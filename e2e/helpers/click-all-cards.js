@@ -39,11 +39,16 @@ async function readCardMeta(card) {
  * @param {import('@playwright/test').Page} page
  * @param {import('@playwright/test').Locator} cards 보이는 카드만 넘긴다.
  * @param {{ click?: (card: import('@playwright/test').Locator) => Promise<void>, openLocator?: import('@playwright/test').Locator, afterOpen?: () => Promise<void>, close?: () => Promise<void>, openTimeout?: number }} [opts]
- * @returns {Promise<{ count: number, results: Array<{ index: number, id: string, kind: string, tier: string, name: string, opened: boolean }> }>}
+ * @returns {Promise<{ count: number, results: Array<{ index: number, id: string, kind: string, tier: string, name: string, opened: boolean, error?: string }> }>}
  */
+function errorText(err) {
+  const text = err instanceof Error ? err.message : String(err);
+  return text.split('\n')[0].slice(0, 180);
+}
+
 export async function clickAllCards(page, cards, opts = {}) {
   const count = await cards.count();
-  /** @type {Array<{ index: number, id: string, kind: string, tier: string, name: string, opened: boolean }>} */
+  /** @type {Array<{ index: number, id: string, kind: string, tier: string, name: string, opened: boolean, error?: string }>} */
   const results = [];
   const openTimeout = opts.openTimeout ?? 4000;
   const openLocator = opts.openLocator || page.locator(DETAIL);
@@ -58,22 +63,30 @@ export async function clickAllCards(page, cards, opts = {}) {
   for (let index = 0; index < count; index += 1) {
     const card = cards.nth(index);
     const meta = await readCardMeta(card);
-    let didOpen = false;
+    let detailShown = false;
+    let reason = '';
     try {
       if (opts.click) await opts.click(card);
       else await card.click({ timeout: 5000 });
       await openLocator.first().waitFor({ state: 'visible', timeout: openTimeout });
-      didOpen = true;
-    } catch {
-      didOpen = false;
+      detailShown = true;
+    } catch (err) {
+      reason = errorText(err);
     }
-    results.push({ index, ...meta, opened: didOpen });
-    if (didOpen && opts.afterOpen) await opts.afterOpen();
-    if (didOpen) {
+    if (detailShown && opts.afterOpen) {
+      try {
+        await opts.afterOpen();
+      } catch (err) {
+        reason = errorText(err);
+      }
+    }
+    const opened = detailShown && reason === '';
+    results.push({ index, ...meta, opened, ...(reason ? { error: reason } : {}) });
+    if (detailShown) {
       try {
         await close();
       } catch {
-        /* 다음 카드는 계속 */
+        /* 닫기 실패도 다음 카드로 계속 */
       }
     } else {
       await dismissGuestGate(page);
@@ -87,7 +100,7 @@ export function assertAllOpened(results) {
   expect(results.length, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
   const closed = results.filter((row) => !row.opened);
   expect(
-    closed.map((row) => `${row.index}:${row.kind}:${row.tier}:${row.id}:${row.name}`),
+    closed.map((row) => `${row.index}:${row.kind}:${row.tier}:${row.id}:${row.name}${row.error ? ` (${row.error})` : ''}`),
     '상세가 열리지 않은 카드',
   ).toEqual([]);
 }

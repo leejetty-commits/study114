@@ -123,6 +123,24 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     await expect(page.locator('#compare-modal-root')).toContainText(name.slice(0, 8));
   });
 
+  test('비교 목록에서 마지막 공부방 상세를 연다', async ({ page }) => {
+    await page.goto(`${SEARCH}/#/search/room?role=parent`);
+    const cards = page.locator('[data-provider-kind="study_room"][data-provider-id]:visible');
+    await cards.first().waitFor({ state: 'visible', timeout: 30_000 });
+    const count = await cards.count();
+    expect(count, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
+    if (count > CAP.study_room) test.fail(true, FAIL_NOTE);
+    const card = cards.nth(count - 1);
+    const name = ((await card.locator('.expo-hcard__name, .expo-tbl__cell--name').first().textContent()) || '').trim();
+    expect(name.length, '비교할 카드 이름').toBeGreaterThan(0);
+    await card.locator('[data-action="compare-toggle"]').first().click();
+    await page.locator('[data-action="compare-bar-open"]').first().click();
+    const modal = page.locator('#compare-modal-root');
+    await expect(modal).toBeVisible({ timeout: 10_000 });
+    await modal.locator('.compare-policy__name, th').filter({ hasText: name.slice(0, 8) }).first().click();
+    await expect(page.locator('#p24-detail-modal')).toBeVisible({ timeout: 10_000 });
+  });
+
   test('이어가기 resume_intent 가 마지막 과외쌤 상세를 연다', async ({ page }) => {
     await page.goto(`${SEARCH}/#/search/tutor?role=parent`);
     const cards = page.locator('[data-provider-kind="tutor"][data-provider-id]:visible');
