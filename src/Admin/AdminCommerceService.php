@@ -6,6 +6,7 @@ namespace Study114\Admin;
 
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Paid\PaidCatalog;
 
 final class AdminCommerceService
 {
@@ -46,14 +47,14 @@ final class AdminCommerceService
                     'capacity' => $pickCap,
                     'used' => $pickUsed,
                     'remaining' => max(0, $pickCap - $pickUsed),
-                    'set_size' => 5,
+                    'set_size' => PaidCatalog::PICK_SET_SIZE,
                     'rotation_minutes' => 15,
                 ],
             ],
             'settings_readonly' => [
                 'note' => '가격·슬롯·회전간격 등 운영값 편집 UI는 1차 제외 — seed/API 조회만',
                 'prime_slots' => $primeCap,
-                'pick_set_size' => 5,
+                'pick_set_size' => PaidCatalog::PICK_SET_SIZE,
                 'pick_rotation_minutes' => 15,
                 'basic_page_size' => 20,
             ],

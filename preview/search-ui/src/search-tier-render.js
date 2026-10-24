@@ -322,6 +322,10 @@ export function renderSearchTierResults(tab, exposureItems, ctx, options = {}) {
     if (tab === 'tutor') return renderStudentHomeVacantTiers('tutor', place, opts);
     return renderStudentHomeNoStudents(place);
   }
+  // 공부방 홈 「우리동네 공부방」 0장: 과외쌤과 같이 프라임·픽 빈칸 줄을 그린다 (296).
+  if (viewerRole === 'study_room' && tab === 'room' && useHomeTierGrammar && ctx.studyRoomHomeReady === true && !exposureItems.length) {
+    return renderStudentHomeVacantTiers('study_room', homeTierTag, opts, 'data-study-room-home-vacant');
+  }
   if (pinTutorPrimary && ctx.tutorHomeReady === true && !exposureItems.length) {
     return renderStudentHomeVacantTiers('tutor', homeTierTag, opts, 'data-tutor-home-vacant');
   }

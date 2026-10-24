@@ -44,6 +44,7 @@ import { PAID_ENDPOINTS } from '../paid-api.js';
  * @property {CatalogProduct[]} products
  * @property {Record<string, Record<string, number>>} [discount_rates]
  * @property {number} [memo_pack_expire_days]
+ * @property {number} [pick_set_size]
  * @property {number} loadedAt
  */
 
@@ -122,6 +123,7 @@ export async function hydratePaidCatalog(providerType, opts = {}) {
       products: data.products,
       discount_rates: data.discount_rates || {},
       memo_pack_expire_days: Number(data.memo_pack_expire_days) || 120,
+      pick_set_size: Number(data.pick_set_size) || undefined,
       loadedAt: Date.now(),
     };
     return catalogState;

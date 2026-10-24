@@ -16,6 +16,9 @@ final class PaidCatalog
 {
     public const VERSION = '2026-09-04.1';
 
+    /** 픽 한 묶음 칸 수 — 서버 단일 기본값 (296). 프론트는 카탈로그 pick_set_size 만 읽는다. */
+    public const PICK_SET_SIZE = 10;
+
     /** @var list<string> */
     public const PERIODS = ['2주', '1개월', '2개월', '3개월', '6개월'];
 
@@ -185,6 +188,7 @@ final class PaidCatalog
             'periods' => self::PERIODS,
             'discount_rates' => self::DISCOUNT_RATES,
             'memo_pack_expire_days' => 120,
+            'pick_set_size' => self::PICK_SET_SIZE,
             'products' => $products,
             'removed_skus' => [
                 'memo_20',

@@ -62,11 +62,14 @@ const TEST_MODE_KEY = 'study114-plans-test-mode';
  * @property {PriceOption[]} [options]
  */
 
+/** 픽 칸 수 — 서버(카탈로그 pick_set_size) 값이 없을 때만 쓰는 유일한 프론트 대체값 (296) */
+export const PICK_SET_SIZE_FALLBACK = 10;
+
 /** 슬롯·순환 등 비가격 런타임 (가격 SSOT 아님) */
 export const PLAN_RUNTIME_DEFAULTS = {
   prime_slots: 3,
   region_scope_type: 'dong',
-  pick_set_size: 10,
+  pick_set_size: PICK_SET_SIZE_FALLBACK,
   pick_rotation_minutes: 15,
   pick_page_size: 5,
   basic_page_size: 20,
@@ -225,12 +228,12 @@ export function withGuestPlanOverride(run) {
 export function getPlanRuntimeSettings() {
   const state = getCatalogState();
   const expire = state?.memo_pack_expire_days || PLAN_RUNTIME_DEFAULTS.credit_expire_days;
-  const base = { ...PLAN_RUNTIME_DEFAULTS, credit_expire_days: expire };
+  const pickSetSize = Number(state?.pick_set_size) || PICK_SET_SIZE_FALLBACK;
+  const base = { ...PLAN_RUNTIME_DEFAULTS, credit_expire_days: expire, pick_set_size: pickSetSize };
   if (!guestRuntimeOverride) return base;
   return {
     ...base,
     basic_page_size: 10,
-    pick_set_size: 10,
     pick_page_size: 10,
   };
 }

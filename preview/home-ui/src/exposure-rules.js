@@ -6,7 +6,7 @@
  * — Basic: 최신순 + 수동 페이지만 (시간 회전 없음)
  */
 
-import { getPlanRuntimeSettings, getPlanSetting } from './plans/runtime-config.js';
+import { getPlanRuntimeSettings, getPlanSetting, PICK_SET_SIZE_FALLBACK } from './plans/runtime-config.js';
 import { sortListItems, DEFAULT_LIST_SORT } from '../../shared/list-sort.js';
 
 /**
@@ -98,7 +98,7 @@ export function rotateSetPool(newestFirst, setSize, minutes = 15, nowMs = Date.n
  * @param {number} [nowMs]
  */
 export function rotatePickPool(newestFirst, nowMs = Date.now()) {
-  const setSize = Number(getPlanSetting('pick_set_size')) || 5;
+  const setSize = Number(getPlanSetting('pick_set_size')) || PICK_SET_SIZE_FALLBACK;
   const minutes = Number(getPlanSetting('pick_rotation_minutes')) || 15;
   return rotateSetPool(newestFirst, setSize, minutes, nowMs);
 }
@@ -143,14 +143,13 @@ export function shouldPadTutorPrimeSlots(opts = {}) {
 }
 
 /**
- * 홈 픽 실제 카드가 0장일 때 홍보 빈 카드 수.
- * 공부방·과외쌤 모드 1장, 학생·비회원 0장(안내 한 줄).
- * 카드가 1장 이상이면 호출하지 않는다. pickSetSize로 빈 칸을 늘리지 않는다.
- * @param {{ guest?: boolean, viewerRole?: string }} [opts]
+ * 홈 픽 실제 카드가 0장일 때 홍보 빈 카드 수 (296 · 2026-10-25 주인 확정 정본).
+ * 공부방·과외쌤·학생 모드·비회원 모두 1장. (10/16「학생·비회원 빈 광고칸 줄임」은 픽 빈칸에 한해 폐기)
+ * 카드가 1장 이상이면 빈 카드 없음 — 한 묶음 pick_set_size(10)장 · 페이지 번호 · 15분 순환.
+ * @param {{ guest?: boolean, viewerRole?: string }} [_opts]
  */
-export function homePickZeroPromoCount(opts = {}) {
-  if (opts.guest !== true && (opts.viewerRole === 'study_room' || opts.viewerRole === 'tutor')) return 1;
-  return 0;
+export function homePickZeroPromoCount(_opts = {}) {
+  return 1;
 }
 
 /** 학생·비회원 픽 0장 안내. 「학부모」를 쓰지 않는다. */
@@ -178,7 +177,7 @@ export function getExposurePageSizes() {
   const s = getPlanRuntimeSettings();
   return {
     primeSlots: Number(s.prime_slots) || 3,
-    pickSetSize: Number(s.pick_set_size) || 5,
+    pickSetSize: Number(s.pick_set_size) || PICK_SET_SIZE_FALLBACK,
     pickRotationMinutes: Number(s.pick_rotation_minutes) || 15,
     basicPageSize: Number(s.basic_page_size) || 20,
     regionScopeType: String(s.region_scope_type || 'dong'),

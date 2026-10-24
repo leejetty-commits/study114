@@ -727,9 +727,7 @@ export function renderEmptyPickPromo(kind, opts = {}) {
 }
 
 /**
- * 홈 픽 0장.
- * 공부방·과외쌤 모드: 홍보 빈 카드 1장.
- * 학생·비회원: 안내 한 줄.
+ * 홈 픽 0장 — 모든 모드(공부방·과외쌤·학생·비회원) 홍보 빈 카드 1장 (296).
  * @param {'study_room'|'tutor'} kind
  * @param {{ guest?: boolean, viewerRole?: string, surfaceMode?: string, withMedia?: boolean }} [opts]
  */

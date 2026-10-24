@@ -3,6 +3,8 @@
  * docs/ssot/17-customer-center-and-safe-guide.md §3 · §4 · §5 · §7
  */
 
+import { PICK_SET_SIZE_FALLBACK } from '../plans/runtime-config.js';
+
 /** §3-1 3대 원칙 */
 export const PRINCIPLES_POSITIVE = [
   { title: '학생 보호', body: '민감정보·공개 범위를 보수적으로 — 필요한 범위만 공개합니다.' },
@@ -178,7 +180,7 @@ export const ROLE_GUIDES = {
  */
 export function getHomeExposureGuides(settings = {}) {
   const rot = Math.max(1, Number(settings.pick_rotation_minutes) || 15);
-  const pickSize = Math.max(1, Number(settings.pick_set_size) || 5);
+  const pickSize = Math.max(1, Number(settings.pick_set_size) || PICK_SET_SIZE_FALLBACK);
   const primeSlots = Math.max(1, Number(settings.prime_slots) || 3);
   return [
     {
