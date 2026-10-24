@@ -10,7 +10,10 @@
 .sup-content__art { flex-shrink: 0; }
 .sup-content__art img {
   width: 240px; height: 120px; object-fit: cover; object-position: center 45%;
-  border-radius: 12px; display: block;
+  display: block;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20%, #000 calc(100% - 20%), transparent 100%), linear-gradient(180deg, transparent 0, #000 22%, #000 calc(100% - 22%), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 20%, #000 calc(100% - 20%), transparent 100%), linear-gradient(180deg, transparent 0, #000 22%, #000 calc(100% - 22%), transparent 100%);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
 }
 .sup-content__title {
   display: flex;
