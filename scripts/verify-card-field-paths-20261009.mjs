@@ -78,7 +78,7 @@ const SERVER_ROOM = {
 };
 const SERVER_TUTOR = {
   id: 8201, title: '점검과외쌤', region_label: '경기도 수원시', summary: '국어', price_label: '월 400천원~', preferred_fee_amount: 400000,
-  main_subject_note: '국어', gender: 'female', grade_band: '중등', slogan: '과외슬로건', intro_short: '과외소개',
+  main_subject_note: '국어', gender: 'female', grade_band: '중등', slogan: '과외슬로건', intro_short: '과외소개', intro_long: '과외긴소개',
   feature_1: '특징가', feature_2: '특징나', feature_3: '특징다', main_material_note: '주교재X', student_gender_group: 'mixed',
   student_count_group: 'two', university_name: '점검대', major_name: '점검과', university_status: 'graduated',
   proof_document_available: true, career_year_band: 'y4_6', lessons_per_week: 2, minutes_per_lesson: 90,
@@ -117,10 +117,10 @@ const TUTOR_BASIC = {
 const TUTOR_TABLE = { 대상: '중등', 과목: '국어', 수업장소: '학생자택방문', 원생수: tutorTarget, 주교재: '주교재X', 슬로건: '과외슬로건' };
 const TUTOR_PICK = { ...TUTOR_TABLE, 특징: '특징가', 강의스타일: '열정' };
 delete TUTOR_PICK.주교재;
-const TUTOR_PRIME = { ...TUTOR_TABLE, 특징: '특징가 · 특징나 · 특징다', 강의스타일: '열정', 소개: '과외소개' };
+const TUTOR_PRIME = { ...TUTOR_TABLE, 특징: '특징가 · 특징나 · 특징다', 강의스타일: '열정', 소개: '과외긴소개' };
 const TUTOR_DETAIL = {
   성별: '여', 과목: '국어', 수업장소: '학생자택방문', 대상: '중등', 원생수: tutorTarget, 슬로건: '과외슬로건',
-  주교재: '주교재X', 강의스타일: '열정', 특징: '특징가 · 특징나 · 특징다', '학교·학과': '점검대 점검과', 소개: '과외소개',
+  주교재: '주교재X', 강의스타일: '열정', 특징: '특징가 · 특징나 · 특징다', '학교·학과': '점검대 점검과', 소개: '과외긴소개',
 };
 
 const studentStyle = F.formatTeachingStyleBadges(SERVER_STUDENT.teaching_style_badges, 2);
