@@ -169,6 +169,24 @@
   position: absolute; width: 180px; height: 1px; background: rgba(255,255,255,.18);
   transform: rotate(-16deg); right: 36px; top: 68%;
 }
+:is(.guide-app, .concern-app, .support-app) .support-hero__art {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 38%; pointer-events: none;
+}
+:is(.guide-app, .concern-app, .support-app) .support-hero__art img {
+  width: 100%; height: 100%; object-fit: cover; object-position: center 30%; display: block;
+}
+:is(.guide-app, .concern-app, .support-app) .support-hero__art::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, #266BC4 0%, rgba(38,107,196,.55) 35%, rgba(38,107,196,0) 70%);
+}
+@media (max-width: 767px) {
+  :is(.guide-app, .concern-app, .support-app) .support-hero__art {
+    position: relative; width: auto; height: 140px; margin: -28px -28px 16px;
+  }
+  :is(.guide-app, .concern-app, .support-app) .support-hero__art::after {
+    background: linear-gradient(0deg, #266BC4 0%, rgba(38,107,196,0) 60%);
+  }
+}
 :is(.guide-app, .concern-app, .support-app) .support-hero__inner { position: relative; z-index: 1; max-width: 620px; }
 :is(.guide-app, .concern-app, .support-app) .support-hero h1 {
   margin: 0 0 8px; font-size: 28px; font-weight: 800;
