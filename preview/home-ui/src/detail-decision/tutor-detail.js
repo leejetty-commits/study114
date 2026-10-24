@@ -57,7 +57,7 @@ export function renderTutorDetailBody(item, viewer) {
         <dt>학적상태</dt><dd>${esc(isGuest ? '로그인 후 확인' : formatUniversityStatus(item.university_status))}</dd>
         <dt>학교·학과</dt><dd>${esc(isGuest ? '로그인 후 확인' : school)}</dd>
         <dt>경력</dt><dd>${esc(formatCareerYearBand(item.career_year_band))}</dd>
-        <dt>소개</dt><dd>${esc(item.intro_short || '—')}</dd>
+        <dt>소개</dt><dd>${esc(item.intro_long || '—')}</dd>
       </dl>
     </section>
     ${reviewSectionPlaceholder()}

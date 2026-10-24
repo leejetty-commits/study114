@@ -109,6 +109,7 @@ export function tutorSearchCardFields(item) {
   return {
     main_subject_note: item.main_subject_note || '',
     intro_short: item.intro_short || '',
+    intro_long: item.intro_long || '',
     gender: item.gender || null,
     grade_band: item.grade_band || '',
     major_name: item.major_name || '',

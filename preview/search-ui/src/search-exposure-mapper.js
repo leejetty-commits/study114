@@ -99,6 +99,7 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       preferred_fee_amount: apiItem.preferred_fee_amount ?? apiItem.price_amount ?? null,
       main_subject_note: String(apiItem.main_subject_note || ''),
       intro_short: String(apiItem.intro_short || ''),
+      intro_long: String(apiItem.intro_long || ''),
       lesson_places: Array.isArray(apiItem.lesson_places) ? apiItem.lesson_places : [],
       teaching_style_badges: Array.isArray(apiItem.teaching_style_badges) ? apiItem.teaching_style_badges : [],
       image_path: String(apiItem.image_path || apiItem.image_path_basic || ''),
