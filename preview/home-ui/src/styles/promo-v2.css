@@ -107,7 +107,7 @@
 
 /* A 히어로 */
 .pv2--room .pv2-hero{position:relative;height:780px;overflow:hidden}
-.pv2--room .pv2-bg{position:absolute;inset:0;background:url('/assets/promo/room-classroom.webp') center/cover}
+.pv2--room .pv2-bg{position:absolute;inset:0;background:url('/assets/promo/room-classroom.webp') right top/cover}
 .pv2--room .pv2-hero::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0E1B33 0%,rgba(14,27,51,.85) 38%,rgba(14,27,51,.05) 72%)}
 .pv2--room .pv2-in{position:relative;z-index:2;padding:150px 80px;max-width:780px}
 
@@ -129,7 +129,7 @@
 
 /* A 포토밴드 */
 .pv2--room .pv2-photoband{display:grid;grid-template-columns:1fr 1fr;min-height:560px}
-.pv2--room .pv2-photoband .pv2-ph{background:url('/assets/promo/study-A-sharp.webp') center/cover}
+.pv2--room .pv2-photoband .pv2-ph{background:url('/assets/promo/room-band-desk.webp') center/cover}
 .pv2--room .pv2-photoband .pv2-tx{background:#F2B84B;color:#1C1917;padding:80px 64px}
 .pv2--room .pv2-room{background:#fff;border-radius:10px;padding:16px 18px;margin-top:12px}
 .pv2--room .pv2-room b{font-size:16px}
@@ -137,7 +137,7 @@
 
 /* A 홍보채널 */
 .pv2--room .pv2-chan{display:grid;grid-template-columns:1fr 1.1fr;gap:60px;align-items:center}
-.pv2--room .pv2-chan .pv2-ph{height:380px;border-radius:12px;background:url('/assets/promo/seoul-alley.webp') center/cover}
+.pv2--room .pv2-chan .pv2-ph{height:380px;border-radius:12px;background:url('/assets/promo/room-sns-phone.webp') center/cover}
 .pv2--room .pv2-ch{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
 .pv2--room .pv2-ch span{font-size:14px;border:1px solid #F2B84B;color:#F2B84B;border-radius:6px;padding:6px 10px}
 .pv2--room .pv2-mapw .pv2-wwb,.pv2--room .pv2-chan .pv2-wwb{grid-template-columns:1fr;gap:8px}
@@ -227,7 +227,7 @@
 .pv2--student .pv2-sec{margin:70px 80px}
 .pv2--student .pv2-card2{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
 .pv2--student .pv2-mock{background:#fff;border-radius:12px;border:1px solid #F2DFC8;padding:26px;box-shadow:0 10px 30px rgba(194,65,12,.08)}
-.pv2--student .pv2-mock .pv2-top{height:180px;border-radius:8px;background:url('/assets/promo/seoul-alley.webp') center/cover;margin-bottom:16px}
+.pv2--student .pv2-mock .pv2-top{height:180px;border-radius:8px;background:url('/assets/promo/student-card-phone.webp') center/cover;margin-bottom:16px}
 .pv2--student .pv2-chip{font-size:12px;padding:4px 8px;border-radius:6px;background:#FFEDD5;color:#C2410C;font-weight:700;margin-right:6px}
 .pv2--student .pv2-sns span{display:inline-block;font-size:12px;border:1px solid #FDBA74;border-radius:6px;padding:4px 8px;margin:10px 6px 0 0;color:#9A3412}
 

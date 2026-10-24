@@ -40,3 +40,15 @@
 | `student-online.webp` | <https://www.pexels.com/photo/a-girl-using-a-tablet-at-home-8055830/> | Annushka Ahuja | C v2 콜라주 | |
 
 v2 실사용: `room-classroom`(A), `study-A-sharp`(A), `tutor-A-sharp`(B), `tutor-portrait`(B), `student-homework`·`student-tablet`·`student-A-sharp`·`student-online`(C), `seoul-street`(A 지도), `seoul-alley`(홍보채널·C카드).
+
+---
+
+## 293-4-2 교체 (2026-10-24 KST)
+
+| 파일 | 원본 페이지 | 작가 | 쓰인 곳 | 교체 전 |
+|---|---|---|---|---|
+| `room-sns-phone.webp` | <https://www.pexels.com/photo/close-up-of-a-person-using-a-smartphone-while-writing-on-a-notebook-7657473/> | Cup of Couple | A v2 홍보채널 사진 칸 | `seoul-alley.webp` |
+| `room-band-desk.webp` | <https://www.pexels.com/photo/lamp-book-and-tablet-on-desk-19884324/> | Şeyma Gül | A v2 고민방 포토밴드 | `study-A-sharp.webp` |
+| `student-card-phone.webp` | <https://www.pexels.com/photo/sunlit-workspace-with-notebook-and-smartphone-34109400/> | Jakub Zerdzicki | C v2 예시 카드 상단 | `seoul-alley.webp` |
+
+`seoul-alley.webp`, `study-A-sharp.webp` 파일은 삭제하지 않음(다른 위치에서 참조 가능성).
