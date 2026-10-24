@@ -3,6 +3,7 @@
  * 전제: home-ui :5174 · search-ui :5176 · API :8080
  */
 import { test, expect } from '@playwright/test';
+import { assertAllOpened, clickAllCards } from './helpers/click-all-cards.js';
 import {
   HOME,
   devLoginParent,
@@ -95,11 +96,15 @@ test.describe('[6단계] parent 마이페이지 · 최근열람', () => {
   test('search-ui 상세 열람 → 마이페이지 최근열람 기록', async ({ page }) => {
     await page.goto(`${SEARCH}/#/search/tutor?role=parent`);
     await page.waitForSelector('[data-provider-kind="tutor"]', { timeout: 30_000 });
-    const card = page.locator('[data-provider-kind="tutor"][data-provider-id]').first();
-    await card.click();
-    await expect(page.locator('#p24-detail-modal')).toBeVisible();
-    const title = (await getDetailTitle(page)).trim();
-    await closeDetailModal(page);
+    const cards = page.locator('[data-provider-kind="tutor"][data-provider-id]:visible');
+    let title = '';
+    const { results } = await clickAllCards(page, cards, {
+      close: async () => {
+        title = (await getDetailTitle(page)).trim();
+        await closeDetailModal(page);
+      },
+    });
+    assertAllOpened(results);
 
     await page.goto(`${HOME}/#/mypage/recent`);
     await page.waitForSelector('.mp-card__rows', { timeout: 30_000 });
