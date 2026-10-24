@@ -196,6 +196,15 @@
 /* B END */
 .pv2--tutor .pv2-end{background:#0F3D36;color:#F3EFE4;padding:90px 80px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #1f5a50}
 
+/* 293-5: 본문 ≈800px(우측 레일 옆) 대응 */
+.pv2--tutor .pv2-split{grid-template-columns:1fr;min-height:auto}
+.pv2--tutor .pv2-r{min-height:420px}
+.pv2--tutor .pv2-card{left:auto;right:24px;bottom:24px;width:min(380px,calc(100% - 48px))}
+.pv2--tutor .pv2-tg,.pv2--tutor .pv2-sg{grid-template-columns:1fr 1fr}
+.pv2--tutor .pv2-wide{grid-template-columns:1fr}
+.pv2--tutor .pv2-wide .pv2-wwb{grid-template-columns:1fr}
+.pv2--tutor .pv2-btn--ghost{background:transparent;color:#9BE3C9;border-color:#9BE3C9}
+
 /* ================================================================
  * C: 학생·학부모 (.pv2--student)
  * ================================================================ */
