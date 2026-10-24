@@ -204,8 +204,8 @@ const HOME_PROMO_TRIO = [
   {
     tone: 'study',
     eyebrow: '공부방 카탈로그',
-    title: '내가 찾는 공부방',
-    sub: '가까운 곳부터 비교하고, 등록은 가볍게 시작하세요',
+    title: '우리 공부방, 지도 위에',
+    sub: '베이직카드 등록과 노출은 무료로 시작하세요',
     path: '/promo/study-room',
   },
   {
@@ -218,7 +218,7 @@ const HOME_PROMO_TRIO = [
   {
     tone: 'parent',
     eyebrow: '우리동네 학생',
-    title: '학생, 인재로 만들기',
+    title: '집 앞에 이런 곳이 있었어?',
     sub: '가까운 곳부터 비교하고, 쪽지로 시작하세요',
     path: '/promo/parent',
   },

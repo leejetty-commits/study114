@@ -19,10 +19,10 @@ export const PROMO_LANDINGS = [
     id: 'study-room',
     path: '/promo/study-room',
     title: '공부방 카탈로그',
-    audience: '학부모 · 원장',
+    audience: '원장',
     status: 'live',
     railHint: '홈/검색 우측 CTA · 게스트 본문 인라인',
-    shareText: '우리동네 공부방, 더 쉽게 찾고 비교해보세요 — 우동공과',
+    shareText: '우리 공부방, 동네 지도 위에 먼저 보이게 — 우동공과',
   },
   {
     id: 'tutor',
@@ -36,8 +36,8 @@ export const PROMO_LANDINGS = [
   {
     id: 'parent',
     path: '/promo/parent',
-    title: '학생 카탈로그',
-    audience: '학생 · 학부모(보조)',
+    title: '우리동네 학생',
+    audience: '학생',
     status: 'live',
     railHint: '학생 우측 소개',
     shareText: '우리동네 공부방·과외, 기준으로 비교하고 쪽지로 시작하세요 — 우동공과',
