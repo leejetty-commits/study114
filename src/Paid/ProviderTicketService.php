@@ -237,7 +237,7 @@ final class ProviderTicketService
                     'remaining' => 0,
                     'scope' => 'circulation',
                     'inventory' => false,
-                    'set_size' => 10,
+                    'set_size' => PaidCatalog::PICK_SET_SIZE,
                     'rotation_minutes' => 15,
                 ],
             ],

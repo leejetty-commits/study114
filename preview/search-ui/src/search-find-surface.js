@@ -2849,7 +2849,9 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   }
 
   if (!state.searchExecuted) {
-    const tierHtml = renderSearchTierResults(tab, activeItems, tierCtx, {
+    const studyRoomHomeReady =
+      role === 'study_room' && tab === 'room' && state.studyRoomHome === true && Array.isArray(getStudyRoomHomeLiveItems());
+    const tierHtml = renderSearchTierResults(tab, activeItems, { ...tierCtx, studyRoomHomeReady }, {
       mode: 'region',
       regionLabel,
       surfaceType,
