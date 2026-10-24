@@ -9,6 +9,7 @@ import { bindReviewSheetTriggers } from '../provider-reviews/sheet.js';
 import { guardGuestDeepAccess, canOpenDetailForViewer } from '../guest-deep-access.js';
 import { getHomeBasicPool } from '../home-basic-live.js';
 import { getFavoriteCard } from '../handoff-backend.js';
+import { lookupRegisteredProviderItem, rememberProviderItem } from './provider-item-registry.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
 export { showP24Toast } from './detail-utils.js';
@@ -51,8 +52,11 @@ export function resolveDetailItem(kind, id) {
         : EXPOSURE_STUDY_ROOMS;
   const hit = bridged.find((x) => Number(x.id) === Number(id));
   if (hit) return hit;
-  if (kind === 'study_room' || kind === 'tutor') return getFavoriteCard(kind, id)?.item || null;
-  return null;
+  if (kind === 'study_room' || kind === 'tutor') {
+    const favorite = getFavoriteCard(kind, id)?.item;
+    if (favorite) return favorite;
+  }
+  return lookupRegisteredProviderItem(kind, id);
 }
 
 /**
@@ -75,6 +79,7 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
   }
   const item = itemOverride || resolveDetailItem(kind, id);
   if (!item) return;
+  rememberProviderItem(kind, item);
   // 29#3 · 7.18: 학생 로그인 — 다른 학생 카드·상세 시장 비교 열람 허용 (실명·연락·쪽지·민감정보 금지)
   openDetailModal({
     kind,

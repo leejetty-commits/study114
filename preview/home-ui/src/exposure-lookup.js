@@ -6,6 +6,7 @@
 import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS } from './exposure-data.js';
 import { previewState } from './state.js';
 import { getHomeBasicPool } from './home-basic-live.js';
+import { lookupRegisteredProviderItem } from './detail-decision/provider-item-registry.js';
 
 /** @typedef {'study_room'|'tutor'} ProviderKind */
 
@@ -28,8 +29,11 @@ export function lookupExposureItem(kind, id, opts) {
     if (hit) return hit;
   }
   if (typeof opts?.favoriteCardFn === 'function') {
-    return opts.favoriteCardFn(kind, n)?.item || undefined;
+    const fav = opts.favoriteCardFn(kind, n)?.item;
+    if (fav) return fav;
   }
+  const registered = lookupRegisteredProviderItem(kind, n);
+  if (registered && nameKey in registered) return registered;
   return undefined;
 }
 

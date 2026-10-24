@@ -1,7 +1,6 @@
 /**
- * 300-1 — 보이는 카드 전부 클릭. 제품 동작은 고치지 않는다.
- * REAL_DB_CAP 은 preview/home-ui/src/exposure-bridge.js 와 같은 수.
- * 표본 밖 카드가 쪽지 배지·비교·이어가기·찜에서 안 열리는 것은 test.fail (300-2).
+ * 300-1 — 보이는 카드 전부 클릭.
+ * 300-2 — 쪽지 배지·비교·이어가기·찜은 표본 밖 카드도 열려야 한다.
  */
 import { test, expect } from '@playwright/test';
 import { ACCOUNTS, DEV_PASSWORD } from './helpers/admin-api.js';
@@ -9,11 +8,6 @@ import { assertAllOpened, clickAllCards, tierNotes } from './helpers/click-all-c
 
 const HOME = process.env.STUDY114_HOME_UI_URL || 'http://127.0.0.1:5174';
 const SEARCH = process.env.STUDY114_SEARCH_UI_URL || 'http://127.0.0.1:5176';
-
-/** exposure-bridge.js REAL_DB_CAP */
-const CAP = { study_room: 3, tutor: 2, student: 2 };
-
-const FAIL_NOTE = '300-2에서 수정 예정: resolveDetailItem/REAL_DB_CAP 표본 밖 카드';
 
 const HOME_ROLES = [
   { id: 'guest', hash: '/guest', account: null },
@@ -88,8 +82,6 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     await cards.first().waitFor({ state: 'visible', timeout: 30_000 });
     const count = await cards.count();
     expect(count, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
-    // 카드 본문 클릭은 getProviderItem. 쪽지 배지는 resolveDetailItem 만 본다.
-    test.fail(count > CAP.tutor, FAIL_NOTE);
     const { results } = await clickAllCards(page, cards, {
       click: async (card) => {
         await card.locator('[data-action="open-detail-memo"]').first().click();
@@ -112,8 +104,6 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     await cards.first().waitFor({ state: 'visible', timeout: 30_000 });
     const count = await cards.count();
     expect(count, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
-    const outside = count > CAP.study_room;
-    test.fail(outside, FAIL_NOTE);
     const card = cards.nth(count - 1);
     const name = ((await card.locator('.expo-hcard__name, .expo-tbl__cell--name').first().textContent()) || '').trim();
     expect(name.length, '비교할 카드 이름').toBeGreaterThan(0);
@@ -129,7 +119,6 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     await cards.first().waitFor({ state: 'visible', timeout: 30_000 });
     const count = await cards.count();
     expect(count, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
-    if (count > CAP.study_room) test.fail(true, FAIL_NOTE);
     const card = cards.nth(count - 1);
     const name = ((await card.locator('.expo-hcard__name, .expo-tbl__cell--name').first().textContent()) || '').trim();
     expect(name.length, '비교할 카드 이름').toBeGreaterThan(0);
@@ -147,7 +136,6 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     await cards.first().waitFor({ state: 'visible', timeout: 30_000 });
     const count = await cards.count();
     expect(count, '보이는 카드 0장 — 조용히 통과하지 않음').toBeGreaterThan(0);
-    test.fail(count > CAP.tutor, FAIL_NOTE);
     const id = await cards.nth(count - 1).getAttribute('data-provider-id');
     const intent = encodeURIComponent(JSON.stringify({
       source: 'card_detail',
@@ -173,8 +161,6 @@ test.describe('300-1 표본 밖 · 쪽지 배지·비교·이어가기·찜', ()
     const wished = page.locator(`[data-mypage-wishlist="study_room"] [data-provider-id="${id}"]`);
     const unknown = page.locator(`[data-wish-unavailable="study_room"][data-id="${id}"]`);
     await wished.or(unknown).first().waitFor({ state: 'visible', timeout: 15_000 }).catch(() => {});
-    const visible = await wished.count();
-    test.fail(count > CAP.study_room && visible === 0, FAIL_NOTE);
     await expect(wished, '찜 목록에 카드가 없음').toHaveCount(1);
     await wished.click();
     await expect(page.locator('#p24-detail-modal')).toBeVisible({ timeout: 10_000 });

@@ -200,9 +200,36 @@ export function seedRecommendedFromItems(kind, items) {
   if (changed) saveRecommendedSet(set);
 }
 
+let compareDetailBound = false;
+
+/** 비교표 이름이 상세를 연다. 비교 모달은 body에 붙으므로 문서에서 한 번만 듣는다. */
+function bindCompareNameDetail() {
+  if (compareDetailBound || typeof document === 'undefined') return;
+  compareDetailBound = true;
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const cell = target.closest('#compare-modal-root .compare-policy__name, #compare-modal-root thead th');
+    if (!cell || cell.classList.contains('compare-policy__row-label')) return;
+    const name = (cell.textContent || '').replace(/\s+/g, ' ').trim();
+    if (!name || name === '대상' || name === '항목') return;
+    for (const kind of ['study_room', 'tutor']) {
+      const item = getCompareItems(kind).find((row) => {
+        const label = kind === 'tutor' ? row.tutor_display_name : row.study_room_name;
+        return label && (label === name || name.includes(String(label).slice(0, 8)));
+      });
+      if (!item) continue;
+      event.preventDefault();
+      openDetailDecision({ kind, id: Number(item.id), item, sourceRoute: 'compare' });
+      return;
+    }
+  });
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender @param {{ sourceRoute?: string }} [opts] */
 export function bindUserActionEvents(root, rerender, opts = {}) {
   const sourceRoute = opts.sourceRoute || 'search';
+  bindCompareNameDetail();
 
   root.querySelectorAll('[data-action="recommend-toggle"]').forEach((btn) => {
     const kind = btn.dataset.itemKind;

@@ -15,6 +15,7 @@ import {
   optimisticRemoveWishlist,
   getFavoriteCard,
 } from './handoff-backend.js';
+import { rememberProviderItem } from './detail-decision/provider-item-registry.js';
 
 const STORAGE_KEY = 'study114-preview-user-actions';
 
@@ -53,6 +54,11 @@ function saveState(state) {
 /** @param {ProviderKind} kind @param {number|string} id */
 export function getExposureItem(kind, id) {
   return lookupExposureItem(kind, id, { favoriteCardFn: getFavoriteCard });
+}
+
+function rememberIfKnown(kind, id) {
+  const item = getExposureItem(kind, id);
+  if (item) rememberProviderItem(kind, item);
 }
 
 /** @param {ProviderKind} kind */
@@ -105,6 +111,7 @@ export function isInCompare(kind, id) {
 /** @param {ProviderKind} kind @param {number|string} id */
 export function toggleWishlist(kind, id) {
   const numId = Number(id);
+  rememberIfKnown(kind, numId);
   if (isHandoffApiMode()) {
     return optimisticToggleWishlist(kind, numId);
   }
@@ -124,6 +131,7 @@ export function toggleWishlist(kind, id) {
  */
 export function toggleCompare(kind, id) {
   const numId = Number(id);
+  rememberIfKnown(kind, numId);
   if (isHandoffApiMode()) {
     const state = getUserActionsCache();
     const list = state.compare[kind];

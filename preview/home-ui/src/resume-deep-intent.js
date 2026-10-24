@@ -12,6 +12,7 @@ import {
 import { isLoggedIn } from './auth-session.js';
 import { getNavRole } from './state.js';
 import { openDetailDecision, resolveDetailItem } from './detail-decision/index.js';
+import { hydrateHomeBasicFromSearch, isHomeBasicLive } from './home-basic-live.js';
 import { openReviewSheet } from './provider-reviews/sheet.js';
 import { openCompareModal } from './compare-modal.js';
 import { getCompareItems, isInCompare, isWishlisted, toggleCompare, toggleWishlist } from './user-actions-state.js';
@@ -40,6 +41,28 @@ function takeIntent() {
   stripResumeIntentFromHash();
   const fromStore = consumePendingDeepIntent();
   return fromQuery || fromStore;
+}
+
+function openResumedDetail(providerType, providerId) {
+  const item = resolveDetailItem(providerType, providerId);
+  if (item) {
+    openDetailDecision({ kind: providerType, id: providerId, item, sourceRoute: 'resume' });
+    return true;
+  }
+  openDetailDecision({ kind: providerType, id: providerId, sourceRoute: 'resume' });
+  void retryResumeDetail(providerType, providerId);
+  return true;
+}
+
+async function retryResumeDetail(providerType, providerId) {
+  try {
+    if (!isHomeBasicLive()) await hydrateHomeBasicFromSearch();
+  } catch (err) {
+    console.warn('[resume-deep-intent]', err);
+  }
+  const item = resolveDetailItem(providerType, providerId);
+  if (!item) return;
+  openDetailDecision({ kind: providerType, id: providerId, item, sourceRoute: 'resume' });
 }
 
 function targetName(providerType, providerId) {
@@ -92,8 +115,9 @@ export function resumePendingDeepIntent() {
     if (source === 'compare') {
       if (idOk) {
         const item = resolveDetailItem(providerType, providerId);
-        if (!item) return false;
-        if (!isInCompare(providerType, providerId)) {
+        if (!item) {
+          openResumedDetail(providerType, providerId);
+        } else if (!isInCompare(providerType, providerId)) {
           const result = toggleCompare(providerType, providerId);
           if (!result?.inCompare) return false;
         }
@@ -106,15 +130,15 @@ export function resumePendingDeepIntent() {
     }
     if (source === 'wishlist' && idOk) {
       const item = resolveDetailItem(providerType, providerId);
-      if (!item) return false;
+      if (!item) return openResumedDetail(providerType, providerId);
       if (!isWishlisted(providerType, providerId)) toggleWishlist(providerType, providerId);
       showP24Toast('보려던 정보로 이어서 보여드릴게요');
-      openDetailDecision({ kind: providerType, id: providerId, sourceRoute: 'resume' });
+      openDetailDecision({ kind: providerType, id: providerId, item, sourceRoute: 'resume' });
       return true;
     }
     if (source === 'message' && idOk) {
       const item = resolveDetailItem(providerType, providerId);
-      if (!item) return false;
+      if (!item) return openResumedDetail(providerType, providerId);
       showP24Toast('보려던 정보로 이어서 보여드릴게요');
       startFirstMemoFlow({
         kind: providerType,
@@ -124,11 +148,8 @@ export function resumePendingDeepIntent() {
       return true;
     }
     if (idOk) {
-      const item = resolveDetailItem(providerType, providerId);
-      if (!item) return false;
       showP24Toast('보려던 정보로 이어서 보여드릴게요');
-      openDetailDecision({ kind: providerType, id: providerId, sourceRoute: 'resume' });
-      return true;
+      return openResumedDetail(providerType, providerId);
     }
   } catch (err) {
     console.warn('[resume-deep-intent]', err);

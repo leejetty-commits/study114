@@ -14,6 +14,7 @@ import { bindGlobalEvents, renderSearchShell } from '../layout.js';
 import { renderCompareBar, bindUserActionEvents } from '@home-ui/user-actions-ui.js';
 import { bindCompareEvents } from '@home-ui/compare-modal.js';
 import { bindDetailDecisionEvents } from '@home-ui/detail-decision/index.js';
+import { registerProviderItemLookup } from '@home-ui/detail-decision/provider-item-registry.js';
 import { previewState as homePreviewState } from '@home-ui/state.js';
 import {
   canUseCompare,
@@ -295,6 +296,11 @@ function findSearchProviderItem(kind, id) {
     null
   );
 }
+
+registerProviderItemLookup((kind, id) => {
+  if (kind === 'student') return findSearchStudentItem(id) || null;
+  return findSearchProviderItem(kind, id);
+});
 
 /**
  * 비로그인 찾기: 목록 클릭은 기존 상세 가드, 검색·필터·정렬·학생 카드는 로그인 팝업.
