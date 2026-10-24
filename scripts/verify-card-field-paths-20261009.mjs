@@ -116,6 +116,7 @@ const TUTOR_BASIC = {
 };
 const TUTOR_TABLE = { 대상: '중등', 과목: '국어', 수업장소: '학생자택방문', 원생수: tutorTarget, 주교재: '주교재X', 슬로건: '과외슬로건' };
 const TUTOR_PICK = { ...TUTOR_TABLE, 특징: '특징가', 강의스타일: '열정' };
+delete TUTOR_PICK.주교재;
 const TUTOR_PRIME = { ...TUTOR_TABLE, 특징: '특징가 · 특징나 · 특징다', 강의스타일: '열정', 소개: '과외소개' };
 const TUTOR_DETAIL = {
   성별: '여', 과목: '국어', 수업장소: '학생자택방문', 대상: '중등', 원생수: tutorTarget, 슬로건: '과외슬로건',
@@ -215,6 +216,24 @@ function check(name, cond, detail = '') {
     hardFail += 1;
     console.error(`FAIL  ${name}${detail ? `\n        ${detail}` : ''}`);
   }
+}
+
+console.log('\n===== 과외쌤 픽 13 · 프라임 15 (정보 칸, 대표사진·배지·슬로건·행동 제외) =====');
+{
+  function tutorInfoCount(html) {
+    const overlay = (html.match(/class="expo-overlay-val"/g) || []).length
+      + (html.match(/class="expo-overlay-bl-grid__cell"/g) || []).length;
+    const labels = [...html.matchAll(/class="expo-tbl__label">([^<]*)/g)].map((m) => m[1]);
+    const table = labels.filter((label) => label !== '슬로건');
+    return { overlay, table: table.length, total: overlay + table.length, labels };
+  }
+  const mapped = mapper.mapToExposureItem('tutor', SERVER_TUTOR, 0);
+  const pickHtml = R.renderExposureBox('tutor', 'pick', { ...mapped, exposure_tier: 'pick', position_sku: 'pick' }, '', {});
+  const primeHtml = R.renderExposureBox('tutor', 'prime', { ...mapped, exposure_tier: 'prime', position_sku: 'prime' }, '', {});
+  const pickInfo = tutorInfoCount(pickHtml);
+  const primeInfo = tutorInfoCount(primeHtml);
+  check('과외쌤 픽 정보 칸 13(주교재·소개 없음)', pickInfo.total === 13 && !pickInfo.labels.includes('주교재') && !pickInfo.labels.includes('소개'), JSON.stringify(pickInfo));
+  check('과외쌤 프라임 정보 칸 15(소개·주교재 포함)', primeInfo.total === 15 && primeInfo.labels.includes('주교재') && primeInfo.labels.includes('소개'), JSON.stringify(primeInfo));
 }
 
 console.log('\n===== 서버 학생 응답 칸 (SearchService::searchStudents) =====');

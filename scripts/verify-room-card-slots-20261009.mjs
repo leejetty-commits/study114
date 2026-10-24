@@ -243,12 +243,18 @@ for (const guest of [false, true]) {
   const html = renderBrowseList('tutor', [{ ...EMPTY_TUTOR, feature_1: '꼼꼼', slogan: '열심히' }], { guest: false });
   ok('(3) 과외쌤 베이직: 값이 있으면 특징·슬로건 그대로', /expo-hcard__tag">꼼꼼</.test(html) && slots(html)['슬로건'] === '열심히');
 }
-for (const tier of ['pick', 'prime']) {
-  const html = renderExposureBox('tutor', tier, { ...EMPTY_TUTOR, exposure_tier: tier, position_sku: tier }, '', {});
-  const s = slots(html);
-  const want = ['대상', '과목', '수업장소', '원생수', '주교재', '특징', '강의스타일', '슬로건'];
-  const bad = want.filter((l) => s[l] !== '—');
-  ok(`(3) 과외쌤 ${tier} 빈 값: 항목제목 보이고 「—」`, bad.length === 0, bad.map((l) => `${l}=${s[l]}`).join(', '));
+{
+  const base = ['대상', '과목', '수업장소', '원생수', '특징', '강의스타일', '슬로건'];
+  const pickHtml = renderExposureBox('tutor', 'pick', { ...EMPTY_TUTOR, exposure_tier: 'pick', position_sku: 'pick' }, '', {});
+  const pickSlots = slots(pickHtml);
+  const pickBad = base.filter((l) => pickSlots[l] !== '—');
+  ok('(3) 과외쌤 픽 빈 값: 항목제목 보이고 「—」', pickBad.length === 0, pickBad.map((l) => `${l}=${pickSlots[l]}`).join(', '));
+  ok('(3) 과외쌤 픽: 주교재 칸 없음', !('주교재' in pickSlots) && !pickHtml.includes('주교재'));
+  const primeHtml = renderExposureBox('tutor', 'prime', { ...EMPTY_TUTOR, exposure_tier: 'prime', position_sku: 'prime' }, '', {});
+  const primeSlots = slots(primeHtml);
+  const primeWant = [...base, '주교재'];
+  const primeBad = primeWant.filter((l) => primeSlots[l] !== '—');
+  ok('(3) 과외쌤 프라임 빈 값: 항목제목 보이고 「—」(주교재 포함)', primeBad.length === 0, primeBad.map((l) => `${l}=${primeSlots[l]}`).join(', '));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
