@@ -558,7 +558,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
       ],
     ];
     if (showIntro) {
-      rows.push([labeled('소개', item.intro_short || '—', { col: 2, cls: 'expo-tbl__cell--intro' })]);
+      rows.push([labeled('소개', item.intro_long, { col: 2, cls: 'expo-tbl__cell--intro' })]);
     }
     return appendSloganAndActions(rows, item, actions, { showIntro });
   }
@@ -577,7 +577,7 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
     ],
   ];
   if (showIntro) {
-    rows.push([labeled('소개', item.intro_short || '—', { col: 2, cls: 'expo-tbl__cell--intro' })]);
+    rows.push([labeled('소개', item.intro_long, { col: 2, cls: 'expo-tbl__cell--intro' })]);
   }
   return appendSloganAndActions(rows, item, actions, { showIntro });
 }
