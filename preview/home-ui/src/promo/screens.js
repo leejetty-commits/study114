@@ -395,16 +395,117 @@ function renderTutorPromo() {
   return renderTutorV2(TUTOR_PROMO.v2);
 }
 
+/** 293-6: 우리동네 학생 홍보 랜딩 v2 본문 렌더 */
+function renderParentV2(c) {
+  const guest = isGuestViewer();
+  const start = guest ? signupUrl() : findHref('room');
+  const pick = (l) => (guest ? l.guest : l.member);
+
+  const wwbGood = (good) =>
+    `<div class="pv2-wwb"><div><b>좋은 점</b>${esc(good)}</div></div>`;
+
+  return `
+<article class="pv2 pv2--student">
+  <section class="pv2-hero">
+    <div>
+      <div class="pv2-eb pv2-rv is-on">${esc(c.hero.eyebrow)}</div>
+      <h2 class="pv2-h1 pv2-rv pv2-d1 is-on">${esc(c.hero.titleLine)}<br><span class="pv2-hand pv2-mark">${esc(c.hero.titleMark)}</span></h2>
+      <p class="pv2-lead pv2-rv pv2-d2 is-on">${esc(c.hero.leadLines[0])}<br>${esc(c.hero.leadLines[1])}</p>
+      <div class="pv2-rv pv2-d3 is-on">${ctaAnchor(pick(c.hero.primaryCta), start, 'pv2-btn')} ${ctaAnchor(c.hero.secondaryCta, '/guide/safety', 'pv2-btn pv2-btn--ghost')}</div>
+    </div>
+    <div class="pv2-col pv2-rv pv2-d1 is-on" aria-hidden="true">
+      <div class="pv2-a"></div>
+      <div class="pv2-b"></div>
+      <div class="pv2-c"></div>
+    </div>
+  </section>
+
+  <section class="pv2-flow pv2-watch">
+    <div class="pv2-rv is-on">
+      <div class="pv2-eb">${esc(c.flow.eyebrow)}</div>
+      <h3 class="pv2-h2">${esc(c.flow.title)}</h3>
+    </div>
+    <div class="pv2-fg">
+      ${c.flow.steps.map((s, i) => `<div class="pv2-step pv2-rv${i > 0 ? ` pv2-d${i}` : ''} is-on">
+        <div class="pv2-n" style="background:${esc(s.nBg)}">${esc(s.n)}</div>
+        <h3>${esc(s.title)}</h3>
+        <p>${esc(s.body)}</p>
+        ${wwbGood(s.good)}
+      </div>`).join('\n      ')}
+    </div>
+  </section>
+
+  <section class="pv2-big pv2-rv is-on">
+    <h3 class="pv2-h2" style="color:#fff">${c.band.titleLines.map(l => esc(l)).join('<br>')}</h3>
+    <p style="margin-top:16px;color:rgba(255,248,239,.85);line-height:1.7">${esc(c.band.body)}</p>
+  </section>
+
+  <section class="pv2-sec">
+    <div class="pv2-card2">
+      <div class="pv2-rv is-on">
+        <div class="pv2-eb">${esc(c.card.eyebrow)}</div>
+        <h3 class="pv2-h2">${c.card.titleLines.map(l => esc(l)).join('<br>')}</h3>
+        <p style="margin-top:14px;font-size:16px;line-height:1.8;color:#4B5563">${esc(c.card.body)}</p>
+      </div>
+      <div class="pv2-mock pv2-float pv2-rv pv2-d1 is-on" aria-hidden="true">
+        <div class="pv2-top"></div>
+        <span class="pv2-example">${esc(c.card.example.badge)}</span>
+        <div style="font-size:18px;font-weight:700;margin-top:8px">${esc(c.card.example.name)}</div>
+        <div style="margin-top:8px">${c.card.example.chips.map(ch => `<span class="pv2-chip">${esc(ch)}</span>`).join('')}</div>
+        <p style="margin-top:8px;font-size:14px;color:#4B5563">${esc(c.card.example.body)}</p>
+        <div class="pv2-sns">${c.card.example.sns.map(s => `<span>${esc(s)}</span>`).join('')}</div>
+        <div style="margin-top:12px">
+          <span class="pv2-btn pv2-btn--sm pv2-btn--deco" aria-hidden="true">${esc(c.card.example.deco[0])}</span>
+          <span class="pv2-btn pv2-btn--sm pv2-btn--deco pv2-btn--ghost" aria-hidden="true">${esc(c.card.example.deco[1])}</span>
+        </div>
+        <p class="pv2-note" style="margin-top:10px">${esc(c.card.example.note)}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv2-sec">
+    <div class="pv2-two">
+      <div class="pv2-box pv2-rv is-on">
+        <div class="pv2-eb">${esc(c.community.board.title)}</div>
+        <h3 class="pv2-h2" style="margin-top:10px">${esc(c.community.board.sub)}</h3>
+        <p style="margin-top:12px;font-size:14px;line-height:1.7">${esc(c.community.board.body)}</p>
+      </div>
+      <div class="pv2-box pv2-r pv2-rv pv2-d1 is-on">
+        <div class="pv2-eb">${esc(c.community.best.title)}</div>
+        <h3 class="pv2-h2" style="margin-top:10px">${esc(c.community.best.sub)}</h3>
+        ${c.community.best.posts.map(p => `<div class="pv2-best"><span class="pv2-example">${esc(c.community.best.example)}</span> ${esc(p)}</div>`).join('\n        ')}
+        <p class="pv2-note" style="margin-top:8px">${esc(c.community.best.note)}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv2-sec">
+    <div class="pv2-faqw">
+      <div class="pv2-rv is-on">
+        <div class="pv2-eb">${esc(c.faq.eyebrow)}</div>
+        <h3 class="pv2-h2" style="margin-top:10px">처음이라 궁금한 것</h3>
+      </div>
+      <div class="pv2-faq pv2-rv pv2-d1 is-on">
+        ${c.faq.items.filter(item => !item.guestOnly || guest).map(item => `<details open>
+          <summary>${esc(item.q)}</summary>
+          <p>${esc(item.a)}</p>
+        </details>`).join('\n        ')}
+      </div>
+    </div>
+  </section>
+
+  <section class="pv2-safe">
+    <div>
+      <h3 class="pv2-h2">${esc(c.finalCta.title)}</h3>
+      ${guest ? `<p style="margin-top:10px;color:rgba(255,248,239,.75)">${esc(c.finalCta.sub)}</p>` : ''}
+    </div>
+    ${ctaAnchor(pick(c.finalCta.cta), start, 'pv2-btn')}
+  </section>
+</article>`;
+}
+
 function renderParentPromo() {
-  const start = isGuestViewer() ? signupUrl() : findHref('room');
-  const safety = '/guide/safety';
-  return renderPromoLanding(PARENT_PROMO, {
-    heroPrimary: start,
-    heroSecondary: safety,
-    structure: start,
-    finalPrimary: start,
-    finalSecondary: safety,
-  });
+  return renderParentV2(PARENT_PROMO.v2);
 }
 
 function railIntroCard() {
