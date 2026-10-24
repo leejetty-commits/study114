@@ -109,7 +109,7 @@ function sectionHead(chip, title) {
     </div>`;
 }
 
-function guideHero({ label, title, p1, p2, art }) {
+function guideHero({ label, title, p1, p2, art, photo }) {
   return `
     <section class="guide-hero" aria-label="${esc(label)}">
       <div class="guide-hero__grid" aria-hidden="true"></div>
@@ -120,9 +120,16 @@ function guideHero({ label, title, p1, p2, art }) {
           <p>${esc(p1)}</p>
           <p>${esc(p2)}</p>
         </div>
-        <div class="guide-hero__art" aria-hidden="true">
+        ${photo
+          ? `<div class="guide-hero__art guide-hero__art--photo" aria-hidden="true">
+          <picture>
+            <source media="(max-width: 1100px)" srcset="/assets/guest/${photo}-m.webp" />
+            <img src="/assets/guest/${photo}.webp" alt="" width="210" height="252" decoding="async" />
+          </picture>
+        </div>`
+          : `<div class="guide-hero__art" aria-hidden="true">
           <img src="${esc(art)}" alt="" width="168" height="118" />
-        </div>
+        </div>`}
       </div>
     </section>
     <div class="pattern-band" aria-hidden="true"></div>`;
@@ -170,6 +177,7 @@ function renderGuideHome() {
       p1: '우동공과를 처음 쓰시나요? 찾는 분과 등록하는 분, 각각 필요한 흐름만 짧게 안내해 드릴게요.',
       p2: '이용 중 막히는 부분이 있다면 고객센터에서 공지, FAQ, 운영문의를 이어서 확인할 수 있어요.',
       art: `${A}/motif-guide.svg`,
+      photo: 'guide-student',
     })}
     ${sectionHead('여기에서 시작', '어디에 해당하나요?')}
     <div class="situation-grid">
@@ -235,6 +243,7 @@ function renderGuideStart() {
       p1: '공부방·과외쌤을 찾는 분들을 위한 첫 이용 안내입니다.',
       p2: '찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가 보세요. 비교는 필요할 때 쓰면 됩니다.',
       art: `${A}/motif-search.svg`,
+      photo: 'guide-homework',
     })}
     ${sectionHead('순서', '이용 순서')}
     <p class="section-lead">한 번에 다 외울 필요 없어요. 찾기 → 조건 → 상세 → 찜 → 비교 → 로그인 → 쪽지 순서로 따라가면 됩니다.</p>
@@ -399,6 +408,7 @@ function renderGuideCompare() {
       p1: '마음에 드는 상대를 모아 비교하고, 쪽지로 첫 인사를 건네는 방법을 안내합니다.',
       p2: '쪽지는 회원끼리 연결되는 통로예요. 사이트 운영팀에 보내는 운영문의와는 다른 기능입니다.',
       art: `${A}/motif-compare.svg`,
+      photo: 'guide-neighborhood',
     })}
     <div class="note-callout" role="note">
       <strong>채널 구분:</strong> 쪽지 = 회원끼리 첫 연락 · 운영문의 = 운영자에게 보내는 문의(폼/메일). 같은 “문의”로 묶지 마세요.
