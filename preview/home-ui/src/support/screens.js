@@ -195,6 +195,12 @@ function renderSupportQuickCards() {
 function renderSupportHero() {
   return `
     <section class="support-hero" aria-label="고객센터 히어로">
+      <div class="support-hero__art" aria-hidden="true">
+        <picture>
+          <source media="(max-width: 767px)" srcset="/assets/guest/support-desk-m.webp" />
+          <img src="/assets/guest/support-desk.webp" alt="" width="260" height="390" decoding="async" />
+        </picture>
+      </div>
       <div class="support-hero__shapes" aria-hidden="true">
         <span class="geo-circle geo-circle--1"></span>
         <span class="geo-circle geo-circle--2"></span>

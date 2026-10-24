@@ -59,6 +59,9 @@ export function renderLibraryShell(path, bodyHtml) {
         <div>
           <h1 class="sup-content__title">${renderLibraryTitle(path)}</h1>
         </div>
+        <div class="sup-content__art" aria-hidden="true">
+          <img src="/assets/guest/library-notebook.webp" alt="" width="240" height="120" loading="lazy" decoding="async" />
+        </div>
       </header>
       <div class="sup-frame sup-frame--library">
         ${renderLibraryNav(path)}
