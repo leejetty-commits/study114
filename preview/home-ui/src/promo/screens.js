@@ -293,16 +293,106 @@ function renderStudyRoomPromo() {
   return renderStudyRoomV2(STUDY_ROOM_PROMO.v2);
 }
 
-function renderTutorPromo() {
+/** 293-5: 과외쌤 홍보 랜딩 v2 본문 렌더 */
+function renderTutorV2(c) {
   const reg = TUTOR_REGISTER_URL;
-  const guide = '/guide/registration';
-  return renderPromoLanding(TUTOR_PROMO, {
-    heroPrimary: reg,
-    heroSecondary: guide,
-    structure: reg,
-    finalPrimary: reg,
-    finalSecondary: guide,
-  });
+  const pv = c.hero.preview;
+
+  const wwbItems = (items) =>
+    items.map(w => `<div><b>${esc(w.k)}</b>${esc(w.v)}</div>`).join('');
+
+  return `
+<article class="pv2 pv2--tutor">
+  <section class="pv2-split">
+    <div class="pv2-l">
+      <div class="pv2-eb pv2-rv is-on">${esc(c.hero.eyebrow)}</div>
+      <h2 class="pv2-h1 pv2-rv pv2-d1 is-on">${esc(c.hero.titleLines[0])}<br>${esc(c.hero.titleLines[1])}<br><span class="pv2-hand pv2-mark">${esc(c.hero.titleMark)}</span>${esc(c.hero.titleAfter)}</h2>
+      <p class="pv2-lead pv2-rv pv2-d2 is-on">${esc(c.hero.leadLines[0])}<br>${esc(c.hero.leadLines[1])}</p>
+      <div class="pv2-rv pv2-d3 is-on">${ctaAnchor(c.hero.primaryCta, reg, 'pv2-btn')} ${ctaAnchor(c.hero.secondaryCta, '/guide/registration', 'pv2-btn pv2-btn--ghost')}</div>
+    </div>
+    <div class="pv2-r" aria-hidden="true">
+      <div class="pv2-card pv2-float">
+        <span class="pv2-badge" style="background:#0F766E;color:#fff">${esc(pv.badge)}</span> <span class="pv2-example">${esc(pv.example)}</span>
+        <div class="pv2-n" style="margin-top:12px">${esc(pv.name)}</div>
+        <div class="pv2-row">${pv.chips.map(ch => `<span class="pv2-chip">${esc(ch)}</span>`).join('')}</div>
+        <p>${esc(pv.body)}</p>
+        <div style="margin-top:14px">
+          <span class="pv2-btn pv2-btn--sm pv2-btn--deco" aria-hidden="true">${esc(pv.deco[0])}</span>
+          <span class="pv2-btn pv2-btn--sm pv2-btn--deco pv2-btn--ghost" aria-hidden="true">${esc(pv.deco[1])}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pv2-steps pv2-watch">
+    <div class="pv2-rv is-on">
+      <div class="pv2-k2">${esc(c.steps.eyebrow)}</div>
+      <h3 class="pv2-h2" style="margin-top:10px">${esc(c.steps.title)}</h3>
+    </div>
+    <div class="pv2-sg">
+      ${c.steps.items.map(s => `<div class="pv2-step">
+        <div class="pv2-k">${esc(s.k)}</div>
+        <h3>${esc(s.title)}</h3>
+        <p>${esc(s.body)}</p>
+      </div>`).join('\n      ')}
+    </div>
+  </section>
+
+  <section class="pv2-types">
+    <div class="pv2-rv is-on">
+      <div class="pv2-k2">${esc(c.cardTypes.eyebrow)}</div>
+      <h3 class="pv2-h2" style="margin-top:10px">${esc(c.cardTypes.title)}</h3>
+      <p style="margin-top:10px;font-size:16px;color:#4B5563">${esc(c.cardTypes.lead)}</p>
+    </div>
+    <div class="pv2-tg">
+      ${c.cardTypes.cards.map((card, i) => `<div class="pv2-t pv2-rv${i > 0 ? ` pv2-d${i}` : ''} is-on">
+        <span class="pv2-badge" style="background:${esc(card.badgeBg)};color:${esc(card.badgeFg)}">${esc(card.badge)}</span>
+        <h3>${esc(card.title)}</h3>
+        <p>${esc(card.body)}</p>
+        <div class="pv2-w">${esc(card.foot)}</div>
+      </div>`).join('\n      ')}
+    </div>
+  </section>
+
+  <section class="pv2-wide">
+    <div class="pv2-rv is-on">
+      <div class="pv2-k2">${esc(c.channel.eyebrow)}</div>
+      <h3 class="pv2-h2" style="margin:12px 0 14px">${c.channel.titleLines.map(l => esc(l)).join('<br>')}</h3>
+      <div class="pv2-wwb">${wwbItems(c.channel.wwb)}</div>
+      <div class="pv2-ch">${c.channel.chips.map(ch => `<span>${esc(ch)}</span>`).join('')}</div>
+    </div>
+    <div class="pv2-ph2 pv2-rv pv2-d1 is-on" aria-hidden="true"></div>
+  </section>
+
+  <section class="pv2-room">
+    <div class="pv2-rv is-on">
+      <div class="pv2-eb">${esc(c.community.eyebrow)}</div>
+      <h3 class="pv2-h2" style="margin-top:10px">${c.community.titleLines.map(l => esc(l)).join('<br>')}</h3>
+      <p style="margin-top:14px;color:#CFE3DC;line-height:1.7">${esc(c.community.body)}</p>
+      ${c.community.posts.map(p => `<div class="pv2-qq"><span class="pv2-example">예시</span> ${esc(p)}</div>`).join('\n      ')}
+      <p class="pv2-note" style="margin-top:8px">${esc(c.community.note)}</p>
+    </div>
+    <div class="pv2-faq pv2-rv pv2-d1 is-on" style="color:#F3EFE4">
+      <div class="pv2-eb">${esc(c.faq.eyebrow)}</div>
+      ${c.faq.items.map(item => `<details open>
+        <summary>${esc(item.q)}</summary>
+        <p>${esc(item.a)}</p>
+      </details>`).join('\n      ')}
+    </div>
+  </section>
+
+  <section class="pv2-end">
+    <div>
+      <h3 class="pv2-h2">${esc(c.finalCta.title)}</h3>
+      <p style="margin-top:10px;color:#CFE3DC">${esc(c.finalCta.sub)}</p>
+    </div>
+    ${ctaAnchor(c.finalCta.cta, reg, 'pv2-btn')}
+  </section>
+</article>`;
+}
+
+function renderTutorPromo() {
+  return renderTutorV2(TUTOR_PROMO.v2);
 }
 
 function renderParentPromo() {
