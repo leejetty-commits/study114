@@ -274,8 +274,9 @@ async function runMapperPart(items) {
   const expectIn = (html, values) => values.filter((v) => !html.includes(v));
   const primeMiss = expectIn(prime, [t7.image_path, t7.grade_band, placeLabel, t7.main_material_note, t7.feature_1, t7.feature_3, styleLabel, t7.intro_short, t7.slogan, '주 2회', '회당 90분']);
   ok('프라임 카드: 사진·대상·수업장소·주교재·특징3·강의스타일·소개·슬로건·주회·분이 그려짐', primeMiss.length === 0, primeMiss.join(' | '));
-  const pickMiss = expectIn(pick, [t7.grade_band, placeLabel, t7.main_material_note, t7.feature_1, t7.slogan]);
-  ok('픽 카드: 대상·수업장소·주교재·특징·슬로건이 그려짐', pickMiss.length === 0, pickMiss.join(' | '));
+  const pickMiss = expectIn(pick, [t7.grade_band, placeLabel, t7.feature_1, t7.slogan]);
+  ok('픽 카드: 대상·수업장소·특징·슬로건이 그려짐', pickMiss.length === 0, pickMiss.join(' | '));
+  ok('픽 카드: 주교재 줄 없음', !pick.includes('주교재') && !pick.includes(t7.main_material_note));
   const basicMiss = expectIn(basic, [t7.image_path_basic, t7.grade_band, placeLabel, '주2·90분', t7.feature_1, t7.slogan]);
   ok('베이직 가로카드: 사진·대상·수업장소·주○·○분·특징·슬로건이 그려짐', basicMiss.length === 0, basicMiss.join(' | '));
   const tableMiss = expectIn(basicTable, [t7.grade_band, placeLabel, '주2·90분', t7.feature_1, t7.slogan]);

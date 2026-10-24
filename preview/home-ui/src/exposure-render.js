@@ -548,7 +548,6 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
       [labeled('과목', item.main_subject_note, { col: 2 })],
       [labeled('수업장소', optionalTutorPlaces(item.lesson_places), { col: 2 })],
       [labeled('원생수', formatTutorStudentTarget(item), { col: 2 })],
-      [labeled('주교재', item.main_material_note || '—', { col: 2 })],
       [labeled('특징', joinFeatures(item, featureMax), { col: 2, cls: 'expo-tbl__cell--features' })],
       [
         labeled(
