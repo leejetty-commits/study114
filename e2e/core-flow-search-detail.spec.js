@@ -3,6 +3,7 @@
  * 전제: home-ui :5174 · search-ui :5176 · API :8080
  */
 import { test, expect } from '@playwright/test';
+import { assertAllOpened, clickAllCards } from './helpers/click-all-cards.js';
 
 const HOME = process.env.STUDY114_HOME_UI_URL || 'http://127.0.0.1:5174';
 const SEARCH = process.env.STUDY114_SEARCH_UI_URL || 'http://127.0.0.1:5176';
@@ -89,10 +90,13 @@ test.describe('[4단계] guest 홈 → 검색 → 상세', () => {
   test('guest 홈 카드 클릭 → 상세 모달 · 로그인 CTA', async ({ page }) => {
     await page.goto(`${HOME}/#/guest`);
     await page.waitForSelector('[data-provider-kind="study_room"]', { timeout: 30_000 });
-    await openFirstStudyRoomDetail(page);
-    await expect(page.getByRole('button', { name: '로그인하고 문의하기' })).toBeVisible();
-    await page.locator('[data-p24-action="close"]').click();
-    await expect(page.locator('#p24-detail-modal')).toHaveCount(0);
+    const cards = page.locator('[data-provider-kind="study_room"][data-provider-id]:visible');
+    const { results } = await clickAllCards(page, cards, {
+      afterOpen: async () => {
+        await expect(page.getByRole('button', { name: '로그인하고 문의하기' })).toBeVisible();
+      },
+    });
+    assertAllOpened(results);
   });
 
   test('search-ui 게스트는 검색 폼을 보고 조작하면 로그인 팝업', async ({ page }) => {
@@ -186,10 +190,9 @@ test.describe('[4단계] parent 홈 → 검색 → 상세 · 행동', () => {
   test('search-ui parent 역할 · 상세 · 최근열람 기록', async ({ page }) => {
     await page.goto(`${SEARCH}/#/search/tutor?role=parent`);
     await page.waitForSelector('[data-provider-kind="tutor"]', { timeout: 30_000 });
-    const card = page.locator('[data-provider-kind="tutor"][data-provider-id]').first();
-    await card.click();
-    await expect(page.locator('#p24-detail-modal')).toBeVisible();
-    await page.locator('[data-p24-action="close"]').click();
+    const cards = page.locator('[data-provider-kind="tutor"][data-provider-id]:visible');
+    const { results } = await clickAllCards(page, cards);
+    assertAllOpened(results);
 
     await page.goto(`${HOME}/#/mypage/recent`);
     await page.waitForSelector('#app', { timeout: 30_000 });
