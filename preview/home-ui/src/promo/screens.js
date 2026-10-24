@@ -1,4 +1,4 @@
-﻿import { STUDY_ROOM_PROMO } from './study-room-content.js';
+import { STUDY_ROOM_PROMO } from './study-room-content.js';
 import { TUTOR_PROMO } from './tutor-content.js';
 import { PARENT_PROMO } from './parent-content.js';
 import { searchUiUrl, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
