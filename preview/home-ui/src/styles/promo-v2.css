@@ -39,6 +39,8 @@
 @keyframes pv2-floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes pv2-kenburns{from{transform:scale(1.08)}to{transform:scale(1)}}
 @keyframes pv2-lit{from{filter:grayscale(1);opacity:.35}to{filter:none;opacity:1}}
+@keyframes pv2-unfold{from{transform:perspective(800px) rotateX(-80deg) scaleY(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes pv2-caret{50%{border-color:transparent}}
 
 /* ── 리빌 애니메이션 ─────────────────────────────────────── */
 .pv2 .pv2-rv{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
@@ -70,6 +72,17 @@
 .pv2 .is-on .pv2-step:nth-child(2){animation-delay:.5s}
 .pv2 .is-on .pv2-step:nth-child(3){animation-delay:1s}
 .pv2 .is-on .pv2-step:nth-child(4){animation-delay:1.5s}
+
+/* 293-7: JS가 붙은 뒤에만 숨김(.pv2-anim). JS 없으면 전부 보임 */
+.pv2.pv2-anim .pv2-unfold{transform-origin:top center;opacity:0}
+.pv2.pv2-anim .pv2-unfold.is-unfold{animation:pv2-unfold .6s cubic-bezier(.2,.8,.2,1) both}
+.pv2.pv2-anim .pv2-unfold.is-unfold:nth-child(2){animation-delay:.12s}
+.pv2.pv2-anim .pv2-unfold.is-unfold:nth-child(3){animation-delay:.24s}
+.pv2.pv2-anim .pv2-unfold.is-unfold:nth-child(4){animation-delay:.36s}
+.pv2.pv2-anim .pv2-mock.pv2-unfold.is-unfold{animation:pv2-unfold .6s cubic-bezier(.2,.8,.2,1) both,pv2-floaty 4s ease-in-out .6s infinite}
+.pv2.pv2-anim .pv2-mark::after{clip-path:inset(0 100% 0 0);transition:clip-path .8s ease .4s}
+.pv2.pv2-anim .pv2-mark.is-draw::after{clip-path:inset(0 0 0 0)}
+.pv2.pv2-anim [data-pv2-type].is-typing{border-right:2px solid currentColor;animation:pv2-caret .8s step-end infinite}
 
 /* ── FAQ ──────────────────────────────────────────────────── */
 .pv2 .pv2-faq details{border-bottom:1px solid currentColor;padding:18px 0}
@@ -331,4 +344,6 @@
 @media(prefers-reduced-motion:reduce){
   .pv2 .pv2-rv{opacity:1;transform:none;transition:none}
   .pv2 .is-on .pv2-pin,.pv2 .pv2-float,.pv2 .pv2-kb,.pv2 .is-on .pv2-step{animation:none}
+  .pv2 .pv2-unfold,.pv2 .pv2-unfold.is-unfold{animation:none;opacity:1;transform:none}
+  .pv2 .pv2-mark::after{clip-path:none;transition:none}
 }

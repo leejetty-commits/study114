@@ -221,7 +221,7 @@ function renderStudyRoomV2(c) {
         <span class="pv2-pin" style="left:59%;top:67%"></span>
         <span class="pv2-pin" style="left:87%;top:54%"></span>
         <span class="pv2-pin pv2-me" style="left:39%;top:52%"></span>
-        <span class="pv2-tag pv2-float" style="left:44%;top:56%"><span class="pv2-example">예시</span> <b>${esc(c.mapPin.tag.title)}</b><br>${esc(c.mapPin.tag.body)}</span>
+        <span class="pv2-tag pv2-float" style="left:44%;top:56%"><span class="pv2-example">예시</span> <b>${esc(c.mapPin.tag.title)}</b><br><span data-pv2-type>${esc(c.mapPin.tag.body)}</span></span>
       </div>
     </div>
   </section>
@@ -233,7 +233,7 @@ function renderStudyRoomV2(c) {
       <p class="pv2-li" style="color:#B9C3D6">${esc(c.cardTypes.lead)}</p>
     </div>
     <div class="pv2-cards">
-      ${c.cardTypes.cards.map((card, i) => `<div class="pv2-c pv2-rv${i > 0 ? ` pv2-d${i}` : ''} is-on">
+      ${c.cardTypes.cards.map((card, i) => `<div class="pv2-c pv2-rv pv2-unfold${i > 0 ? ` pv2-d${i}` : ''} is-on">
         <span class="pv2-badge" style="background:${esc(card.badgeBg)};color:${esc(card.badgeFg)}">${esc(card.badge)}</span>
         <h3>${esc(card.title)}</h3>
         <p>${esc(card.body)}</p>
@@ -345,7 +345,7 @@ function renderTutorV2(c) {
       <p style="margin-top:10px;font-size:16px;color:#4B5563">${esc(c.cardTypes.lead)}</p>
     </div>
     <div class="pv2-tg">
-      ${c.cardTypes.cards.map((card, i) => `<div class="pv2-t pv2-rv${i > 0 ? ` pv2-d${i}` : ''} is-on">
+      ${c.cardTypes.cards.map((card, i) => `<div class="pv2-t pv2-rv pv2-unfold${i > 0 ? ` pv2-d${i}` : ''} is-on">
         <span class="pv2-badge" style="background:${esc(card.badgeBg)};color:${esc(card.badgeFg)}">${esc(card.badge)}</span>
         <h3>${esc(card.title)}</h3>
         <p>${esc(card.body)}</p>
@@ -447,7 +447,7 @@ function renderParentV2(c) {
         <h3 class="pv2-h2">${c.card.titleLines.map(l => esc(l)).join('<br>')}</h3>
         <p style="margin-top:14px;font-size:16px;line-height:1.8;color:#4B5563">${esc(c.card.body)}</p>
       </div>
-      <div class="pv2-mock pv2-float pv2-rv pv2-d1 is-on" aria-hidden="true">
+      <div class="pv2-mock pv2-float pv2-rv pv2-unfold pv2-d1 is-on" aria-hidden="true">
         <div class="pv2-top"></div>
         <span class="pv2-example">${esc(c.card.example.badge)}</span>
         <div style="font-size:18px;font-weight:700;margin-top:8px">${esc(c.card.example.name)}</div>
@@ -546,6 +546,130 @@ export function renderPromoInlineCard() {
     </aside>`;
 }
 
+/* ── 293-7: 홍보 v2 모션 바인딩 ───────────────────────────── */
+let pv2Observer = null;
+let pv2Timers = [];
+let pv2TeardownBound = false;
+
+function _pv2Typewriter(el) {
+  const full = el.dataset.pv2Text !== undefined ? el.dataset.pv2Text : el.textContent;
+  el.dataset.pv2Text = full;
+  el.textContent = '';
+  el.classList.add('is-typing');
+  const chars = [...full];
+  let i = 0;
+  function next() {
+    if (i < chars.length) {
+      el.textContent = chars.slice(0, i + 1).join('');
+      i++;
+      pv2Timers.push(setTimeout(next, 60));
+    } else {
+      el.classList.remove('is-typing');
+    }
+  }
+  next();
+}
+
+function teardownPv2Motion() {
+  pv2Observer?.disconnect();
+  pv2Observer = null;
+  pv2Timers.forEach(id => clearTimeout(id));
+  pv2Timers = [];
+  document.querySelectorAll('[data-pv2-type]').forEach(el => {
+    if (el.dataset.pv2Text !== undefined) {
+      el.textContent = el.dataset.pv2Text;
+      el.classList.remove('is-typing');
+      delete el.dataset.pv2Text;
+    }
+  });
+}
+
+function bindPv2Motion(root) {
+  teardownPv2Motion();
+  const art = root.querySelector('.pv2');
+  if (!art) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (!window.IntersectionObserver) return;
+  // DOM 레이아웃 계산 후 실행 (SPA innerHTML 교체 직후 rAF 2회 = 2프레임)
+  requestAnimationFrame(() => requestAnimationFrame(() => _bindPv2MotionCore(art)));
+}
+
+function _bindPv2MotionCore(art) {
+  const _savedIsOff = []; // is-on 제거한 요소 목록 (catch 복원용)
+  try {
+    art.classList.add('pv2-anim');
+
+    // S1: 화면 밖 .pv2-rv (unfold 제외) — is-on 제거 후 observe
+    const rvEls = [...art.querySelectorAll('.pv2-rv:not(.pv2-unfold)')];
+    rvEls.forEach(el => {
+      if (el.getBoundingClientRect().top >= innerHeight) {
+        el.classList.remove('is-on');
+        _savedIsOff.push(el);
+      }
+    });
+
+    // S2·S3: .pv2-watch — is-on 제거 후 observe
+    const watchEls = [...art.querySelectorAll('.pv2-watch')];
+    watchEls.forEach(el => { el.classList.remove('is-on'); _savedIsOff.push(el); });
+
+    // N1: .pv2-unfold (is-on 유지, is-unfold 없이 시작) — observe
+    const unfoldEls = [...art.querySelectorAll('.pv2-unfold')];
+
+    // N3: .pv2-mark (히어로) — observe (IO 초기 콜백으로 첫 화면도 트리거)
+    const markEls = [...art.querySelectorAll('.pv2-mark')];
+
+    // 안전장치: 3초 뒤에도 미트리거면 전부 표시 후 teardown
+    let anyTriggered = false;
+    pv2Timers.push(setTimeout(() => {
+      if (!anyTriggered) {
+        rvEls.forEach(el => el.classList.add('is-on'));
+        watchEls.forEach(el => el.classList.add('is-on'));
+        unfoldEls.forEach(el => el.classList.add('is-unfold'));
+        markEls.forEach(el => el.classList.add('is-draw'));
+        teardownPv2Motion();
+      }
+    }, 3000));
+
+    pv2Observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        anyTriggered = true;
+        const el = entry.target;
+        pv2Observer.unobserve(el);
+        if (el.classList.contains('pv2-unfold')) {
+          el.classList.add('is-unfold');                      // N1 카드 펼침
+        } else if (el.classList.contains('pv2-watch')) {
+          el.classList.add('is-on');                          // S2·S3 트리거
+          // N2 타자: watch 안 [data-pv2-type] — 핀 떨어짐(≈1s) 뒤
+          el.querySelectorAll('[data-pv2-type]').forEach(te => {
+            pv2Timers.push(setTimeout(() => _pv2Typewriter(te), 1000));
+          });
+        } else if (el.classList.contains('pv2-mark')) {
+          el.classList.add('is-draw');                        // N3 밑줄
+        } else {
+          el.classList.add('is-on');                          // S1 등장
+        }
+      });
+    }, { threshold: 0.2 });
+
+    rvEls.filter(el => !el.classList.contains('is-on')).forEach(el => pv2Observer.observe(el));
+    watchEls.forEach(el => pv2Observer.observe(el));
+    unfoldEls.forEach(el => pv2Observer.observe(el));
+    markEls.forEach(el => pv2Observer.observe(el));
+
+    if (!pv2TeardownBound) {
+      window.addEventListener('hashchange', teardownPv2Motion);
+      pv2TeardownBound = true;
+    }
+  } catch (_) {
+    art.classList.remove('pv2-anim');
+    _savedIsOff.forEach(el => el.classList.add('is-on')); // is-on 복원
+    teardownPv2Motion();
+  }
+}
+/* ── /293-7 ─────────────────────────────────────────────── */
+
+
 export function bindPromoScreenEvents(root) {
   root.querySelectorAll('[data-promo-ext]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -563,4 +687,5 @@ export function bindPromoScreenEvents(root) {
       window.location.hash = el.getAttribute('data-nav') || '/guest';
     });
   });
+  bindPv2Motion(root); // 293-7
 }
