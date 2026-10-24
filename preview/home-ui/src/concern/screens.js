@@ -243,8 +243,11 @@ function renderCommunityHub(navRole) {
             <a class="btn btn--secondary" href="#/community/solved" data-concern-nav="/community/solved">해결후기 보기</a>
           </div>
         </div>
-        <div class="hero-band__art" aria-hidden="true">
-          <img src="/assets/info-refresh/motif-support.svg" alt="" />
+        <div class="hero-band__art hero-band__art--photo" aria-hidden="true">
+          <picture>
+            <source media="(max-width: 1100px)" srcset="/assets/guest/community-study-m.webp" />
+            <img src="/assets/guest/community-study.webp" alt="" width="180" height="180" decoding="async" />
+          </picture>
         </div>
       </div>
     </section>
