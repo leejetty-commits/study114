@@ -7,6 +7,11 @@
 .sup-main { padding-top: var(--space-4); }
 .sup-layout { max-width: 56rem; margin: 0 auto; padding: 0 var(--space-4) var(--space-8); }
 .sup-content__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.sup-content__art { flex-shrink: 0; }
+.sup-content__art img {
+  width: 240px; height: 120px; object-fit: cover; object-position: center 45%;
+  border-radius: 12px; display: block;
+}
 .sup-content__title {
   display: flex;
   flex-wrap: wrap;
@@ -51,6 +56,7 @@
     scrollbar-width: thin;
   }
   .sup-nav--policy .sup-nav__link { flex-shrink: 0; white-space: nowrap; }
+  .sup-content__art { display: none; }
 }
 .sup-nav__link {
   display: flex; flex-direction: column; gap: 0.125rem;
