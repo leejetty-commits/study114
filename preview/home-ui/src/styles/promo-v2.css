@@ -340,7 +340,7 @@
   .pv2--room .pv2-cards{grid-template-columns:1fr}
   .pv2--tutor .pv2-sg{grid-template-columns:1fr}
   .pv2--tutor .pv2-tg{grid-template-columns:1fr}
-  .pv2--student .pv2-safe{padding:36px 22px;background:linear-gradient(180deg,rgba(11,23,48,.92) 0%,rgba(11,23,48,.85) 100%),url('/assets/promo/room-band-desk.webp') center 70%/cover no-repeat}
+  .pv2--student .pv2-safe{padding:36px 22px;background:linear-gradient(180deg,rgba(11,23,48,.86) 0%,rgba(11,23,48,.82) 38%,rgba(11,23,48,.62) 100%),url('/assets/promo/room-band-desk.webp') center 70%/cover no-repeat}
   .pv2--student .pv2-safe .pv2-h2{font-size:clamp(22px,6.4vw,28px);line-height:1.35;word-break:keep-all}
 }
 
