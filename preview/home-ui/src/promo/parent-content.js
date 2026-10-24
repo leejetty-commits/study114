@@ -5,7 +5,7 @@
 export const PARENT_PROMO = {
   meta: {
     path: '/promo/parent',
-    title: '학생 카탈로그',
+    title: '우리동네 학생',
     eyebrow: '학생 · 우리동네 찾기',
   },
   v2: {
