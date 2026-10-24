@@ -250,6 +250,18 @@
 .pv2--student .pv2-faqw{display:grid;grid-template-columns:340px 1fr;gap:60px}
 .pv2--student .pv2-safe{margin:0 80px 90px;background:#1C1917;color:#FFF8EF;border-radius:12px;padding:60px;display:flex;justify-content:space-between;align-items:center}
 
+/* 293-6: 본문 ≈800~984px(우측 레일 옆) 대응 */
+.pv2--student .pv2-hero{grid-template-columns:1fr;padding:56px 48px 32px}
+.pv2--student .pv2-col{grid-template-rows:240px 200px}
+.pv2--student .pv2-flow{margin:48px}
+.pv2--student .pv2-fg{grid-template-columns:1fr}
+.pv2--student .pv2-big{margin:0 48px}
+.pv2--student .pv2-sec{margin:56px 48px}
+.pv2--student .pv2-card2{grid-template-columns:1fr}
+.pv2--student .pv2-two{grid-template-columns:1fr}
+.pv2--student .pv2-faqw{grid-template-columns:1fr;gap:24px}
+.pv2--student .pv2-safe{margin:0 48px 72px;flex-direction:column;align-items:flex-start;gap:20px}
+
 /* ================================================================
  * 모바일 대응 (max-width: 760px)
  * 고정폭 → 유동화. 가로 넘침 0 기준.
