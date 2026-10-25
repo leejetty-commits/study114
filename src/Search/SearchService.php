@@ -316,6 +316,23 @@ final class SearchService
             unset($item);
         }
 
+        // room/tutor: 찜·비교·쪽지 실집계 배치 (게스트·로그인 공통)
+        if (($tab === 'room' || $tab === 'tutor') && $result['items'] !== []) {
+            $targetType = $tab === 'room' ? 'study_room' : 'tutor';
+            $ids = array_map(static fn (array $item): int => (int) $item['id'], $result['items']);
+            $wishCounts = $this->batchCount($pdo, 'user_favorites', 'target_type', 'target_id', $targetType, $ids);
+            $compareCounts = $this->batchCount($pdo, 'user_compare_items', 'target_type', 'target_id', $targetType, $ids);
+            $contextKind = $tab === 'room' ? 'study_room' : 'tutor';
+            $msgCounts = $this->batchCount($pdo, 'message_threads', 'context_kind', 'context_id', $contextKind, $ids);
+            foreach ($result['items'] as &$item) {
+                $id = (int) $item['id'];
+                $item['wish_count'] = $wishCounts[$id] ?? 0;
+                $item['compare_count'] = $compareCounts[$id] ?? 0;
+                $item['message_count'] = $msgCounts[$id] ?? 0;
+            }
+            unset($item);
+        }
+
         return $result;
     }
 
@@ -349,6 +366,19 @@ final class SearchService
             foreach ($result['items'] as $item) {
                 $cards[(int) $item['id']] = $item;
             }
+        }
+
+        if ($cards !== []) {
+            $cardIds = array_keys($cards);
+            $wishCounts = $this->batchCount($pdo, 'user_favorites', 'target_type', 'target_id', $providerType, $cardIds);
+            $compareCounts = $this->batchCount($pdo, 'user_compare_items', 'target_type', 'target_id', $providerType, $cardIds);
+            $msgCounts = $this->batchCount($pdo, 'message_threads', 'context_kind', 'context_id', $providerType, $cardIds);
+            foreach ($cards as $id => &$card) {
+                $card['wish_count'] = $wishCounts[$id] ?? 0;
+                $card['compare_count'] = $compareCounts[$id] ?? 0;
+                $card['message_count'] = $msgCounts[$id] ?? 0;
+            }
+            unset($card);
         }
 
         return $cards;
@@ -470,6 +500,31 @@ final class SearchService
         $cache[$table] = (bool) $stmt->fetchColumn();
 
         return $cache[$table];
+    }
+
+    /**
+     * 테이블이 있으면 IN 한 번으로 id → COUNT 맵을 돌려준다.
+     * @param list<int> $ids
+     * @return array<int, int>
+     */
+    private function batchCount(PDO $pdo, string $table, string $typeCol, string $idCol, string $typeValue, array $ids): array
+    {
+        if ($ids === [] || !$this->tableExists($pdo, $table)) {
+            return [];
+        }
+        $ph = implode(',', array_fill(0, count($ids), '?'));
+        $sql = "SELECT {$idCol}, COUNT(*) AS cnt FROM {$table} WHERE {$typeCol} = ? AND {$idCol} IN ({$ph}) GROUP BY {$idCol}";
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute(array_merge([$typeValue], $ids));
+            $out = [];
+            while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+                $out[(int) $row[0]] = (int) $row[1];
+            }
+            return $out;
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     private function recommendCountExpr(PDO $pdo, string $table, string $alias): string

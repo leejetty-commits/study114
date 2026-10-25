@@ -224,6 +224,11 @@ export function queueToggleFavorite(kind, id) {
         if (data.in_favorite && !has) list.push(id);
         if (!data.in_favorite && has) list.splice(list.indexOf(id), 1);
       }
+      if (data.wish_count !== undefined) {
+        document.querySelectorAll(
+          `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
+        ).forEach((el) => { el.textContent = String(data.wish_count); });
+      }
     })
     .catch(warnHandoff);
 }
@@ -241,6 +246,11 @@ export function queueToggleCompare(kind, id) {
       if (data.full && has) {
         const idx = list.indexOf(id);
         if (idx >= 0) list.splice(idx, 1);
+      }
+      if (data.compare_count !== undefined) {
+        document.querySelectorAll(
+          `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
+        ).forEach((el) => { el.textContent = String(data.compare_count); });
       }
     })
     .catch(warnHandoff);

@@ -38,10 +38,11 @@ HandoffApi::run(static function (): void {
         $result = $service->toggleCompare($userId, $targetType, $targetId);
         HandoffApi::ok([
             ...$result,
-            'target_type' => $targetType,
-            'target_id'   => $targetId,
-            'count'       => $service->countCompare($userId, $targetType),
-            'max'         => HandoffService::COMPARE_MAX,
+            'target_type'   => $targetType,
+            'target_id'     => $targetId,
+            'count'         => $service->countCompare($userId, $targetType),
+            'max'           => HandoffService::COMPARE_MAX,
+            'compare_count' => $service->countItemCompares($targetType, $targetId),
         ]);
     }
 

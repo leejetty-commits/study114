@@ -46,6 +46,17 @@ final class HandoffRepository
         $stmt->execute([$userId, $targetType, $targetId]);
     }
 
+    /** 이 아이템을 찜한 전체 유저 수 */
+    public function countFavoritesByTarget(string $targetType, int $targetId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM user_favorites WHERE target_type = ? AND target_id = ?'
+        );
+        $stmt->execute([$targetType, $targetId]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
     public function isFavorite(int $userId, string $targetType, int $targetId): bool
     {
         $stmt = $this->pdo->prepare(
@@ -74,6 +85,17 @@ final class HandoffRepository
             'SELECT COUNT(*) FROM user_compare_items WHERE user_id = ? AND target_type = ?'
         );
         $stmt->execute([$userId, $targetType]);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** 이 아이템을 비교에 담은 전체 유저 수 */
+    public function countComparesByTarget(string $targetType, int $targetId): int
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT COUNT(*) FROM user_compare_items WHERE target_type = ? AND target_id = ?'
+        );
+        $stmt->execute([$targetType, $targetId]);
 
         return (int) $stmt->fetchColumn();
     }

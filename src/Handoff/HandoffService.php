@@ -235,6 +235,22 @@ final class HandoffService
         $this->repo->removeStudentReview($providerUserId, $studentId);
     }
 
+    /** 이 아이템을 찜한 전체 유저 수 */
+    public function countFavorites(string $targetType, int $targetId): int
+    {
+        $this->assertProviderTargetType($targetType);
+
+        return $this->repo->countFavoritesByTarget($targetType, $targetId);
+    }
+
+    /** 이 아이템을 비교에 담은 전체 유저 수 */
+    public function countItemCompares(string $targetType, int $targetId): int
+    {
+        $this->assertProviderTargetType($targetType);
+
+        return $this->repo->countComparesByTarget($targetType, $targetId);
+    }
+
     private function assertProviderTargetType(string $targetType): void
     {
         if (!in_array($targetType, self::PROVIDER_TARGET_TYPES, true)) {

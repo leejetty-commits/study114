@@ -13,7 +13,10 @@ import {
   clearCompare,
   getCompareIds,
   getCompareItems,
+  getExposureItem,
   getWishlistItems,
+  isWishlisted,
+  isInCompare,
   removeWishlist,
   toggleCompare,
   toggleWishlist,
@@ -227,7 +230,12 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      toggleWishlist(btn.dataset.itemKind, btn.dataset.itemId);
+      const kind = btn.dataset.itemKind;
+      const numId = Number(btn.dataset.itemId);
+      const wasWished = isWishlisted(kind, numId);
+      toggleWishlist(kind, numId);
+      const item = getExposureItem(kind, numId);
+      if (item) item.wish_count = Math.max(0, (Number(item.wish_count) || 0) + (wasWished ? -1 : 1));
       rerender();
     });
   });
@@ -237,8 +245,14 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
       e.preventDefault();
       e.stopPropagation();
       const kind = btn.dataset.itemKind;
-      const result = toggleCompare(kind, btn.dataset.itemId);
+      const numId = Number(btn.dataset.itemId);
+      const wasCompared = isInCompare(kind, numId);
+      const result = toggleCompare(kind, numId);
       if (!notifyCompareToggle(result, kind, { sourceRoute })) return;
+      const item = getExposureItem(kind, numId);
+      if (item && result.inCompare !== undefined) {
+        item.compare_count = Math.max(0, (Number(item.compare_count) || 0) + (wasCompared ? -1 : 1));
+      }
       rerender();
     });
   });

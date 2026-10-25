@@ -38,6 +38,7 @@ HandoffApi::run(static function (): void {
             'in_favorite' => $added,
             'target_type' => $targetType,
             'target_id'   => $targetId,
+            'wish_count'  => $service->countFavorites($targetType, $targetId),
         ]);
     }
 
