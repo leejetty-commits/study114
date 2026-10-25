@@ -201,10 +201,8 @@ export function renderBrandHero() {
     <div class="brand-hero">
       <img
         class="brand-hero__logo"
-        src="/assets/brand/logo-full.png"
+        src="/assets/brand/logo-lockup-pencil-wordmark.png"
         alt="우리동네 공부방과외 우동공과"
-        width="280"
-        height="80"
       />
     </div>
   `;

@@ -123,6 +123,9 @@ export function renderRegisterCardInner(content, options = {}) {
     <div class="site-gate-wrap">
       <div class="register-card register-card--wide panel register-flow"${attrs}>
         ${showSteps ? renderStepIndicator(stepKey) : ''}
+        <div class="brand-hero">
+          <img class="brand-hero__logo" src="/assets/brand/logo-lockup-pencil-wordmark.png" alt="우리동네 공부방과외 우동공과" />
+        </div>
         ${
           headingActions
             ? `<div class="register-heading-row">

@@ -1,5 +1,5 @@
 import { TERMS, signupState, markTermsAgreed } from '../state.js';
-import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { policyUiUrl } from '../../../shared/preview-links.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
@@ -35,16 +35,8 @@ export function renderSignupTerms() {
 
   const content = `
     ${renderStepIndicator(1, 5)}
-    <div class="panel">
-      <div class="login-stage__brand">
-        <img
-          class="login-stage__wordmark"
-          src="/assets/brand/logo-wordmark.png"
-          alt="우동공과"
-          width="120"
-          height="32"
-        />
-      </div>
+    <div>
+      ${renderBrandHero()}
       <h1 class="auth-heading">약관 동의</h1>
       <p class="auth-subheading mb-8">${AUTH_WELCOME_COPY.termsSub}</p>
 

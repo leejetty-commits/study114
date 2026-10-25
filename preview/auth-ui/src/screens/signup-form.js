@@ -2,7 +2,7 @@ import { signupState, DUMMY_USER } from '../state.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import { isValidMobile } from '../../../shared/phone.js';
-import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 
@@ -29,7 +29,8 @@ export function renderSignupForm() {
 
   const content = `
     ${renderStepIndicator(2, 5)}
-    <div class="panel auth-shell__card--wide">
+    <div>
+      ${renderBrandHero()}
       <h1 class="auth-heading">회원가입</h1>
       <p class="auth-subheading mb-6">${AUTH_WELCOME_COPY.formSub}</p>
 

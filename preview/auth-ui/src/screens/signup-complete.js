@@ -1,6 +1,6 @@
 import { signupState } from '../state.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
-import { renderAuthShell, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { fetchMeApi } from '../auth-api.js';
 import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
 import {
@@ -128,7 +128,8 @@ export function renderSignupComplete() {
   const studentSummary = summarizeBasic('student', basic);
   const content = role === 'student' ? `
     ${renderStepIndicator(5, 5)}
-    <div class="panel success-message">
+    <div class="success-message">
+      ${renderBrandHero()}
       <div class="success-icon">✓</div>
       <h1 class="auth-heading">${AUTH_WELCOME_COPY.complete.title}</h1>
       <p class="auth-subheading">
@@ -157,7 +158,8 @@ export function renderSignupComplete() {
     </div>
   ` : `
     ${renderStepIndicator(5, 5)}
-    <div class="panel success-message">
+    <div class="success-message">
+      ${renderBrandHero()}
       <div class="success-icon">✓</div>
       <h1 class="auth-heading">${AUTH_WELCOME_COPY.complete.title}</h1>
       <p class="auth-subheading">

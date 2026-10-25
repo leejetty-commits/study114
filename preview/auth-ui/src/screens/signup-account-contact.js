@@ -1,4 +1,4 @@
-import { renderAuthShell, bindGlobalEvents, navigate } from '../layout.js';
+import { renderAuthShell, renderBrandHero, bindGlobalEvents, navigate } from '../layout.js';
 import { fetchMeApi, saveAccountContactApi } from '../auth-api.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { getLoginReturnTo, resolveAfterAuthUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
@@ -10,7 +10,8 @@ const PHONE_GUIDE =
 
 export function renderSignupAccountContact() {
   const content = `
-    <div class="panel">
+    <div>
+      ${renderBrandHero()}
       <h1 class="auth-heading">계정 연락처</h1>
       <p class="auth-subheading mb-6">이메일과 휴대폰은 가입 시 필수입니다. 이메일은 로그인 및 계정 확인에 사용됩니다. 휴대폰 번호는 비공개로 보관됩니다.</p>
       <form data-form="account-contact" novalidate>

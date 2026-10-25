@@ -571,7 +571,7 @@ export function renderSignupBasic() {
 
   const content = `
     ${oauthMode ? '' : renderStepIndicator(4, 5)}
-    <div class="panel auth-shell__card--wide">
+    <div>
       ${renderBrandHero()}
       <h1 class="auth-heading">${role === 'tutor' ? '과외쌤 가입정보 입력' : '기본등록'}</h1>
       <p class="auth-subheading mb-6">
@@ -586,7 +586,7 @@ export function renderSignupBasic() {
     </div>
   `;
 
-  return renderAuthShell(content, shellOptions);
+  return renderAuthShell(content, { ...shellOptions, wide: true });
 }
 
 function collectFormData(form) {

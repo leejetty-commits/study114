@@ -60,7 +60,7 @@ export function renderSignupRole() {
 
   const content = `
     ${oauthMode ? '' : renderStepIndicator(3, 5)}
-    <div class="panel">
+    <div>
       ${renderBrandHero()}
       <h1 class="auth-heading">${AUTH_WELCOME_COPY.roleTitle}</h1>
       <p class="auth-subheading mb-8">

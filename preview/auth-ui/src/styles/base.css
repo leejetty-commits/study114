@@ -88,22 +88,23 @@ img {
   }
 }
 
-/* ── Brand Hero (login 등) ── */
+/* ── Brand Hero (lockup B 가로형) ── */
 .brand-hero {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--space-8);
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .brand-hero__logo {
   display: block;
-  width: min(100%, 17.5rem);
-  height: auto;
+  height: 2rem;
+  width: auto;
 }
 
 @media (min-width: 768px) {
   .brand-hero__logo {
-    width: min(100%, 20rem);
+    height: 2.5rem;
   }
 }
 

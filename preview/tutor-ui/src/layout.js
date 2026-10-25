@@ -94,6 +94,9 @@ export function renderRegisterShell(content, options = {}) {
           <div class="site-gate-wrap">
             <div class="register-card register-card--wide panel register-flow">
               ${showSteps ? renderStepIndicator(stepKey) : ''}
+              <div class="brand-hero">
+                <img class="brand-hero__logo" src="/assets/brand/logo-lockup-pencil-wordmark.png" alt="우리동네 공부방과외 우동공과" />
+              </div>
               <h1 class="auth-heading">${title}</h1>
               ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
               ${content}
