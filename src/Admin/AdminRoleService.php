@@ -28,24 +28,25 @@ final class AdminRoleService
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */
     public function resolveLevel(array $auth): ?string
     {
-        // DB 값 우선. 세션 admin_level 은 DB 조회 실패 시에만 폴백.
+        // DB 행이 있으면 그 admin_level 이 정본(NULL 이어도). 세션·bootstrap·degrade 금지.
+        // DB 조회가 진짜 실패(예외)하거나 행이 없을 때에만 세션 폴백.
         $userId = (int) ($auth['user_id'] ?? 0);
         $email = strtolower(trim((string) ($auth['email'] ?? '')));
 
         if ($userId > 0) {
-            $fromDb = $this->fetchLevelByUserId($userId);
-            if ($fromDb !== null) {
-                return $fromDb;
+            [$found, $level] = $this->fetchLevelTriState($userId, null);
+            if ($found) {
+                return $level;
             }
         }
         if ($email !== '') {
-            $fromDb = $this->fetchLevelByEmail($email);
-            if ($fromDb !== null) {
-                return $fromDb;
+            [$found, $level] = $this->fetchLevelTriState(null, $email);
+            if ($found) {
+                return $level;
             }
         }
 
-        // DB 에서 못 찾으면 세션값 폴백
+        // DB 에서 행을 찾지 못했거나 예외일 때만 세션값 폴백
         $fromAuth = $this->normalizeLevel($auth['admin_level'] ?? null);
         if ($fromAuth !== null) {
             return $fromAuth;
@@ -62,6 +63,37 @@ final class AdminRoleService
 
         // admin 역할이지만 등급 없음 — 부마스터로 degrade
         return self::LEVEL_SUB_MASTER;
+    }
+
+    /**
+     * DB 행 존재 여부와 admin_level 을 분리해서 돌려준다.
+     * [true, ?string] — 행이 있었다. level 은 유효 등급 또는 null(회수됨).
+     * [false, null]   — 행이 없거나 예외.
+     *
+     * @return array{0: bool, 1: ?string}
+     */
+    private function fetchLevelTriState(?int $userId, ?string $email): array
+    {
+        try {
+            $pdo = Connection::get();
+            if ($userId !== null && $userId > 0) {
+                $stmt = $pdo->prepare('SELECT admin_level FROM users WHERE id = ? LIMIT 1');
+                $stmt->execute([$userId]);
+            } elseif ($email !== null && $email !== '') {
+                $stmt = $pdo->prepare('SELECT admin_level FROM users WHERE email = ? LIMIT 1');
+                $stmt->execute([strtolower(trim($email))]);
+            } else {
+                return [false, null];
+            }
+            $raw = $stmt->fetchColumn();
+            if ($raw === false) {
+                return [false, null];
+            }
+
+            return [true, $this->normalizeLevel($raw)];
+        } catch (\Throwable) {
+            return [false, null];
+        }
     }
 
     /** 시장 역할이어도 admin_level이 있으면 콘솔 RBAC 가능. 가입완료 판정과는 무관. */
