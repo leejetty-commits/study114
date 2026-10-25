@@ -6,6 +6,7 @@
 import { searchPreviewTab } from './search-api.js';
 import { studyRoomBadges, tutorBadges } from './exposure-format.js';
 import { DEFAULT_LIST_SORT, readListSortFromHash } from '../../shared/list-sort.js';
+import { seedRecommendedFromItems } from './user-actions-ui.js';
 
 /** 서버 page당 최대(SearchService limit cap) */
 const PAGE_LIMIT = 50;
@@ -93,6 +94,7 @@ function mapRoom(item) {
     inquiry_status: item.inquiry_status || 'open',
     latitude: item.latitude ?? null,
     longitude: item.longitude ?? null,
+    recommended: item.recommended === true,
     exposure_tier: paidPositionSku(item) || 'basic',
     position_sku: paidPositionSku(item),
     _realDb: true,
@@ -152,6 +154,7 @@ function mapTutor(item) {
         : [],
     profile_status: 'published',
     compare_eligible: true,
+    recommended: item.recommended === true,
     exposure_tier: paidPositionSku(item) || 'basic',
     position_sku: paidPositionSku(item),
     _realDb: true,
@@ -266,6 +269,8 @@ export async function hydrateHomeBasicFromSearch(sorts = {}, opts = {}) {
     state.study_room = rooms.map(mapRoom);
     state.tutor = tutors.map(mapTutor);
     state.student = students.map(mapStudent);
+    seedRecommendedFromItems('study_room', state.study_room);
+    seedRecommendedFromItems('tutor', state.tutor);
     state.sorts = {
       study_room: roomSort,
       tutor: tutorSort,
@@ -293,8 +298,8 @@ export async function refetchHomeBasicKind(kind, sort) {
   const tab = kind === 'study_room' ? 'room' : kind;
   try {
     const items = await fetchAllSorted(tab, sort, scopeFilters(kind));
-    if (kind === 'study_room') state.study_room = items.map(mapRoom);
-    else if (kind === 'tutor') state.tutor = items.map(mapTutor);
+    if (kind === 'study_room') { state.study_room = items.map(mapRoom); seedRecommendedFromItems('study_room', state.study_room); }
+    else if (kind === 'tutor') { state.tutor = items.map(mapTutor); seedRecommendedFromItems('tutor', state.tutor); }
     else state.student = items.map(mapStudent);
     state.sorts[kind] = sort;
     state.live = true;

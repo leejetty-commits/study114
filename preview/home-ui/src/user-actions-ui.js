@@ -176,11 +176,25 @@ export function isRecommendedLocal(kind, id) {
   return loadRecommendedSet().has(`${kind}:${id}`);
 }
 
-function setRecommendedLocal(kind, id, active) {
+export function setRecommendedLocal(kind, id, active) {
   const set = loadRecommendedSet();
   const key = `${kind}:${id}`;
   if (active) set.add(key); else set.delete(key);
   saveRecommendedSet(set);
+}
+
+/** 서버 목록 응답의 recommended 를 sessionStorage 에 시드한다. */
+export function seedRecommendedFromItems(kind, items) {
+  if (!Array.isArray(items) || items.length === 0) return;
+  const set = loadRecommendedSet();
+  let changed = false;
+  for (const item of items) {
+    if (!item || !item.id) continue;
+    const key = `${kind}:${item.id}`;
+    if (item.recommended === true && !set.has(key)) { set.add(key); changed = true; }
+    else if (item.recommended === false && set.has(key)) { set.delete(key); changed = true; }
+  }
+  if (changed) saveRecommendedSet(set);
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender @param {{ sourceRoute?: string }} [opts] */

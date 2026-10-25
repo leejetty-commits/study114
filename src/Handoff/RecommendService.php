@@ -51,6 +51,39 @@ final class RecommendService
     }
 
     /**
+     * 배치 조회. ids 중 userId가 추천한 항목의 set을 돌려준다.
+     * DB 미적용이면 빈 배열. N+1 금지 — IN 한 번.
+     *
+     * @param list<int> $ids
+     * @return array<int, true> target_id => true (추천한 것만)
+     */
+    public function recommendedSet(int $userId, string $targetType, array $ids): array
+    {
+        if (!$this->tableExists('user_recommendations')) {
+            return [];
+        }
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn (int $id): bool => $id > 0,
+        )));
+        if ($ids === [] || $userId < 1) {
+            return [];
+        }
+        $ph = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT target_id FROM user_recommendations
+             WHERE user_id = ? AND target_type = ? AND target_id IN ({$ph})"
+        );
+        $stmt->execute(array_merge([$userId, $targetType], $ids));
+        $out = [];
+        while ($row = $stmt->fetchColumn()) {
+            $out[(int) $row] = true;
+        }
+
+        return $out;
+    }
+
+    /**
      * @return array{recommended: bool, recommend_count: int}
      */
     public function toggle(int $userId, string $targetType, int $targetId): array

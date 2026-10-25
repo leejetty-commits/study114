@@ -32,6 +32,7 @@ import { renderListPagination } from '@home-ui/list-pagination.js';
 import { complexNameFromKakao } from '../../shared/complex-name-from-kakao.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
 import { renderBrowseList, renderGuestPaginatedListBlock } from '@home-ui/exposure-render.js';
+import { seedRecommendedFromItems } from '@home-ui/user-actions-ui.js';
 import { SECTION_HEADINGS, renderSectionTitleBar } from '@home-ui/section-headings.js';
 import { renderStateCard } from '@home-ui/empty-state-copy.js';
 import { TUTOR_HOME_STUDENT_COPY } from '@home-ui/student-reg/student-reg-copy.js';
@@ -3107,6 +3108,9 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     if (state.searchItems) state.searchItems = result.items || [];
     state.searchExposureItems = mapSearchResultsToExposure(tab, result.items || []);
     state.searchTotal = Number(result.total) || 0;
+    if (tab === 'room' || tab === 'tutor') {
+      seedRecommendedFromItems(tab === 'room' ? 'study_room' : 'tutor', state.searchExposureItems);
+    }
     refreshActiveResultItems(tab, state, role);
   } catch (err) {
     if (stale()) return;

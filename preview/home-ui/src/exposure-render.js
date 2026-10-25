@@ -185,7 +185,7 @@ export function renderItemActions(opts = {}) {
   const rev = layers?.stats.review ?? (Number(review_count) || 0);
 
   // 한 행: 통계(추천·후기) → 행동(찜·비교·쪽지). 후기남기기 CTA는 레일 밖(확대카드 푸터).
-  const recommendActive = !guest && itemId != null && isRecommendedLocal(kind, itemId);
+  const recommendActive = !guest && itemId != null && (item?.recommended === true || isRecommendedLocal(kind, itemId));
   const recommendAttrs = guest
     ? `data-action="login-gate" data-gate="recommend" data-gate-label="추천" data-item-kind="${kind}" data-item-id="${itemId}"`
     : itemId != null

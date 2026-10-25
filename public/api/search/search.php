@@ -92,6 +92,7 @@ try {
         $includeStudentRequestText,
         $authUser !== null,
         $authUser === null,
+        $authUser !== null ? (int) $authUser['user_id'] : null,
     );
 
     echo json_encode([

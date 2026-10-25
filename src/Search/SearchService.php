@@ -280,6 +280,7 @@ final class SearchService
         bool $includeStudentRequestText = false,
         bool $includePreciseCoordinates = true,
         bool $guestPublishedOnly = false,
+        ?int $authUserId = null,
     ): array
     {
         if (!in_array($tab, self::VALID_TABS, true)) {
@@ -299,6 +300,21 @@ final class SearchService
             'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort, $includeStudentRequestText),
         };
         $result['sort'] = $sort;
+
+        // 로그인 room/tutor: 페이지 items 의 추천 여부를 배치 조회해 붙인다.
+        if ($authUserId !== null && $authUserId > 0 && ($tab === 'room' || $tab === 'tutor') && $result['items'] !== []) {
+            $targetType = $tab === 'room' ? 'study_room' : 'tutor';
+            $ids = array_map(static fn (array $item): int => (int) $item['id'], $result['items']);
+            try {
+                $recSet = (new \Study114\Handoff\RecommendService($pdo))->recommendedSet($authUserId, $targetType, $ids);
+            } catch (\Throwable) {
+                $recSet = [];
+            }
+            foreach ($result['items'] as &$item) {
+                $item['recommended'] = isset($recSet[(int) $item['id']]);
+            }
+            unset($item);
+        }
 
         return $result;
     }
