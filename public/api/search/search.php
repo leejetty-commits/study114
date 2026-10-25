@@ -90,7 +90,7 @@ try {
         $limit,
         $sort,
         $includeStudentRequestText,
-        $authUser !== null,
+        true,
         $authUser === null,
         $authUser !== null ? (int) $authUser['user_id'] : null,
     );
