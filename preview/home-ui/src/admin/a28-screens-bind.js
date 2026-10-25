@@ -161,6 +161,7 @@ import {
   getAdminScreenId,
 } from './router.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
+import { s114Confirm, s114Prompt } from '../../../shared/confirm-dialog.js';
 import {
   listAddonVendors,
   ADDON_CATEGORY_LABELS,
@@ -560,7 +561,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         await navigator.clipboard.writeText(text);
         window.alert('URL을 복사했습니다.');
       } catch {
-        window.prompt('복사하세요', text);
+        await s114Prompt('복사하세요', text);
       }
     });
   });
@@ -571,7 +572,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         await navigator.clipboard.writeText(text);
         window.alert('공유 문구를 복사했습니다.');
       } catch {
-        window.prompt('복사하세요', text);
+        await s114Prompt('복사하세요', text);
       }
     });
   });
@@ -582,7 +583,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         await navigator.clipboard.writeText(text);
         window.alert('런치 킷(문구+URL)을 복사했습니다.');
       } catch {
-        window.prompt('복사하세요', text);
+        await s114Prompt('복사하세요', text);
       }
     });
   });
@@ -627,7 +628,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const id = Number(btn.getAttribute('data-operator-toggle-status'));
         const status = String(btn.getAttribute('data-status') || '');
         if (!id || !status) return;
-        if (!window.confirm(status === 'inactive' ? '이 계정을 비활성할까요?' : '이 계정을 활성할까요?')) return;
+        if (!(await s114Confirm(status === 'inactive' ? '이 계정을 비활성할까요?' : '이 계정을 활성할까요?', { danger: status === 'inactive' }))) return;
         try {
           await apiPatchOperator({ user_id: id, status });
           rerender();
@@ -642,7 +643,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const current = String(btn.getAttribute('data-level') || '');
         const next = current === 'super_admin' ? 'sub_master' : 'super_admin';
         if (!id) return;
-        if (!window.confirm(`권한을 ${next === 'super_admin' ? '최고관리자' : '부마스터'}로 변경할까요?`)) return;
+        if (!(await s114Confirm(`권한을 ${next === 'super_admin' ? '최고관리자' : '부마스터'}로 변경할까요?`))) return;
         try {
           await apiPatchOperator({ user_id: id, admin_level: next });
           rerender();
@@ -655,7 +656,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       btn.addEventListener('click', async () => {
         const id = Number(btn.getAttribute('data-operator-reset-pw'));
         if (!id) return;
-        const password = window.prompt('새 임시 비밀번호 (8~14자 · 영문+숫자+특수문자)');
+        const password = await s114Prompt('새 임시 비밀번호 (8~14자 · 영문+숫자+특수문자)');
         if (!password) return;
         try {
           await apiResetOperatorPassword({
@@ -714,7 +715,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const input = root.querySelector(`[data-commerce-ends="${id}"]`);
         if (!id || !(input instanceof HTMLInputElement) || !input.value) return;
         const endsAt = input.value.replace('T', ' ') + ':00';
-        if (!window.confirm('포지션 만료일을 보정할까요?')) return;
+        if (!(await s114Confirm('포지션 만료일을 보정할까요?'))) return;
         try {
           await apiApplyCommerceCorrection({ action: 'position_ends_at', position_id: Number(id), ends_at: endsAt });
           rerender();
@@ -728,7 +729,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const id = btn.getAttribute('data-commerce-ticket-save');
         const input = root.querySelector(`[data-commerce-remain="${id}"]`);
         if (!id || !(input instanceof HTMLInputElement)) return;
-        if (!window.confirm('횟수권 잔여를 보정할까요?')) return;
+        if (!(await s114Confirm('횟수권 잔여를 보정할까요?'))) return;
         try {
           await apiApplyCommerceCorrection({
             action: 'ticket_remaining',
@@ -814,9 +815,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
       btn.addEventListener('click', async () => {
         const sourceKey = btn.getAttribute('data-channel-copy');
         if (!sourceKey) return;
-        const newKey = window.prompt(`「${sourceKey}」 복사 — 새 채널 키`, `${sourceKey}-copy`);
+        const newKey = await s114Prompt(`「${sourceKey}」 복사 — 새 채널 키`, `${sourceKey}-copy`);
         if (!newKey) return;
-        const newLabel = window.prompt('새 메뉴 이름 (선택)', '') || undefined;
+        const newLabel = (await s114Prompt('새 메뉴 이름 (선택)', '')) || undefined;
         try {
           await copyBoardChannel(sourceKey, { boardKey: newKey, menuLabel: newLabel });
           rerender();
@@ -827,9 +828,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
 
     root.querySelectorAll('[data-channel-archive]').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const boardKey = btn.getAttribute('data-channel-archive');
-        if (!boardKey || !window.confirm(`${boardKey} 채널을 보관 상태로 바꿀까요?`)) return;
+        if (!boardKey || !(await s114Confirm(`${boardKey} 채널을 보관 상태로 바꿀까요?`, { danger: true }))) return;
         archiveBoardChannel(boardKey);
         rerender();
       });
@@ -877,9 +878,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
       });
     });
     root.querySelectorAll('[data-section-remove]').forEach((btn) => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-section-remove');
-        if (!id || !window.confirm(`${id} 그룹을 삭제할까요?`)) return;
+        if (!id || !(await s114Confirm(`${id} 그룹을 삭제할까요?`, { danger: true }))) return;
         try {
           removeCustomSectionGroup(id);
           if (a28Ui.channelFilters.sectionOwner === id) {
@@ -964,7 +965,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         window.alert('채널을 선택해 주세요.');
         return;
       }
-      if (!window.confirm(`선택한 ${keys.length}개 채널 상태를 ${STATUS_KO[status] || '선택값'}으로 바꿀까요?`)) return;
+      if (!(await s114Confirm(`선택한 ${keys.length}개 채널 상태를 ${STATUS_KO[status] || '선택값'}으로 바꿀까요?`))) return;
       try {
         for (const boardKey of keys) {
           const channel = getBoardChannel(boardKey);
@@ -990,8 +991,8 @@ export function bindA28ScreenEvents(root, path, rerender) {
       channelForm.querySelector('[name="mode"]').value = 'create';
     });
 
-    channelForm?.querySelector('[data-channel-reset-seed]')?.addEventListener('click', () => {
-      if (!window.confirm('채널 설정을 초기값으로 되돌릴까요?')) return;
+    channelForm?.querySelector('[data-channel-reset-seed]')?.addEventListener('click', async () => {
+      if (!(await s114Confirm('채널 설정을 초기값으로 되돌릴까요?', { danger: true }))) return;
       resetBoardChannels();
       rerender();
     });
@@ -1062,8 +1063,8 @@ export function bindA28ScreenEvents(root, path, rerender) {
       });
     });
 
-    railForm?.querySelector('[data-rail-reset-seed]')?.addEventListener('click', () => {
-      if (!window.confirm('우측 배너 설정을 초기값으로 되돌릴까요?')) return;
+    railForm?.querySelector('[data-rail-reset-seed]')?.addEventListener('click', async () => {
+      if (!(await s114Confirm('우측 배너 설정을 초기값으로 되돌릴까요?', { danger: true }))) return;
       resetRightRailSlots();
       rerender();
     });
@@ -1125,7 +1126,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-a28-notice-delete]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-a28-notice-delete');
-        if (!id || !window.confirm('삭제할까요?')) return;
+        if (!id || !(await s114Confirm('삭제할까요?', { danger: true }))) return;
         try {
           await deleteNotice(id);
           rerender();
@@ -1183,7 +1184,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           window.alert('기본 질문은 지울 수 없습니다. 내용을 수정해 주세요.');
           return;
         }
-        if (!window.confirm('삭제할까요?')) return;
+        if (!(await s114Confirm('삭제할까요?', { danger: true }))) return;
         try {
           await deleteFaqPost(id);
           rerender();
@@ -1240,7 +1241,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           window.alert('기본 글은 지울 수 없습니다. 내용을 수정해 주세요.');
           return;
         }
-        if (!window.confirm('삭제할까요?')) return;
+        if (!(await s114Confirm('삭제할까요?', { danger: true }))) return;
         try {
           await deleteGuidePost(slug);
           rerender();
@@ -1320,7 +1321,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           action === 'expose'
             ? '이 제출을 노출 반영(게시중)할까요?'
             : '이 제출을 숨김(비공개) 처리할까요?';
-        if (!window.confirm(confirmMsg)) return;
+        if (!(await s114Confirm(confirmMsg, { danger: action === 'hide' }))) return;
         try {
           await apiApplySubmissionQueueAction(id, action, { internalMemo });
           rerender();
@@ -1442,7 +1443,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
     });
 
     root.querySelector('[data-settings-reset-seed]')?.addEventListener('click', async () => {
-      if (!window.confirm('사이트 기본을 초기값으로 되돌릴까요?')) return;
+      if (!(await s114Confirm('사이트 기본을 초기값으로 되돌릴까요?', { danger: true }))) return;
       try {
         await resetSiteSettingsSeed();
         rerender();
@@ -1567,11 +1568,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
     root.querySelectorAll('[data-tpl-grp-del]').forEach((btn) => {
 
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
 
         const id = btn.getAttribute('data-tpl-grp-del');
 
-        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
+        if (!id || !(await s114Confirm('이 그룹을 삭제할까요?', { danger: true }))) return;
 
         try {
 
@@ -1621,11 +1622,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
     root.querySelectorAll('[data-tpl-delete]').forEach((btn) => {
 
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
 
         const id = btn.getAttribute('data-tpl-delete');
 
-        if (!id || !window.confirm('이 템플릿을 삭제할까요?')) return;
+        if (!id || !(await s114Confirm('이 템플릿을 삭제할까요?', { danger: true }))) return;
 
         deleteTemplate(id);
 
@@ -1691,11 +1692,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
     root.querySelectorAll('[data-ph-grp-del]').forEach((btn) => {
 
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
 
         const id = btn.getAttribute('data-ph-grp-del');
 
-        if (!id || !window.confirm('이 그룹을 삭제할까요?')) return;
+        if (!id || !(await s114Confirm('이 그룹을 삭제할까요?', { danger: true }))) return;
 
         try {
 
@@ -1743,11 +1744,11 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
     root.querySelectorAll('[data-ph-del]').forEach((btn) => {
 
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
 
         const id = btn.getAttribute('data-ph-del');
 
-        if (!id || !window.confirm('이 번호를 삭제할까요?')) return;
+        if (!id || !(await s114Confirm('이 번호를 삭제할까요?', { danger: true }))) return;
 
         deletePhone(id);
 
@@ -1873,9 +1874,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
 
 
-    root.querySelector('[data-sms-reset]')?.addEventListener('click', () => {
+    root.querySelector('[data-sms-reset]')?.addEventListener('click', async () => {
 
-      if (!window.confirm('문자 미리보기를 초기화할까요?')) return;
+      if (!(await s114Confirm('문자 미리보기를 초기화할까요?', { danger: true }))) return;
 
       resetSmsLab();
 
@@ -1999,7 +2000,7 @@ export function bindMembersScreen(root, rerender, navigate) {
       const confirmText = benefitNotice
         ? `${memberActionConfirm(action)}\n${benefitNotice}`
         : memberActionConfirm(action);
-      if (!window.confirm(confirmText)) return;
+      if (!(await s114Confirm(confirmText, { danger: action !== 'restore' }))) return;
       const memoInput = root.querySelector(`[data-member-memo="${id}"]`);
       const memo = memoInput instanceof HTMLInputElement ? memoInput.value.trim() : '';
       try {
@@ -2036,7 +2037,7 @@ export function bindMembersScreen(root, rerender, navigate) {
         window.alert('회원을 선택해 주세요.');
         return;
       }
-      if (!window.confirm(memberActionConfirm(action, ids.length))) return;
+      if (!(await s114Confirm(memberActionConfirm(action, ids.length), { danger: action === 'block' }))) return;
       const memoEl = root.querySelector('[data-member-bulk-memo]');
       const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
       if (!isAdminApiMode()) {
@@ -2295,7 +2296,7 @@ export function bindExposureScreen(root, rerender, navigate) {
           : action === 'publish'
             ? '이 카드를 홈·찾기에 다시 보이게 할까요?'
             : '상담 상태를 보정할까요?';
-      if (!window.confirm(confirmMsg)) return;
+      if (!(await s114Confirm(confirmMsg, { danger: action === 'hide' }))) return;
 
       try {
         await apiApplyExposureCorrection(
@@ -2422,7 +2423,7 @@ export function bindHomePopupForm(root, rerender, navigate) {
   root.querySelectorAll('[data-popup-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-popup-delete');
-      if (!id || !window.confirm('이 팝업을 삭제할까요?')) return;
+      if (!id || !(await s114Confirm('이 팝업을 삭제할까요?', { danger: true }))) return;
       try {
         await deleteHomePopup(id);
         rerender();

@@ -8,6 +8,7 @@ import { listTickets, updateTicketStatus, updateTicketReply } from './ticket-sto
 import { getTicketLoadError, hydrateSupportCache, isSupportApiMode } from './support-backend.js';
 import { getAuthUser } from '../auth-session.js';
 import { navigate } from '../state.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 let supportTicketAdminLoadedFor = '';
 
@@ -213,7 +214,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
     root.querySelectorAll('[data-notice-delete]').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.getAttribute('data-notice-delete');
-        if (!id || !window.confirm('이 공지를 삭제할까요?')) return;
+        if (!id || !(await s114Confirm('이 공지를 삭제할까요?', { danger: true }))) return;
         try {
           await deleteNotice(id);
           rerender();
@@ -230,7 +231,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
     });
 
     form?.querySelector('[data-notice-seed-reset]')?.addEventListener('click', async () => {
-      if (!window.confirm('공지를 초기 시드 데이터로 되돌릴까요?')) return;
+      if (!(await s114Confirm('공지를 초기 시드 데이터로 되돌릴까요?', { danger: true }))) return;
       try {
         await resetNoticesToSeed();
         rerender();

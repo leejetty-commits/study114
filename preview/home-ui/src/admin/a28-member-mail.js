@@ -2,6 +2,7 @@ import '../styles/admin-member-mail.css';
 import { MEMBER_MAIL_COPY as C, MEMBER_MAIL_KINDS as KINDS, MEMBER_MAIL_VARIANTS as VARIANTS } from './a28-member-mail-copy.js';
 import { fetchMemberMail, patchMemberMail, postMemberMail } from './a28-member-mail-api.js';
 import { esc, renderDetailDrawer, renderPanel } from './a28-screens-shared.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 export const MEMBER_MAIL_PATH = '/admin/notify/member-mail';
 
@@ -187,7 +188,7 @@ export function bindMemberMail(root) {
     if (toggleId) {
       const enable = target.getAttribute('data-enabled') !== '1';
       const name = KINDS[toggleId]?.name || toggleId;
-      if (!enable && !window.confirm(C.confirmPause(name))) return;
+      if (!enable && !(await s114Confirm(C.confirmPause(name), { danger: true }))) return;
       busy = true;
       target.disabled = true;
       try {
