@@ -104,7 +104,7 @@ final class SearchService
             error_log('[guestAxisCounts] base dong row missing 서울 강남구 ' . RegionGuLink::GUEST_BASE_DONG_NAME
                 . ' dong_code=' . RegionGuLink::GUEST_BASE_DONG_CODE . '|' . RegionGuLink::GUEST_BASE_DONG_OFFICIAL_CODE);
         } else {
-            $room = $this->search('room', ['region_id' => $dongId], 1, 1, 'latest', false, false, true);
+            $room = $this->search('room', ['region_id' => $dongId], 1, 1, 'latest', false, true, true);
             $studyRooms = (int) $room['total'];
         }
 
@@ -116,7 +116,7 @@ final class SearchService
         if ($tutorUnitId === null) {
             error_log('[guestAxisCounts] tutor unit row missing for official_code=' . RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
         } else {
-            $tutor = $this->search('tutor', ['tutor_region_id' => $tutorUnitId], 1, 1, 'latest', false, false, true);
+            $tutor = $this->search('tutor', ['tutor_region_id' => $tutorUnitId], 1, 1, 'latest', false, true, true);
             $tutors = (int) $tutor['total'];
         }
 
