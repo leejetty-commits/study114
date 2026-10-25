@@ -2,7 +2,7 @@ import '../styles/admin-member-mail.css';
 import { MEMBER_MAIL_COPY as C, MEMBER_MAIL_KINDS as KINDS, MEMBER_MAIL_VARIANTS as VARIANTS } from './a28-member-mail-copy.js';
 import { fetchMemberMail, patchMemberMail, postMemberMail } from './a28-member-mail-api.js';
 import { esc, renderDetailDrawer, renderPanel } from './a28-screens-shared.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 
 export const MEMBER_MAIL_PATH = '/admin/notify/member-mail';
 
@@ -174,10 +174,10 @@ export function bindMemberMail(root) {
         const data = await postMemberMail('test', testId, '');
         if (data.view) view = data.view;
         paint();
-        window.alert(C.testDone(String(data.to || '')));
+        void s114Alert(C.testDone(String(data.to || '')));
       } catch (err) {
         paint();
-        window.alert(errorText(err, C.testFailed));
+        void s114Alert(errorText(err, C.testFailed));
       } finally {
         busy = false;
       }
@@ -196,7 +196,7 @@ export function bindMemberMail(root) {
         paint();
       } catch (err) {
         paint();
-        window.alert(errorText(err, C.saveFailed));
+        void s114Alert(errorText(err, C.saveFailed));
       } finally {
         busy = false;
       }
