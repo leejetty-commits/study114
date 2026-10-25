@@ -205,7 +205,8 @@ function tutorRow(int $id, int $ownerId, array $over = []): array
         'university_status' => 'graduated', 'proof_document_available' => 1, 'lessons_per_week' => 2,
         'minutes_per_lesson' => 90, 'detail_completion_status' => 'basic_only', 'profile_status' => 'published',
         'published_at' => '2026-01-01 00:00:00', 'created_at' => '2026-01-01 00:00:00',
-        'slogan' => '개념부터 꼼꼼하게', 'intro_short' => '짧은 소개 문장', 'feature_1' => '내신대비',
+        'slogan' => '개념부터 꼼꼼하게', 'intro_short' => '짧은 소개 문장', 'intro_long' => '상세 소개 문장',
+        'feature_1' => '내신대비',
         'feature_2' => '수능대비', 'feature_3' => '오답노트', 'main_material_note' => '개념원리',
         'student_gender_group' => 'mixed', 'student_count_group' => 'two',
         'tutor_gender' => 'female', 'primary_school_level' => 'high',
@@ -214,10 +215,11 @@ function tutorRow(int $id, int $ownerId, array $over = []): array
         'sigungu_name' => '', 'sido_name' => '서울특별시', 'sido_code' => '11', 'sigungu_code' => '',
         'unit_level' => 'sido', 'official_code' => '1100000000', 'is_active' => 1,
         // 비공개(검색 SELECT 에 없는 칸). 가짜 행에 있어도 응답에 나오면 안 된다.
+        // intro_long 은 298부터 검색 응답·카드 공개 칸이다.
         'name' => '실명비노출', 'real_name' => '실명비노출', 'phone' => '010-1111-2222',
         'email' => 'tutor@private.invalid', 'birth_date' => '2000-01-01', 'address_line1' => '비공개로 1',
         'home_address_detail' => '101동 1001호', 'contact_time_note' => '저녁 9시 이후 전화',
-        'fee_description' => '비공개 가격 설명', 'intro_long' => '상세 소개 비노출', 'age_band' => 'late_20s',
+        'fee_description' => '비공개 가격 설명', 'age_band' => 'late_20s',
         'youtube_url' => 'https://youtube.invalid/x', 'document_path' => '/private/docs/1.pdf',
         'deleted_at' => null, '_slot1' => true,
     ], $over);
@@ -261,7 +263,7 @@ $pdo->tutors = [
     3 => tutorRow(3, 703),
     9 => tutorRow(9, 709, ['image_path_basic' => '/uploads/promo/tutors/9/legacy.jpg', 'tutor_gender' => 'male', 'primary_school_level' => 'middle']),
     10 => tutorRow(10, 710, [
-        'slogan' => null, 'intro_short' => null, 'feature_1' => null, 'feature_2' => null, 'feature_3' => null,
+        'slogan' => null, 'intro_short' => null, 'intro_long' => null, 'feature_1' => null, 'feature_2' => null, 'feature_3' => null,
         'main_material_note' => null, 'student_gender_group' => null, 'student_count_group' => null,
         'tutor_gender' => null, 'primary_school_level' => null, 'image_path_basic' => null,
         'lessons_per_week' => null, 'minutes_per_lesson' => null,
@@ -306,6 +308,7 @@ $want7 = [
     'feature_3' => '오답노트',
     'slogan' => '개념부터 꼼꼼하게',
     'intro_short' => '짧은 소개 문장',
+    'intro_long' => '상세 소개 문장',
     'main_material_note' => '개념원리',
     'teaching_style_badges' => ['meticulous', 'kind'],
     'image_path_basic' => '/uploads/promo/tutors/7/abc_basic_720.webp',
@@ -335,6 +338,7 @@ $empty10 = [
     'gender' => null, 'grade_band' => '', 'lessons_per_week' => null, 'minutes_per_lesson' => null,
     'lesson_places' => [], 'student_gender_group' => null, 'student_count_group' => null,
     'feature_1' => '', 'feature_2' => '', 'feature_3' => '', 'slogan' => '', 'intro_short' => '',
+    'intro_long' => '',
     'main_material_note' => '', 'teaching_style_badges' => [],
     'image_path' => '', 'image_path_basic' => '', 'image_path_prime' => '',
 ];
@@ -345,7 +349,7 @@ foreach ($empty10 as $key => $value) {
     }
 }
 check('빈 과외쌤(10): 모든 카드 칸 키가 있고 빈값', $bad10 === [], implode(', ', $bad10));
-check('빈 과외쌤(10): 소개는 summary(「경력 …」) 로 채우지 않음', $t10 !== null && $t10['intro_short'] === '' && !str_contains((string) ($t10['intro_short'] ?? ''), '경력'));
+check('빈 과외쌤(10): 소개는 summary(「경력 …」) 로 채우지 않음', $t10 !== null && $t10['intro_short'] === '' && $t10['intro_long'] === '' && !str_contains((string) ($t10['intro_short'] ?? ''), '경력'));
 $pdo->tutors[10]['tutor_gender'] = 'unknown';
 $weird = itemOf($search->search('tutor', [], 1, 20)['items'], 10);
 check('성별 값이 male/female 이 아니면 null', $weird !== null && $weird['gender'] === null);
@@ -354,7 +358,7 @@ $pdo->tutors[10]['tutor_gender'] = null;
 echo "── 비공개 칸 없음 ──\n";
 $forbiddenKeys = [
     'name', 'real_name', 'phone', 'email', 'birth_date', 'address_line1', 'home_address_detail', 'road_address',
-    'address_detail', 'contact_time_note', 'fee_description', 'intro_long', 'age_band', 'youtube_url',
+    'address_detail', 'contact_time_note', 'fee_description', 'age_band', 'youtube_url',
     'document_path', 'user_id', 'deleted_at', '_slot1', 'tutor_gender', 'primary_school_level',
 ];
 $leakKeys = [];
@@ -366,13 +370,13 @@ foreach ($items as $item) {
         }
     }
     $json = (string) json_encode($item, JSON_UNESCAPED_UNICODE);
-    foreach (['실명비노출', '010-1111-2222', 'private.invalid', '비공개로 1', '101동 1001호', '저녁 9시', '상세 소개 비노출', '/private/docs/'] as $needle) {
+    foreach (['실명비노출', '010-1111-2222', 'private.invalid', '비공개로 1', '101동 1001호', '저녁 9시', '/private/docs/'] as $needle) {
         if (str_contains($json, $needle)) {
             $leakVals[] = $item['id'] . ':' . $needle;
         }
     }
 }
-check('응답 키에 실명·연락처·주소·이메일·상세소개·주인 id 등 없음', $leakKeys === [], implode(',', $leakKeys));
+check('응답 키에 실명·연락처·주소·이메일·주인 id 등 없음', $leakKeys === [], implode(',', $leakKeys));
 check('응답 값에 비공개 값 문자열 없음', $leakVals === [], implode(',', $leakVals));
 
 $mainSql = '';
@@ -385,7 +389,7 @@ check('과외쌤 조회 SQL 확보', $mainSql !== '');
 $badCols = [];
 foreach ([
     '/\bup\.(?!gender\b|user_id\b)\w+/', '/SELECT (?!up\.gender FROM)[^()]*FROM user_profiles/', '/\breal_name\b/', '/\bphone\b/', '/\bemail\b/', '/address/i', '/\bbirth_date\b/',
-    '/\bcontact_time_note\b/', '/\bintro_long\b/', '/\bfee_description\b/', '/document_path/', '/tutor_verification_documents/',
+    '/\bcontact_time_note\b/', '/\bfee_description\b/', '/document_path/', '/tutor_verification_documents/',
     '/youtube_url|facebook_url|instagram_url/',
 ] as $re) {
     if (preg_match($re, $mainSql, $m)) {

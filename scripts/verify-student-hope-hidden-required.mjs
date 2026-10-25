@@ -481,6 +481,7 @@ const DEPS = {
   ...lessonDuration,
   ...lessonWeekly,
   ...tutorBasic,
+  s114Confirm: async () => true,
 };
 const missing = imported.filter((n) => !(n in DEPS));
 ok('signup-basic.js import 이름을 모두 채움(실제 모듈 · 브라우저 전용만 대체)', missing.length === 0, missing.join(', '));
