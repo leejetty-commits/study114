@@ -17,6 +17,8 @@
 | 6 | `POST /api/auth/phone/verify-otp.php` | 본인 OTP 검증. | 위와 동일. `phone_verified_at`만. 가입완료·공개 게이트와 분리. | 없음 |
 | 7 | `GET·PATCH /api/auth/profile.php` | 사이트 **표시명**만. 로그인 이메일 변경 거부. | 본인 표시명. 기본등록·보드·쪽지·유료 미개방. 이메일 키 요청 시 422. | 없음 |
 
+공개 읽기(메일 인증 게이트와 무관, `search/search.php`와 같은 분류): `neighborhood-greeting-card.php`, `study-room/public.php` — 세션으로 회원/손님만 구분.
+
 ## 결론
 
 - 7개 모두 **자기 계정 확인·연락처/휴대폰 인증 준비·복구·탈퇴** 범위.
