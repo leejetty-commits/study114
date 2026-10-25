@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 2) . '/src/bootstrap.php';
 
+use Study114\Auth\AuthSession;
 use Study114\Neighborhood\NeighborhoodGreetingService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -30,8 +31,20 @@ $providerType = (string) ($_GET['provider_type'] ?? '');
 $providerType = $providerType === 'tutor' ? 'tutor' : 'study_room';
 $registrationId = (int) ($_GET['registration_id'] ?? 0);
 
+$isGuest = true;
+$sessionCookie = session_name();
+$hasSession = session_status() === PHP_SESSION_ACTIVE
+        || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
+if ($hasSession) {
+    $auth = AuthSession::user();
+    AuthSession::close();
+    if (is_array($auth) && (int) ($auth['user_id'] ?? 0) > 0) {
+        $isGuest = false;
+    }
+}
+
 try {
-    $item = NeighborhoodGreetingService::fromDefaultPath()->basicCard($providerType, $registrationId);
+    $item = NeighborhoodGreetingService::fromDefaultPath()->basicCard($providerType, $registrationId, $isGuest);
     if ($item === null) {
         http_response_code(404);
         echo json_encode([

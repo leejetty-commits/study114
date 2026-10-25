@@ -404,29 +404,34 @@ final class NeighborhoodGreetingService
 
     /**
      * 베이직카드. 없거나 비공개(hidden)·삭제면 null.
-     * draft·published 는 연다.
+     * 로그인: draft·published 는 연다. 좌표 포함.
+     * 게스트($isGuest): published 만. 공부방 좌표 null.
      *
      * @return array<string, mixed>|null
      */
-    public function basicCard(string $providerType, int $registrationId): ?array
+    public function basicCard(string $providerType, int $registrationId, bool $isGuest = false): ?array
     {
         if ($registrationId < 1) {
             return null;
         }
         $pdo = Connection::get();
         if ($providerType === 'tutor') {
-            return $this->tutorBasicCard($pdo, $registrationId);
+            return $this->tutorBasicCard($pdo, $registrationId, $isGuest);
         }
         if (!$this->roomHasPromoSlot1($pdo, $registrationId)) {
             return null;
+        }
+        if ($isGuest) {
+            return (new StudyRoomPublicReadService($pdo))->getPublishedById($registrationId, false, true);
         }
         return (new StudyRoomPublicReadService($pdo))->getPublishedById($registrationId);
     }
 
     /** @return array<string, mixed>|null */
-    private function tutorBasicCard(\PDO $pdo, int $registrationId): ?array
+    private function tutorBasicCard(\PDO $pdo, int $registrationId, bool $isGuest = false): ?array
     {
         $cond = self::tutorCardCondition('t');
+        $guestCond = $isGuest ? "AND t.profile_status = 'published'" : '';
         $stmt = $pdo->prepare(
             "SELECT t.id, t.tutor_display_name, t.main_subject_note, t.profile_status,
                     t.preferred_fee_amount, t.lessons_per_week, t.minutes_per_lesson,
@@ -438,6 +443,7 @@ final class NeighborhoodGreetingService
                LEFT JOIN regions r ON r.id = tr.region_id
               WHERE t.id = ?
                 AND {$cond}
+                {$guestCond}
               LIMIT 1"
         );
         $stmt->execute([$registrationId]);
