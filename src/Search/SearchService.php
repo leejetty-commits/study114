@@ -83,7 +83,7 @@ final class SearchService
      * 게스트 지도 박스 실수. 로그인 후 화면은 이 함수를 쓰지 않는다.
      * 공부방은 RegionGuLink::guestBaseDongId() 행 id, 학생은 GUEST_BASE_GU_OFFICIAL_CODE 행 id,
      * 과외쌤은 그 구가 속한 과외 단위(서울특별시) 행 id.
-     * 목록 노출·비삭제·탈퇴 제외는 기존 검색과 같다. 유료 티어만 세지 않는다.
+     * 목록 노출·비삭제·탈퇴 제외는 게스트 검색과 같다(published 만). 유료 티어만 세지 않는다.
      * 기준 행이 없으면 그 축은 0이고 로그 한 줄만 남긴다.
      * regionIds 는 게스트 목록이 같은 행으로 search 필터를 걸 때 쓴다. 기준 행이 없으면 null.
      *
@@ -104,7 +104,7 @@ final class SearchService
             error_log('[guestAxisCounts] base dong row missing 서울 강남구 ' . RegionGuLink::GUEST_BASE_DONG_NAME
                 . ' dong_code=' . RegionGuLink::GUEST_BASE_DONG_CODE . '|' . RegionGuLink::GUEST_BASE_DONG_OFFICIAL_CODE);
         } else {
-            $room = $this->search('room', ['region_id' => $dongId], 1, 1);
+            $room = $this->search('room', ['region_id' => $dongId], 1, 1, 'latest', false, false, true);
             $studyRooms = (int) $room['total'];
         }
 
@@ -116,7 +116,7 @@ final class SearchService
         if ($tutorUnitId === null) {
             error_log('[guestAxisCounts] tutor unit row missing for official_code=' . RegionGuLink::GUEST_BASE_GU_OFFICIAL_CODE);
         } else {
-            $tutor = $this->search('tutor', ['tutor_region_id' => $tutorUnitId], 1, 1);
+            $tutor = $this->search('tutor', ['tutor_region_id' => $tutorUnitId], 1, 1, 'latest', false, false, true);
             $tutors = (int) $tutor['total'];
         }
 
@@ -264,6 +264,10 @@ final class SearchService
     }
 
     /**
+     * $includePreciseCoordinates 가 false 이면 공부방 카드의 위도·경도는 null 이다.
+     * $guestPublishedOnly 이면 공부방·과외 목록에 profile_status = published 를 더한다.
+     * 학생은 원래 exposure_status = published 만 본다.
+     *
      * @param array<string, mixed> $filters
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>, sort: string}
      */
@@ -274,6 +278,8 @@ final class SearchService
         int $limit = 20,
         string $sort = 'latest',
         bool $includeStudentRequestText = false,
+        bool $includePreciseCoordinates = true,
+        bool $guestPublishedOnly = false,
     ): array
     {
         if (!in_array($tab, self::VALID_TABS, true)) {
@@ -288,8 +294,8 @@ final class SearchService
         $pdo = Connection::get();
 
         $result = match ($tab) {
-            'room'    => $this->searchRooms($pdo, $filters, $limit, $offset, $sort),
-            'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset, $sort),
+            'room'    => $this->searchRooms($pdo, $filters, $limit, $offset, $sort, null, $includePreciseCoordinates, $guestPublishedOnly),
+            'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset, $sort, null, $guestPublishedOnly),
             'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort, $includeStudentRequestText),
         };
         $result['sort'] = $sort;
@@ -539,9 +545,19 @@ final class SearchService
      * @param list<int>|null $cardIds publicCardsByIds 전용
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchRooms(PDO $pdo, array $filters, int $limit, int $offset, string $sort, ?array $cardIds = null): array
+    private function searchRooms(
+        PDO $pdo,
+        array $filters,
+        int $limit,
+        int $offset,
+        string $sort,
+        ?array $cardIds = null,
+        bool $includePreciseCoordinates = true,
+        bool $guestPublishedOnly = false,
+    ): array
     {
-        // 목록/검색 노출 = 숨김(hidden)만 제외. 공개(published) 게이트·완성도 게이트 없음.
+        // 목록/검색 노출 = 숨김(hidden)만 제외 + 홍보지역 1. 완성도 게이트 없음.
+        // 게스트는 여기에 published 만 더한다. 홍보지역 1이 있어도 draft 로 남은 행은 나가지 않는다.
         // Pick/Prime 후보는 detail_completion_status 로 별도 판정(prime_eligible).
         $where = [
             "sr.profile_status <> 'hidden'",
@@ -549,6 +565,9 @@ final class SearchService
             WithdrawnOwnerSql::notWithdrawn('sr.user_id'),
             $this->roomPromoSlot1Sql('sr'),
         ];
+        if ($guestPublishedOnly) {
+            $where[] = "sr.profile_status = 'published'";
+        }
         $params = [];
         if ($cardIds !== null) {
             $where[] = $this->cardIdsSql('sr.id', $cardIds, $params);
@@ -803,8 +822,8 @@ final class SearchService
                     && trim((string) ($row['feature_3'] ?? '')) !== '',
                 'position_sku'               => $positionSku,
                 'exposure_tier'              => $exposureTier,
-                'latitude'                   => $row['latitude'] !== null ? (float) $row['latitude'] : null,
-                'longitude'                  => $row['longitude'] !== null ? (float) $row['longitude'] : null,
+                'latitude'                   => $includePreciseCoordinates && $row['latitude'] !== null ? (float) $row['latitude'] : null,
+                'longitude'                  => $includePreciseCoordinates && $row['longitude'] !== null ? (float) $row['longitude'] : null,
                 'published_at'               => $row['published_at'] ?? null,
                 'created_at'                 => $row['created_at'] ?? null,
                 'is_new'                     => AutoNewBadge::isActive(
@@ -858,15 +877,27 @@ final class SearchService
      * @param list<int>|null $cardIds publicCardsByIds 전용
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
-    private function searchTutors(PDO $pdo, array $filters, int $limit, int $offset, string $sort, ?array $cardIds = null): array
+    private function searchTutors(
+        PDO $pdo,
+        array $filters,
+        int $limit,
+        int $offset,
+        string $sort,
+        ?array $cardIds = null,
+        bool $guestPublishedOnly = false,
+    ): array
     {
         // 목록/검색 노출 = 기본등록 완료(필수 8개, 정본 73 0절) · 관리자 숨김(hidden) 제외 · 탈퇴 제외.
+        // 게스트는 published 만. 필수 8개가 있어도 draft 로 남은 행은 나가지 않는다.
         $where = [
             "t.profile_status <> 'hidden'",
             WithdrawnOwnerSql::notWithdrawn('t.user_id'),
             $this->tutorSlot1Sql('t'),
             TutorBasicFields::completeSql('t'),
         ];
+        if ($guestPublishedOnly) {
+            $where[] = "t.profile_status = 'published'";
+        }
         $params = [];
         if ($cardIds !== null) {
             $where[] = $this->cardIdsSql('t.id', $cardIds, $params);

@@ -83,7 +83,16 @@ try {
         );
     }
 
-    $result = $service->search($tab, $filters, $page, $limit, $sort, $includeStudentRequestText);
+    $result = $service->search(
+        $tab,
+        $filters,
+        $page,
+        $limit,
+        $sort,
+        $includeStudentRequestText,
+        $authUser !== null,
+        $authUser === null,
+    );
 
     echo json_encode([
         'ok'    => true,

@@ -22,7 +22,11 @@ final class StudyRoomPublicReadService
     /**
      * @return array<string, mixed>|null
      */
-    public function getPublishedById(int $roomId): ?array
+    public function getPublishedById(
+        int $roomId,
+        bool $includePreciseCoordinates = true,
+        bool $guestPublishedOnly = false,
+    ): ?array
     {
         if ($roomId <= 0) {
             return null;
@@ -50,9 +54,10 @@ final class StudyRoomPublicReadService
         }
         $extraSql = $selectExtra !== [] ? ', ' . implode(', ', $selectExtra) : '';
 
-        // 샵 상세: 숨김(hidden)·삭제만 제외. draft도 입력값 그대로 노출.
-        // 완성도(expanded_complete)는 섹션 숨김 조건이 아니다.
+        // 샵 상세: 숨김(hidden)·삭제만 제외. 로그인 읽기는 draft도 연다.
+        // 게스트는 published 만. 완성도(expanded_complete)는 섹션 숨김 조건이 아니다.
         $ownerSql = WithdrawnOwnerSql::notWithdrawn('sr.user_id');
+        $publishedSql = $guestPublishedOnly ? " AND sr.profile_status = 'published'" : '';
         $stmt = $this->pdo->prepare(
             "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
@@ -67,7 +72,7 @@ final class StudyRoomPublicReadService
               WHERE sr.id = ?
                 AND sr.profile_status <> 'hidden'
                 AND sr.deleted_at IS NULL
-                AND {$ownerSql}
+                AND {$ownerSql}{$publishedSql}
               LIMIT 1"
         );
         $stmt->execute([$roomId]);
@@ -171,8 +176,8 @@ final class StudyRoomPublicReadService
             'naver_clip_url'                  => (string) ($row['naver_clip_url'] ?? ''),
             'inquiry_status'                  => (string) ($row['inquiry_status'] ?? ''),
             'profile_status'                  => (string) ($row['profile_status'] ?? ''),
-            'latitude'                        => $row['latitude'] !== null ? (float) $row['latitude'] : null,
-            'longitude'                       => $row['longitude'] !== null ? (float) $row['longitude'] : null,
+            'latitude'                        => $includePreciseCoordinates && $row['latitude'] !== null ? (float) $row['latitude'] : null,
+            'longitude'                       => $includePreciseCoordinates && $row['longitude'] !== null ? (float) $row['longitude'] : null,
             'image_path'                      => $cover,
             'image_path_prime'                => $cover,
             'image_path_basic'                => $cover,

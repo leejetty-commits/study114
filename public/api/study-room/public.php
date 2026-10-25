@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
-use Study114\StudyRoom\StudyRoomPublicReadService;
+use Study114\Auth\AuthSession;
 use Study114\Database\Connection;
+use Study114\StudyRoom\StudyRoomPublicReadService;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -33,9 +34,21 @@ if ($id <= 0) {
 }
 
 try {
+    $authUser = null;
+    $sessionCookie = session_name();
+    $hasSession = session_status() === PHP_SESSION_ACTIVE
+        || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
+    if ($hasSession) {
+        $auth = AuthSession::user();
+        AuthSession::close();
+        if (is_array($auth) && (int) ($auth['user_id'] ?? 0) > 0) {
+            $authUser = $auth;
+        }
+    }
+
     $pdo = Connection::get();
     $service = new StudyRoomPublicReadService($pdo);
-    $item = $service->getPublishedById($id);
+    $item = $service->getPublishedById($id, $authUser !== null, $authUser === null);
     if ($item === null) {
         http_response_code(404);
         echo json_encode(['ok' => false, 'error' => 'not_found', 'message' => '공부방을 찾을 수 없습니다.'], JSON_UNESCAPED_UNICODE);
