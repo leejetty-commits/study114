@@ -30,13 +30,9 @@ if ($method !== 'GET') {
 
 try {
     $popups = (new HomePopupService())->listPublic();
-    echo json_encode(['ok' => true, 'popups' => $popups], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
     error_log('[home-popups] ' . $e->getMessage());
-    http_response_code(500);
-    echo json_encode([
-        'ok' => false,
-        'error' => 'server_error',
-        'message' => '조회에 실패했습니다.',
-    ], JSON_UNESCAPED_UNICODE);
+    $popups = [];
 }
+
+echo json_encode(['ok' => true, 'popups' => $popups], JSON_UNESCAPED_UNICODE);
