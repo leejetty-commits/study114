@@ -8,6 +8,7 @@ import {
 } from '../mypage/plans-catalog.js';
 import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { renderProviderNoticeBanners, hydrateProviderNotices } from '../provider-notices.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   createPaidCheckout,
   completePaidCheckout,
@@ -1901,7 +1902,7 @@ export function bindPlansScreenEvents(root, rerender) {
                 await cancelPrimeWaitlist(roomId, id);
                 rerender();
               } catch (err) {
-                window.alert(err?.message || '예약대기 취소에 실패했습니다.');
+                void s114Alert(err?.message || '예약대기 취소에 실패했습니다.');
               }
             });
           });
@@ -2144,7 +2145,7 @@ export function bindPlansScreenEvents(root, rerender) {
     const query = parsePlansQuery();
     const profile = resolveSelectedProfile(query, role);
     if (role !== 'study_room' || !profile) {
-      window.alert('예약대기는 공부방 프로필로만 등록할 수 있습니다.');
+      void s114Alert('예약대기는 공부방 프로필로만 등록할 수 있습니다.');
       return;
     }
     const regionEl = root.querySelector('[data-plans-apply-region]:checked');
@@ -2159,15 +2160,15 @@ export function bindPlansScreenEvents(root, rerender) {
           }
         : null;
     if (!region?.region_basis_type || (region.region_basis_type === 'dong' && !region.region_id) || (region.region_basis_type === 'complex' && !region.complex_id)) {
-      window.alert('적용 지역을 먼저 선택해 주세요.');
+      void s114Alert('적용 지역을 먼저 선택해 주세요.');
       return;
     }
     try {
       const res = await registerPrimeWaitlist(profile.id, region);
-      window.alert(res.message || '예약대기가 등록되었습니다.');
+      await s114Alert(res.message || '예약대기가 등록되었습니다.');
       window.location.hash = '#/mypage/plans/my';
     } catch (err) {
-      window.alert(err?.message || '예약대기 등록에 실패했습니다.');
+      void s114Alert(err?.message || '예약대기 등록에 실패했습니다.');
     }
   });
 

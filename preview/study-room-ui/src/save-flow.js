@@ -1,3 +1,4 @@
+import { s114Alert } from '../../shared/confirm-dialog.js';
 export async function saveCurrentStep(state, step) {
   const { saveStep } = await import('./register-api.js');
   const { payloadForStep } = await import('./form-collect.js');
@@ -37,7 +38,7 @@ export async function withSaving(btn, fn) {
   try {
     await fn();
   } catch (err) {
-    alert(err instanceof Error ? err.message : '저장 실패');
+    void s114Alert(err instanceof Error ? err.message : '저장 실패');
     throw err;
   } finally {
     if (btn) {

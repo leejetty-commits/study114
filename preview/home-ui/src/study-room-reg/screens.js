@@ -11,6 +11,7 @@ import {
   inquiryStatusFromForm,
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
@@ -800,10 +801,10 @@ export function bindStudyRoomRegEvents(root, rerender) {
             one_on_one_available: fd.get('one_on_one_available') === '1',
           });
         }
-        alert('저장되었습니다.');
+        void s114Alert('저장되었습니다.');
         rerender();
       } catch (err) {
-        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
       } finally {
         if (btn) btn.disabled = false;
       }
@@ -829,7 +830,7 @@ export function bindStudyRoomRegEvents(root, rerender) {
       const receiving = section?.querySelector('input[name="p20_inquiry_receiving"]:checked')?.value === '1';
       const reasonEl = section?.querySelector('input[name="inquiry_off_reason"]:checked');
       if (!receiving && (!reasonEl || (reasonEl.value !== 'paused' && reasonEl.value !== 'capacity_full'))) {
-        alert(P20_INQUIRY_COPY.offReasonRequired);
+        void s114Alert(P20_INQUIRY_COPY.offReasonRequired);
         return;
       }
       const reason = receiving ? null : /** @type {'capacity_full'|'paused'} */ (reasonEl.value);
@@ -838,11 +839,11 @@ export function bindStudyRoomRegEvents(root, rerender) {
       const persist = async () => {
         try {
           await setInquiryStatus(id, nextStatus);
-          alert('저장되었습니다.');
+          void s114Alert('저장되었습니다.');
           rerender();
         } catch (err) {
           console.warn('[p20]', err);
-          alert(P20_INQUIRY_COPY.saveFailed);
+          void s114Alert(P20_INQUIRY_COPY.saveFailed);
           rerender();
         }
       };

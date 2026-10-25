@@ -9,6 +9,7 @@ import { showPaidGateOverlay } from '../messages/overlays.js';
 import { renderEntryContextRibbon } from '../handoff-resume.js';
 import { renderStudentRequestBody } from './student-request-card.js';
 import { resolveStudyRoomCardCta } from '../study-room-reg/inquiry-display.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   esc,
   buildJudgmentTokens,
@@ -382,7 +383,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
         btn.title = `추천 ${data.recommend_count ?? 0}`;
       } catch (err) {
         console.warn('[recommend]', err);
-        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
       }
     });
   });

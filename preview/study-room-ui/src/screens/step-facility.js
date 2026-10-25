@@ -5,6 +5,7 @@ import { syncFacilityFromForm, syncCareerFromForm } from '../form-collect.js';
 import { saveCurrentStep, withSaving } from '../save-flow.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
 import { TIER_MARK_NOTE } from '../../../shared/pickprime-requirements.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -252,7 +253,7 @@ export function bindFacilityEvents(root, opts = {}) {
         opts.onSaved();
         return;
       }
-      alert('저장되었습니다.');
+      void s114Alert('저장되었습니다.');
       refresh();
     });
   });

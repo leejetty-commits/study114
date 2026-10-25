@@ -2,6 +2,7 @@ import {
   LIFECYCLE_FOOTNOTE_REG,
   renderAdminHideOwnerLine,
 } from '../lifecycle-copy.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   parseTutorRegPath,
   tutorHubPath,
@@ -712,7 +713,7 @@ export function bindTutorRegEvents(root, rerender) {
           basicSaveFlash = '저장되었습니다.';
           markTutorBasicClean(form);
         }
-        if (kind !== 'basic') alert('저장되었습니다.');
+        if (kind !== 'basic') await s114Alert('저장되었습니다.');
         if (isReturnToRegistrationCheck()) {
           basicSaveFlash = '';
           window.location.hash = tutorSectionPath(id, 'publish');
@@ -724,7 +725,7 @@ export function bindTutorRegEvents(root, rerender) {
           basicSaveFlash = '';
           showTutorBasicFeedback(form, 'error', err instanceof Error ? err.message : '저장에 실패했습니다.');
         } else {
-          alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
         }
       } finally {
         if (btn && (kind !== 'basic' || tutorCityUnitsReady())) btn.disabled = false;

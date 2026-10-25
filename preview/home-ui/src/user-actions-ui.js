@@ -8,6 +8,7 @@ import {
   WISH_LABELS,
 } from './handoff-copy.js';
 import { notifyCompareToggle } from './handoff-utils.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   addCompareFromWishlist,
   clearCompare,
@@ -248,7 +249,7 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
         setRecommendedLocal(kind, id, Boolean(data.recommended));
       } catch (err) {
         console.warn('[recommend]', err);
-        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
       }
     });
   });

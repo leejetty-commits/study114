@@ -2,6 +2,7 @@ import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import { loginUrl } from '../../../shared/route-access.js';
 import { navigate } from '../state.js';
 import { isLoggedIn, getAuthUser, isAdminUser } from '../auth-session.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   FAQ_TABS,
   OPERATIONAL_CONTACT,
@@ -487,7 +488,7 @@ export function bindSupportScreenEvents(root, path, rerender) {
         rerender?.();
       } catch (err) {
         console.warn('[support]', err);
-        alert('문의 접수에 실패했습니다.');
+        void s114Alert('문의 접수에 실패했습니다.');
       }
     });
   }

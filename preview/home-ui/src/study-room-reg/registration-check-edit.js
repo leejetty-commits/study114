@@ -23,6 +23,7 @@ import {
   TEACHING_STYLE_OPTIONS,
   registrationCheckTabHref,
 } from './registration-check-model.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -251,7 +252,7 @@ async function openCoverModal(roomId, rerender) {
     if (!file) return;
     const err = await validatePromoImageFile(file);
     if (err) {
-      alert(err);
+      void s114Alert(err);
       return;
     }
     const crop = await openPromoCropDialog(document.body, { file });
@@ -260,7 +261,7 @@ async function openCoverModal(roomId, rerender) {
       await ensureEmbeddedRegister(roomId, { force: true });
       const id = Number(registerState.study_room_id || roomId);
       if (!id) {
-        alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
+        void s114Alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
         return;
       }
       const image = await uploadPromoImage({
@@ -285,7 +286,7 @@ async function openCoverModal(roomId, rerender) {
       await ensureEmbeddedRegister(roomId, { force: true });
       rerender();
     } catch (uploadErr) {
-      alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
+      void s114Alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
     }
   });
   document.body.appendChild(input);

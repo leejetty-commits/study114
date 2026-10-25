@@ -8,7 +8,7 @@ import {
 import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
 import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -602,7 +602,7 @@ function collectFormData(form) {
 function packMainSubject(data) {
   const subject = String(data.main_subject || '').trim();
   if (!subject) {
-    alert('주력과목을 선택해 주세요.');
+    void s114Alert('주력과목을 선택해 주세요.');
     return null;
   }
   data.main_subjects = [subject];
@@ -825,7 +825,7 @@ export function bindSignupBasicEvents(root) {
     el.addEventListener('invalid', (e) => {
       e.preventDefault();
       if (role !== 'student') {
-        alert(`기본정보를 모두 채워 주세요: ${STUDENT_BASIC_LABELS.budget}`);
+        void s114Alert(`기본정보를 모두 채워 주세요: ${STUDENT_BASIC_LABELS.budget}`);
         return;
       }
       form.dataset.studentBasicTried = '1';
@@ -846,12 +846,12 @@ export function bindSignupBasicEvents(root) {
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!roleReady) {
-      alert('계정 역할을 확인하는 중입니다. 잠시 후 다시 시도해 주세요.');
+      void s114Alert('계정 역할을 확인하는 중입니다. 잠시 후 다시 시도해 주세요.');
       return;
     }
     role = signupState.role || role;
     if (role !== 'student' && role !== 'study_room' && role !== 'tutor') {
-      alert('계정 역할을 확인할 수 없습니다. 새로고침 후 다시 시도해 주세요.');
+      void s114Alert('계정 역할을 확인할 수 없습니다. 새로고침 후 다시 시도해 주세요.');
       return;
     }
     let data = collectFormData(form);
@@ -861,7 +861,7 @@ export function bindSignupBasicEvents(root) {
       data = collectStudyRoomBasicFields(form);
       const err = validateStudyRoomBasicFields(data);
       if (err) {
-        alert(err);
+        void s114Alert(err);
         return;
       }
       const coords = businessCoordsForSave(
@@ -891,7 +891,7 @@ export function bindSignupBasicEvents(root) {
       clearStudentFieldErrors(form);
       const region = studentRegionCheck(form, data);
       if (!region.ok && region.system) {
-        alert(region.message);
+        void s114Alert(region.message);
         return;
       }
       if (region.patch) Object.assign(data, region.patch);
@@ -917,7 +917,7 @@ export function bindSignupBasicEvents(root) {
           nameErr.hidden = false;
           nameErr.textContent = '표시명을 입력해 주세요.';
         } else {
-          alert('표시명을 입력해 주세요.');
+          void s114Alert('표시명을 입력해 주세요.');
         }
         nameEl?.focus();
         return;
@@ -935,7 +935,7 @@ export function bindSignupBasicEvents(root) {
 
       const units = getCityUnits(signupState.tutorUnits || []);
       if (!units.some((u) => /^\d+$/.test(String(u.id)))) {
-        alert(TUTOR_UNIT_LIST_ERROR);
+        void s114Alert(TUTOR_UNIT_LIST_ERROR);
         return;
       }
 
@@ -944,7 +944,7 @@ export function bindSignupBasicEvents(root) {
       if (!checked.ok) {
         const slotEl = form.querySelector(`[data-region-slot="${checked.index}"]`);
         if (slotEl) setTutorRegionSlotError(slotEl, checked.message);
-        else alert(checked.message);
+        else void s114Alert(checked.message);
         return;
       }
 
@@ -958,7 +958,7 @@ export function bindSignupBasicEvents(root) {
       data.region_id = primary.region_id;
       const label = activityLabelFromRegionId(primary.region_id, units);
       if (!label) {
-        alert('과외지역 1을 다시 선택해 주세요.');
+        void s114Alert('과외지역 1을 다시 선택해 주세요.');
         return;
       }
       data.region_label = label;
@@ -968,7 +968,7 @@ export function bindSignupBasicEvents(root) {
       data.slogan = String(data.slogan || '').trim();
       const missing = tutorBasicMissing({ ...data, has_primary_region: true });
       if (missing.length) {
-        alert(tutorBasicMissingMessage(missing));
+        void s114Alert(tutorBasicMissingMessage(missing));
         return;
       }
     }
@@ -1043,7 +1043,7 @@ export function bindSignupBasicEvents(root) {
           return;
         }
       } else {
-        alert(err instanceof Error ? err.message : '가입정보 저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '가입정보 저장에 실패했습니다.');
       }
     } finally {
       if (submitBtn) {

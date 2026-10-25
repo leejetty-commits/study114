@@ -5,6 +5,7 @@
 
 import { registerState, apiMasters, isTutorBasicComplete } from '@tutor-ui/state.js';
 import { fetchMasters, loadTutor } from '@tutor-ui/register-api.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   applyTutorToState,
   syncLessonFromForm,
@@ -210,7 +211,7 @@ export function bindEmbeddedTutorDetail(root, rerender) {
           syncLessonFromForm(lesson, registerState);
           const lessonErr = validateLessonState(registerState);
           if (lessonErr) {
-            alert(lessonErr);
+            void s114Alert(lessonErr);
             return;
           }
           await saveAndNavigate(registerState, 'lesson', null);
@@ -226,14 +227,14 @@ export function bindEmbeddedTutorDetail(root, rerender) {
           if (contact && !contact.querySelector('[name="intro_long"]')) registerState.intro_long = keepIntroLong;
           const urlErr = validatePromoUrls(registerState);
           if (urlErr) {
-            alert(urlErr);
+            void s114Alert(urlErr);
             return;
           }
           await saveAndNavigate(registerState, 'career', null);
           await saveAndNavigate(registerState, 'contact', null);
         }
       } catch (err) {
-        alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
         return;
       }
       if (isRegistrationsApiMode()) {
@@ -243,7 +244,7 @@ export function bindEmbeddedTutorDetail(root, rerender) {
           /* 저장은 끝났고 목록 캐시만 실패 */
         }
       }
-      alert('저장되었습니다.');
+      void s114Alert('저장되었습니다.');
       if (isReturnToRegistrationCheck()) {
         window.location.hash = tutorSectionPath(tutorId, 'publish');
         return;

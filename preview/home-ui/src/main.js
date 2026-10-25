@@ -44,6 +44,7 @@ import { renderGuest, bindGuestEvents } from './screens/guest.js';
 import { renderParent, bindParentEvents } from './screens/parent.js';
 import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
 import { renderTutor, bindTutorEvents } from './screens/tutor.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getCurrentScreen,
   navigate,
@@ -552,7 +553,7 @@ function init() {
         }
         const q = parseHashQuery();
         if (q.email_verified === '1') {
-          window.alert(AUTH_WELCOME_COPY.verify.doneAlert);
+          await s114Alert(AUTH_WELCOME_COPY.verify.doneAlert);
         } else if (q.email_verify_error) {
           showEmailVerifyOverlay();
         }

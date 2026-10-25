@@ -40,6 +40,7 @@ import { ensureRegionFromKakao } from './region-ensure.js';
 import { complexNameFromKakao } from './complex-name-from-kakao.js';
 import { renderMainSubjectSelect } from './main-subjects.js';
 import { refreshInputFill } from './input-fill.js';
+import { s114Alert } from './confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -742,7 +743,7 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
       try {
         await search(btn.getAttribute('data-address-search') || '');
       } catch (err) {
-        alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
+        void s114Alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
       }
     });
   });
@@ -957,7 +958,7 @@ export function bindStudentHopeRegion(root, opts = {}) {
           }
         });
       } catch (err) {
-        alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
+        void s114Alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
       }
     });
   });

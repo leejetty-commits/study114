@@ -9,6 +9,7 @@ import { checkFirstMemoPermission, getScopeBadge } from './permissions.js';
 import { ADMIN_STUDENT_MEMO_BLOCKED_COPY, MEMO_TARGET_BLOCKED_COPY, resolveMemoRole } from './messages-copy.js';
 import { showPaidGateOverlay, showComposeModal } from './overlays.js';
 import { getStudentProtectedVisibility } from '../student-visibility.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 /**
  * 첫 쪽지 불가 안내
@@ -36,7 +37,7 @@ export function startFirstMemoFlow(opts) {
       showPaidGateOverlay();
       return;
     }
-    alert(memoBlockedMessage(opts.kind, role));
+    void s114Alert(memoBlockedMessage(opts.kind, role));
     return;
   }
 

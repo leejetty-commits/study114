@@ -83,7 +83,7 @@ function done() {
 }
 
 /**
- * @param {{ message: string, title?: string, okLabel?: string, cancelLabel?: string, danger?: boolean, promptDefault?: string|null }} cfg
+ * @param {{ message: string, title?: string, okLabel?: string, cancelLabel?: string, danger?: boolean, promptDefault?: string|null, alertOnly?: boolean }} cfg
  * @returns {Promise<{ confirmed: boolean, value: string }>}
  */
 function showDialog(cfg) {
@@ -104,6 +104,7 @@ function showDialog(cfg) {
       const head = document.createElement('div');
       head.className = 's114-confirm__head';
       head.textContent = cfg.title || '확인';
+      if (cfg.alertOnly && !cfg.title) head.textContent = '알림';
       box.appendChild(head);
 
       const body = document.createElement('div');
@@ -136,6 +137,7 @@ function showDialog(cfg) {
       okBtn.textContent = cfg.okLabel || '확인';
 
       foot.appendChild(cancelBtn);
+      if (cfg.alertOnly) cancelBtn.hidden = true;
       foot.appendChild(okBtn);
       box.appendChild(foot);
       backdrop.appendChild(box);
@@ -199,4 +201,14 @@ export function s114Confirm(message, options = {}) {
  */
 export function s114Prompt(message, defaultValue = '', options = {}) {
   return showDialog({ message, promptDefault: defaultValue, ...options }).then((r) => r.confirmed ? r.value : null);
+}
+
+/**
+ * 브라우저 alert() 대체. 확인 버튼만 있는 알림창.
+ * @param {string} message
+ * @param {{ title?: string }} [options]
+ * @returns {Promise<void>}
+ */
+export function s114Alert(message, options = {}) {
+  return showDialog({ message, alertOnly: true, title: options.title }).then(() => {});
 }

@@ -5,6 +5,7 @@ import { isValidMobile } from '../../../shared/phone.js';
 import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -203,7 +204,7 @@ function showSignupError(root, msg) {
     errorEl.hidden = false;
     errorEl.textContent = msg;
   } else {
-    alert(msg);
+    void s114Alert(msg);
   }
 }
 

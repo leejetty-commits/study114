@@ -38,7 +38,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import {
   MESSAGE_ATTACHMENT,
@@ -341,7 +341,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
         console.warn('[messages]', err);
 
-        alert(err?.message || '처리에 실패했습니다.');
+        void s114Alert(err?.message || '처리에 실패했습니다.');
 
       }
 
@@ -375,7 +375,7 @@ export function bindMessagesScreenEvents(root, rerender) {
       const files = Array.from(fileInput?.files || []);
       const fileErr = validateMessageFiles(files);
       if (fileErr) {
-        alert(fileErr);
+        void s114Alert(fileErr);
         return;
       }
       if (!body && files.length === 0) return;
@@ -393,7 +393,7 @@ export function bindMessagesScreenEvents(root, rerender) {
         if (err?.code === 'paid_gate') showPaidGateOverlay();
         else if (err?.code === 'email_verify_required') showEmailVerifyOverlay();
 
-        else alert(err?.message || '답장 전송에 실패했습니다.');
+        else void s114Alert(err?.message || '답장 전송에 실패했습니다.');
 
       }
 

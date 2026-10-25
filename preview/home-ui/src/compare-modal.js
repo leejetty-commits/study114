@@ -8,6 +8,7 @@ import { resolveDisplayValue } from './exposure-format.js';
 import { resolveCardVisualLayers, renderPromoBadgeRow, renderTrustBadgeRow } from './card-visual.js';
 import { isLoggedIn } from './auth-session.js';
 import { openDeepAccessLoginGate } from '../../shared/guest-gate-ui.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -158,7 +159,7 @@ export function openCompareModal(kind, items = []) {
     return;
   }
   if (!items.length) {
-    alert(`비교할 항목을 ⇄ 버튼으로 선택하세요 (최대 ${COMPARE_MAX}개).`);
+    void s114Alert(`비교할 항목을 ⇄ 버튼으로 선택하세요 (최대 ${COMPARE_MAX}개).`);
     return;
   }
 

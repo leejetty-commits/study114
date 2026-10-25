@@ -5,6 +5,7 @@ import { getLoginReturnTo, resolvePostLoginUrl, setPostVerifyTarget } from '../.
 import { parseHashQuery } from '../../../shared/preview-links.js';
 import { verifyEmailPathForSignupResult } from '../email-verify-send-status.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 const ROLES = ['student', 'study_room', 'tutor'];
 
@@ -147,7 +148,7 @@ export function bindSignupRoleEvents(root) {
         }
         window.location.href = resolvePostLoginUrl(data.role_type, returnTo);
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '회원 구분 저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '회원 구분 저장에 실패했습니다.');
         submitBtn.disabled = false;
         submitBtn.textContent = prevLabel;
       }

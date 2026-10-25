@@ -1,7 +1,7 @@
 import { renderAdminHideOwnerLine } from '../lifecycle-copy.js';
 import { syncStoredHopeRegionsFromStudent } from '@search-ui/student-saved-region.js';
 import { setStoredStudentBranch } from '../../../shared/student-branch-store.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { renderStudentBasicSelfCard } from '../exposure-render.js';
 import { renderStudentProfileRead } from './profile-read.js';
 import {
@@ -636,7 +636,7 @@ export function bindStudentRegEvents(root, rerender) {
       form.querySelectorAll('[name="preferred_fee_amount"], [name="preferred_studyroom_fee_amount"]').forEach((el) => {
         el.addEventListener('invalid', (ev) => {
           ev.preventDefault();
-          alert('예산은 1천원 이상으로 입력해 주세요. 0은 입력하지 않은 것으로 봅니다.');
+          void s114Alert('예산은 1천원 이상으로 입력해 주세요. 0은 입력하지 않은 것으로 봅니다.');
         });
       });
       bindLessonTypeChange(form, syncBasic);
@@ -665,7 +665,7 @@ export function bindStudentRegEvents(root, rerender) {
       if (formKind === 'settings') {
         const picked = patch.memo_status;
         if (picked !== 'open' && picked !== 'paused') {
-          alert('저장에 실패했습니다.');
+          void s114Alert('저장에 실패했습니다.');
           return;
         }
         patch = { memo_status: picked };
@@ -674,7 +674,7 @@ export function bindStudentRegEvents(root, rerender) {
         const hopeRegion = readStudentHopeRegion(form);
         const issue = studyRoomHopeIssue(hopeRegion);
         if (issue) {
-          alert(issue);
+          void s114Alert(issue);
           return;
         }
         const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
@@ -692,14 +692,14 @@ export function bindStudentRegEvents(root, rerender) {
         }
       } else if (formKind === 'basic') {
         if (!tutorCityUnitsReady()) {
-          alert(tutorCityUnitsError() || TUTOR_UNIT_LIST_ERROR);
+          void s114Alert(tutorCityUnitsError() || TUTOR_UNIT_LIST_ERROR);
           return;
         }
         const regionId = String(patch.preferred_tutor_region_id || '').trim();
         const picker = form.querySelector('[data-p19-hope-panel="tutor"] [data-region-cascade]');
         const started = Boolean(picker?.querySelector('[data-field="region_sido"]')?.value);
         if (!/^\d+$/.test(regionId)) {
-          alert(started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.');
+          void s114Alert(started ? '희망지역의 시·군을 선택해 주세요.' : '희망지역을 선택해 주세요.');
           return;
         }
       }
@@ -723,11 +723,11 @@ export function bindStudentRegEvents(root, rerender) {
         const saved = await updateStudent(id, patch);
         if (saved) setStoredStudentBranch(saved.preferred_lesson_type);
         if ((formKind === 'basic' || formKind === 'detail') && saved) syncStoredHopeRegionsFromStudent(saved);
-        alert(formKind === 'settings' ? '저장되었습니다.' : savedNotice(branchChanged, saved));
+        void s114Alert(formKind === 'settings' ? '저장되었습니다.' : savedNotice(branchChanged, saved));
         rerender();
       } catch (err) {
         console.warn('[p19]', err);
-        alert('저장에 실패했습니다.');
+        void s114Alert('저장에 실패했습니다.');
       }
     });
 

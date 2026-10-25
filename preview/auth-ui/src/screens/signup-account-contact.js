@@ -4,6 +4,7 @@ import { parseHashQuery } from '../../../shared/preview-links.js';
 import { getLoginReturnTo, resolveAfterAuthUrl, setPostVerifyTarget } from '../../../shared/auth-redirect.js';
 import { formatMobile, isValidMobile } from '../../../shared/phone.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 const PHONE_GUIDE =
   '휴대폰 번호는 010-0000-0000 형식으로 입력해 주세요.\n숫자만 넣어도 됩니다.\n예: 01012345678 또는 010-1234-5678';
@@ -78,7 +79,7 @@ export function bindSignupAccountContactEvents(root) {
       phoneInput.value = formatMobile(phone) || phone;
     }
     if (!isValidMobile(phone)) {
-      window.alert(PHONE_GUIDE);
+      void s114Alert(PHONE_GUIDE);
       if (errorEl) {
         errorEl.hidden = false;
         errorEl.textContent = '휴대폰 번호를 정확히 입력해 주세요.';
@@ -92,7 +93,7 @@ export function bindSignupAccountContactEvents(root) {
       continueAfterContact(me);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '저장에 실패했습니다.';
-      window.alert(msg);
+      void s114Alert(msg);
       if (errorEl) {
         errorEl.hidden = false;
         errorEl.textContent = msg;

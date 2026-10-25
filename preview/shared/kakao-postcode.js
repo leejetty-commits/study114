@@ -1,3 +1,4 @@
+import { s114Alert } from './confirm-dialog.js';
 /**
  * 카카오(Daum) 우편번호 — 주소 자동완성 · 지번→도로명 매핑
  * Key 불필요 · https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js
@@ -143,7 +144,7 @@ export async function openKakaoPostcode(onComplete, options = {}) {
   new Postcode({
     oncomplete(data) {
       Promise.resolve(onComplete(normalizePostcodeResult(data))).catch((err) => {
-        window.alert(err instanceof Error ? err.message : '주소를 적용하지 못했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '주소를 적용하지 못했습니다.');
       });
     },
     width,
