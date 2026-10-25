@@ -8,6 +8,7 @@ import {
 import { fetchMeApi, basicRegisterApi } from '../auth-api.js';
 import { resolveAfterAuthUrl, resolveUiRoleForBasicRegister } from '../../../shared/auth-redirect.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 import {
   buildHomeStudentImportUrl,
   isReturnImportMode,
@@ -1034,7 +1035,7 @@ export function bindSignupBasicEvents(root) {
           regionLabel: data.region_label,
           apiOk: false,
         });
-        const go = confirm(
+        const go = await s114Confirm(
           `서버 저장 실패: ${err instanceof Error ? err.message : err}\n\n화면 확인용으로 마이페이지에만 반영할까요?`,
         );
         if (go) {

@@ -13,6 +13,7 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE } from '../../shared/preview-links.js';
+import { s114Confirm } from '../../shared/confirm-dialog.js';
 import { renderRegisterRightRail, bindRightRailEvents } from '../../home-ui/src/right-rail.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
@@ -203,8 +204,8 @@ export function renderNavButtons(prevPath, nextLabel = '다음', opts = {}) {
 }
 
 /** 상세등록 나중에 — 기본등록만으로도 가입·이용 가능 */
-export function skipDetailRegistration() {
-  const ok = window.confirm(
+export async function skipDetailRegistration() {
+  const ok = await s114Confirm(
     '상세등록을 나중에 할까요?\n기본등록만으로도 가입은 완료된 상태입니다. 마이페이지에서 언제든 이어서 작성할 수 있습니다.',
   );
   if (!ok) return;

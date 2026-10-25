@@ -13,6 +13,7 @@ import {
   chromeLogout,
 } from '../../shared/chrome-session.js';
 import { HOME_UI_BASE, homeUiUrl } from '../../shared/preview-links.js';
+import { s114Confirm } from '../../shared/confirm-dialog.js';
 import { renderRegisterRightRail, bindRightRailEvents } from '../../home-ui/src/right-rail.js';
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { bindGuestGateLinks } from '../../shared/guest-gate-ui.js';
@@ -236,8 +237,8 @@ export function mypageRegistrationsUrl() {
 }
 
 /** 상세등록 나중에 — 기본등록만으로도 가입·이용 가능 */
-export function skipDetailRegistration() {
-  const ok = window.confirm(
+export async function skipDetailRegistration() {
+  const ok = await s114Confirm(
     '상세등록을 나중에 할까요?\n기본등록만으로도 가입은 완료된 상태입니다. 마이페이지에서 언제든 이어서 작성할 수 있습니다.',
   );
   if (!ok) return;
@@ -342,11 +343,11 @@ export function renderMessageInquiryNotice() {
   `;
 }
 
-/** @param {number|string|null|undefined} roomId @returns {boolean} 이동했으면 true */
-export function offerGoToMessageInquiry(roomId) {
+/** @param {number|string|null|undefined} roomId @returns {Promise<boolean>} 이동했으면 true */
+export async function offerGoToMessageInquiry(roomId) {
   const url = messageInquiryPageUrl(roomId);
   if (!url) return false;
-  const go = window.confirm(
+  const go = await s114Confirm(
     '입력값이 저장되었습니다.\n\n쪽지 기본값은 「받는 중」입니다. 카드 노출과는 별개이며, 지금 설정하지 않아도 됩니다.\n\n지금 「쪽지설정」으로 이동할까요?\n(나중에 마이페이지 → 내 등록 → 쪽지설정에서 바꿀 수 있습니다)',
   );
   if (!go) return false;

@@ -10,6 +10,7 @@ import {
   homeUiUrl,
 } from '../../../shared/preview-links.js';
 import { publishGreeting } from '../../../shared/neighborhood-greeting-store.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 const PROMPT_DONE_KEY = 'study114-ng-prompt-done';
 
@@ -270,7 +271,7 @@ export function bindSignupCompleteEvents(root) {
     window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations/students`);
   });
 
-  root.querySelector('[data-action="go-home"]')?.addEventListener('click', () => {
+  root.querySelector('[data-action="go-home"]')?.addEventListener('click', async () => {
     const role = signupState.role || 'student';
     const basic = signupState.basicRegister?.[role];
     const savedOk =
@@ -292,7 +293,7 @@ export function bindSignupCompleteEvents(root) {
       // 잘못된 「지역 없음」 경고 대신 완료 안내만
       window.alert(AUTH_WELCOME_COPY.complete.alertDone);
     } else if (!hasSeed) {
-      const proceed = window.confirm(
+      const proceed = await s114Confirm(
         role === 'student'
           ? AUTH_WELCOME_COPY.complete.confirmStudent
           : AUTH_WELCOME_COPY.complete.confirmProvider,

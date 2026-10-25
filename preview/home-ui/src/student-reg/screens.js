@@ -1,6 +1,7 @@
 import { renderAdminHideOwnerLine } from '../lifecycle-copy.js';
 import { syncStoredHopeRegionsFromStudent } from '@search-ui/student-saved-region.js';
 import { setStoredStudentBranch } from '../../../shared/student-branch-store.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 import { renderStudentBasicSelfCard } from '../exposure-render.js';
 import { renderStudentProfileRead } from './profile-read.js';
 import {
@@ -559,10 +560,10 @@ function bindLessonTypeChange(form, syncBasic) {
     mountStudentHopeRegion(slot, restore ? savedHopeRegion : {});
   };
 
-  select.addEventListener('change', () => {
+  select.addEventListener('change', async () => {
     const next = select.value === 'study_room' ? 'study_room' : 'tutor';
     if (next === shownHope) return;
-    if (next !== savedHope && !window.confirm(STUDENT_BRANCH_COPY.mypage.changeConfirm)) {
+    if (next !== savedHope && !(await s114Confirm(STUDENT_BRANCH_COPY.mypage.changeConfirm))) {
       select.value = shownHope;
       return;
     }

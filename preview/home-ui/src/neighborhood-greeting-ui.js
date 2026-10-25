@@ -18,6 +18,7 @@ import { getAuthUser, isLoggedIn } from './auth-session.js';
 import { HOME_NEWS_COPY as COPY } from './home-news-copy.js';
 import { createNewsLoader } from './home-news-loader.js';
 import { readGuestBaseline } from '../../shared/location-display.js';
+import { s114Confirm } from '../../shared/confirm-dialog.js';
 import { openDetailModal, resolveDetailItem } from './detail-decision/index.js';
 import { primarySavedRegion, studyRoomPromo1Label } from './study-room-home-seed.js';
 import { getStudyRooms } from './study-room-reg/store.js';
@@ -728,7 +729,7 @@ export function bindNeighborhoodGreetingEditor(root, _rerender) {
     if (delBtn) {
       const hid = delBtn.getAttribute('data-ng-del-history');
       if (!hid) return;
-      if (!window.confirm('이 인사를 지울까요?')) return;
+      if (!(await s114Confirm('이 인사를 지울까요?', { danger: true }))) return;
       const res = await deleteGreeting(providerType, registrationId, hid);
       if (!res.ok) {
         showError(res.error);
