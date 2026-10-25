@@ -540,7 +540,7 @@ img {
   font-size: var(--text-sm);
   font-weight: 600;
   color: #6b7280;
-  background: transparent;
+  background: #dcdfe4;
   border: none;
   border-radius: 9px;
   box-shadow: none;
