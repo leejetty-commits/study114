@@ -96,7 +96,10 @@ export function renderRegisterShell(content, options = {}) {
             <div class="register-card register-card--wide panel register-flow">
               ${showSteps ? renderStepIndicator(stepKey) : ''}
               <div class="brand-hero">
-                <img class="brand-hero__logo" src="/assets/brand/logo-lockup-pencil-wordmark.png" alt="우리동네 공부방과외 우동공과" />
+                <span class="brand-lockup brand-lockup--hero">
+                  <img class="brand-lockup__symbol" src="/assets/brand/src/udong-pin.png" alt="" />
+                  <img class="brand-lockup__wordmark" src="/assets/brand/logo-wordmark.png" alt="우동공과" />
+                </span>
               </div>
               <h1 class="auth-heading">${title}</h1>
               ${subtitle ? `<p class="auth-subheading">${subtitle}</p>` : ''}
