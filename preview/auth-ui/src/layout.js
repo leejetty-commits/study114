@@ -199,11 +199,10 @@ export function renderTempNotice(message) {
 export function renderBrandHero() {
   return `
     <div class="brand-hero">
-      <img
-        class="brand-hero__logo"
-        src="/assets/brand/logo-lockup-pencil-wordmark.png"
-        alt="우리동네 공부방과외 우동공과"
-      />
+      <span class="brand-lockup brand-lockup--hero">
+        <img class="brand-lockup__symbol" src="/assets/brand/src/udong-pin.png" alt="" />
+        <img class="brand-lockup__wordmark" src="/assets/brand/logo-wordmark.png" alt="우동공과" />
+      </span>
     </div>
   `;
 }

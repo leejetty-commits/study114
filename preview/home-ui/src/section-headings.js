@@ -7,7 +7,8 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-const LOGO_SRC = '/assets/brand/logo-wordmark.png';
+const SYMBOL_SRC = '/assets/brand/src/udong-pin.png';
+const WORDMARK_SRC = '/assets/brand/logo-wordmark.png';
 
 /**
  * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·좌측) | plain
@@ -137,14 +138,20 @@ export function renderSectionHeading(cfg) {
 
   let brandInner = '';
   if (cfg.showLogo || cfg.iconType === 'logo') {
-    const src = cfg.iconType === 'logo' && cfg.icon ? cfg.icon : LOGO_SRC;
+    const sym = SYMBOL_SRC;
+    const wm = cfg.iconType === 'logo' && cfg.icon ? cfg.icon : WORDMARK_SRC;
     brandInner = `
-      <img class="section-heading__logo" src="${src}" alt="우동공과" width="88" height="22" />
+      <span class="brand-lockup brand-lockup--section">
+        <img class="brand-lockup__symbol" src="${sym}" alt="" />
+        <img class="brand-lockup__wordmark" src="${wm}" alt="우동공과" />
+      </span>
       <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
   } else if (cfg.brandText) {
-    // 로고 미지정 시에도 동일 로고 사용 (전역 통일)
     brandInner = `
-      <img class="section-heading__logo" src="${LOGO_SRC}" alt="${esc(cfg.brandText)}" width="88" height="22" />
+      <span class="brand-lockup brand-lockup--section">
+        <img class="brand-lockup__symbol" src="${SYMBOL_SRC}" alt="" />
+        <img class="brand-lockup__wordmark" src="${WORDMARK_SRC}" alt="${esc(cfg.brandText)}" />
+      </span>
       <h2 class="section-heading__title">${esc(cfg.title)}</h2>`;
   } else if (cfg.iconType === 'emoji' && cfg.icon) {
     brandInner = `

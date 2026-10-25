@@ -76,6 +76,10 @@
   height: 1.2rem;
 }
 
+.section-heading .brand-lockup--section {
+  flex-shrink: 0;
+}
+
 .section-heading__title {
   font-family: var(--font-serif);
   font-size: 1.25rem;

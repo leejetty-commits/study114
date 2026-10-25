@@ -96,15 +96,30 @@ img {
   margin-bottom: var(--space-4);
 }
 
-.brand-hero__logo {
-  display: block;
-  height: 2rem;
+.brand-hero__logo,
+.brand-hero .brand-lockup {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.brand-hero .brand-lockup__symbol {
+  height: 22.5px;
+  width: auto;
+}
+
+.brand-hero .brand-lockup__wordmark {
+  height: 28px;
   width: auto;
 }
 
 @media (min-width: 768px) {
-  .brand-hero__logo {
-    height: 2.5rem;
+  .brand-hero .brand-lockup__symbol {
+    height: 28px;
+  }
+
+  .brand-hero .brand-lockup__wordmark {
+    height: 34px;
   }
 }
 
@@ -277,8 +292,20 @@ img {
 }
 
 .login-stage__wordmark,
-.auth-shell__card .login-stage__wordmark {
-  height: 2rem;
+.auth-shell__card .login-stage__wordmark,
+.login-stage__brand .brand-lockup {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.login-stage__brand .brand-lockup__symbol {
+  height: 22.5px;
+  width: auto;
+}
+
+.login-stage__brand .brand-lockup__wordmark {
+  height: 28px;
   width: auto;
 }
 
@@ -373,9 +400,20 @@ img {
   display: inline-flex;
 }
 
-.recovery-stage__logo-img {
-  display: block;
-  height: 2rem;
+.recovery-stage__logo-img,
+.recovery-stage__logo .brand-lockup {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.recovery-stage__logo .brand-lockup__symbol {
+  height: 22.5px;
+  width: auto;
+}
+
+.recovery-stage__logo .brand-lockup__wordmark {
+  height: 28px;
   width: auto;
 }
 
