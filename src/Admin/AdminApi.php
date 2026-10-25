@@ -68,7 +68,7 @@ final class AdminApi
     /** @return array{user_id: int, email: string, role_type: string, name: string} */
     public static function requireAuth(): array
     {
-        $auth = AuthSession::user();
+        $auth = AuthSession::userIfActive();
         if ($auth === null) {
             self::fail(401, 'unauthorized', '로그인이 필요합니다.');
         }

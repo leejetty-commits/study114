@@ -28,13 +28,10 @@ final class AdminRoleService
     /** @param array{email?: string, role_type?: string, admin_level?: ?string, user_id?: int} $auth */
     public function resolveLevel(array $auth): ?string
     {
-        $fromAuth = $this->normalizeLevel($auth['admin_level'] ?? null);
-        if ($fromAuth !== null) {
-            return $fromAuth;
-        }
-
+        // DB 값 우선. 세션 admin_level 은 DB 조회 실패 시에만 폴백.
         $userId = (int) ($auth['user_id'] ?? 0);
         $email = strtolower(trim((string) ($auth['email'] ?? '')));
+
         if ($userId > 0) {
             $fromDb = $this->fetchLevelByUserId($userId);
             if ($fromDb !== null) {
@@ -46,6 +43,12 @@ final class AdminRoleService
             if ($fromDb !== null) {
                 return $fromDb;
             }
+        }
+
+        // DB 에서 못 찾으면 세션값 폴백
+        $fromAuth = $this->normalizeLevel($auth['admin_level'] ?? null);
+        if ($fromAuth !== null) {
+            return $fromAuth;
         }
 
         // 시장 역할 + admin_level 없음 → 운영 권한 없음 (bootstrap 이메일도 DB 없으면 미부여)
