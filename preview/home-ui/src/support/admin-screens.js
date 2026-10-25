@@ -8,7 +8,7 @@ import { listTickets, updateTicketStatus, updateTicketReply } from './ticket-sto
 import { getTicketLoadError, hydrateSupportCache, isSupportApiMode } from './support-backend.js';
 import { getAuthUser } from '../auth-session.js';
 import { navigate } from '../state.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 
 let supportTicketAdminLoadedFor = '';
 
@@ -219,7 +219,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
           await deleteNotice(id);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+          void s114Alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         }
       });
     });
@@ -236,7 +236,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
         await resetNoticesToSeed();
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '공지를 되돌리지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        void s114Alert(err instanceof Error ? err.message : '공지를 되돌리지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
       }
     });
 
@@ -251,7 +251,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
           body: String(fd.get('body')).split('\n').map((l) => l.trim()).filter(Boolean),
         });
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        void s114Alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         return;
       }
       form.reset();
@@ -276,7 +276,7 @@ export function bindAdminScreenEvents(root, path, rerender) {
         try {
           await updateTicketStatus(id, sel.value);
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+          void s114Alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
           rerender();
         }
       });
@@ -290,12 +290,12 @@ export function bindAdminScreenEvents(root, path, rerender) {
         try {
           const updated = await updateTicketReply(id, text);
           if (!updated) {
-            window.alert('답변 내용이 필요합니다.');
+            void s114Alert('답변 내용이 필요합니다.');
             return;
           }
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
         }
       });
     });

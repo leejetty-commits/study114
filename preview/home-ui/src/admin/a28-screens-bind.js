@@ -161,7 +161,7 @@ import {
   getAdminScreenId,
 } from './router.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
-import { s114Confirm, s114Prompt } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm, s114Prompt } from '../../../shared/confirm-dialog.js';
 import {
   listAddonVendors,
   ADDON_CATEGORY_LABELS,
@@ -261,15 +261,15 @@ function bulkDeleteSummary(data) {
 function openMemberBulkDelete(root, rerender) {
   const picked = selectedMemberDeletes(root);
   if (!picked.length) {
-    window.alert('회원을 선택해 주세요.');
+    void s114Alert('회원을 선택해 주세요.');
     return;
   }
   if (picked.length > 6) {
-    window.alert('한 번에 6명까지 삭제할 수 있습니다.');
+    void s114Alert('한 번에 6명까지 삭제할 수 있습니다.');
     return;
   }
   if (!isAdminApiMode()) {
-    window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
+    void s114Alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
     return;
   }
 
@@ -339,7 +339,7 @@ function openMemberBulkDelete(root, rerender) {
       a28Ui.openMemberId = null;
       await hydrateMembersCache(a28Ui.memberFilters);
       rerender();
-      window.alert(bulkDeleteSummary(data));
+      void s114Alert(bulkDeleteSummary(data));
     } catch (err) {
       error.hidden = false;
       error.textContent = err instanceof Error ? err.message : '선택 삭제에 실패했습니다.';
@@ -559,7 +559,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       const text = btn.getAttribute('data-promo-copy-url') || '';
       try {
         await navigator.clipboard.writeText(text);
-        window.alert('URL을 복사했습니다.');
+        void s114Alert('URL을 복사했습니다.');
       } catch {
         await s114Prompt('복사하세요', text);
       }
@@ -570,7 +570,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       const text = btn.getAttribute('data-promo-copy-share') || '';
       try {
         await navigator.clipboard.writeText(text);
-        window.alert('공유 문구를 복사했습니다.');
+        void s114Alert('공유 문구를 복사했습니다.');
       } catch {
         await s114Prompt('복사하세요', text);
       }
@@ -581,7 +581,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       const text = btn.getAttribute('data-promo-copy-kit') || '';
       try {
         await navigator.clipboard.writeText(text);
-        window.alert('런치 킷(문구+URL)을 복사했습니다.');
+        void s114Alert('런치 킷(문구+URL)을 복사했습니다.');
       } catch {
         await s114Prompt('복사하세요', text);
       }
@@ -592,14 +592,14 @@ export function bindA28ScreenEvents(root, path, rerender) {
     if (isAdminApiMode() && !getOperatorsCache()) {
       hydrateOperatorsCache()
         .then(() => rerender())
-        .catch((err) => window.alert(err instanceof Error ? err.message : '목록 로드 실패'));
+        .catch((err) => void s114Alert(err instanceof Error ? err.message : '목록 로드 실패'));
     }
     root.querySelector('[data-operator-refresh]')?.addEventListener('click', async () => {
       try {
         await hydrateOperatorsCache();
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '새로고침 실패');
+        void s114Alert(err instanceof Error ? err.message : '새로고침 실패');
       }
     });
     const createForm = root.querySelector('[data-operator-create]');
@@ -618,9 +618,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
         });
         createForm.reset();
         rerender();
-        window.alert('운영 계정을 발급했습니다.');
+        void s114Alert('운영 계정을 발급했습니다.');
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '발급 실패');
+        void s114Alert(err instanceof Error ? err.message : '발급 실패');
       }
     });
     root.querySelectorAll('[data-operator-toggle-status]').forEach((btn) => {
@@ -633,7 +633,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await apiPatchOperator({ user_id: id, status });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '상태 변경 실패');
+          void s114Alert(err instanceof Error ? err.message : '상태 변경 실패');
         }
       });
     });
@@ -648,7 +648,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await apiPatchOperator({ user_id: id, admin_level: next });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '권한 변경 실패');
+          void s114Alert(err instanceof Error ? err.message : '권한 변경 실패');
         }
       });
     });
@@ -665,9 +665,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
             password_confirm: password,
           });
           rerender();
-          window.alert('임시 비밀번호로 초기화했습니다. 대상자는 로그인 후 비밀번호를 변경해야 합니다.');
+          void s114Alert('임시 비밀번호로 초기화했습니다. 대상자는 로그인 후 비밀번호를 변경해야 합니다.');
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '초기화 실패');
+          void s114Alert(err instanceof Error ? err.message : '초기화 실패');
         }
       });
     });
@@ -692,7 +692,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           rerender();
         } catch (err) {
           lastCommerceLoad = '';
-          window.alert(err instanceof Error ? err.message : '결제 목록을 불러오지 못했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '결제 목록을 불러오지 못했습니다.');
         }
       })();
     }
@@ -706,7 +706,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         lastCommerceLoad = numericHashUser() || 'all';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '새로고침 실패');
+        void s114Alert(err instanceof Error ? err.message : '새로고침 실패');
       }
     });
     root.querySelectorAll('[data-commerce-position-save]').forEach((btn) => {
@@ -720,7 +720,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await apiApplyCommerceCorrection({ action: 'position_ends_at', position_id: Number(id), ends_at: endsAt });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '보정 실패');
+          void s114Alert(err instanceof Error ? err.message : '보정 실패');
         }
       });
     });
@@ -738,7 +738,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '보정 실패');
+          void s114Alert(err instanceof Error ? err.message : '보정 실패');
         }
       });
     });
@@ -822,7 +822,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await copyBoardChannel(sourceKey, { boardKey: newKey, menuLabel: newLabel });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '채널 복사 실패');
+          void s114Alert(err instanceof Error ? err.message : '채널 복사 실패');
         }
       });
     });
@@ -862,7 +862,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         addSectionAccessMember(a28Ui.openSectionAccessId, String(fd.get('email') || ''));
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '접근회원 추가 실패');
+        void s114Alert(err instanceof Error ? err.message : '접근회원 추가 실패');
       }
     });
     root.querySelectorAll('[data-section-access-remove]').forEach((btn) => {
@@ -873,7 +873,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           removeSectionAccessMember(a28Ui.openSectionAccessId, email);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '접근회원 제거 실패');
+          void s114Alert(err instanceof Error ? err.message : '접근회원 제거 실패');
         }
       });
     });
@@ -888,7 +888,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           }
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '그룹 삭제 실패');
+          void s114Alert(err instanceof Error ? err.message : '그룹 삭제 실패');
         }
       });
     });
@@ -901,7 +901,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         addCustomSectionGroup(String(fd.get('id') || ''), String(fd.get('label') || ''));
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '그룹 추가 실패');
+        void s114Alert(err instanceof Error ? err.message : '그룹 추가 실패');
       }
     });
 
@@ -948,7 +948,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           );
           rerender();
         } catch (err) {
-        window.alert(err instanceof Error ? err.message : '상태 변경 실패');
+        void s114Alert(err instanceof Error ? err.message : '상태 변경 실패');
           rerender();
         }
       });
@@ -962,7 +962,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         .map((el) => (el instanceof HTMLInputElement ? el.value : ''))
         .filter(Boolean);
       if (!keys.length) {
-        window.alert('채널을 선택해 주세요.');
+        void s114Alert('채널을 선택해 주세요.');
         return;
       }
       if (!(await s114Confirm(`선택한 ${keys.length}개 채널 상태를 ${STATUS_KO[status] || '선택값'}으로 바꿀까요?`))) return;
@@ -981,7 +981,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         }
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '일괄 상태 변경 실패');
+        void s114Alert(err instanceof Error ? err.message : '일괄 상태 변경 실패');
         rerender();
       }
     });
@@ -1026,7 +1026,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         );
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '채널 저장 실패');
+        void s114Alert(err instanceof Error ? err.message : '채널 저장 실패');
       }
     });
 
@@ -1106,7 +1106,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         });
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '슬롯 저장 실패');
+        void s114Alert(err instanceof Error ? err.message : '슬롯 저장 실패');
       }
     });
 
@@ -1131,7 +1131,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await deleteNotice(id);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+          void s114Alert(err instanceof Error ? err.message : '공지를 삭제하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         }
       });
     });
@@ -1153,7 +1153,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           target_role: String(fd.get('target_role') || 'all'),
         });
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        void s114Alert(err instanceof Error ? err.message : '공지를 저장하지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         return;
       }
       form.reset();
@@ -1181,7 +1181,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const id = btn.getAttribute('data-a28-faq-delete');
         if (!id) return;
         if (isSeedFaqId(id)) {
-          window.alert('기본 질문은 지울 수 없습니다. 내용을 수정해 주세요.');
+          void s114Alert('기본 질문은 지울 수 없습니다. 내용을 수정해 주세요.');
           return;
         }
         if (!(await s114Confirm('삭제할까요?', { danger: true }))) return;
@@ -1189,7 +1189,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await deleteFaqPost(id);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '자주 묻는 질문 삭제 실패');
+          void s114Alert(err instanceof Error ? err.message : '자주 묻는 질문 삭제 실패');
         }
       });
     });
@@ -1212,7 +1212,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         faqForm.querySelector('[name="id"]').value = '';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '자주 묻는 질문 저장 실패');
+        void s114Alert(err instanceof Error ? err.message : '자주 묻는 질문 저장 실패');
       }
     });
 
@@ -1238,7 +1238,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         const slug = btn.getAttribute('data-a28-guide-delete');
         if (!slug) return;
         if (isSeedGuideSlug(slug)) {
-          window.alert('기본 글은 지울 수 없습니다. 내용을 수정해 주세요.');
+          void s114Alert('기본 글은 지울 수 없습니다. 내용을 수정해 주세요.');
           return;
         }
         if (!(await s114Confirm('삭제할까요?', { danger: true }))) return;
@@ -1246,7 +1246,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await deleteGuidePost(slug);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '이용안내 삭제 실패');
+          void s114Alert(err instanceof Error ? err.message : '이용안내 삭제 실패');
         }
       });
     });
@@ -1284,7 +1284,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         guideForm.querySelector('[name="serverId"]').value = '';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '이용안내 저장 실패');
+        void s114Alert(err instanceof Error ? err.message : '이용안내 저장 실패');
       }
     });
   }
@@ -1305,7 +1305,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         try {
           await apiOpenSubmissionAttachment(id, { audience: 'admin' });
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '첨부를 열 수 없습니다.');
+          void s114Alert(err instanceof Error ? err.message : '첨부를 열 수 없습니다.');
         }
       });
     });
@@ -1326,7 +1326,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           await apiApplySubmissionQueueAction(id, action, { internalMemo });
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '조치에 실패했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '조치에 실패했습니다.');
         }
       });
     });
@@ -1341,7 +1341,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
       ensureAdminSettings().then(() => rerender());
     }
     const showSettingsError = (message) => {
-      window.alert(message);
+      void s114Alert(message);
     };
     root.querySelector('[data-settings-basic]')?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -1361,7 +1361,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           guestBannerText: String(fd.get('guestBannerText') || ''),
         });
         rerender();
-        window.alert('사이트 설정을 저장했습니다.');
+        void s114Alert('사이트 설정을 저장했습니다.');
       } catch (err) {
         showSettingsError(err instanceof Error ? err.message : '사이트 기본을 저장하지 못했습니다.');
         rerender();
@@ -1392,7 +1392,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           joinPolicy,
         });
         rerender();
-        window.alert('가입·등록 정책을 저장했습니다.');
+        void s114Alert('가입·등록 정책을 저장했습니다.');
       } catch (err) {
         showSettingsError(err instanceof Error ? err.message : '가입·등록 정책을 저장하지 못했습니다.');
         rerender();
@@ -1412,7 +1412,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
           notifyEmails: String(fd.get('notifyEmails') || ''),
         });
         rerender();
-        window.alert('알림 설정을 저장했습니다.');
+        void s114Alert('알림 설정을 저장했습니다.');
       } catch (err) {
         showSettingsError(err instanceof Error ? err.message : '알림 설정을 저장하지 못했습니다.');
         rerender();
@@ -1434,9 +1434,9 @@ export function bindA28ScreenEvents(root, path, rerender) {
             body: String(fd.get('body') || ''),
           });
           rerender();
-          window.alert('문서를 저장했습니다.');
+          void s114Alert('문서를 저장했습니다.');
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '문서를 저장하지 못했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '문서를 저장하지 못했습니다.');
           rerender();
         }
       });
@@ -1448,7 +1448,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
         await resetSiteSettingsSeed();
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '초기값으로 되돌리지 못했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '초기값으로 되돌리지 못했습니다.');
         rerender();
       }
     });
@@ -1528,7 +1528,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
       rerender();
 
-      window.alert('문자 기본설정을 저장했습니다. (실발송은 아직 없습니다)');
+      void s114Alert('문자 기본설정을 저장했습니다. (실발송은 아직 없습니다)');
 
     });
 
@@ -1544,7 +1544,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
       rerender();
 
-      window.alert(`동기화 완료 · 새로 추가 ${data.syncedMemberPhones}건`);
+      void s114Alert(`동기화 완료 · 새로 추가 ${data.syncedMemberPhones}건`);
 
     });
 
@@ -1582,7 +1582,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
         } catch (err) {
 
-          window.alert(err instanceof Error ? err.message : '삭제 실패');
+          void s114Alert(err instanceof Error ? err.message : '삭제 실패');
 
         }
 
@@ -1706,7 +1706,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
         } catch (err) {
 
-          window.alert(err instanceof Error ? err.message : '삭제 실패');
+          void s114Alert(err instanceof Error ? err.message : '삭제 실패');
 
         }
 
@@ -1844,7 +1844,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
 
 
-    sendForm?.addEventListener('submit', (e) => {
+    sendForm?.addEventListener('submit', async (e) => {
 
       e.preventDefault();
 
@@ -1866,7 +1866,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
 
       rerender();
 
-      window.alert('전송내역에 미리보기를 남겼습니다. 실제 문자는 보내지 않았습니다.');
+      await s114Alert('전송내역에 미리보기를 남겼습니다. 실제 문자는 보내지 않았습니다.');
 
       window.location.hash = '/admin/notify/logs';
 
@@ -1928,7 +1928,7 @@ export function bindMembersScreen(root, rerender, navigate) {
         rerender();
       } catch (err) {
         lastMembersHash = '';
-        window.alert(err instanceof Error ? err.message : '회원을 불러오지 못했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '회원을 불러오지 못했습니다.');
       }
     })();
   } else if (isAdminApiMode() && !getMembersCache()) {
@@ -1950,7 +1950,7 @@ export function bindMembersScreen(root, rerender, navigate) {
       if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
       rerender();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : '검색 실패');
+      void s114Alert(err instanceof Error ? err.message : '검색 실패');
     }
   });
   root.querySelectorAll('[data-member-status-chip]').forEach((btn) => {
@@ -1961,7 +1961,7 @@ export function bindMembersScreen(root, rerender, navigate) {
         if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '필터 실패');
+        void s114Alert(err instanceof Error ? err.message : '필터 실패');
       }
     });
   });
@@ -1970,7 +1970,7 @@ export function bindMembersScreen(root, rerender, navigate) {
       if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
       rerender();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : '새로고침 실패');
+      void s114Alert(err instanceof Error ? err.message : '새로고침 실패');
     }
   });
   root.querySelectorAll('[data-member-open]').forEach((btn) => {
@@ -2011,7 +2011,7 @@ export function bindMembersScreen(root, rerender, navigate) {
         await hydrateMemberDetail(id);
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '조치 실패');
+        void s114Alert(err instanceof Error ? err.message : '조치 실패');
       }
     });
   });
@@ -2034,14 +2034,14 @@ export function bindMembersScreen(root, rerender, navigate) {
         .map((el) => Number(el instanceof HTMLInputElement ? el.value : 0))
         .filter((id) => id > 0);
       if (!ids.length) {
-        window.alert('회원을 선택해 주세요.');
+        void s114Alert('회원을 선택해 주세요.');
         return;
       }
       if (!(await s114Confirm(memberActionConfirm(action, ids.length), { danger: action === 'block' }))) return;
       const memoEl = root.querySelector('[data-member-bulk-memo]');
       const memo = memoEl instanceof HTMLInputElement ? memoEl.value.trim() : '';
       if (!isAdminApiMode()) {
-        window.alert('미리보기에서는 일괄 조치를 쓸 수 없습니다.');
+        void s114Alert('미리보기에서는 일괄 조치를 쓸 수 없습니다.');
         return;
       }
       try {
@@ -2051,16 +2051,16 @@ export function bindMembersScreen(root, rerender, navigate) {
         await hydrateMembersCache(a28Ui.memberFilters);
         if (a28Ui.openMemberId) await hydrateMemberDetail(a28Ui.openMemberId).catch(() => {});
         rerender();
-        window.alert(`완료: 성공 ${ok} · 실패 ${fail}`);
+        void s114Alert(`완료: 성공 ${ok} · 실패 ${fail}`);
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '일괄 조치 실패');
+        void s114Alert(err instanceof Error ? err.message : '일괄 조치 실패');
       }
     });
   });
   root.querySelectorAll('[data-member-delete]').forEach((btn) => {
     btn.addEventListener('click', () => {
       if (!isAdminApiMode()) {
-        window.alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
+        void s114Alert('미리보기에서는 회원 삭제를 쓸 수 없습니다.');
         return;
       }
       openMemberDeleteModal(btn, rerender);
@@ -2078,7 +2078,7 @@ export function bindReportsScreen(root, rerender, navigate) {
       try {
         await apiUpdateAdminReport(id, sel.value, { internalMemo });
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '상태 변경에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '상태 변경에 실패했습니다.');
         rerender();
       }
     });
@@ -2187,7 +2187,7 @@ export function bindTicketsScreen(root, rerender, _navigate) {
         await updateTicketStatus(id, sel.value);
         await reloadTicketAdmin(host, rerender);
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
+        void s114Alert(err instanceof Error ? err.message : '상태를 바꾸지 못했습니다. 운영자 로그인 상태를 확인해 주세요.');
         rerender();
       }
     });
@@ -2201,12 +2201,12 @@ export function bindTicketsScreen(root, rerender, _navigate) {
       try {
         const updated = await updateTicketReply(id, text);
         if (!updated) {
-          window.alert('답변 내용이 필요합니다.');
+          void s114Alert('답변 내용이 필요합니다.');
           return;
         }
         await reloadTicketAdmin(host, rerender);
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '답변 저장에 실패했습니다.');
       }
     });
   });
@@ -2237,7 +2237,7 @@ export function bindExposureScreen(root, rerender, navigate) {
         rerender();
       } catch (err) {
         lastExposureLoad = '';
-        window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
       } finally {
         exposureLoadBusy = false;
       }
@@ -2269,7 +2269,7 @@ export function bindExposureScreen(root, rerender, navigate) {
       lastExposureLoad = exposureLoadKey(route, status);
       rerender();
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
+      void s114Alert(err instanceof Error ? err.message : '목록을 불러오지 못했습니다.');
     }
   });
 
@@ -2308,7 +2308,7 @@ export function bindExposureScreen(root, rerender, navigate) {
         lastExposureLoad = '';
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '보정에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '보정에 실패했습니다.');
       }
     });
   });
