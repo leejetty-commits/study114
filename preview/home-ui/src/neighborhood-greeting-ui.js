@@ -395,7 +395,7 @@ function openGreetingFeed(opts) {
       : `<p class="ng-feed__state" role="status">${esc(greetingStateCopy(opts.viewer))}</p>`;
     el.innerHTML = `
       <div class="ng-feed__card" role="document" data-drag-box>
-        <h2 id="ng-feed-title" class="ng-feed__title" data-drag-handle><span class="ng-feed__wave">👋</span>${esc(COPY.greetingTitle)}</h2>
+        <h2 id="ng-feed-title" class="ng-feed__title" data-drag-handle><span class="ng-feed__wave" aria-hidden="true">👋</span>${esc(COPY.greetingTitle)}</h2>
         ${list}
         ${pager}
         <button type="button" class="btn btn--secondary" data-ng-feed-close>닫기</button>
