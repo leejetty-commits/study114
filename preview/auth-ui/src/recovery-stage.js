@@ -4,19 +4,17 @@
 
 import { renderAuthShell } from './layout.js';
 
-export function renderRecoveryStage(cardHtml) {
+export function renderRecoveryStage(cardHtml, options = {}) {
+  const logoHtml = options.lockup
+    ? `<img class="brand-hero__logo" src="/assets/brand/logo-lockup-pencil-wordmark.png" alt="우리동네 공부방과외 우동공과" />`
+    : `<img class="recovery-stage__logo-img" src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />`;
+
   return renderAuthShell(
     `
     <div class="recovery-stage">
       <header class="recovery-stage__header">
         <a href="#/login" class="recovery-stage__logo" data-nav="/login" aria-label="로그인으로">
-          <img
-            class="recovery-stage__logo-img"
-            src="/assets/brand/logo-wordmark.png"
-            alt="우동공과"
-            width="120"
-            height="32"
-          />
+          ${logoHtml}
         </a>
       </header>
       <div class="recovery-stage__card panel">${cardHtml}</div>

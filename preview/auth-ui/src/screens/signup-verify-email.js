@@ -159,6 +159,7 @@ export function renderSignupVerifyEmail() {
 
   return renderRecoveryStage(
     `<div data-verify-wait data-mail-send-failed="${sendFailed ? '1' : '0'}">${body}</div>`,
+    { lockup: true },
   );
 }
 
