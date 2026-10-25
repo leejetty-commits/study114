@@ -20,6 +20,7 @@ import {
 } from './user-actions-state.js';
 import { openDetailDecision, resolveDetailItem } from './detail-decision/index.js';
 import { startFirstMemoFlow } from './messages/compose-flow.js';
+import { toggleRecommendation } from './search-api.js';
 
 function esc(s) {
   return String(s ?? '').replace(/</g, '&lt;');
@@ -152,9 +153,61 @@ export function openWishlistModal(onUpdate) {
   });
 }
 
+// 추천 토글 세션 기억 — 서버 응답 recommended 로 갱신, 새로고침 후 is-active 유지
+const RECOMMEND_STORAGE_KEY = 'study114-recommend-active';
+const RECOMMEND_MAX = 200;
+
+function loadRecommendedSet() {
+  try {
+    const raw = sessionStorage.getItem(RECOMMEND_STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+}
+
+function saveRecommendedSet(set) {
+  try {
+    const arr = [...set];
+    sessionStorage.setItem(RECOMMEND_STORAGE_KEY, JSON.stringify(arr.slice(-RECOMMEND_MAX)));
+  } catch { /* 무시 */ }
+}
+
+/** @param {'study_room'|'tutor'} kind @param {number} id */
+export function isRecommendedLocal(kind, id) {
+  return loadRecommendedSet().has(`${kind}:${id}`);
+}
+
+function setRecommendedLocal(kind, id, active) {
+  const set = loadRecommendedSet();
+  const key = `${kind}:${id}`;
+  if (active) set.add(key); else set.delete(key);
+  saveRecommendedSet(set);
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender @param {{ sourceRoute?: string }} [opts] */
 export function bindUserActionEvents(root, rerender, opts = {}) {
   const sourceRoute = opts.sourceRoute || 'search';
+
+  root.querySelectorAll('[data-action="recommend-toggle"]').forEach((btn) => {
+    const kind = btn.dataset.itemKind;
+    const id = Number(btn.dataset.itemId);
+    if (isRecommendedLocal(kind, id)) btn.classList.add('is-active');
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if ((kind !== 'study_room' && kind !== 'tutor') || !id) return;
+      try {
+        const data = await toggleRecommendation(kind, id);
+        const countEl = btn.querySelector('.item-actions__count');
+        if (countEl) countEl.textContent = String(data.recommend_count ?? 0);
+        btn.classList.toggle('is-active', Boolean(data.recommended));
+        btn.title = `추천 ${data.recommend_count ?? 0}`;
+        setRecommendedLocal(kind, id, Boolean(data.recommended));
+      } catch (err) {
+        console.warn('[recommend]', err);
+        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+      }
+    });
+  });
 
   root.querySelectorAll('[data-action="wish-toggle"]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
