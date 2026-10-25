@@ -244,7 +244,7 @@ export function bindEmbeddedTutorDetail(root, rerender) {
           /* 저장은 끝났고 목록 캐시만 실패 */
         }
       }
-      void s114Alert('저장되었습니다.');
+      await s114Alert('저장되었습니다.');
       if (isReturnToRegistrationCheck()) {
         window.location.hash = tutorSectionPath(tutorId, 'publish');
         return;
