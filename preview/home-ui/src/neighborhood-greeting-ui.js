@@ -277,7 +277,7 @@ export function greetingCellBody(viewer) {
       (row, index) => `
         <li class="ng-rail__item">
           <div class="ng-rail__line">
-            <span class="ng-rail__kind">${esc(row.kindLabel)}</span>
+            <span class="ng-rail__kind" data-kind="${esc(row.providerType)}">${esc(row.kindLabel)}</span>
             <button type="button" class="ng-rail__name" data-ng-name data-ng-kind="${esc(row.providerType)}" data-ng-reg="${row.registrationId}">${esc(row.name)}</button>
             <button type="button" class="ng-rail__text" data-ng-line data-ng-index="${index}">${esc(row.summary)}</button>
           </div>
@@ -375,7 +375,7 @@ function openGreetingFeed(opts) {
         (row) => `
         <li class="ng-feed__item">
           <p class="ng-feed__who">
-            <span class="ng-feed__kind">${esc(row.kindLabel)}</span>
+            <span class="ng-feed__kind" data-kind="${esc(row.providerType)}">${esc(row.kindLabel)}</span>
             <button type="button" class="ng-feed__name" data-ng-feed-name data-ng-kind="${esc(row.providerType)}" data-ng-reg="${row.registrationId}">${esc(row.name)}</button>
           </p>
           <p class="ng-feed__body">${esc(row.full)}</p>
@@ -395,7 +395,7 @@ function openGreetingFeed(opts) {
       : `<p class="ng-feed__state" role="status">${esc(greetingStateCopy(opts.viewer))}</p>`;
     el.innerHTML = `
       <div class="ng-feed__card" role="document" data-drag-box>
-        <h2 id="ng-feed-title" class="ng-feed__title" data-drag-handle>${esc(COPY.greetingTitle)}</h2>
+        <h2 id="ng-feed-title" class="ng-feed__title" data-drag-handle><span class="ng-feed__wave">👋</span>${esc(COPY.greetingTitle)}</h2>
         ${list}
         ${pager}
         <button type="button" class="btn btn--secondary" data-ng-feed-close>닫기</button>

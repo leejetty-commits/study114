@@ -22,6 +22,22 @@
   font-weight: 700;
 }
 
+.ng-rail__kind {
+  padding: 1.6px 6.4px;
+  border-radius: 5px;
+  font-size: 9.6px;
+  background: #FDF1E3;
+  color: #B45309;
+}
+.ng-rail__kind[data-kind="tutor"] {
+  background: #E6F4F1;
+  color: #0F766E;
+}
+.ng-rail__kind[data-kind="study_room"] {
+  background: #EEF4FB;
+  color: #266BC4;
+}
+
 .ng-rail__name,
 .ng-rail__text,
 .ng-feed__name {
@@ -71,8 +87,15 @@
 }
 
 .ng-feed__title {
-  margin: 0 0 0.75rem;
+  margin: -1.25rem -1.25rem 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(90deg, #FFF7EA, #EEF4FB);
+  border-radius: 0.75rem 0.75rem 0 0;
   font-size: 1rem;
+}
+
+.ng-feed__wave {
+  margin-right: 0.25rem;
 }
 
 .ng-feed__list {
@@ -92,8 +115,20 @@
 }
 
 .ng-feed__kind {
-  font-size: 0.75rem;
+  padding: 1.6px 6.4px;
+  border-radius: 5px;
+  font-size: 9.6px;
   font-weight: 700;
+  background: #FDF1E3;
+  color: #B45309;
+}
+.ng-feed__kind[data-kind="tutor"] {
+  background: #E6F4F1;
+  color: #0F766E;
+}
+.ng-feed__kind[data-kind="study_room"] {
+  background: #EEF4FB;
+  color: #266BC4;
 }
 
 .ng-feed__body {

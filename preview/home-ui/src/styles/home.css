@@ -228,8 +228,19 @@ img {
   border-bottom: none;
 }
 
-.home-header__logo img {
-  height: 1.75rem;
+.home-header__logo {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.home-header__symbol {
+  height: 22.5px;
+  width: auto;
+}
+
+.home-header__wordmark {
+  height: 28px;
   width: auto;
 }
 
@@ -518,9 +529,9 @@ img {
   display: flex;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
-  padding: var(--space-1);
-  background: var(--gray-100);
-  border-radius: 0.75rem;
+  padding: 4px;
+  background: #e5e7eb;
+  border-radius: 12px;
 }
 
 .parent-tabs__btn {
@@ -528,15 +539,19 @@ img {
   padding: var(--space-3) var(--space-4);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--gray-600);
-  border-radius: 0.625rem;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  box-shadow: none;
   transition: all 0.15s ease;
 }
 
 .parent-tabs__btn.is-active {
   background: #fff;
-  color: var(--brand-blue);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  color: #266BC4;
+  font-weight: 700;
+  box-shadow: none;
 }
 
 /* ?? Section (compact) ?? */

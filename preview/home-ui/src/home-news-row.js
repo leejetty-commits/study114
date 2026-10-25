@@ -80,7 +80,7 @@ function noticeCellBody() {
     .map(
       (n) => `<li>
         <button type="button" class="home-news-row__notice" data-home-notice-open="${esc(n.id)}">
-          <span class="home-news-row__badge">${esc(noticeTargetLabel(n))}</span>
+          <span class="home-news-row__badge" data-kind="${esc(n.targetRole || 'all')}">${esc(noticeTargetLabel(n))}</span>
           <span class="home-news-row__notice-title">${esc(n.title)}</span>
           <span class="home-news-row__date">${esc(fmtDate(n.date))}</span>
         </button>
