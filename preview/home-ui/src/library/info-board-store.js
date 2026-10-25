@@ -110,6 +110,16 @@ async function request(url, init = {}) {
   return data;
 }
 
+/**
+ * 게스트 뷰어용 읽기 옵션. 세션 확인 전에 boardRole이 'guest'로 보이면
+ * credentials를 생략해, 서버가 세션 쿠키로 실 역할(학생 등)을 판정하지 못하게 한다.
+ * 순수 비로그인은 쿠키가 없어 결과가 같고, 학생이 게스트로 잘못 보이는 레이스에서 403을 막는다.
+ * @param {InfoViewer} viewer
+ */
+function guestSafeOpts(viewer) {
+  return viewer.boardRole === 'guest' ? { credentials: 'omit' } : {};
+}
+
 function listUrl(boardKey, category, offset) {
   const params = new URLSearchParams({ board_key: boardKey });
   if (category) params.set('category', category);
@@ -155,7 +165,7 @@ export async function loadInfoList(viewer, boardKey, category = '') {
   }
   let entry;
   try {
-    entry = toListEntry(await request(listUrl(boardKey, category, 0)), category);
+    entry = toListEntry(await request(listUrl(boardKey, category, 0), guestSafeOpts(viewer)), category);
   } catch {
     entry = { status: 'failed', access: '', category, posts: [], total: 0, hasMore: false, canCompose: false };
   }
@@ -168,7 +178,7 @@ export async function loadMoreInfoList(viewer, boardKey) {
   const who = claim(viewer);
   const entry = _lists.get(boardKey);
   if (!entry || entry.status !== 'ready' || !entry.hasMore) return entry ?? null;
-  const data = await request(listUrl(boardKey, entry.category, entry.posts.length));
+  const data = await request(listUrl(boardKey, entry.category, entry.posts.length), guestSafeOpts(viewer));
   if (who !== _owner || _lists.get(boardKey) !== entry) return _lists.get(boardKey) ?? null;
   const next = toListEntry(data, entry.category, entry.posts);
   _lists.set(boardKey, next);
@@ -196,7 +206,7 @@ export async function loadInfoPost(viewer, boardKey, postKey) {
   let entry;
   try {
     const params = new URLSearchParams({ board_key: boardKey, post_key: postKey });
-    const data = await request(`${API}?${params}`);
+    const data = await request(`${API}?${params}`, guestSafeOpts(viewer));
     const access = data.access === 'full' ? 'full' : 'titles';
     entry = { status: 'ready', access, post: normalizeInfoPost(data.post, access) };
   } catch (err) {
@@ -321,7 +331,7 @@ export function loadInfoRailList(viewer, boardKey) {
   const pending = _railPending.get(boardKey);
   if (pending) return pending;
   const params = new URLSearchParams({ board_key: boardKey, limit: String(INFO_RAIL_LIMIT) });
-  const task = request(`${API}?${params}`)
+  const task = request(`${API}?${params}`, guestSafeOpts(viewer))
     .then(
       (data) => ({
         status: 'ready',
@@ -353,7 +363,7 @@ export async function loadInfoPage(viewer, boardKey, offset, limit = INFO_POPUP_
   if (infoAccessFor(viewer, boardKey) === 'blocked') return { ...empty, status: 'blocked', access: 'blocked' };
   try {
     const params = new URLSearchParams({ board_key: boardKey, limit: String(limit), offset: String(offset) });
-    const data = await request(`${API}?${params}`);
+    const data = await request(`${API}?${params}`, guestSafeOpts(viewer));
     const access = data.access === 'full' ? 'full' : 'titles';
     const posts = (Array.isArray(data.posts) ? data.posts : []).map((p) => normalizeInfoPost(p, access)).filter((p) => p.id);
     return {
