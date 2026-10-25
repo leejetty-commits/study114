@@ -16,6 +16,7 @@ import {
 import { syncLessonFromForm, syncCareerFromForm, syncContactFromForm, validateLessonState, validateCareerState, validateIntroState } from '../form-collect.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -224,28 +225,28 @@ export function bindDetailEvents(root) {
       syncContactFromForm(form, registerState);
       const lessonErr = validateLessonState(registerState);
       if (lessonErr) {
-        alert(lessonErr);
+        void s114Alert(lessonErr);
         return;
       }
       const careerErr = validateCareerState(registerState);
       if (careerErr) {
-        alert(careerErr);
+        void s114Alert(careerErr);
         return;
       }
       const introErr = validateIntroState(registerState);
       if (introErr) {
-        alert(introErr);
+        void s114Alert(introErr);
         return;
       }
       const urlErr = validatePromoUrls(registerState);
       if (urlErr) {
-        alert(urlErr);
+        void s114Alert(urlErr);
         return;
       }
       await saveAndNavigate(registerState, 'lesson', null);
       await saveAndNavigate(registerState, 'career', null);
       await saveAndNavigate(registerState, 'contact', null);
-      alert('상세정보가 저장되었습니다.');
+      await s114Alert('상세정보가 저장되었습니다.');
       returnToMypage();
     });
   });

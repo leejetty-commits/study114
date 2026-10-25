@@ -6,6 +6,7 @@ import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { TUTOR_SLOGAN_MAX, tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -258,12 +259,12 @@ async function saveBasicForm(root) {
   registerState.saved_regions = collectTutorRegionSlots(root);
   const checked = validateTutorActivityRegions(registerState.saved_regions);
   if (!checked.ok) {
-    alert(checked.message);
+    void s114Alert(checked.message);
     return false;
   }
   const missing = tutorBasicMissing({ ...registerState, has_primary_region: true });
   if (missing.length) {
-    alert(tutorBasicMissingMessage(missing));
+    void s114Alert(tutorBasicMissingMessage(missing));
     return false;
   }
   await saveAndNavigate(registerState, 'basic', null);

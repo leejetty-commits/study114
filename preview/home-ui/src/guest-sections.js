@@ -12,6 +12,7 @@ import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { loadGuestBaseline, readGuestBaseline, readGuestAxisCounts } from '../../shared/location-display.js';
 import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getHomeBasicPool,
   isHomeBasicLive,
@@ -307,7 +308,7 @@ export function bindGuestSectionEvents(root, rerender) {
         btn.title = `추천 ${data.recommend_count ?? 0}`;
       } catch (err) {
         console.warn('[recommend]', err);
-        window.alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '추천 처리에 실패했습니다.');
       }
     });
   });

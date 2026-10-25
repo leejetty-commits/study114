@@ -14,6 +14,7 @@ import { lessonMonthlyOptions, lessonMonthlySelectValue, lessonMonthlyOmitUntilT
 import { TUTOR_DETAIL_GROUP_LESSON } from '../../../shared/tutor-detail-fields.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { bindInputFill } from '../../../shared/input-fill.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -204,7 +205,7 @@ export function bindLessonEvents(root, opts = {}) {
       syncLessonFromForm(lessonForm(), registerState);
       const err = validateLessonState(registerState);
       if (err) {
-        alert(err);
+        void s114Alert(err);
         return;
       }
       await saveAndNavigate(registerState, 'lesson', '/register/contact');
@@ -216,7 +217,7 @@ export function bindLessonEvents(root, opts = {}) {
       syncLessonFromForm(lessonForm(), registerState);
       const err = validateLessonState(registerState);
       if (err) {
-        alert(err);
+        void s114Alert(err);
         return;
       }
       await saveAndNavigate(registerState, 'lesson', null);

@@ -3,6 +3,7 @@
  */
 
 import { COMPARE_MAX } from './exposure-schema.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   compareToastAdded,
   compareOpenCta,
@@ -69,7 +70,7 @@ export function notifyCompareToggle(result, kind, opts = {}) {
     return false;
   }
   if (result.ineligible) {
-    alert(COMPARE_ERROR_INELIGIBLE);
+    void s114Alert(COMPARE_ERROR_INELIGIBLE);
     return false;
   }
   if (result.inCompare) {

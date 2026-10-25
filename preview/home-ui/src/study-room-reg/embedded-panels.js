@@ -29,6 +29,7 @@ import {
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { studyRoomSectionPath } from './router.js';
 import { RC_COPY } from './registration-check-copy.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 /** @type {{ reset: () => void, destroy: () => void } | null} */
 let embedBasicDrag = null;
@@ -490,7 +491,7 @@ export function bindEmbeddedPanelEvents(root, rerender) {
         const data = collectStudyRoomBasicFields(formEl);
         const err = validateStudyRoomBasicFields(data);
         if (err) {
-          alert(err);
+          void s114Alert(err);
           return;
         }
         applyStudyRoomBasicToState(registerState, data);

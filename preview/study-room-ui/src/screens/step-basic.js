@@ -2,6 +2,7 @@ import { registerState, PERSONAL_GENDER_OPTIONS, apiMasters, getRegions, getComp
 import { applyRoomToState } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
 import { loadRoom } from '../register-api.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   bindGlobalEvents,
@@ -301,7 +302,7 @@ export function bindBasicEvents(root) {
       const data = collectStudyRoomBasicFields(formEl);
       const err = validateStudyRoomBasicFields(data);
       if (err) {
-        alert(err);
+        void s114Alert(err);
         return;
       }
       applyStudyRoomBasicToState(registerState, data);

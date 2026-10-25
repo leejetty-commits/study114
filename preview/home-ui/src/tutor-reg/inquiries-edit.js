@@ -6,6 +6,7 @@
 import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';
 import { setTutorInquiryStatus } from './store.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 function selectedReceiving(page) {
   const el = page.querySelector('input[name="p21_inquiry_receiving"]:checked');
@@ -74,30 +75,30 @@ export function bindTutorInquiriesEvents(root, rerender) {
     const receiving = selectedReceiving(page);
     const reason = selectedReason(page);
     if (!receiving && (!hasClosedReason(page) || !reason)) {
-      alert(P21_INQUIRY_COPY.offReasonRequired);
+      void s114Alert(P21_INQUIRY_COPY.offReasonRequired);
       return;
     }
     const nextStatus = tutorInquiryStatusFromPref(receiving, reason);
     if (!nextStatus) {
-      alert(P21_INQUIRY_COPY.offReasonRequired);
+      void s114Alert(P21_INQUIRY_COPY.offReasonRequired);
       return;
     }
 
     const persistInquiryStatus = async () => {
       try {
         await setTutorInquiryStatus(id, nextStatus);
-        alert('저장되었습니다.');
+        void s114Alert('저장되었습니다.');
         rerender();
       } catch (err) {
         console.warn('[p21-inquiries]', err);
         if (err?.code === 'schema_missing') {
-          alert(P21_INQUIRY_COPY.schemaMissing);
+          void s114Alert(P21_INQUIRY_COPY.schemaMissing);
           rerender();
           return;
         }
         const msg =
           err instanceof Error && err.message ? err.message : P21_INQUIRY_COPY.saveFailed;
-        alert(msg);
+        void s114Alert(msg);
         rerender();
       }
     };

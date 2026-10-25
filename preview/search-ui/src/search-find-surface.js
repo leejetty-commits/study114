@@ -7,6 +7,7 @@ import {
   SEARCH_TABS,
 } from './search-schema.js';
 import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
+import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getStudyRoomHomeLiveItems,
   getStudyRoomStudentLiveItems,
@@ -3279,7 +3280,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
         rerender();
       });
     } catch (err) {
-      window.alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
+      void s114Alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
     }
   });
 
@@ -3324,7 +3325,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
           rerender();
         });
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
+        void s114Alert(err instanceof Error ? err.message : '주소찾기를 열 수 없습니다.');
       }
     });
   });

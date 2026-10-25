@@ -6,6 +6,7 @@ import {
 } from '../state.js';
 import { syncCareerFromForm, syncContactFromForm } from '../form-collect.js';
 import { saveAndNavigate, withSaving } from '../save-flow.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -184,7 +185,7 @@ export function bindContactEvents(root, opts = {}) {
       syncContactFromForm(form, registerState);
       const urlErr = validatePromoUrls(registerState);
       if (urlErr) {
-        alert(urlErr);
+        void s114Alert(urlErr);
         return;
       }
       await saveAndNavigate(registerState, 'career', null);
@@ -198,7 +199,7 @@ export function bindContactEvents(root, opts = {}) {
       syncContactForm(form, true);
       const urlErr = validatePromoUrls(registerState);
       if (urlErr) {
-        alert(urlErr);
+        void s114Alert(urlErr);
         return;
       }
       await saveAndNavigate(registerState, 'career', null);

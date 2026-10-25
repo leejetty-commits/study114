@@ -25,6 +25,7 @@ import { hydrateProviderStatus } from '../provider-status.js';
 import { hydrateProviderNotices } from '../provider-notices.js';
 
 import { isMessagesApiMode } from '../messages-backend.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 
 
@@ -247,7 +248,7 @@ export function showComposeModal(opts) {
     const files = Array.from(fileInput?.files || []);
     const fileErr = validateMessageFiles(files);
     if (fileErr) {
-      alert(fileErr);
+      void s114Alert(fileErr);
       return;
     }
 
@@ -313,7 +314,7 @@ export function showComposeModal(opts) {
 
       } else {
 
-        alert(err?.message || '쪽지 전송에 실패했습니다. 로그인·API 연결을 확인해 주세요.');
+        void s114Alert(err?.message || '쪽지 전송에 실패했습니다. 로그인·API 연결을 확인해 주세요.');
 
       }
 

@@ -12,6 +12,7 @@ import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
 import { saveAndNavigate, saveCurrentStep, withSaving } from '../save-flow.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   renderRegisterShell,
   renderSectionTitle,
@@ -383,7 +384,7 @@ export function bindLessonEvents(root, opts = {}) {
         opts.onSaved();
         return;
       }
-      alert('저장되었습니다.');
+      void s114Alert('저장되었습니다.');
       refresh();
     });
   });

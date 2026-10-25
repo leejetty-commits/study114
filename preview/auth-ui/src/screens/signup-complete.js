@@ -10,7 +10,7 @@ import {
   homeUiUrl,
 } from '../../../shared/preview-links.js';
 import { publishGreeting } from '../../../shared/neighborhood-greeting-store.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 
 const PROMPT_DONE_KEY = 'study114-ng-prompt-done';
 
@@ -291,7 +291,7 @@ export function bindSignupCompleteEvents(root) {
 
     if (role === 'study_room' && hasSeed) {
       // 잘못된 「지역 없음」 경고 대신 완료 안내만
-      window.alert(AUTH_WELCOME_COPY.complete.alertDone);
+      await s114Alert(AUTH_WELCOME_COPY.complete.alertDone);
     } else if (!hasSeed) {
       const proceed = await s114Confirm(
         role === 'student'

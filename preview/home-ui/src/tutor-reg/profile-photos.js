@@ -11,6 +11,7 @@ import {
 } from '../../../shared/promo-image.js';
 import { isRegistrationsApiMode, hydrateRegistrationsCache, patchTutorInCache } from '../registrations-backend.js';
 import { getTutor, updateTutor } from './store.js';
+import { s114Alert } from '../../../shared/confirm-dialog.js';
 
 export const TUTOR_PROFILE_PHOTO_SPEC = {
   maxCount: 3,
@@ -544,19 +545,19 @@ export function bindTutorProfilePhotos(root, opts) {
     if (!file) return;
     const images = loadImages();
     if (images.length >= TUTOR_PROFILE_PHOTO_SPEC.maxCount) {
-      alert(`프로필 사진은 최대 ${TUTOR_PROFILE_PHOTO_SPEC.maxCount}장까지입니다.`);
+      void s114Alert(`프로필 사진은 최대 ${TUTOR_PROFILE_PHOTO_SPEC.maxCount}장까지입니다.`);
       return;
     }
     const err = await validateTutorProfilePhoto(file);
     if (err) {
-      alert(err);
+      void s114Alert(err);
       return;
     }
     let prepared = file;
     try {
       prepared = await ensureTutorProfilePhotoMinSize(file);
     } catch (e) {
-      alert(e instanceof Error ? e.message : '사진을 준비하지 못했습니다.');
+      void s114Alert(e instanceof Error ? e.message : '사진을 준비하지 못했습니다.');
       return;
     }
     const crop = await openPromoCropDialog(document.body, { file: prepared });
@@ -593,7 +594,7 @@ export function bindTutorProfilePhotos(root, opts) {
       }
       refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : '사진 업로드에 실패했습니다.');
+      void s114Alert(e instanceof Error ? e.message : '사진 업로드에 실패했습니다.');
     }
   });
 
@@ -634,7 +635,7 @@ export function bindTutorProfilePhotos(root, opts) {
           await applyOrder(next);
         }
       } catch (e) {
-        alert(e instanceof Error ? e.message : '사진 처리에 실패했습니다.');
+        void s114Alert(e instanceof Error ? e.message : '사진 처리에 실패했습니다.');
       }
     });
   });

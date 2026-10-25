@@ -1,3 +1,4 @@
+import { s114Alert } from '../../shared/confirm-dialog.js';
 /** 부트가 id를 못 담았어도 저장 전에 서버 행을 다시 찾아 INSERT를 피한다. */
 async function resolveTutorId(state) {
   if (state.tutor_id) return state.tutor_id;
@@ -42,7 +43,7 @@ export async function withSaving(btn, fn) {
   try {
     await fn();
   } catch (err) {
-    alert(err instanceof Error ? err.message : '저장 실패');
+    void s114Alert(err instanceof Error ? err.message : '저장 실패');
     throw err;
   } finally {
     if (btn) {

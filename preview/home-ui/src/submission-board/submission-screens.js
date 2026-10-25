@@ -28,7 +28,7 @@ import {
   apiOpenSubmissionAttachment,
 } from './submission-store.js';
 import { parseSubmissionBoardPath, SUBMISSION_BOARD_BASE } from './submission-router.js';
-import { s114Confirm } from '../../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -347,14 +347,14 @@ export function bindSubmissionBoardEvents(root, rerender) {
       const action = submitter?.getAttribute('data-sub-action') || 'submit';
       const payload = readFormPayload(form);
       if (!payload.title) {
-        window.alert('제목을 입력해 주세요.');
+        void s114Alert('제목을 입력해 주세요.');
         return;
       }
       const editId = form.getAttribute('data-sub-edit');
       const status = action === 'draft' ? 'draft' : 'submitted';
       const file = payload.file;
       if (!editId && !file) {
-        window.alert('첨부 파일을 선택해 주세요.');
+        void s114Alert('첨부 파일을 선택해 주세요.');
         return;
       }
 
@@ -383,7 +383,7 @@ export function bindSubmissionBoardEvents(root, rerender) {
         }
         rerender();
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
+        void s114Alert(err instanceof Error ? err.message : '저장에 실패했습니다.');
       }
     });
   }
@@ -398,7 +398,7 @@ export function bindSubmissionBoardEvents(root, rerender) {
           navigate(SUBMISSION_BOARD_BASE);
           rerender();
         } catch (err) {
-          window.alert(err instanceof Error ? err.message : '삭제에 실패했습니다.');
+          void s114Alert(err instanceof Error ? err.message : '삭제에 실패했습니다.');
         }
       }
     });
@@ -411,7 +411,7 @@ export function bindSubmissionBoardEvents(root, rerender) {
       try {
         await apiOpenSubmissionAttachment(id, { authorRole: getNavRole() });
       } catch (err) {
-        window.alert(err instanceof Error ? err.message : '첨부를 열 수 없습니다.');
+        void s114Alert(err instanceof Error ? err.message : '첨부를 열 수 없습니다.');
       }
     });
   });

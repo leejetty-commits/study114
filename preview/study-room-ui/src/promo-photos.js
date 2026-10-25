@@ -9,7 +9,7 @@ import {
   deletePromoImage,
   updatePromoImageCaption,
 } from '../../shared/promo-image.js';
-import { s114Confirm } from '../../shared/confirm-dialog.js';
+import { s114Alert, s114Confirm } from '../../shared/confirm-dialog.js';
 
 const PHOTO_FILE_ID = 'room-promo-photo-file';
 
@@ -124,12 +124,12 @@ export function bindPromoPhotos(root, opts) {
     console.info('[study114:promo-photo] 파일 선택됨', file ? { name: file.name, size: file.size, type: file.type } : null);
     if (!file) return;
     if ((registerState.images || []).length >= PROMO_IMAGE_SPEC.maxCount) {
-      alert('홍보사진은 최대 5장까지입니다.');
+      void s114Alert('홍보사진은 최대 5장까지입니다.');
       return;
     }
     const err = await validatePromoImageFile(file);
     if (err) {
-      alert(err);
+      void s114Alert(err);
       return;
     }
     const crop = await openPromoCropDialog(document.body, { file });
@@ -139,13 +139,13 @@ export function bindPromoPhotos(root, opts) {
       try {
         await opts.persistBeforeUpload();
       } catch (saveErr) {
-        alert(saveErr instanceof Error ? saveErr.message : '공부방을 먼저 저장한 뒤 사진을 올려 주세요.');
+        void s114Alert(saveErr instanceof Error ? saveErr.message : '공부방을 먼저 저장한 뒤 사진을 올려 주세요.');
         return;
       }
     }
     const roomId = registerState.study_room_id;
     if (!roomId) {
-      alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
+      void s114Alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
       return;
     }
 
@@ -162,7 +162,7 @@ export function bindPromoPhotos(root, opts) {
       registerState.images = [...(registerState.images || []), image];
       window.dispatchEvent(new Event('hashchange'));
     } catch (uploadErr) {
-      alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
+      void s114Alert(uploadErr instanceof Error ? uploadErr.message : '사진 업로드에 실패했습니다.');
     }
   });
 
@@ -181,7 +181,7 @@ export function bindPromoPhotos(root, opts) {
           caption,
         });
       } catch (capErr) {
-        alert(capErr instanceof Error ? capErr.message : '사진 제목을 저장하지 못했습니다.');
+        void s114Alert(capErr instanceof Error ? capErr.message : '사진 제목을 저장하지 못했습니다.');
       }
     });
   });
@@ -202,7 +202,7 @@ export function bindPromoPhotos(root, opts) {
         registerState.images.splice(idx, 1);
         window.dispatchEvent(new Event('hashchange'));
       } catch (delErr) {
-        alert(delErr instanceof Error ? delErr.message : '사진을 삭제하지 못했습니다.');
+        void s114Alert(delErr instanceof Error ? delErr.message : '사진을 삭제하지 못했습니다.');
       }
     });
   });
