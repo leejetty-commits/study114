@@ -341,7 +341,8 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
   };
 
   if (!options.naver && !getNaverMapClientId()) {
-    showStatus('[설정 필요] VITE_NAVER_MAP_CLIENT_ID · 네이버 지도 API 키를 .env에 추가하세요.', 'config');
+    console.warn('[naver-map] VITE_NAVER_MAP_CLIENT_ID 미설정');
+    showStatus('아직 등록지역이 검색되지 않습니다', 'info');
     return null;
   }
 
