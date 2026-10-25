@@ -73,7 +73,7 @@
 | EMPTY | 미점유 슬롯 홍보카드 | 후보 없을 때만 3칸 EMPTY |
 | overflow | 정책 확정 전 보류 | 페이지로 소화 |
 
-데모 후보 풀: `demo_prime_tutor_pool` (기본 12). Pick/Basic 제외는 후보 풀 전체 ID.
+~~데모 후보 풀: `demo_prime_tutor_pool` (기본 12)~~ — 2026-10-09 삭제됨. Pick/Basic 제외는 후보 풀 전체 ID.
 
 ### 296 · 홈 픽 빈칸 (2026-10-25 확정)
 

@@ -40,7 +40,7 @@ function paidSku(item) {
 
 /**
  * 유료 Prime 점유자.
- * 로그인 실데이터(_realDb)는 position_sku=prime 만. demo_prime_filled 는 게스트 시드 전용.
+ * 로그인 실데이터는 position_sku=prime 유료 업체만.
  * @param {object[]} pool
  * @param {number} [capacity]
  */
