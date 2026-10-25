@@ -16,7 +16,9 @@ import {
   toggleStudentReview as apiToggleStudentReview,
   removeStudentReview as apiRemoveStudentReview,
 } from './handoff-api.js';
-import { mapSearchRoomItem, mapSearchTutorItem } from './home-basic-live.js';
+import { mapSearchRoomItem, mapSearchTutorItem, getHomeBasicPool } from './home-basic-live.js';
+import { EXPOSURE_STUDY_ROOMS, EXPOSURE_TUTORS } from './exposure-data.js';
+import { previewState } from './state.js';
 
 let apiMode = false;
 
@@ -168,6 +170,27 @@ function warnHandoff(err) {
   console.warn('[handoff-api]', err instanceof Error ? err.message : err);
 }
 
+/** item 객체(참조)를 모든 풀에서 찾는다. 찾으면 직접 변이로 카운트를 갱신할 수 있다. */
+function findItemInPools(kind, id) {
+  const n = Number(id);
+  const pools = [
+    kind === 'tutor' ? EXPOSURE_TUTORS : EXPOSURE_STUDY_ROOMS,
+    getHomeBasicPool(kind),
+    previewState.parentFind?.activeResultItems,
+    previewState.parentFind?.searchExposureItems,
+    previewState.studyRoomFind?.activeResultItems,
+    previewState.studyRoomFind?.searchExposureItems,
+    previewState.tutorFind?.activeResultItems,
+    previewState.tutorFind?.searchExposureItems,
+  ];
+  for (const pool of pools) {
+    if (!Array.isArray(pool)) continue;
+    const hit = pool.find((x) => Number(x?.id) === n);
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** @param {'study_room'|'tutor'} kind @param {number} id @returns {boolean} */
 export function optimisticToggleWishlist(kind, id) {
   const list = userActionsCache.wishlist[kind];
@@ -216,6 +239,8 @@ export function optimisticRemoveWishlist(kind, id) {
 
 /** @param {'study_room'|'tutor'} kind @param {number} id */
 export function queueToggleFavorite(kind, id) {
+  const item = findItemInPools(kind, id);
+  const prevCount = item ? (Number(item.wish_count) || 0) : null;
   toggleFavorite(kind, id)
     .then((data) => {
       const list = userActionsCache.wishlist[kind];
@@ -225,16 +250,33 @@ export function queueToggleFavorite(kind, id) {
         if (!data.in_favorite && has) list.splice(list.indexOf(id), 1);
       }
       if (data.wish_count !== undefined) {
+        if (item) item.wish_count = data.wish_count;
         document.querySelectorAll(
           `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
         ).forEach((el) => { el.textContent = String(data.wish_count); });
       }
     })
-    .catch(warnHandoff);
+    .catch((err) => {
+      warnHandoff(err);
+      // 실패: 캐시·item·DOM 롤백
+      const list = userActionsCache.wishlist[kind];
+      const idx = list.indexOf(id);
+      if (idx >= 0) list.splice(idx, 1); else list.push(id);
+      if (item && prevCount !== null) item.wish_count = prevCount;
+      document.querySelectorAll(
+        `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
+      ).forEach((btn) => {
+        btn.classList.toggle('is-active');
+        const el = btn.querySelector('.item-actions__count');
+        if (el && prevCount !== null) el.textContent = String(prevCount);
+      });
+    });
 }
 
 /** @param {'study_room'|'tutor'} kind @param {number} id */
 export function queueToggleCompare(kind, id) {
+  const item = findItemInPools(kind, id);
+  const prevCount = item ? (Number(item.compare_count) || 0) : null;
   toggleCompare(kind, id)
     .then((data) => {
       const list = userActionsCache.compare[kind];
@@ -248,12 +290,26 @@ export function queueToggleCompare(kind, id) {
         if (idx >= 0) list.splice(idx, 1);
       }
       if (data.compare_count !== undefined) {
+        if (item) item.compare_count = data.compare_count;
         document.querySelectorAll(
           `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
         ).forEach((el) => { el.textContent = String(data.compare_count); });
       }
     })
-    .catch(warnHandoff);
+    .catch((err) => {
+      warnHandoff(err);
+      const list = userActionsCache.compare[kind];
+      const idx = list.indexOf(id);
+      if (idx >= 0) list.splice(idx, 1); else list.push(id);
+      if (item && prevCount !== null) item.compare_count = prevCount;
+      document.querySelectorAll(
+        `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
+      ).forEach((btn) => {
+        btn.classList.toggle('is-active');
+        const el = btn.querySelector('.item-actions__count');
+        if (el && prevCount !== null) el.textContent = String(prevCount);
+      });
+    });
 }
 
 /** @param {'study_room'|'tutor'} kind */
