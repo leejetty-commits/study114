@@ -244,7 +244,7 @@ export function renderHeader(role, opts = {}) {
       <div class="home-header__main">
         <div class="home-header__inner">
           <a href="#${logoPath}" class="home-header__logo" data-nav="${logoPath}" aria-label="우동공과 홈">
-            <img src="/assets/brand/logo-wordmark.png" alt="우동공과" width="120" height="32" />
+            <img src="/assets/brand/src/udong-pin.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark.png" alt="우동공과" class="home-header__wordmark" />
           </a>
           <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
         </div>
