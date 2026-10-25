@@ -20,6 +20,7 @@ import {
   deleteProviderReview,
   reviewsArchivePath,
 } from './store.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 function formatWhen(iso) {
   if (!iso) return '';
@@ -204,7 +205,7 @@ function bindInbox(host, rerender) {
 
   host.querySelectorAll('[data-review-block]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('이 작성자의 추가 후기를 막을까요? 이미 올라온 후기는 그대로 둡니다.')) return;
+      if (!(await s114Confirm('이 작성자의 추가 후기를 막을까요? 이미 올라온 후기는 그대로 둡니다.', { danger: true }))) return;
       await blockReviewAuthor({
         provider_type: btn.getAttribute('data-provider-type'),
         provider_id: Number(btn.getAttribute('data-provider-id')),
@@ -237,7 +238,7 @@ function bindInbox(host, rerender) {
   });
   host.querySelectorAll('[data-review-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('이 후기를 삭제할까요? 삭제해도 작성 횟수는 줄어들지 않습니다.')) return;
+      if (!(await s114Confirm('이 후기를 삭제할까요? 삭제해도 작성 횟수는 줄어들지 않습니다.', { danger: true }))) return;
       await deleteProviderReview(Number(btn.getAttribute('data-review-delete')), { userId: getAuthUser()?.user_id });
       rerender?.();
     });

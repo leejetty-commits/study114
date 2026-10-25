@@ -9,6 +9,7 @@ import {
   deletePromoImage,
   updatePromoImageCaption,
 } from '../../shared/promo-image.js';
+import { s114Confirm } from '../../shared/confirm-dialog.js';
 
 const PHOTO_FILE_ID = 'room-promo-photo-file';
 
@@ -190,7 +191,7 @@ export function bindPromoPhotos(root, opts) {
       const idx = Number(btn.getAttribute('data-idx'));
       const img = registerState.images[idx];
       if (!img) return;
-      if (!confirm('이 사진을 삭제할까요?')) return;
+      if (!(await s114Confirm('이 사진을 삭제할까요?', { danger: true }))) return;
       try {
         if (img.id && registerState.study_room_id) {
           await deletePromoImage({

@@ -27,6 +27,7 @@ import {
 } from './store.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { goHomeHashPath } from '../spa-navigation.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 let sheetEl = null;
 
@@ -332,7 +333,7 @@ function bindSheet(host, summary, view, extra) {
   });
   host.querySelectorAll('[data-review-delete]').forEach((btn) => {
     btn.addEventListener('click', async () => {
-      if (!confirm('이 후기를 삭제할까요? 삭제해도 작성 횟수는 줄어들지 않습니다.')) return;
+      if (!(await s114Confirm('이 후기를 삭제할까요? 삭제해도 작성 횟수는 줄어들지 않습니다.', { danger: true }))) return;
       await deleteProviderReview(Number(btn.getAttribute('data-review-delete')), { userId: getAuthUser()?.user_id });
       await reload('manage');
     });

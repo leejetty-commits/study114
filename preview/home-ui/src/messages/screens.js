@@ -38,6 +38,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import {
   MESSAGE_ATTACHMENT,
@@ -328,7 +329,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
         if (action === 'block') {
 
-          if (!confirm(BLOCK_THREAD_COPY.confirm)) return;
+          if (!(await s114Confirm(BLOCK_THREAD_COPY.confirm, { danger: true }))) return;
 
           await setThreadBlocked(id);
 

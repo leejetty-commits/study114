@@ -28,6 +28,7 @@ import {
   apiOpenSubmissionAttachment,
 } from './submission-store.js';
 import { parseSubmissionBoardPath, SUBMISSION_BOARD_BASE } from './submission-router.js';
+import { s114Confirm } from '../../../shared/confirm-dialog.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -391,7 +392,7 @@ export function bindSubmissionBoardEvents(root, rerender) {
     btn.addEventListener('click', async () => {
       const id = btn.getAttribute('data-sub-delete');
       if (!id) return;
-      if (window.confirm('이 제출을 삭제할까요?')) {
+      if (await s114Confirm('이 제출을 삭제할까요?', { danger: true })) {
         try {
           await deleteSubmissionPost(id, getNavRole());
           navigate(SUBMISSION_BOARD_BASE);
