@@ -10,6 +10,7 @@ import {
   optimisticToggleStudentReview,
   optimisticRemoveStudentReview,
 } from './handoff-backend.js';
+import { lookupRegisteredProviderItem } from './detail-decision/provider-item-registry.js';
 
 const KEY = 'study114-preview-student-review';
 const MAX = 50;
@@ -44,7 +45,7 @@ export function isInStudentReview(id) {
 export function getStudentReviewItems() {
   return loadAll()
     .map((entry) => {
-      const student = EXPOSURE_STUDENTS.find((s) => s.id === entry.id);
+      const student = EXPOSURE_STUDENTS.find((s) => s.id === entry.id) || lookupRegisteredProviderItem('student', entry.id);
       if (!student) return null;
       return { ...student, savedAt: entry.savedAt, providerRole: entry.providerRole };
     })

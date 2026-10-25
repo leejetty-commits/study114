@@ -6,6 +6,7 @@ import { EXPOSURE_STUDENTS } from './exposure-data.js';
 import { LIFECYCLE_BASKET, STUDENT_REVIEW } from './handoff-copy.js';
 import { inquiryStatusLabel } from './study-room-reg/format.js';
 import { getExposureItem } from './user-actions-state.js';
+import { lookupRegisteredProviderItem } from './detail-decision/provider-item-registry.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -78,7 +79,7 @@ export function isBasketLifecycleMuted(item, kind) {
  */
 export function resolveBasketItem(entry) {
   if (entry.kind === 'student') {
-    return EXPOSURE_STUDENTS.find((s) => s.id === entry.id) || null;
+    return EXPOSURE_STUDENTS.find((s) => s.id === entry.id) || lookupRegisteredProviderItem('student', entry.id) || null;
   }
   return getExposureItem(entry.kind, entry.id);
 }
