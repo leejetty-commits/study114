@@ -173,14 +173,14 @@ function warnHandoff(err) {
 export function optimisticToggleWishlist(kind, id) {
   const list = userActionsCache.wishlist[kind];
   const idx = list.indexOf(id);
-  if (idx >= 0) {
+  const wasInList = idx >= 0;
+  if (wasInList) {
     list.splice(idx, 1);
-    queueToggleFavorite(kind, id);
-    return false;
+  } else {
+    list.push(id);
   }
-  list.push(id);
-  queueToggleFavorite(kind, id);
-  return true;
+  queueToggleFavorite(kind, id, wasInList);
+  return !wasInList;
 }
 
 /**
@@ -191,14 +191,14 @@ export function optimisticToggleWishlist(kind, id) {
 export function optimisticToggleCompare(kind, id) {
   const list = userActionsCache.compare[kind];
   const idx = list.indexOf(id);
-  if (idx >= 0) {
+  const wasInList = idx >= 0;
+  if (wasInList) {
     list.splice(idx, 1);
-    queueToggleCompare(kind, id);
-    return { inCompare: false };
+  } else {
+    list.push(id);
   }
-  list.push(id);
-  queueToggleCompare(kind, id);
-  return { inCompare: true };
+  queueToggleCompare(kind, id, wasInList);
+  return { inCompare: !wasInList };
 }
 
 /** @param {'study_room'|'tutor'} kind */
@@ -215,11 +215,10 @@ export function optimisticRemoveWishlist(kind, id) {
   queueRemoveFavorite(kind, id);
 }
 
-/** @param {'study_room'|'tutor'} kind @param {number} id */
-export function queueToggleFavorite(kind, id) {
+/** @param {'study_room'|'tutor'} kind @param {number} id @param {boolean} prevInList 토글 전 캐시 상태 */
+function queueToggleFavorite(kind, id, prevInList) {
   const items = lookupAllExposureItems(kind, id);
   const prevCount = items.length ? (Number(items[0].wish_count) || 0) : null;
-  const prevInList = userActionsCache.wishlist[kind].includes(id);
   toggleFavorite(kind, id)
     .then((data) => {
       const list = userActionsCache.wishlist[kind];
@@ -230,32 +229,36 @@ export function queueToggleFavorite(kind, id) {
       }
       if (data.wish_count !== undefined) {
         for (const it of items) it.wish_count = data.wish_count;
-        document.querySelectorAll(
-          `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
-        ).forEach((el) => { el.textContent = String(data.wish_count); });
       }
+      document.querySelectorAll(
+        `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
+      ).forEach((btn) => {
+        btn.classList.toggle('is-active', !!data.in_favorite);
+        const el = btn.querySelector('.item-actions__count');
+        if (el && data.wish_count !== undefined) el.textContent = String(data.wish_count);
+      });
     })
     .catch((err) => {
       warnHandoff(err);
       const list = userActionsCache.wishlist[kind];
-      if (prevInList && !list.includes(id)) list.push(id);
-      if (!prevInList && list.includes(id)) list.splice(list.indexOf(id), 1);
+      const has = list.includes(id);
+      if (prevInList && !has) list.push(id);
+      if (!prevInList && has) list.splice(list.indexOf(id), 1);
       if (prevCount !== null) for (const it of items) it.wish_count = prevCount;
       document.querySelectorAll(
         `[data-action="wish-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
       ).forEach((btn) => {
-        btn.classList.toggle('is-active');
+        btn.classList.toggle('is-active', !!prevInList);
         const el = btn.querySelector('.item-actions__count');
         if (el && prevCount !== null) el.textContent = String(prevCount);
       });
     });
 }
 
-/** @param {'study_room'|'tutor'} kind @param {number} id */
-export function queueToggleCompare(kind, id) {
+/** @param {'study_room'|'tutor'} kind @param {number} id @param {boolean} prevInList 토글 전 캐시 상태 */
+function queueToggleCompare(kind, id, prevInList) {
   const items = lookupAllExposureItems(kind, id);
   const prevCount = items.length ? (Number(items[0].compare_count) || 0) : null;
-  const prevInList = userActionsCache.compare[kind].includes(id);
   toggleCompare(kind, id)
     .then((data) => {
       const list = userActionsCache.compare[kind];
@@ -270,21 +273,26 @@ export function queueToggleCompare(kind, id) {
       }
       if (data.compare_count !== undefined) {
         for (const it of items) it.compare_count = data.compare_count;
-        document.querySelectorAll(
-          `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"] .item-actions__count`
-        ).forEach((el) => { el.textContent = String(data.compare_count); });
       }
+      document.querySelectorAll(
+        `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
+      ).forEach((btn) => {
+        btn.classList.toggle('is-active', !!data.in_compare);
+        const el = btn.querySelector('.item-actions__count');
+        if (el && data.compare_count !== undefined) el.textContent = String(data.compare_count);
+      });
     })
     .catch((err) => {
       warnHandoff(err);
       const list = userActionsCache.compare[kind];
-      if (prevInList && !list.includes(id)) list.push(id);
-      if (!prevInList && list.includes(id)) list.splice(list.indexOf(id), 1);
+      const has = list.includes(id);
+      if (prevInList && !has) list.push(id);
+      if (!prevInList && has) list.splice(list.indexOf(id), 1);
       if (prevCount !== null) for (const it of items) it.compare_count = prevCount;
       document.querySelectorAll(
         `[data-action="compare-toggle"][data-item-kind="${kind}"][data-item-id="${id}"]`
       ).forEach((btn) => {
-        btn.classList.toggle('is-active');
+        btn.classList.toggle('is-active', !!prevInList);
         const el = btn.querySelector('.item-actions__count');
         if (el && prevCount !== null) el.textContent = String(prevCount);
       });
