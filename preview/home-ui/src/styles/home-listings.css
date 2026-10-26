@@ -315,23 +315,15 @@
   border-top: none;
 }
 
-/* 학생 홈 「우리동네 과외쌤」 픽·베이직 구분선.
-   선 위(위 블록과 선) = margin-top, 선 아래(선과 제목) = padding-top.
-   변수는 --tier-section-gap 하나. 1.25rem(20px)은 선 없는 한쪽 여백이라 좁다.
-   2rem(32px)은 루트 16px의 --space-8과 같고, 선 양쪽에 같은 값을 둔다. */
+/* 학생 홈 「우리동네 과외쌤」 픽·베이직 여백.
+   310 게스트와 동일 리듬, 선 없음 — 311 */
 .home-shell--parent .content-section--blue {
-  --tier-section-gap: 2rem;
+  --tier-section-gap: var(--space-8);
 }
 
-.home-shell--parent .content-section--blue .list-subsection .section-heading--pick {
-  margin-top: var(--tier-section-gap);
-  border-top: 1px solid var(--gray-200);
-  padding-top: var(--tier-section-gap);
-}
-
+.home-shell--parent .content-section--blue .list-subsection .section-heading--pick,
 .home-shell--parent .content-section--blue .list-subsection > .section-title-bar--basic {
-  margin-top: var(--tier-section-gap);
-  border-top: 1px solid var(--gray-200);
+  margin-top: 0;
   padding-top: var(--tier-section-gap);
 }
 
