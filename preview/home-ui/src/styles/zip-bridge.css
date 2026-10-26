@@ -103,33 +103,33 @@
 .guide-app .guide-frame__body > * + *,
 .concern-app .concern-frame__body > * + *,
 .support-app .sup-frame__body > * + * {
-  margin-top: 32px;
+  margin-top: var(--space-8);
 }
 
 /* 271: 제목 → 자기 내용 16px (12px + section-head 아래 4px). 윗블럭 → 제목 32px(268)는 그대로 */
 .guide-app .guide-frame__body > .section-head + *,
 .concern-app .concern-frame__body > .section-head + *,
 .support-app .sup-frame__body > .section-head + * {
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 /* 271-1: 두 번째 이후 제목도 윗블럭 → 제목 32px. (.uds-theme .section-head 의 margin 0 이 268 규칙을 덮어쓰던 것 보완) */
 .guide-app .guide-frame__body > * + .section-head,
 .concern-app .concern-frame__body > * + .section-head,
 .support-app .sup-frame__body > * + .section-head {
-  margin-top: 32px;
+  margin-top: var(--space-8);
 }
 
 .guide-app .guide-frame__body > .pattern-band,
 .concern-app .concern-frame__body > .pattern-band,
 .support-app .sup-frame__body > .pattern-band {
-  margin-top: -4px;
+  margin-top: calc(-1 * var(--space-1));
 }
 
 .guide-app .guide-frame__body > .pattern-band + *,
 .concern-app .concern-frame__body > .pattern-band + *,
 .support-app .sup-frame__body > .pattern-band + * {
-  margin-top: 32px;
+  margin-top: var(--space-8);
 }
 
 .uds-theme .fake-tag {
@@ -140,8 +140,8 @@
   background: var(--uds-off-bg);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-badge-a);
-  padding: 2px 6px;
-  margin-left: 6px;
+  padding: 2px var(--space-1);
+  margin-left: var(--space-1);
   vertical-align: middle;
   letter-spacing: 0.02em;
 }
@@ -150,8 +150,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  margin: 0 0 4px;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-1);
 }
 
 .uds-theme .section-head h2 {
@@ -165,7 +165,7 @@
 .uds-theme .section-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -173,7 +173,7 @@
   background: var(--uds-primary-subtle);
   border: 1px solid var(--uds-info-line);
   border-radius: var(--r-badge-a);
-  padding: 3px 8px;
+  padding: var(--space-1) var(--space-2);
   text-transform: uppercase;
 }
 
@@ -182,16 +182,16 @@
   width: 48px;
   background: var(--uds-primary);
   border-radius: 2px;
-  margin: 8px 0 16px;
+  margin: var(--space-2) 0 var(--space-4);
 }
 
 .uds-theme .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   font-size: var(--fs-16);
   font-weight: 600;
   border-radius: var(--r-ctl);
@@ -202,7 +202,7 @@
 
 .uds-theme .btn--sm {
   min-height: 32px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   font-size: var(--fs-14);
 }
 
@@ -244,7 +244,7 @@
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.45);
   min-height: 40px;
-  padding: 0 16px;
+  padding: 0 var(--space-4);
   border-radius: var(--r-ctl);
   font-weight: 600;
   text-decoration: none;
@@ -307,8 +307,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px 14px 18px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-4) var(--space-4) var(--space-5);
   background: transparent;
   border: 0;
   width: 100%;
@@ -334,5 +334,5 @@
 }
 
 .uds-theme .notice-list .sup-accordion__panel {
-  padding: 0 16px 14px 18px;
+  padding: 0 var(--space-4) var(--space-4) var(--space-5);
 }
