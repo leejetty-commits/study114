@@ -2,7 +2,9 @@ import {
   listCommunityBoards,
   CONCERN_COMPOSE_HINT,
   CONCERN_PHOTO_HINT,
-  CONCERN_HUB_LEAD,
+  COMMUNITY_HUB_HEADLINE,
+  COMMUNITY_HUB_LEAD,
+  COMMUNITY_CORK_EMPTY,
   CONCERN_POST_TYPES,
   CONCERN_POST_TYPE_KEYS,
   CONCERN_DEFAULT_POST_TYPE,
@@ -11,6 +13,7 @@ import {
 import { concernBoardNav, getConcernView, getDefaultCommunityPath } from './router.js';
 import {
   fetchConcernPosts,
+  fetchConcernRailPage,
   fetchMoreConcernPosts,
   fetchConcernPost,
   findConcernPost,
@@ -224,7 +227,108 @@ function boardVisual(board) {
   );
 }
 
-/* ── 커뮤니티 허브 ── */
+/* ── 커뮤니티 허브 (003b 골목) ── */
+
+const CORK_SHEET = {
+  director: 'director',
+  tutor: 'tutor',
+  parent: 'parent',
+  solved: 'solved',
+};
+
+/** @type {{ role: string, titles: {title:string,href:string}[], solved: {title:string,href:string}[] }|null} */
+let _hubTape = null;
+/** @type {string} */
+let _hubTapeLoading = '';
+
+function corkSheetTone(board) {
+  return CORK_SHEET[board?.slug] || 'director';
+}
+
+/**
+ * 게스트에게 열리는 제목만. titles 응답은 서버가 공개 글 제목만 준다.
+ * full 응답은 status 가 비었거나 published 인 글만 (숨김 글 제목은 넣지 않음).
+ */
+function guestVisibleTitle(post, access) {
+  const title = String(post?.title || '').trim();
+  if (!title || !post?.id) return '';
+  if (access === 'titles') return title;
+  if (access !== 'full') return '';
+  const status = String(post.status || '');
+  if (status && status !== 'published') return '';
+  return title;
+}
+
+function renderCorkTicker(items) {
+  const lis = items
+    .map(
+      (item) =>
+        `<li class="cork-ticker__item"><a href="#${esc(item.href)}" data-concern-nav="${esc(item.href)}">${esc(item.title)}</a></li>`,
+    )
+    .join('');
+  return `
+    <div class="cork-ticker" aria-label="게시판에 올라온 글 제목">
+      <div class="cork-ticker__viewport">
+        <div class="cork-ticker__track">
+          <ul class="cork-ticker__list">${lis}</ul>
+          <ul class="cork-ticker__list" aria-hidden="true">${lis}</ul>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCorkStamps(items) {
+  const lis = items
+    .map(
+      (item) =>
+        `<li class="cork-stamp"><a href="#${esc(item.href)}" data-concern-nav="${esc(item.href)}">${esc(item.title)}</a></li>`,
+    )
+    .join('');
+  return `
+    <section class="cork-stamps" aria-label="해결후기">
+      <h2 class="cork-stamps__label">해결후기</h2>
+      <ul class="cork-stamps__row">${lis}</ul>
+    </section>`;
+}
+
+function renderHubTape(navRole) {
+  const tape = _hubTape && _hubTape.role === navRole ? _hubTape : null;
+  if (!tape) return '<div data-community-ticker hidden></div>';
+  const ticker = tape.titles.length ? renderCorkTicker(tape.titles) : '';
+  const stamps = tape.solved.length ? renderCorkStamps(tape.solved) : '';
+  return `${ticker}${stamps}`;
+}
+
+async function loadHubTape(role) {
+  const boards = listCommunityBoards().filter((board) => canDiscoverBoard(board.boardKey, role));
+  const titles = [];
+  const solved = [];
+  const seen = new Set();
+  await Promise.all(
+    boards.map(async (board) => {
+      try {
+        const page = await fetchConcernRailPage(board.boardKey, 0, 8, role);
+        const access = page.access;
+        if (access !== 'titles' && access !== 'full') return;
+        page.posts.forEach((post) => {
+          const title = guestVisibleTitle(post, access);
+          if (!title) return;
+          const key = `${board.boardKey}:${post.id}`;
+          if (seen.has(key)) return;
+          seen.add(key);
+          const item = { title, href: `${board.path}/${post.id}` };
+          titles.push(item);
+          if (board.slug === 'solved') solved.push(item);
+        });
+      } catch {
+        /* 이 방 제목은 티커에 넣지 않는다. 지어내지 않음. */
+      }
+    }),
+  );
+  if (getNavRole() !== role) return null;
+  _hubTape = { role, titles, solved };
+  return _hubTape;
+}
 
 function renderCommunityHub(navRole) {
   const boards = listCommunityBoards().filter((board) => canDiscoverBoard(board.boardKey, navRole));
@@ -236,9 +340,9 @@ function renderCommunityHub(navRole) {
       <div class="hero-band__inner">
         <div class="hero-band__copy">
           <span class="section-chip">현장형 커뮤니티</span>
-          <h1>남기고 · 답하고 · 해결후기로 이어가기</h1>
-          <p>${esc(CONCERN_HUB_LEAD)}</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <h1>${esc(COMMUNITY_HUB_HEADLINE)}</h1>
+          <p>${esc(COMMUNITY_HUB_LEAD)}</p>
+          <div class="cork-hero__actions">
             <a class="btn btn--primary" href="#${esc(browsePath)}" data-concern-nav="${esc(browsePath)}">게시판 둘러보기</a>
             <a class="btn btn--secondary" href="#/community/solved" data-concern-nav="/community/solved">해결후기 보기</a>
           </div>
@@ -251,6 +355,7 @@ function renderCommunityHub(navRole) {
         </div>
       </div>
     </section>
+    ${renderHubTape(navRole)}
     <div class="pattern-band" aria-hidden="true"></div>
     <div class="section-head">
       <div>
@@ -263,16 +368,16 @@ function renderCommunityHub(navRole) {
       ${boards
         .map((board) => {
           const vis = boardVisual(board);
-          const color = vis.kickerColor ? ` style="color:${esc(vis.kickerColor)}"` : '';
+          const tone = corkSheetTone(board);
           return `
-            <a class="board-entry card card--accent ${esc(vis.accent)}" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">
+            <a class="board-entry card card--accent ${esc(vis.accent)} cork-sheet cork-sheet--${esc(tone)}" href="#${esc(board.path)}" data-concern-nav="${esc(board.path)}">
               <div class="board-entry__art ${esc(vis.art)}">
                 <span class="icon-halo ${esc(vis.halo)}"><span class="icon-tile ${esc(vis.tile)}"><img src="${esc(vis.icon)}" alt="" /></span></span>
               </div>
-              <p class="board-entry__label"${color}>${esc(vis.kicker)}</p>
+              <p class="board-entry__label">${esc(vis.kicker)}</p>
               <h2>${esc(board.label)}</h2>
               <p>${esc(vis.desc)}</p>
-              <span class="board-entry__cta"${color}>${esc(vis.cta)} →</span>
+              <span class="board-entry__cta">${esc(vis.cta)} →</span>
             </a>`;
         })
         .join('')}
@@ -290,9 +395,14 @@ function renderCommunityHub(navRole) {
 /* ── 게스트 벽 ── */
 
 function renderGuestBoardWall(board, role) {
-  const intro = getChannelIntro(board.boardKey);
   const gate = roleGateCopy(board.boardKey, role);
   const loginHref = boardLoginHref('community');
+  const steps = COMMUNITY_CORK_EMPTY.howSteps
+    .map(
+      (text, index) =>
+        `<li class="cork-how__step"><span class="cork-how__n">${index + 1}</span><span>${esc(text)}</span></li>`,
+    )
+    .join('');
   return `
     <div class="section-head">
       <div>
@@ -301,20 +411,22 @@ function renderGuestBoardWall(board, role) {
         <div class="section-underline"></div>
       </div>
     </div>
-    <section class="login-wall" aria-label="로그인 안내">
-      <span class="blob blob--a" style="left:-28px;top:-18px" aria-hidden="true"></span>
-      <div class="login-wall__art"><img src="/assets/info-refresh/motif-login.svg" alt="" /></div>
-      <h1>${esc(gate.title || intro.title)}</h1>
-      <p>${esc(gate.body)}</p>
-      <div class="login-wall__steps" aria-label="이용 단계">
-        <span class="step-pill"><span class="step-pill__n">1</span>로그인</span>
-        <span class="step-pill"><span class="step-pill__n">2</span>역할 확인</span>
-        <span class="step-pill"><span class="step-pill__n">3</span>글 읽고 답하기</span>
+    <section class="cork-empty" aria-label="빈 게시판">
+      <article class="cork-example">
+        <span class="cork-example__badge">${esc(COMMUNITY_CORK_EMPTY.exampleBadge)}</span>
+        <p class="cork-example__kicker">${esc(COMMUNITY_CORK_EMPTY.exampleKicker)}</p>
+        <h3 class="cork-example__title">${esc(COMMUNITY_CORK_EMPTY.exampleTitle)}</h3>
+        <p class="cork-example__body">${esc(COMMUNITY_CORK_EMPTY.exampleBody)}</p>
+      </article>
+      <div class="cork-how">
+        <h3 class="cork-how__title">${esc(COMMUNITY_CORK_EMPTY.howTitle)}</h3>
+        <ol class="cork-how__list">${steps}</ol>
+        <p class="cork-how__gate">${esc(gate.body)}</p>
+        <a class="btn btn--primary" href="${esc(loginHref)}">로그인하고 게시판 열기</a>
+        <p class="cork-how__back">
+          또는 <a href="#/community" data-concern-nav="/community">커뮤니티 홈으로 돌아가기</a>
+        </p>
       </div>
-      <a class="btn btn--primary" href="${esc(loginHref)}">로그인하고 게시판 열기</a>
-      <p style="margin:12px 0 0;font-size:13px;color:var(--uds-muted);position:relative;z-index:1">
-        또는 <a href="#/community" data-concern-nav="/community" style="color:var(--uds-primary);font-weight:600">커뮤니티 홈으로 돌아가기</a>
-      </p>
     </section>`;
 }
 
@@ -1045,6 +1157,25 @@ export function bindConcernScreenEvents(root, rerender) {
       if (target) navigate(target.startsWith('/') ? target : `/${target}`);
     });
   });
+
+  const tickerSlot = root.querySelector('[data-community-ticker]');
+  if (tickerSlot) {
+    const role = getNavRole();
+    const cached = _hubTape && _hubTape.role === role;
+    if (!cached && _hubTapeLoading !== role) {
+      _hubTapeLoading = role;
+      loadHubTape(role)
+        .then(() => {
+          if (_hubTapeLoading === role) _hubTapeLoading = '';
+          rerender();
+        })
+        .catch(() => {
+          if (getNavRole() === role) _hubTape = { role, titles: [], solved: [] };
+          if (_hubTapeLoading === role) _hubTapeLoading = '';
+          rerender();
+        });
+    }
+  }
 
   // 목록 첫 페이지 (서버 정렬·종류 필터)
   root.querySelectorAll('[data-concern-board-load]').forEach((el) => {
