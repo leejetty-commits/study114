@@ -10,8 +10,23 @@ import { listBoardChannels } from '../board-channel-store.js';
 /** @typedef {'empathy'|'helpful'|'cheer'} CommunityReaction */
 
 export const COMMUNITY_HUB_TITLE = '커뮤니티';
+export const COMMUNITY_HUB_HEADLINE = '쪽지를 남기고, 답을 받고, 해결후기로 이어가요';
 export const COMMUNITY_HUB_LEAD =
-  '공부방·과외쌤·학생·학부모가 현장 고민을 나누는 공간입니다. 역할에 맞는 게시판에서 질문하고, 답변을 주고받으며, 해결된 이야기는 후기로 남깁니다.';
+  '공부방·과외쌤·학생·학부모가 역할에 맞는 방에서 고민을 나누고, 풀린 이야기는 해결후기로 남기는 골목입니다.';
+
+/** 게스트 빈 보드. 예시 메모는 실제 글이 아니다. */
+export const COMMUNITY_CORK_EMPTY = {
+  exampleBadge: '예시',
+  exampleKicker: '이 노란색 메모는 모양만 보여 줍니다. 실제 글이 아니에요.',
+  exampleTitle: '예시 쪽지',
+  exampleBody: '로그인 뒤 이 자리에 고민 제목과 짧은 글이 붙습니다.',
+  howTitle: '쪽지 붙이는 법',
+  howSteps: [
+    '로그인하고 내 역할을 확인해요',
+    '맞는 고민방을 골라요',
+    '제목과 짧은 글을 쪽지처럼 붙여요',
+  ],
+};
 
 /** @deprecated alias */
 export const CONCERN_HUB_TITLE = COMMUNITY_HUB_TITLE;
