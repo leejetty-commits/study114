@@ -1805,7 +1805,7 @@
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
   position: relative;
   overflow: hidden;
-  padding: calc(0.1rem - 1.5px) calc(0.4rem - 1.5px);
+  padding: calc(0.1rem - 1.5px) calc(0.4rem - 1.5px); /* 1.5px border 보정 — 의도적 비스케일 (FS-T1-006) */
   --bg: #1d4ed8;
   --l1: #c7d2fe;
   --l2: #1e3a8a;
