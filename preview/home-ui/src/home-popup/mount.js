@@ -3,7 +3,7 @@ import {
   hidePopupForToday,
   markHomePopupClosed,
   noteHomePopupRoot,
-  resolveHomePopup,
+  resolveHomePopups,
   setHomePopupRemount,
   writePopupDemo,
   writePopupFamily,
@@ -37,17 +37,17 @@ function watermark(family) {
   return `<img class="home-popup__watermark" src="${WORDMARK_SRC}" alt="" aria-hidden="true" />`;
 }
 
-function renderNotice(card, family) {
+function renderNotice(card, family, idx) {
   const bullets = card.bullets.map((line) => `<li>${esc(line)}</li>`).join('');
   return `
-    <article class="home-popup__card home-popup__card--notice" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+    <article class="home-popup__card home-popup__card--notice" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
       ${closeButton()}
       <header class="home-popup__head">
         <span class="home-popup__badge">공지</span>
         ${lockup('home-popup__lockup home-popup__lockup--notice')}
       </header>
       <p class="home-popup__date">${esc(card.date)}</p>
-      <h2 id="home-popup-title" class="home-popup__title">${esc(card.title)}</h2>
+      <h2 id="home-popup-title-${idx}" class="home-popup__title">${esc(card.title)}</h2>
       <div class="home-popup__indent">
         <p class="home-popup__text">${esc(card.body)}</p>
         <ul class="home-popup__list">${bullets}</ul>
@@ -61,9 +61,9 @@ function renderNotice(card, family) {
     </article>`;
 }
 
-function renderEvent(card, family) {
+function renderEvent(card, family, idx) {
   return `
-    <article class="home-popup__card home-popup__card--event" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+    <article class="home-popup__card home-popup__card--event" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
       <div class="home-popup__hero">
         <span class="home-popup__orb home-popup__orb--a" aria-hidden="true"></span>
         <span class="home-popup__orb home-popup__orb--b" aria-hidden="true"></span>
@@ -72,7 +72,7 @@ function renderEvent(card, family) {
         <p class="home-popup__kicker">${esc(card.kicker)}</p>
       </div>
       <div class="home-popup__event-body">
-        <h2 id="home-popup-title" class="home-popup__title">${esc(card.title)}</h2>
+        <h2 id="home-popup-title-${idx}" class="home-popup__title">${esc(card.title)}</h2>
         <div class="home-popup__indent">
           <span class="home-popup__chip home-popup__chip--event">${esc(card.chip)}</span>
           <p class="home-popup__text">${esc(card.body)}</p>
@@ -86,11 +86,11 @@ function renderEvent(card, family) {
     </article>`;
 }
 
-function renderAd(card, family) {
+function renderAd(card, family, idx) {
   const body = esc(card.body).replace(/\n/g, '<br>');
   const aside = esc(card.aside).replace(/\n/g, '<br>');
   return `
-    <article class="home-popup__card home-popup__card--ad" role="dialog" aria-modal="true" aria-labelledby="home-popup-title">
+    <article class="home-popup__card home-popup__card--ad" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
       <div class="home-popup__ad-aside">
         <span class="home-popup__deco" aria-hidden="true"></span>
         ${lockup('home-popup__lockup home-popup__lockup--ad')}
@@ -99,7 +99,7 @@ function renderAd(card, family) {
       <div class="home-popup__ad-main">
         ${closeButton()}
         <span class="home-popup__chip home-popup__chip--guide">${esc(card.chip)}</span>
-        <h2 id="home-popup-title" class="home-popup__title">${esc(card.title)}</h2>
+        <h2 id="home-popup-title-${idx}" class="home-popup__title">${esc(card.title)}</h2>
         <div class="home-popup__indent">
           <p class="home-popup__text">${body}</p>
           <div class="home-popup__actions">
@@ -131,11 +131,11 @@ function fillCard(type, content) {
   return card;
 }
 
-function renderCard(type, family, content) {
+function renderCard(type, family, content, idx) {
   const card = fillCard(type, content);
-  if (type === 'event') return renderEvent(card, family);
-  if (type === 'ad') return renderAd(card, family);
-  return renderNotice(card, family);
+  if (type === 'event') return renderEvent(card, family, idx);
+  if (type === 'ad') return renderAd(card, family, idx);
+  return renderNotice(card, family, idx);
 }
 
 function renderSwitch(type, family) {
@@ -152,30 +152,20 @@ function renderSwitch(type, family) {
   return `<div class="home-popup__switch" role="group" aria-label="팝업 패밀리와 유형">${families}<span class="home-popup__switch-gap" aria-hidden="true"></span>${buttons}</div>`;
 }
 
-/** @type {((event: KeyboardEvent) => void) | null} */
-let onKey = null;
-
-function detachKey() {
-  if (!onKey) return;
-  document.removeEventListener('keydown', onKey);
-  onKey = null;
-}
-
-/**
- * @param {{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null }} choice
- * @param {HTMLElement} root
- */
-function closePopup(choice, root) {
-  const checked = Boolean(root.querySelector('[data-home-popup-day]')?.checked);
+function closeCard(choice, cardEl, containerEl) {
+  const checked = Boolean(cardEl.querySelector('[data-home-popup-day]')?.checked);
   if (choice.mode === 'public' && checked && choice.id) hidePopupForToday(choice.id);
   markHomePopupClosed(choice);
-  root.remove();
-  detachKey();
+  cardEl.remove();
+
+  const remaining = containerEl.querySelectorAll('.home-popup__card');
+  if (remaining.length === 0) {
+    containerEl.remove();
+  } else {
+    containerEl.classList.remove('home-popup--dual');
+  }
 }
 
-/**
- * @param {HTMLElement | null} appRoot
- */
 setHomePopupRemount((root) => {
   mountHomePopup(root);
 });
@@ -183,34 +173,51 @@ setHomePopupRemount((root) => {
 export function mountHomePopup(appRoot) {
   noteHomePopupRoot(appRoot || null);
   document.querySelectorAll('[data-home-popup]').forEach((el) => el.remove());
-  detachKey();
   if (!appRoot) return;
 
-  const choice = resolveHomePopup();
-  if (!choice) return;
-  const { type, family } = choice;
+  const choices = resolveHomePopups();
+  if (choices.length === 0) return;
 
   const root = document.createElement('div');
   root.className = 'home-popup';
-  root.setAttribute('data-home-popup', type);
-  root.setAttribute('data-home-popup-family', family);
-  root.setAttribute('data-home-popup-mode', choice.mode);
-  root.innerHTML = `
-    <div class="home-popup__backdrop" data-home-popup-close></div>
-    <div class="home-popup__frame">
-      ${choice.mode === 'preview' && choice.previewKind !== 'row' ? renderSwitch(type, family) : ''}
-      ${renderCard(type, family, choice.content)}
-    </div>`;
+  root.setAttribute('data-home-popup', choices[0].type);
+  root.setAttribute('data-home-popup-family', choices[0].family);
+  root.setAttribute('data-home-popup-mode', choices[0].mode);
+  if (choices.length > 1) root.classList.add('home-popup--dual');
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'home-popup__backdrop';
+  root.appendChild(backdrop);
+
+  const frame = document.createElement('div');
+  frame.className = 'home-popup__frame';
+
+  if (choices.length === 1 && choices[0].mode === 'preview' && choices[0].previewKind !== 'row') {
+    const sw = document.createElement('div');
+    sw.innerHTML = renderSwitch(choices[0].type, choices[0].family);
+    frame.appendChild(sw.firstElementChild);
+  }
+
+  choices.forEach((choice, idx) => {
+    const html = renderCard(choice.type, choice.family, choice.content, idx);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    const card = wrapper.firstElementChild;
+    frame.appendChild(card);
+
+    card.querySelectorAll('[data-home-popup-close]').forEach((el) => {
+      el.addEventListener('click', () => closeCard(choice, card, root));
+    });
+  });
+
+  root.appendChild(frame);
   appRoot.appendChild(root);
 
-  root.querySelectorAll('[data-home-popup-close]').forEach((el) => {
-    el.addEventListener('click', () => closePopup(choice, root));
-  });
   root.querySelectorAll('[data-home-popup-demo]').forEach((el) => {
     el.addEventListener('click', () => {
       const next = el.getAttribute('data-home-popup-demo');
       if (next !== 'notice' && next !== 'event' && next !== 'ad') return;
-      if (next === type) return;
+      if (next === choices[0].type) return;
       writePopupDemo(next);
       mountHomePopup(appRoot);
     });
@@ -219,15 +226,9 @@ export function mountHomePopup(appRoot) {
     el.addEventListener('click', () => {
       const next = el.getAttribute('data-home-popup-family');
       if (next !== 'a' && next !== 'b') return;
-      if (next === family) return;
+      if (next === choices[0].family) return;
       writePopupFamily(next);
       mountHomePopup(appRoot);
     });
   });
-
-  onKey = (event) => {
-    if (event.key !== 'Escape') return;
-    closePopup(choice, root);
-  };
-  document.addEventListener('keydown', onKey);
 }
