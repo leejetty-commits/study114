@@ -13,7 +13,7 @@
   background:
     linear-gradient(135deg, #EEF4FB 0%, #FFFFFF 48%, #F6F1E8 100%);
   border: 1px solid var(--uds-info-line);
-  padding: 28px 28px 24px;
+  padding: var(--space-8) var(--space-8) var(--space-6);
 }
 :is(.guide-app, .concern-app, .support-app) .guide-hero__grid {
   position: absolute; inset: 0;
@@ -28,7 +28,7 @@
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 24px;
+  gap: var(--space-6);
   align-items: center;
 }
 :is(.guide-app, .concern-app, .support-app) .guide-hero__inner { flex: 1; min-width: 0; max-width: 56ch; }
@@ -51,10 +51,10 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--uds-primary);
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 :is(.guide-app, .concern-app, .support-app) .guide-hero h1 {
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
   font-size: var(--fs-28);
   font-weight: 800;
   letter-spacing: var(--track-hero);
@@ -67,7 +67,7 @@
   color: var(--uds-muted);
   line-height: var(--lh-body);
 }
-:is(.guide-app, .concern-app, .support-app) .guide-hero p + p { margin-top: 6px; }
+:is(.guide-app, .concern-app, .support-app) .guide-hero p + p { margin-top: var(--space-2); }
 
 :is(.guide-app, .concern-app, .support-app) .pattern-band {
   height: 8px;
@@ -80,7 +80,7 @@
   border-top: 1px solid var(--uds-info-line);
   border-bottom: 1px solid var(--uds-info-line);
   border-radius: 0 0 4px 4px;
-  margin-top: -4px;
+  margin-top: calc(-1 * var(--space-1));
 }
 
 
@@ -144,13 +144,13 @@
 :is(.guide-app, .concern-app, .support-app) .situation-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 :is(.guide-app, .concern-app, .support-app) .situation-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 20px 18px 18px 20px;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-5) var(--space-5) var(--space-5);
   text-decoration: none;
   color: inherit;
   transition: border-color .12s, box-shadow .12s;
@@ -180,7 +180,7 @@
   color: var(--uds-primary);
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
   margin-top: auto;
 }
 
@@ -189,8 +189,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 20px;
-  padding: 14px 16px;
+  gap: var(--space-2) var(--space-5);
+  padding: var(--space-4) var(--space-4);
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
@@ -218,9 +218,9 @@
 :is(.guide-app, .concern-app, .support-app) .slim-cta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-3);
   align-items: center;
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-5);
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
@@ -229,7 +229,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--uds-muted);
-  margin-right: 4px;
+  margin-right: var(--space-1);
 }
 
 
@@ -245,8 +245,8 @@
 :is(.guide-app, .concern-app, .support-app) .step-item {
   display: grid;
   grid-template-columns: 40px 44px minmax(0, 1fr);
-  gap: 12px;
-  padding: 16px 18px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--uds-line);
   align-items: start;
 }
@@ -261,7 +261,7 @@
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 :is(.guide-app, .concern-app, .support-app) .step-item__ill {
   width: 40px; height: 40px;
@@ -275,12 +275,12 @@
 }
 :is(.guide-app, .concern-app, .support-app) .step-item__body { min-width: 0; }
 :is(.guide-app, .concern-app, .support-app) .step-item h3 {
-  margin: 0 0 4px;
+  margin: 0 0 var(--space-1);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: var(--track-title);
   line-height: 1.35;
-  padding-top: 8px;
+  padding-top: var(--space-2);
 }
 :is(.guide-app, .concern-app, .support-app) .step-item p {
   margin: 0;
@@ -293,13 +293,13 @@
 :is(.guide-app, .concern-app, .support-app) .chip-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-3);
 }
 :is(.guide-app, .concern-app, .support-app) .feat-chip {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
@@ -340,12 +340,12 @@
 
 :is(.guide-app, .concern-app, .support-app) .role-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 :is(.guide-app, .concern-app, .support-app) .role-tab {
   min-height: var(--role-tab-h);
-  padding: 0 14px;
+  padding: 0 var(--space-4);
   border-radius: var(--r-chip);
   border: 1px solid var(--uds-line);
   background: var(--uds-surface);
@@ -362,15 +362,15 @@
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
-  padding: 8px 0;
+  padding: var(--space-2) 0;
   list-style: none;
   margin: 0;
 }
 :is(.guide-app, .concern-app, .support-app) .checklist li {
   display: flex;
-  gap: 10px;
+  gap: var(--space-3);
   align-items: flex-start;
-  padding: 10px 18px;
+  padding: var(--space-3) var(--space-5);
   font-size: 14px;
   color: var(--uds-ink);
   line-height: 1.5;
@@ -401,21 +401,21 @@
 :is(.guide-app, .concern-app, .support-app) .do-dont {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--space-4);
 }
 :is(.guide-app, .concern-app, .support-app) .do-dont__panel {
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-5);
 }
 :is(.guide-app, .concern-app, .support-app) .do-dont__panel h3 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   font-size: 16px;
   font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 :is(.guide-app, .concern-app, .support-app) .do-dont__panel h3 img {
   width: 32px; height: 32px;
@@ -431,7 +431,7 @@
 }
 :is(.guide-app, .concern-app, .support-app) .do-dont__panel li {
   position: relative;
-  padding: 8px 0 8px 20px;
+  padding: var(--space-2) 0 var(--space-2) var(--space-5);
   font-size: 14px;
   color: var(--uds-ink);
   line-height: 1.5;
@@ -454,15 +454,15 @@
   background: var(--uds-surface);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-card);
-  padding: 20px;
+  padding: var(--space-5);
 }
 :is(.guide-app, .concern-app, .support-app) .help-block h3 {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   font-size: 17px;
   font-weight: 800;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 :is(.guide-app, .concern-app, .support-app) .help-block h3 img {
   width: 32px; height: 32px;
@@ -470,21 +470,21 @@
   flex-shrink: 0;
 }
 :is(.guide-app, .concern-app, .support-app) .help-block > p {
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
   font-size: 14px;
   color: var(--uds-muted);
 }
 :is(.guide-app, .concern-app, .support-app) .help-links {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 :is(.guide-app, .concern-app, .support-app) .help-link {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-ctl);
   text-decoration: none;
@@ -513,36 +513,36 @@
 }
 
 :is(.guide-app, .concern-app, .support-app) .note-callout {
-  padding: 12px 14px;
+  padding: var(--space-3) var(--space-4);
   background: var(--uds-info-bg);
   border: 1px solid var(--uds-info-line);
   border-radius: var(--r-ctl);
   font-size: 13px;
   color: var(--uds-ink);
   line-height: 1.5;
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
 }
 :is(.guide-app, .concern-app, .support-app) .note-callout strong { color: var(--uds-primary); }
 
 :is(.guide-app, .concern-app, .support-app) .cta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-3);
   align-items: center;
 }
 
 :is(.guide-app, .concern-app, .support-app) .section-lead {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   font-size: 14px;
   color: var(--uds-muted);
 }
 
 
-:is(.guide-app, .concern-app, .support-app) .nav-select-wrap { display: none; margin-bottom: 8px; }
+:is(.guide-app, .concern-app, .support-app) .nav-select-wrap { display: none; margin-bottom: var(--space-2); }
 :is(.guide-app, .concern-app, .support-app) .nav-select {
   width: 100%;
   min-height: 40px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   border: 1px solid var(--uds-line);
   border-radius: var(--r-ctl);
   background: var(--uds-surface);
@@ -581,24 +581,24 @@
 @media (max-width: 480px) {
   :is(.guide-app, .concern-app, .support-app) .step-item {
     grid-template-columns: 32px minmax(0, 1fr);
-    gap: 10px;
+    gap: var(--space-3);
   }
-  :is(.guide-app, .concern-app, .support-app) .step-item__ill { grid-column: 2; margin-bottom: -4px; }
+  :is(.guide-app, .concern-app, .support-app) .step-item__ill { grid-column: 2; margin-bottom: calc(-1 * var(--space-1)); }
   :is(.guide-app, .concern-app, .support-app) .step-item__body { grid-column: 2; }
   :is(.guide-app, .concern-app, .support-app) .step-item h3 { padding-top: 0; }
   :is(.guide-app, .concern-app, .support-app) .cta-row, :is(.guide-app, .concern-app, .support-app) .slim-cta {
-    gap: 12px;
+    gap: var(--space-3);
   }
   :is(.guide-app, .concern-app, .support-app) .cta-row .btn, :is(.guide-app, .concern-app, .support-app) .slim-cta .btn {
     min-height: 44px;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
   :is(.guide-app, .concern-app, .support-app) .aux-links {
     flex-wrap: wrap;
-    row-gap: 8px;
+    row-gap: var(--space-2);
   }
-  :is(.guide-app, .concern-app, .support-app) .help-links { gap: 10px; }
+  :is(.guide-app, .concern-app, .support-app) .help-links { gap: var(--space-3); }
   :is(.guide-app, .concern-app, .support-app) .help-link { min-height: 52px; }
   :is(.guide-app, .concern-app, .support-app) .nav-select { min-height: 44px; font-size: 15px; }
 }
