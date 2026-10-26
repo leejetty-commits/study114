@@ -4,14 +4,14 @@
  */
 import { isAdminUser } from '../auth-session.js';
 import { getCurrentScreen } from '../state.js';
-import { pickHomePopup, seoulToday } from './engine.js';
+import { pickHomePopup, pickHomePopups, seoulToday } from './engine.js';
 
 const HOME_SCREENS = new Set(['guest', 'parent', 'studyRoom', 'tutor']);
 
 const HIDE_PREFIX = 'udg.homePopup.hide.';
 
-/** @type {{ path: string, type: string, family: 'a' | 'b', id: string | null } | null} */
-let closedView = null;
+/** @type {Array<{ path: string, type: string, family: 'a' | 'b', id: string | null }>} */
+let closedViews = [];
 
 /** @type {Record<string, unknown> | false | null} */
 let previewRow = null;
@@ -128,21 +128,24 @@ export function hidePopupForToday(id) {
  * @param {{ type: string, family: string, id?: string | null }} choice
  */
 function isChoiceClosed(choice) {
-  if (!closedView || closedView.path !== homePopupPath()) return false;
-  if (choice.id) return closedView.id === choice.id;
-  return closedView.type === choice.type && closedView.family === choice.family;
+  const path = homePopupPath();
+  return closedViews.some((cv) => {
+    if (cv.path !== path) return false;
+    if (choice.id) return cv.id === choice.id;
+    return cv.type === choice.type && cv.family === choice.family;
+  });
 }
 
 /**
  * @param {{ type: string, family: string, id?: string | null }} choice
  */
 export function markHomePopupClosed(choice) {
-  closedView = {
+  closedViews.push({
     path: homePopupPath(),
     type: choice.type,
     family: choice.family,
     id: choice.id || null,
-  };
+  });
 }
 
 /** 홈 코드. parent 홈은 학생(student) 대상. */
@@ -153,16 +156,16 @@ function audienceSurface() {
 }
 
 /**
- * @returns {{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null } | null}
+ * @returns {Array<{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null }>}
  */
-export function resolveHomePopup() {
-  if (!isHomePopupSurface()) return null;
+export function resolveHomePopups() {
+  if (!isHomePopupSurface()) return [];
   if (isAdminUser()) {
     const previewId = readPopupPreviewId();
     if (previewId) {
       if (previewForId !== previewId || previewRow === null) {
         loadPreviewRow(previewId);
-        return null;
+        return [];
       }
       if (previewRow) {
         const content = previewRow.content && typeof previewRow.content === 'object' ? previewRow.content : {};
@@ -174,7 +177,7 @@ export function resolveHomePopup() {
           id: String(previewRow.id),
           content,
         };
-        return isChoiceClosed(choice) ? null : choice;
+        return isChoiceClosed(choice) ? [] : [choice];
       }
     }
   }
@@ -186,27 +189,36 @@ export function resolveHomePopup() {
       family: readPopupFamily(),
       id: null,
     };
-    return isChoiceClosed(choice) ? null : choice;
+    return isChoiceClosed(choice) ? [] : [choice];
   }
   if (publicCatalog === null) {
     loadPublicCatalog();
-    return null;
+    return [];
   }
-  const picked = pickHomePopup(publicCatalog, {
+  const picks = pickHomePopups(publicCatalog, {
     surface: audienceSurface(),
     today: seoulToday(),
     isHidden: isPopupHiddenToday,
-  });
-  if (!picked) return null;
-  const content = picked.content && typeof picked.content === 'object' ? picked.content : {};
-  const choice = {
-    mode: 'public',
-    type: String(picked.type),
-    family: picked.family === 'b' ? 'b' : 'a',
-    id: String(picked.id),
-    content,
-  };
-  return isChoiceClosed(choice) ? null : choice;
+  }, { limit: 2 });
+  return picks
+    .map((p) => {
+      const content = p.content && typeof p.content === 'object' ? p.content : {};
+      return {
+        mode: 'public',
+        type: String(p.type),
+        family: p.family === 'b' ? 'b' : 'a',
+        id: String(p.id),
+        content,
+      };
+    })
+    .filter((c) => !isChoiceClosed(c));
+}
+
+/**
+ * @returns {{ mode: 'preview' | 'public', type: string, family: 'a' | 'b', id: string | null } | null}
+ */
+export function resolveHomePopup() {
+  return resolveHomePopups()[0] || null;
 }
 
 /** 미리보기 또는 엔진이 팝업을 띄울 때 납작 팝업을 숨긴다. 배너는 유지. */

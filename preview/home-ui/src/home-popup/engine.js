@@ -53,3 +53,30 @@ export function pickHomePopup(list, ctx) {
   });
   return rows[0] || null;
 }
+
+/**
+ * @param {Array<Record<string, unknown>>} list
+ * @param {{ surface: string, today: string, isHidden?: (id: string) => boolean }} ctx
+ * @param {{ limit?: number }} [opts]
+ * @returns {Array<Record<string, unknown>>}
+ */
+export function pickHomePopups(list, ctx, { limit = 2 } = {}) {
+  const surface = ctx?.surface || '';
+  const today = ctx?.today || '';
+  const isHidden = typeof ctx?.isHidden === 'function' ? ctx.isHidden : () => false;
+  const rows = (Array.isArray(list) ? list : []).filter((row) => {
+    if (!row || row.published !== true) return false;
+    if (!inWindow(row.startAt, row.endAt, today)) return false;
+    if (!matchesAudience(row.audience, surface)) return false;
+    if (isHidden(String(row.id))) return false;
+    return TYPE_RANK[row.type] !== undefined;
+  });
+  rows.sort((a, b) => {
+    const byType = TYPE_RANK[a.type] - TYPE_RANK[b.type];
+    if (byType !== 0) return byType;
+    const byOrder = Number(a.sortOrder) - Number(b.sortOrder);
+    if (byOrder !== 0) return byOrder;
+    return String(b.updatedAt || '').localeCompare(String(a.updatedAt || ''));
+  });
+  return rows.slice(0, limit);
+}
