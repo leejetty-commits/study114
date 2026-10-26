@@ -1202,3 +1202,86 @@ a.guide-summary-card__chip--link:hover {
 }
 .info-board__cheer-count { font-weight: 700; }
 
+/* 308c 고객센터 창구 타일. FAQ·공지·문의 폼에는 적용하지 않는다. */
+.support-app .support-windows {
+  padding-block: var(--space-3);
+}
+
+.support-app .support-windows .quick-tile {
+  --tilt: 1deg;
+  --support-soft: var(--role-accent-study-soft);
+  position: relative;
+  z-index: 0;
+  overflow: visible;
+  border-radius: var(--radius-surface);
+  background: var(--support-soft);
+  box-shadow: none;
+  transform: rotate(var(--tilt));
+  animation: support-window-float 4.8s ease-in-out infinite;
+  transition: transform 200ms;
+}
+
+.support-app .support-windows .quick-tile:nth-child(1) {
+  --tilt: -1deg;
+  --support-soft: var(--color-warning-soft);
+}
+
+.support-app .support-windows .quick-tile:nth-child(2) {
+  --tilt: 1.5deg;
+}
+
+.support-app .support-windows .quick-tile:nth-child(3) {
+  --tilt: -2deg;
+  --support-soft: var(--role-accent-student-soft);
+}
+
+.support-app .support-windows .quick-tile:nth-child(4) {
+  --tilt: 1deg;
+  --support-soft: var(--role-accent-tutor-soft);
+}
+
+.support-app .support-windows .quick-tile:nth-child(5) {
+  --tilt: -1.5deg;
+  --support-soft: var(--color-success-soft);
+}
+
+.support-app .support-windows .quick-tile::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--space-2) calc(var(--space-1) * -1) calc(var(--space-2) * -1) var(--space-3);
+  border-radius: var(--radius-surface);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  transform: rotate(calc(var(--tilt) * -1));
+  transition: transform 200ms;
+  pointer-events: none;
+}
+
+.support-app .support-windows .quick-tile:hover,
+.support-app .support-windows .quick-tile:focus-visible {
+  --tilt: 0deg;
+  animation: none;
+  box-shadow: none;
+  transform: rotate(0deg) translateY(-4px);
+}
+
+.support-app .support-windows .quick-tile:hover::before,
+.support-app .support-windows .quick-tile:focus-visible::before {
+  transform: rotate(0deg);
+}
+
+@keyframes support-window-float {
+  0%, 100% { transform: rotate(var(--tilt)) translateY(0); }
+  50% { transform: rotate(var(--tilt)) translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-app .support-windows .quick-tile,
+  .support-app .support-windows .quick-tile::before {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+

@@ -178,7 +178,7 @@ function renderSupportQuickCards() {
         <div class="section-underline"></div>
       </div>
     </div>
-    <div class="quick-grid">
+    <div class="quick-grid support-windows">
       ${cards
         .map(
           (card) => `<a href="#${card.href}" class="quick-tile card card--accent ${card.extra || ''}" data-sup-nav="${card.href}">
