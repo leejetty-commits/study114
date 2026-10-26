@@ -17,13 +17,13 @@
 }
 .promo-layout__crumb a { color: var(--brand-blue); text-decoration: none; }
 .promo-layout__title {
-  margin: 0 0 1.25rem;
+  margin: 0 0 var(--space-5);
   font-size: var(--fs-6);
   font-weight: 700;
   color: var(--gray-900);
 }
 .promo-eyebrow {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   font-size: 0.75rem;
   font-weight: 700;
   color: var(--brand-blue);
@@ -33,15 +33,15 @@
   display: grid;
   gap: 1.75rem;
   align-items: center;
-  margin-bottom: 2.5rem;
-  padding: 1.5rem 0 2rem;
+  margin-bottom: var(--space-10);
+  padding: var(--space-6) 0 var(--space-8);
   border-bottom: 1px solid var(--gray-200);
 }
 @media (min-width: 900px) {
-  .promo-hero { grid-template-columns: 1.1fr 0.9fr; gap: 2.5rem; }
+  .promo-hero { grid-template-columns: 1.1fr 0.9fr; gap: var(--space-10); }
 }
 .promo-hero__title {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
   font-size: clamp(1.75rem, 3vw, 2.35rem);
   line-height: 1.25;
   font-weight: 800;
@@ -56,26 +56,26 @@
   font-size: 1.05rem;
 }
 .promo-h2 {
-  margin: 0 0 1rem;
+  margin: 0 0 var(--space-4);
   font-size: clamp(1.35rem, 2.2vw, 1.75rem);
   line-height: 1.35;
   font-weight: 750;
   color: var(--gray-900);
 }
 .promo-h2--center { text-align: center; }
-.promo-lead--center { text-align: center; max-width: 40rem; margin: 0 auto 1.5rem; }
+.promo-lead--center { text-align: center; max-width: 40rem; margin: 0 auto var(--space-6); }
 .promo-cta-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
 }
 .promo-cta-row--center { justify-content: center; }
 .promo-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.85rem 1.25rem;
+  padding: 0.85rem var(--space-5);
   border-radius: var(--product-radius-btn);
   font-weight: 700;
   text-decoration: none;
@@ -106,14 +106,14 @@
   display: grid;
   gap: 1.75rem;
   align-items: center;
-  margin: 2.5rem 0;
+  margin: var(--space-10) 0;
 }
 @media (min-width: 900px) {
-  .promo-split { grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+  .promo-split { grid-template-columns: 1fr 1fr; gap: var(--space-10); }
   .promo-split--structure .promo-split__copy { order: 0; }
 }
 .promo-bullets {
-  margin: 1.25rem 0 0;
+  margin: var(--space-5) 0 0;
   padding: 0;
   list-style: none;
   display: grid;
@@ -137,8 +137,8 @@
   background: var(--brand-blue);
 }
 .promo-band {
-  margin: 2.5rem 0;
-  padding: 2rem 1.25rem;
+  margin: var(--space-10) 0;
+  padding: var(--space-8) var(--space-5);
   border-radius: 1rem;
   background: var(--surface-section);
 }
@@ -146,8 +146,8 @@
 .promo-persona-grid,
 .promo-trust-grid {
   display: grid;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
 }
 @media (min-width: 700px) {
   .promo-compare-grid,
@@ -178,7 +178,7 @@
 .promo-feature-card h3,
 .promo-persona-card h3,
 .promo-trust-item h3 {
-  margin: 0 0 0.5rem;
+  margin: 0 0 var(--space-2);
   font-size: 1.05rem;
 }
 .promo-feature-card p,
@@ -191,14 +191,14 @@
 }
 .promo-persona-card__role {
   display: inline-block;
-  margin-bottom: 0.5rem;
+  margin-bottom: var(--space-2);
   font-size: 0.6875rem;
   font-weight: 700;
   color: var(--brand-blue);
 }
 .promo-badge {
   display: inline-flex;
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
   background: var(--brand-blue);
@@ -207,28 +207,28 @@
   font-weight: 800;
   letter-spacing: 0.04em;
 }
-.promo-trust { margin: 2.5rem 0; }
+.promo-trust { margin: var(--space-10) 0; }
 .promo-final {
-  margin: 2.5rem 0 1rem;
-  padding: 2rem 1.25rem;
+  margin: var(--space-10) 0 var(--space-4);
+  padding: var(--space-8) var(--space-5);
   border-radius: 1rem;
   background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-blue-dark) 100%);
   color: #fff;
   text-align: center;
 }
 .promo-final__title {
-  margin: 0 0 0.75rem;
+  margin: 0 0 var(--space-3);
   font-size: clamp(1.35rem, 2.2vw, 1.75rem);
   font-weight: 800;
 }
 .promo-final__lead {
-  margin: 0 auto 1.25rem;
+  margin: 0 auto var(--space-5);
   max-width: 36rem;
   opacity: 0.92;
   line-height: 1.65;
 }
 .promo-planned {
-  padding: 3rem 1rem;
+  padding: var(--space-12) var(--space-4);
   text-align: center;
 }
 .promo-ui-mock {
@@ -276,13 +276,13 @@
 .promo-ui-mock--compare {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  padding: 1rem;
-  margin-top: 1.25rem;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  margin-top: var(--space-5);
 }
 .promo-ui-mock__col {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
   padding: 0.85rem 0.7rem;
   border-radius: 0.65rem;
   background: var(--brand-blue-light);
@@ -292,11 +292,11 @@
 .promo-ui-mock__col span { color: var(--brand-blue-dark); font-weight: 700; }
 .promo-ui-mock__col strong { color: var(--gray-900); }
 .promo-ui-mock__col em { color: var(--gray-500); font-style: normal; }
-.promo-ui-mock--register { padding: 1rem; display: grid; gap: 0.55rem; }
+.promo-ui-mock--register { padding: var(--space-4); display: grid; gap: 0.55rem; }
 .promo-ui-mock__field {
   display: grid;
   gap: 0.2rem;
-  padding: 0.65rem 0.75rem;
+  padding: 0.65rem var(--space-3);
   border-radius: 0.55rem;
   border: 1px solid var(--gray-200);
   background: #fff;
@@ -304,7 +304,7 @@
 }
 .promo-ui-mock__field span { color: var(--gray-500); font-size: 0.6875rem; font-weight: 700; }
 .promo-ui-mock__bar {
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   padding: 0.65rem;
   border-radius: 0.55rem;
   background: var(--brand-blue);
@@ -349,8 +349,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  margin: 1.25rem 0;
+  gap: var(--space-4);
+  margin: var(--space-5) 0;
   padding: 1.1rem 1.2rem;
   border-radius: 0.85rem;
   border: 1px solid #bfdbfe;
@@ -360,14 +360,14 @@
 .promo-inline-card p { margin: 0; color: var(--gray-600); font-size: 0.875rem; line-height: 1.5; }
 .a28-promo-grid {
   display: grid;
-  gap: 1rem;
-  margin: 1rem 0 1.5rem;
+  gap: var(--space-4);
+  margin: var(--space-4) 0 var(--space-6);
 }
 @media (min-width: 800px) {
   .a28-promo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 .a28-promo-card {
-  padding: 1rem 1.1rem;
+  padding: var(--space-4) 1.1rem;
   border: 1px solid var(--gray-200);
   border-radius: 0.75rem;
   background: #fff;
@@ -375,7 +375,7 @@
 .a28-promo-card__head {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-3);
   align-items: center;
   margin-bottom: 0.35rem;
 }
@@ -390,22 +390,22 @@
 .a28-promo-card__status--live { background: #ecfdf5; color: #047857; }
 .a28-promo-card__status--planned { background: #fff7ed; color: #c2410c; }
 .a28-promo-rail-preview {
-  padding: 1rem;
+  padding: var(--space-4);
   border-radius: 0.75rem;
   border: 1px dashed #93c5fd;
   background: #f8fbff;
   max-width: 22rem;
 }
 .a28-promo-rail-preview strong { display: block; margin-bottom: 0.35rem; }
-.a28-promo-rail-preview p { margin: 0 0 0.5rem; color: var(--gray-600); font-size: 0.875rem; }
+.a28-promo-rail-preview p { margin: 0 0 var(--space-2); color: var(--gray-600); font-size: 0.875rem; }
 .a28-promo-rail-preview span { font-weight: 700; color: var(--brand-blue-dark); font-size: 0.8125rem; }
 
 .a28-promo-quick {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem 0.65rem;
-  margin: 0 0 1rem;
+  gap: var(--space-2) 0.65rem;
+  margin: 0 0 var(--space-4);
   padding: 0.65rem 0.85rem;
   border-radius: 0.65rem;
   border: 1px solid #bfdbfe;
@@ -431,7 +431,7 @@
   border: 1px solid var(--gray-300);
   background: #fff;
   border-radius: 0.45rem;
-  padding: 0.25rem 0.55rem;
+  padding: var(--space-1) 0.55rem;
   font: inherit;
   font-size: 0.75rem;
   font-weight: 600;
@@ -447,10 +447,10 @@
 .a28-promo-qr {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-4);
   align-items: center;
-  margin: 0 0 1.25rem;
-  padding: 1rem;
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4);
   border: 1px solid var(--gray-200);
   border-radius: 0.75rem;
   background: #fff;
