@@ -651,7 +651,7 @@ a.plans-chip:hover {
   place-items: center;
   min-width: 3rem;
   height: 1.75rem;
-  padding: 0 10px;
+  padding: 0 var(--space-3);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
@@ -667,7 +667,7 @@ a.plans-chip:hover {
 
 .plans-badge-select__limit {
   margin: 0 0 0.9rem;
-  padding: 10px 12px;
+  padding: var(--space-3) var(--space-3);
   border-radius: 8px;
   background: #eaf2fb;
   color: var(--plans-primary, #266bc4);
@@ -695,7 +695,7 @@ a.plans-chip:hover {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .plans-badge-select__options > li {
@@ -708,11 +708,11 @@ a.plans-chip:hover {
 .plans-badge-select__option {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: var(--space-3);
   width: 100%;
   min-width: 0;
   margin: 0;
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--plans-line, #e6dfd4);
   border-radius: 12px;
   background: var(--plans-surface, #fff);
@@ -730,7 +730,7 @@ a.plans-chip:hover {
 
 .plans-badge-select__body {
   display: grid;
-  gap: 4px;
+  gap: var(--space-1);
   min-width: 0;
   flex: 1;
 }
@@ -752,7 +752,7 @@ a.plans-chip:hover {
 }
 
 .plans-badge-select__price {
-  margin-top: 6px;
+  margin-top: var(--space-2);
   font-size: 18px;
   font-weight: 800;
   color: var(--plans-ink, #292823);
@@ -766,7 +766,7 @@ a.plans-chip:hover {
 .plans-badge-select__option.is-checked {
   border: 2px solid var(--plans-primary, #266bc4);
   background: var(--plans-selected, #fbf7ef);
-  padding: 15px 17px;
+  padding: 15px 19px; /* 1px compensation: border 1→2px */
 }
 
 .plans-badge-select__option.is-checked .plans-badge-select__name {
@@ -780,8 +780,8 @@ a.plans-chip:hover {
 }
 
 .plans-badge-select__note {
-  margin: 14px 0 0;
-  padding: 10px 12px;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-3) var(--space-3);
   border-radius: 8px;
   background: #faf7f1;
   font-size: 13px;
@@ -1017,7 +1017,7 @@ a.plans-chip:hover {
 .plans-prime-board__cells {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1025,13 +1025,13 @@ a.plans-chip:hover {
 
 .plans-prime-cell {
   min-height: 110px;
-  padding: 14px;
+  padding: var(--space-4);
   border-radius: 12px;
   border: 1px solid var(--plans-line, #e6dfd4);
   background: #faf7f1;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .plans-prime-cell__label {
@@ -1079,15 +1079,15 @@ a.plans-chip:hover {
 }
 
 .plans-prime-waitlist {
-  margin-top: 8px;
-  padding: 16px;
+  margin-top: var(--space-2);
+  padding: var(--space-4);
   border-radius: 12px;
   background: var(--plans-warn, #fff0e9);
   border: 1px solid var(--plans-warn-line, #e4b59f);
 }
 
 .plans-prime-waitlist p {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   font-size: var(--text-sm);
   line-height: 1.5;
   color: var(--plans-ink, #292823);
@@ -1095,7 +1095,7 @@ a.plans-chip:hover {
 
 /* 적용 대상 — paid-apply-target-block-v1 SPEC */
 .plans-apply-target.plans-sf-panel {
-  padding: 22px;
+  padding: var(--space-6);
   border-radius: 12px;
   border: 1px solid var(--plans-line, #e6dfd4);
   box-sizing: border-box;
@@ -1120,8 +1120,8 @@ a.plans-chip:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
-  margin: 0 0 12px;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
 }
 
 .plans-apply-target__profile-main {
@@ -1134,7 +1134,7 @@ a.plans-chip:hover {
 .plans-apply-target__status {
   display: inline-flex;
   align-items: center;
-  padding: 2px 8px;
+  padding: 2px var(--space-2);
   border-radius: 999px;
   border: 1px solid var(--plans-line, #e6dfd4);
   background: #f8fafc;
@@ -1147,7 +1147,7 @@ a.plans-chip:hover {
 .plans-apply-target__regions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
   margin: 0.5rem 0;
   width: 100%;
 }
@@ -1158,9 +1158,9 @@ a.plans-chip:hover {
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 6px;
+  gap: var(--space-2);
   min-height: 80px;
-  padding: 14px 16px;
+  padding: var(--space-4) var(--space-4);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   background: #fff;
@@ -1225,7 +1225,7 @@ a.plans-chip:hover {
   border: 2px solid #266bc4;
   background: #eef4fb;
   box-shadow: none;
-  padding: 13px 15px; /* border 2px 보정 — 내부 박스 크기 유지 */
+  padding: 15px 15px; /* 1px compensation: border 1→2px */
 }
 
 .plans-region-chip:has(input:checked) .plans-region-chip__label {
@@ -1253,8 +1253,8 @@ a.plans-chip:hover {
 .plans-order-summary__row {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  padding: 8px 0;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
   border-bottom: 1px solid #eee7dc;
   font-size: 14px;
 }
@@ -1274,8 +1274,8 @@ a.plans-chip:hover {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin: 8px 0 0;
-  padding-top: 10px;
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-3);
   border-top: 2px solid var(--plans-ink, #292823);
   font-size: 1.125rem;
   font-weight: 800;
@@ -1302,13 +1302,13 @@ a.plans-chip:hover {
   background: var(--plans-sand, #f4e7c9) !important;
   border: 0 !important;
   border-radius: 12px !important;
-  padding: 16px 18px !important;
+  padding: var(--space-4) var(--space-5) !important;
   box-shadow: none !important;
   margin-top: 0.25rem;
 }
 
 .plans-purchase-check .plans-sf-panel__head {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 .plans-purchase-check .plans-sf-panel__title {
@@ -1319,7 +1319,7 @@ a.plans-chip:hover {
 }
 
 .plans-purchase-check p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   color: var(--plans-ink, #292823);
   font-size: 14px;
 }
@@ -1353,7 +1353,7 @@ a.plans-chip:hover {
 
 /* aux-nav — 봇 시안 */
 .plans-access-aux {
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-5);
   border-radius: 14px;
   background: var(--plans-surface, #fff);
   border: 1px solid var(--plans-line, #e6dfd4);
@@ -1361,20 +1361,20 @@ a.plans-chip:hover {
 }
 
 .plans-access-aux p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   font-size: 14px;
   color: var(--plans-ink, #292823);
   line-height: 1.5;
 }
 
 .plans-access-aux p:last-of-type {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .plans-access-aux__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--space-2);
   margin: 0 !important;
 }
 
@@ -1382,7 +1382,7 @@ a.plans-chip:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 14px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--plans-line, #e6dfd4);
   border-radius: 9px;
   background: transparent;
@@ -1400,7 +1400,7 @@ a.plans-chip:hover {
 /* ticket-explain — 봇 파란 안내 박스 */
 .plans-access-explain {
   margin: 0;
-  padding: 16px 18px;
+  padding: var(--space-4) var(--space-5);
   border-radius: 14px;
   background: #f3f7fc;
   border: 1px solid #d2e0f0;
@@ -1411,7 +1411,7 @@ a.plans-chip:hover {
 
 .plans-access-explain__lead {
   display: block;
-  margin: 0 0 6px;
+  margin: 0 0 var(--space-2);
   font-size: 14px;
   font-weight: 800;
   line-height: 1.45;
@@ -1452,8 +1452,8 @@ a.plans-chip:hover {
 }
 
 .plans-access-hold {
-  margin: 0 0 14px;
-  padding: 14px 16px;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4) var(--space-4);
   border-radius: 12px;
   border: 1px solid #e0c48a;
   background: var(--plans-sand, #f4e7c9);
@@ -1462,7 +1462,7 @@ a.plans-chip:hover {
 }
 
 .plans-access-hold p {
-  margin: 0 0 10px;
+  margin: 0 0 var(--space-3);
   color: var(--plans-ink, #292823);
 }
 
@@ -1575,7 +1575,7 @@ a.plans-chip:hover {
 .plans-period-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--space-3);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1591,7 +1591,7 @@ a.plans-chip:hover {
   width: 100%;
   min-height: 200px;
   height: 100%;
-  padding: 14px 12px;
+  padding: var(--space-4) var(--space-3);
   border-radius: 12px;
   border: 1px solid var(--plans-line, #e6dfd4);
   background: #fff;
@@ -1618,7 +1618,7 @@ a.plans-chip:hover {
 .plans-period-card.is-selected .plans-period-card__btn {
   border: 2px solid var(--plans-primary, #266bc4);
   background: var(--plans-selected, #fbf7ef);
-  padding: 13px 11px;
+  padding: 15px 11px; /* 1px compensation: border 1→2px */
 }
 
 .plans-period-card.is-disabled .plans-period-card__btn,
@@ -1674,7 +1674,7 @@ a.plans-chip:hover {
   font-size: 12px;
   color: #4b6a50;
   border-top: 1px solid var(--plans-line, #e6dfd4);
-  padding-top: 8px;
+  padding-top: var(--space-2);
   margin-top: 2px;
   align-self: end;
   min-height: 28px;
@@ -1710,7 +1710,7 @@ a.plans-chip:hover {
 .plans-ticket-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: var(--space-4);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1726,7 +1726,7 @@ a.plans-chip:hover {
   width: 100%;
   min-height: 220px;
   height: 100%;
-  padding: 20px 16px;
+  padding: var(--space-5) var(--space-4);
   border-radius: 14px;
   border: 1px solid var(--plans-line, #e6dfd4);
   background: var(--plans-surface, #fff);
@@ -1735,7 +1735,7 @@ a.plans-chip:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   box-sizing: border-box;
   position: relative;
   overflow: visible;
@@ -1745,7 +1745,7 @@ a.plans-chip:hover {
 .plans-ticket-card.is-selected .plans-ticket-card__btn {
   border: 2px solid var(--plans-primary, #266bc4);
   background: var(--plans-selected, #fbf7ef);
-  padding: 19px 15px;
+  padding: 19px 15px; /* 1px compensation: border 1→2px */
 }
 
 .plans-ticket-card.is-disabled .plans-ticket-card__btn {
@@ -1784,8 +1784,8 @@ a.plans-chip:hover {
 
 .plans-ticket-card__meta {
   width: 100%;
-  margin-top: 4px;
-  padding-top: 10px;
+  margin-top: var(--space-1);
+  padding-top: var(--space-3);
   border-top: 1px solid var(--plans-line, #e6dfd4);
   font-size: 0.875rem;
   color: var(--plans-muted, #766f64);
@@ -1861,12 +1861,12 @@ a.plans-chip:hover {
 
   .plans-storefront__offer--prime .plans-prime-board__cells {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    gap: var(--space-2);
   }
 
   .plans-storefront__offer--prime .plans-prime-cell {
     min-height: 88px;
-    padding: 8px;
+    padding: var(--space-2);
   }
 }
 
@@ -1987,7 +1987,7 @@ a.plans-chip:hover {
 
   .plans-region-chip {
     min-height: 80px;
-    padding: 14px 16px;
+    padding: var(--space-4) var(--space-4);
   }
 
   .plans-badge-select__option {
@@ -2017,12 +2017,12 @@ a.plans-chip:hover {
 
   .plans-storefront__offer--prime .plans-prime-board__cells {
     grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
+    gap: var(--space-2);
   }
 
   .plans-storefront__offer--prime .plans-prime-cell {
     min-height: 0;
-    padding: 10px 12px;
+    padding: var(--space-3) var(--space-3);
   }
 
   .plans-prime-cell__label,
