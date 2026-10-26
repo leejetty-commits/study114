@@ -239,7 +239,7 @@
   border: 1px solid #eee7dd;
   border-radius: 1.25rem;
   padding: var(--space-4);
-  background: #fffdf9;
+  background: #d4d4d8;
   height: fit-content;
   box-shadow: 0 0.75rem 2rem rgb(65 45 25 / 0.06);
 }
