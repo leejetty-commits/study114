@@ -986,7 +986,7 @@ a.sup-term-chip:hover {
   font-size: var(--fs-1);
   font-weight: 600;
   color: var(--brand-blue);
-  margin: 0 0 calc(0.125rem + 3px);
+  margin: 0 0 var(--space-1); /* 5px→4px, 1px 차이 허용 (FS-T1-006) */
   line-height: calc(1em + 3px);
 }
 
