@@ -42,7 +42,7 @@ function renderNotice(card, family, idx) {
   return `
     <article class="home-popup__card home-popup__card--notice" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
       ${closeButton()}
-      <header class="home-popup__head">
+      <header class="home-popup__head" data-drag-handle>
         <span class="home-popup__badge">공지</span>
         ${lockup('home-popup__lockup home-popup__lockup--notice')}
       </header>
@@ -64,7 +64,7 @@ function renderNotice(card, family, idx) {
 function renderEvent(card, family, idx) {
   return `
     <article class="home-popup__card home-popup__card--event" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
-      <div class="home-popup__hero">
+      <div class="home-popup__hero" data-drag-handle>
         <span class="home-popup__orb home-popup__orb--a" aria-hidden="true"></span>
         <span class="home-popup__orb home-popup__orb--b" aria-hidden="true"></span>
         ${closeButton()}
@@ -91,7 +91,7 @@ function renderAd(card, family, idx) {
   const aside = esc(card.aside).replace(/\n/g, '<br>');
   return `
     <article class="home-popup__card home-popup__card--ad" role="dialog" aria-modal="true" aria-labelledby="home-popup-title-${idx}">
-      <div class="home-popup__ad-aside">
+      <div class="home-popup__ad-aside" data-drag-handle>
         <span class="home-popup__deco" aria-hidden="true"></span>
         ${lockup('home-popup__lockup home-popup__lockup--ad')}
         <p class="home-popup__aside-copy">${aside}</p>
