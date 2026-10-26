@@ -552,7 +552,7 @@ body {
 .guest-browse-lists--students {
   margin-top: var(--space-8);
   background: var(--surface-page);
-  border-top: 1px solid var(--gray-200);
+  border-top: none;
   border-radius: 0;
 }
 
@@ -1080,6 +1080,16 @@ body {
 .slot-grid--5,
 .expo-grid--5 {
   gap: 0.625rem;
+}
+
+/* 게스트 홈 섹션 여백 통일·키움 + 구분선 제거 — 310 */
+.home-shell--guest .content-section .section-heading,
+.home-shell--guest .guest-browse-lists .section-heading {
+  padding-top: var(--space-8);
+}
+
+.home-shell--guest .content-section {
+  border-bottom: none;
 }
 
 /* 기본 공부방·과외쌤 목록은 학생 목록과 같은 평면·균등 표 구조 */
