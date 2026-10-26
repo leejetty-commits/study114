@@ -73,7 +73,7 @@
   position: sticky;
   top: calc(var(--preview-toolbar-h, 0px) + var(--ops-chrome-h, 0px) + 5.5rem);
   z-index: 10;
-  background: var(--if-surface);
+  background: #d4d4d8;
   border: 1px solid var(--if-line);
   border-radius: var(--if-radius);
   padding: 0.75rem 0.5rem 1rem;
