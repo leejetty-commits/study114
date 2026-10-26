@@ -4,6 +4,7 @@
 - **브랜치:** `cursor/309-tokenize-p3-bridge-popup-catalog-20261026`
 - **RESTORE_BASE:** `e483f1ccf8d2039faad5a9ea30c084b4e7698893`
 - **base 확인:** `git fetch` 후 `git rev-parse origin/main` = `e483f1ccf8d2039faad5a9ea30c084b4e7698893`
+- **PR:** https://github.com/leejetty-commits/study114/pull/53
 - **상태:** 검수 대기. 이 세션은 자기 커밋을 승인하지 않는다. merge / Deploy 하지 않음.
 
 ## 지시서 원문
