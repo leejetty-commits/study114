@@ -605,7 +605,7 @@ table {
   }
 }
 
-/* ── Footer · FOOTER-SPEC / UDX-20 Shell ── */
+/* ── Footer · FOOTER-SPEC / UDX-20 Shell — Design D (#334155 소프트 차콜) ── */
 .site-footer,
 .home-footer {
   box-sizing: border-box;
@@ -615,9 +615,9 @@ table {
   margin-left: 0;
   margin-right: 0;
   padding: var(--footer-pad-y-top) 0 var(--footer-pad-y-bottom);
-  border-top: 1px solid var(--uds-line);
-  background: var(--uds-surface);
-  color: var(--uds-muted);
+  border-top: none;
+  background: #334155;
+  color: #94a3b8;
   text-align: center;
 }
 
@@ -656,7 +656,7 @@ table {
   font-size: var(--fs-14);
   font-weight: var(--fw-medium);
   line-height: var(--leading-normal);
-  color: var(--uds-muted);
+  color: #e2e8f0;
   text-decoration: none;
 }
 
@@ -664,14 +664,14 @@ table {
 .site-footer__links a:focus-visible,
 .home-footer__links a:hover,
 .home-footer__links a:focus-visible {
-  color: var(--uds-ink);
+  color: #f8fafc;
   text-decoration: underline;
-  text-decoration-color: var(--uds-primary);
+  text-decoration-color: #94a3b8;
   text-underline-offset: 0.2em;
 }
 
 .site-footer__sep {
-  color: var(--uds-line);
+  color: #64748b;
   font-size: var(--fs-14);
   line-height: 1;
   user-select: none;
@@ -684,7 +684,7 @@ table {
   font-size: var(--fs-12);
   font-weight: var(--fw-regular);
   line-height: 1.5;
-  color: var(--uds-muted);
+  color: #94a3b8;
 }
 
 .site-footer__company {
@@ -704,13 +704,13 @@ table {
 .site-footer__company-label {
   margin: 0;
   font-weight: var(--fw-medium);
-  color: var(--uds-muted);
+  color: #94a3b8;
 }
 
 .site-footer__company-value {
   margin: 0;
   font-weight: var(--fw-regular);
-  color: var(--uds-ink);
+  color: #cbd5e1;
 }
 
 .site-footer__legal {
@@ -718,7 +718,7 @@ table {
   font-size: var(--fs-12);
   font-weight: var(--fw-regular);
   line-height: var(--leading-normal);
-  color: var(--uds-muted);
+  color: #94a3b8;
 }
 
 @media (max-width: 639px) {

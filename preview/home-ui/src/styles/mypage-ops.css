@@ -43,7 +43,7 @@
   box-sizing: border-box;
 }
 
-/* —— 사이드바 —— */
+/* —— 사이드바 — S2-2 #d4d4d8 쿨 뉴트럴 바탕 —— */
 .mypage-sidebar {
   position: sticky;
   top: calc(var(--ops-chrome-h, 0px) + var(--site-header-h, 4.75rem) + 0.75rem);
@@ -52,7 +52,7 @@
   padding: 1rem 0.75rem;
   border: 1px solid var(--mp-line);
   border-radius: var(--mp-radius-card);
-  background: var(--mp-panel);
+  background: #d4d4d8;
   box-shadow: none;
   height: fit-content;
 }
