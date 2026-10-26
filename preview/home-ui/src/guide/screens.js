@@ -180,7 +180,7 @@ function renderGuideHome() {
       photo: 'guide-student',
     })}
     ${sectionHead('여기에서 시작', '어디에 해당하나요?')}
-    <div class="situation-grid">
+    <div class="situation-grid guide-doors">
       <a class="situation-card card card--accent" href="#/guide/start" data-guide-nav="/guide/start">
         <span class="icon-halo"><span class="icon-tile" aria-hidden="true"><img src="${A}/tile-search.svg" alt="" width="56" height="56" /></span></span>
         <h3>찾는 중이에요</h3>
