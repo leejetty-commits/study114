@@ -114,7 +114,7 @@
 }
 
 .mypage-nav {
-  gap: 0.12rem;
+  gap: var(--space-1);
 }
 
 .mypage-nav__link {
