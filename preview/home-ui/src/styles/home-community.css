@@ -377,3 +377,235 @@
 }
 .concern-more__count { color: var(--gray-500); font-size: 0.8125rem; }
 
+/* ===== 308a 동네 게시판 골목 (concern-app 만) ===== */
+
+.concern-app .cork-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.concern-app .concern-frame__body .board-grid {
+  padding: var(--space-3) var(--space-2);
+}
+
+@media (max-width: 700px) {
+  .concern-app .concern-frame__body .board-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.concern-app .board-grid .board-entry.cork-sheet {
+  --tilt: 1.5deg;
+  --cork-soft: var(--role-accent-study-soft);
+  position: relative;
+  z-index: 0;
+  overflow: visible;
+  border-radius: var(--radius-surface);
+  background: var(--cork-soft);
+  transform: rotate(var(--tilt));
+  animation: cork-float 4.8s ease-in-out infinite;
+  transition: transform 200ms;
+}
+
+.concern-app .board-grid .board-entry.cork-sheet--tutor { --tilt: 2deg; --cork-soft: var(--role-accent-tutor-soft); }
+.concern-app .board-grid .board-entry.cork-sheet--parent { --tilt: -2.5deg; --cork-soft: var(--role-accent-student-soft); }
+.concern-app .board-grid .board-entry.cork-sheet--solved { --tilt: -1deg; --cork-soft: var(--color-success-soft); }
+.concern-app .board-grid .board-entry.cork-sheet--director { --tilt: -1.5deg; }
+
+.concern-app .board-grid .board-entry.cork-sheet::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: var(--space-2) calc(var(--space-1) * -1) calc(var(--space-2) * -1) var(--space-3);
+  border-radius: var(--radius-surface);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  transform: rotate(calc(var(--tilt) * -1));
+  transition: transform 200ms;
+  pointer-events: none;
+}
+
+.concern-app .board-grid .board-entry.cork-sheet:hover,
+.concern-app .board-grid .board-entry.cork-sheet:focus-visible {
+  --tilt: 0deg;
+  animation: none;
+  transform: rotate(0deg) translateY(-4px);
+}
+
+.concern-app .board-grid .board-entry.cork-sheet:hover::before,
+.concern-app .board-grid .board-entry.cork-sheet:focus-visible::before {
+  transform: rotate(0deg);
+}
+
+@keyframes cork-float {
+  0%, 100% { transform: rotate(var(--tilt)) translateY(0); }
+  50% { transform: rotate(var(--tilt)) translateY(-6px); }
+}
+
+.concern-app .cork-ticker {
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-surface);
+  background: var(--color-warning-soft);
+}
+
+.concern-app .cork-ticker__viewport { overflow: hidden; }
+
+.concern-app .cork-ticker__track {
+  display: flex;
+  width: max-content;
+  animation: cork-marquee 18s linear infinite;
+}
+
+.concern-app .cork-ticker__list {
+  display: flex;
+  gap: var(--space-6);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  list-style: none;
+}
+
+.concern-app .cork-ticker__item a {
+  color: inherit;
+  font-size: var(--fs-2);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@keyframes cork-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.concern-app .cork-stamps { display: flex; flex-direction: column; gap: var(--space-3); }
+
+.concern-app .cork-stamps__label {
+  margin: 0;
+  font-size: var(--fs-4);
+  font-weight: 700;
+}
+
+.concern-app .cork-stamps__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.concern-app .cork-stamp {
+  --tilt: 2deg;
+  max-width: 16rem;
+  border-radius: var(--radius-surface);
+  background: var(--color-success-soft);
+  border: 1px solid var(--gray-200);
+  transform: rotate(var(--tilt));
+}
+
+.concern-app .cork-stamp a {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  color: inherit;
+  font-size: var(--fs-2);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.concern-app .cork-empty {
+  display: grid;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+@media (min-width: 800px) {
+  .concern-app .cork-empty { grid-template-columns: minmax(0, 16rem) minmax(0, 1fr); }
+}
+
+.concern-app .cork-example {
+  --tilt: -1.5deg;
+  position: relative;
+  padding: var(--space-4);
+  border-radius: var(--radius-surface);
+  background: var(--color-warning-soft);
+  border: 1px solid var(--gray-200);
+  transform: rotate(var(--tilt));
+}
+
+.concern-app .cork-example__badge {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-badge);
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  font-size: var(--fs-1);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.concern-app .cork-example__kicker,
+.concern-app .cork-example__body,
+.concern-app .cork-how__gate,
+.concern-app .cork-how__back {
+  margin: 0;
+  font-size: var(--fs-2);
+  line-height: 1.5;
+  color: var(--gray-600);
+}
+
+.concern-app .cork-example__title,
+.concern-app .cork-how__title {
+  margin: var(--space-2) 0;
+  font-size: var(--fs-4);
+  font-weight: 700;
+}
+
+.concern-app .cork-how__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.concern-app .cork-how__step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-3);
+}
+
+.concern-app .cork-how__n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-badge);
+  background: var(--role-accent-study-soft);
+  font-size: var(--fs-1);
+  font-weight: 700;
+}
+
+.concern-app .cork-how__gate { margin-bottom: var(--space-4); }
+
+.concern-app .cork-how__back { margin-top: var(--space-3); }
+
+.concern-app .cork-how__back a { font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .concern-app .board-grid .board-entry.cork-sheet,
+  .concern-app .board-grid .board-entry.cork-sheet::before,
+  .concern-app .cork-ticker__track,
+  .concern-app .cork-stamp,
+  .concern-app .cork-example {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
