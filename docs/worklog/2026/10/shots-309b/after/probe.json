@@ -1,0 +1,38 @@
+[
+  {
+    "file": "community-1440.png",
+    "ok": true,
+    "errors": [],
+    "probe": {
+      "support": false,
+      "guide": false,
+      "concern": true,
+      "promo": false,
+      "popup": false,
+      "chipPad": "0px 6px",
+      "underline": "8px 0px 16px",
+      "noticePad": null,
+      "frameGap": null,
+      "promoPad": null,
+      "promoTitle": null
+    }
+  },
+  {
+    "file": "community-390.png",
+    "ok": true,
+    "errors": [],
+    "probe": {
+      "support": false,
+      "guide": false,
+      "concern": true,
+      "promo": false,
+      "popup": false,
+      "chipPad": "0px 6px",
+      "underline": "8px 0px 16px",
+      "noticePad": null,
+      "frameGap": null,
+      "promoPad": null,
+      "promoTitle": null
+    }
+  }
+]

@@ -1859,7 +1859,7 @@
 
 /* ── 마이페이지 「내 공지」 카드 ── */
 .mypage-notice {
-  margin: 0 0 var(--space-6, 24px);
+  margin: 0 0 var(--space-6);
   border: 1px solid var(--uds-line, #e2e8f0);
   border-bottom: 2px solid var(--gray-300);
   border-radius: 12px;
@@ -1870,7 +1870,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: var(--space-3) var(--space-4);
   background: #eef4fb;
   color: #266bc4;
   border-bottom: 1px solid #e5e7eb;
@@ -1891,9 +1891,9 @@
 .mypage-notice__row {
   display: grid;
   grid-template-columns: auto minmax(0,1fr) auto auto;
-  gap: 8px;
+  gap: var(--space-2);
   align-items: center;
-  padding: 10px 16px;
+  padding: var(--space-3) var(--space-4);
   border-top: 1px solid #e5e7eb;
   font-size: 14px;
   color: #1c1917;
@@ -1924,7 +1924,7 @@
 }
 .mypage-notice__new {
   flex-shrink: 0;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   font-size: 12px;
   font-weight: 700;
   color: #266bc4;
@@ -1943,11 +1943,11 @@
 .mypage-content .mp-card-stack {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--space-4);
 }
 .mypage-content .mp-card {
   margin: 0;
-  padding: 24px;
+  padding: var(--space-6);
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
@@ -1956,7 +1956,7 @@
   min-width: 0;
 }
 .mypage-content .mp-card__title {
-  margin: 0 0 16px;
+  margin: 0 0 var(--space-4);
   color: #1c1917;
   font-size: 18px;
   font-weight: 700;
@@ -1976,7 +1976,7 @@
 }
 .mypage-content .mp-card__row {
   margin: 0;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   border: 0;
   border-top: 1px solid #e5e7eb;
   border-radius: 0;
@@ -1993,7 +1993,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .mypage-content .mp-card__row.is-muted {
   opacity: 0.72;
@@ -2002,7 +2002,7 @@
   opacity: 1;
 }
 .mypage-content .mp-card__row p {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   color: #4b5563;
   font-size: 14px;
   font-weight: 400;
@@ -2029,12 +2029,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  margin-top: 16px;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 .mypage-content .mp-card__empty {
   margin: 0;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   color: #4b5563;
   font-size: 14px;
   font-weight: 400;
@@ -2051,7 +2051,7 @@
 }
 .mypage-content .mp-card .plans-table th,
 .mypage-content .mp-card .plans-table td {
-  padding: 12px 8px;
+  padding: var(--space-3) var(--space-2);
   border-bottom: 1px solid #e5e7eb;
   color: #1c1917;
   font-size: 14px;
@@ -2064,17 +2064,17 @@
 }
 @media (max-width: 640px) {
   .mypage-content .mp-card {
-    padding: 16px;
+    padding: var(--space-4);
   }
 }
 
 /* ── 쪽지·후기함 (마이페이지 안만. 바깥 후기 시트 .review-sheet는 그대로) ── */
 .mypage-content .msg-hub {
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-6);
   border-bottom: 1px solid #e5e7eb;
 }
 .mypage-content .msg-hub__tab {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 2px solid transparent;
   color: #4b5563;
   font-size: 14px;
@@ -2097,7 +2097,7 @@
   gap: 0;
 }
 .mypage-content .msg-list__label {
-  margin: 16px 0 4px;
+  margin: var(--space-4) 0 var(--space-1);
   color: #4b5563;
   font-size: 12px;
   font-weight: 600;
@@ -2107,8 +2107,8 @@
   margin-top: 0;
 }
 .mypage-content .msg-row {
-  margin: 0 -12px;
-  padding: 12px;
+  margin: 0 calc(-1 * var(--space-3));
+  padding: var(--space-3);
   border: 0;
   border-bottom: 1px solid #e5e7eb;
   border-radius: 0;
@@ -2164,16 +2164,16 @@
   border-bottom: 0;
 }
 .mypage-content .review-inbox .review-inbox__badges {
-  padding: 12px 0 0;
+  padding: var(--space-3) 0 0;
 }
 .mypage-content .review-inbox .review-sheet__item:first-child .review-inbox__badges {
   padding-top: 0;
 }
 .mypage-content .review-inbox .review-sheet__item-btn {
-  padding: 8px 0 12px;
+  padding: var(--space-2) 0 var(--space-3);
 }
 .mypage-content .review-inbox .review-sheet__item-actions {
-  padding: 0 0 12px;
+  padding: 0 0 var(--space-3);
 }
 .mypage-content .review-inbox__tag {
   box-sizing: border-box;
@@ -2187,7 +2187,7 @@
   line-height: 1;
 }
 .mypage-content .review-inbox__pager {
-  margin-top: 16px;
+  margin-top: var(--space-4);
   font-size: 14px;
 }
 .mypage-content .review-inbox__lead {
@@ -2203,7 +2203,7 @@
 }
 .mypage-content .mp-card.mypage-contact .mypage-contact-list {
   gap: 0;
-  margin-top: 16px;
+  margin-top: var(--space-4);
 }
 .mypage-content .mp-card.mypage-contact .mypage-contact-item {
   border: 0;
@@ -2221,10 +2221,10 @@
 
 /* 계정설정: 그라데이션·그림자 없이 흰 칸 */
 .mypage-content .account-settings {
-  gap: 16px;
+  gap: var(--space-4);
 }
 .mypage-content .account-settings__hero {
-  padding: 24px;
+  padding: var(--space-6);
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   background: #fff;
@@ -2265,23 +2265,23 @@
 }
 .mypage-content .account-form .form-input {
   height: 44px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   font-size: 16px;
 }
 @media (max-width: 640px) {
   .mypage-content .account-settings__hero {
-    padding: 16px;
+    padding: var(--space-4);
   }
 }
 
 /* 공부방 내 등록 탭. 과외쌤은 포함 여부가 정해지기 전이라 그대로 둔다. */
 .home-app--role-study_room .mp-room {
-  gap: 24px;
+  gap: var(--space-6);
 }
 .home-app--role-study_room .mp-room__tab {
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   font-size: 14px;
 }
 .home-app--role-study_room .mp-room__tab.is-active {
@@ -2295,7 +2295,7 @@
 }
 @media (max-width: 720px) {
   .home-app--role-study_room .mp-room__tab {
-    padding: 12px 16px;
+    padding: var(--space-3) var(--space-4);
     font-size: 14px;
   }
 }
