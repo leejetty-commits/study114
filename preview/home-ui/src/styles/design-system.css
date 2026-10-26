@@ -1121,6 +1121,8 @@ body {
 
 .home-shell > .guest-login-strip .guest-login-strip__text {
   padding-left: 1.25rem;
+  line-height: var(--leading-normal, 1.5);
+  margin: 0;
 }
 
 /* 카드 이미지를 카드의 위·좌·우 테두리까지 확장 */
