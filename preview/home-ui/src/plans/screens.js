@@ -1336,7 +1336,7 @@ export function renderPlansAccess() {
       ? [{ label: '발송', value: '결제 후 바로 발송 · 남은 횟수로 보관되지 않습니다' }]
       : [
           { label: '사용기한', value: '구매일부터 120일' },
-          { label: '소멸', value: '사용기한 경과 시 남은 횟수 소멸 · 환불·연장 없음' },
+          { label: '소멸', value: '사용기한 경과 시 잔여 소멸(환불액 0) · 연장 없음' },
         ]),
     { label: '적용 프로필', value: profile ? profile.label : '미선택' },
   ];
