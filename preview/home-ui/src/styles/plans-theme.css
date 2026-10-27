@@ -612,6 +612,22 @@
   gap: var(--space-1);
 }
 
+/* 328 — 요금제 shellFit 사이드메뉴 헤어라인 (회색 패널에서 보이도록 #cbd5e1) */
+.plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link {
+  position: relative;
+}
+
+.plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0.35rem;
+  right: 0.35rem;
+  height: 1px;
+  background: #cbd5e1;
+  pointer-events: none;
+}
+
 .plans-theme .plans-sf-sidenav .sup-nav__link {
   display: flex;
   flex-direction: row;
@@ -1055,6 +1071,10 @@
     flex-direction: row;
     flex-wrap: wrap;
     width: 100%;
+  }
+
+  .plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link::before {
+    content: none;
   }
 
   .plans-theme .plans-sf-sidenav .sup-nav__link {
