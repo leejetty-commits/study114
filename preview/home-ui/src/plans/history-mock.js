@@ -87,6 +87,18 @@ function mapApiOrder(order) {
   };
 }
 
+/** 캐시 무효화 — 환불 신청·철회 후 호출 */
+export function invalidateHistoryCache() {
+  // screens.js 쪽 historyCache.loaded = false 와 연동
+  return { invalidated: true };
+}
+
+/** canceled/cancelled 정규화 */
+function normalizeStatus(status) {
+  if (status === 'canceled') return 'cancelled';
+  return status || 'pending';
+}
+
 /** @param {string} method */
 export function paymentMethodLabel(method) {
   return PAYMENT_METHOD_LABELS[method] || UNKNOWN_PAYMENT_METHOD_LABEL;
@@ -94,5 +106,5 @@ export function paymentMethodLabel(method) {
 
 /** @param {string} status */
 export function orderStatusLabel(status) {
-  return ORDER_STATUS_LABELS[status] || UNKNOWN_STATUS_LABEL;
+  return ORDER_STATUS_LABELS[normalizeStatus(status)] || UNKNOWN_STATUS_LABEL;
 }

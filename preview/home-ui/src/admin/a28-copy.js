@@ -532,7 +532,22 @@ export const A28_MENU_ID_LABELS = {
 
 /** 탈퇴·삭제 확인. 결제 있음 또는 활성 노출 구독이 있을 때만 붙인다. */
 export const A28_MEMBER_BENEFIT_END_NOTICE =
-  '이용 중인 노출·이용권 혜택은 모두 종료되며, 환불은 환불규정에 따라서 조치를 해 드립니다.';
+  '이용 중인 노출·이용권 혜택은 모두 종료되며, 환불은 결제 후 7일 이내 · 사용 구간별 환불표(서버 정본)에 따라 처리됩니다.';
+
+/** 326b: 관리자 환불 관련 안내 문구 */
+export const A28_REFUND_LABELS = {
+  blockedByRefund: '환불 진행 중인 팩은 수량을 수정할 수 없습니다.',
+  withdrawnNoRerefund: '철회 처리된 결제는 다시 환불을 신청할 수 없습니다.',
+  refundReasonCodes: {
+    withdrawn_no_rerefund: '재환불 차단(철회 이력)',
+    already_requested: '이미 진행 중',
+    already_refunded: '환불 완료',
+    over_7days: '7일 경과',
+    expired: '만료',
+    used_over: '사용 초과',
+    sent: '발송 완료',
+  },
+};
 
 /**
  * @param {{ hasPayment?: boolean, activePositions?: number, paid?: { positions?: unknown[] } } | null | undefined} member

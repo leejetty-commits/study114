@@ -59,9 +59,48 @@
 
 ---
 
+## 326: 신청·동결·자동승인(PG HOLD)·철회·관리자 차단 (2026-10-28)
+
+### 서버 (PHP)
+
+| 파일 | 역할 |
+|------|------|
+| `src/Paid/RefundService.php` | 자격 확인 · 신청(txn+freeze) · 철회 · 관리자 차단 판정 |
+| `src/Paid/RefundRepository.php` | `provider_refund_requests` CRUD |
+| `public/api/paid/refund.php` | GET 자격 · POST submit · POST withdraw |
+| `src/Admin/AdminCommerceService.php` | `ticket_remaining` 보정 시 환불 진행 중 팩 차단 |
+
+### 동결(freeze) 로직
+
+1. `submit()` 트랜잭션 안에서 주문 FOR UPDATE → 팩 FOR UPDATE
+2. `MemoTicketRefundCalculator::calculate()` 재계산
+3. `provider_ticket_packs.remaining = 0` (동결)
+4. `provider_refund_requests` INSERT (status=requested)
+5. `provider_payment_orders.status = refund_requested`
+6. `provider_refund_requests.status = approved` (자동승인 — PG HOLD, 실 PG 환불은 327)
+
+### remaining 보존
+
+- 전용 컬럼 없음 — `reason_text` JSON: `{"frozen_remaining": N, "used_count": M, ...}`
+- 철회(withdraw) 시: JSON 파싱 → `pack.remaining = frozen_remaining` 복원
+- `remaining=0` 이면 기존 `consumeTicket*` WHERE(`remaining > 0`)에서 자동 제외
+
+### 프론트엔드 (JS)
+
+- `screens.js`: 결제내역 탭(쪽지권/노출) · 확장행(환불 상세) · 환불 액션 박스(사유·신청·철회)
+- `paid-api.js`: `fetchRefundEligibility` / `submitRefund` / `withdrawRefund`
+- `mypage-copy.js`: `REFUND_REASON_CHOICES` · `REFUND_STATUS_LABELS` · `REFUND_COPY`
+- `history-mock.js`: `invalidateHistoryCache()` · `normalizeStatus()`
+
+### 관리자 차단
+
+- `AdminCommerceService.applyCorrection('ticket_remaining')` → `RefundService::isPackBlockedByRefund(packId)` 확인
+- pack ↔ order 연결: `provider_ticket_packs.source_order_ref` → `provider_payment_orders.status = 'refund_requested'`
+
+---
+
 ## 후속 (이 문서 밖)
 
-- PG 취소/부분취소 API 연동 (→ 326)
-- 환불 신청 UI/API 본체 · 팩 freeze · 자동승인 (→ 326)
+- PG 실 환불 처리 → `refunded` 상태 전환 (→ 327)
 - 노출상품(프라임·픽) 환불 계산기 — **별도 티켓** (→ 327)
-- 관리자 환불 화면
+- 관리자 환불 상세 화면
