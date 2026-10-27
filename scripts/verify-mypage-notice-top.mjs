@@ -295,6 +295,10 @@ function paint(role, label, path) {
       `${role} ${label} 팝업 트리거 data-mypage-notice-*`,
       html.includes('data-mypage-notice-more') && html.includes('data-mypage-notice-open='),
     );
+    ok(
+      `${role} ${label} 행·더보기에 data-nav 없음`,
+      !/class="mypage-notice__row"[^>]*data-nav=/.test(html) && !/class="mypage-notice__more"[^>]*data-nav=/.test(html),
+    );
   }
 }
 
@@ -305,6 +309,9 @@ ok('(328) openNoticePopup 추출', noticePopupSrc.includes('export function open
 ok('(328) 스트립이 openNoticePopup 호출', noticeStripSrc.includes('openNoticePopup'));
 ok('(328) 홈이 notice-popup 재export', homeNewsSrc.includes("from './support/notice-popup.js'"));
 ok('(328) findNoticeOpener mypage 셀렉터', noticePopupSrc.includes('data-mypage-notice-open') && noticePopupSrc.includes('data-mypage-notice-more'));
+ok('(328b) 스트립 소스에 data-nav="/support/notice" 없음', !noticeStripSrc.includes('data-nav="/support/notice"'));
+ok('(328b) stopPropagation 로 이탈 차단', noticeStripSrc.includes('stopPropagation'));
+ok('(328b) 중복 바인드 가드', noticeStripSrc.includes("dataset.bound"));
 
 await login('guardian_student', 'guardian1@dev.local', '학생');
 const parentEntry = getDefaultMypagePath('parent');
