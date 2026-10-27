@@ -802,7 +802,11 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const regionReady = Boolean(opts.regionReady);
   const periodLocked = soldOut || !regionReady || !readiness.ready;
   const periodOptions = sortPeriodOptions(options);
-  const periodReason = !regionReady ? periodDisabledReason(role) : '';
+  const periodReason = !regionReady
+    ? periodDisabledReason(role)
+    : !readiness.ready
+      ? readiness.label || (readiness.reason === 'checking' ? '확인 중' : '준비 미완료')
+      : '';
   const periodCards = periodOptions
     .map((o) => {
       const key = periodKey(o);
@@ -1070,11 +1074,11 @@ export function renderPlansPositions() {
   const ops = getPaidOperationalStatus();
   const slots = role === 'study_room' ? ops?.slots ?? null : null;
   const canBuy = role === 'study_room' || role === 'tutor';
-  const selectedCode = query.product || products[0]?.productCode || 'prime';
-  const selectedProduct = products.find((p) => p.productCode === selectedCode) || products[0];
+  const selectedCode = query.product || '';
+  const selectedProduct = selectedCode ? products.find((p) => p.productCode === selectedCode) || null : null;
   const selectedPeriodOptions = sortPeriodOptions(selectedProduct?.options || []);
   const selectedOption =
-    selectedPeriodOptions.find((o) => o.optionId === query.option) || selectedPeriodOptions[0];
+    query.option ? selectedPeriodOptions.find((o) => o.optionId === query.option) || null : null;
   const periodLabel = selectedOption?.label || selectedOption?.apiVariant || '1개월';
   const periodPreview = selectedOption ? previewInclusiveRange(selectedOption) : null;
   const selectedBadges = sanitizeBadgeCodes(
@@ -1108,6 +1112,7 @@ export function renderPlansPositions() {
     !canBuy ||
     !profile ||
     !selectedProduct ||
+    !selectedOption ||
     !applyReady ||
     roomPrimeSoldOut ||
     !selectedReadiness.ready ||
@@ -1115,6 +1120,7 @@ export function renderPlansPositions() {
     (role === 'study_room' &&
       (selectedProduct?.productCode === 'prime' || selectedProduct?.productCode === 'pick') &&
       !selectedRegionScope);
+  const summaryReady = Boolean(selectedProduct && selectedOption && selectedReadiness.ready);
   const effectiveBadges = selectedReadiness.ready ? selectedBadges : [];
   const badgeLines = effectiveBadges.map((code) => {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
@@ -1124,39 +1130,47 @@ export function renderPlansPositions() {
       priceKrw: price || 0,
     };
   });
-  const positionAmt = selectedOption ? resolveCheckoutAmount(selectedOption.priceKrw) : null;
+  const positionAmt = summaryReady && selectedOption ? resolveCheckoutAmount(selectedOption.priceKrw) : null;
   const badgeSum = badgeLines.reduce((n, b) => n + (b.priceKrw || 0), 0);
   const displayTotal =
     positionAmt != null ? positionAmt.displayKrw + badgeSum : null;
-  const orderRows = buildPositionOrderRows({
-    profileLabel: profile ? profile.label : '미선택',
-    roleText: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role),
-    productName: selectedProduct?.name || productLabel(selectedCode),
-    regionValue:
-      selectedRegionScope?.label ||
-      (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
-    periodLabel,
-    periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
-    listPriceText:
-      selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
-        ? formatKrw(selectedOption.listPriceKrw)
-        : '',
-    positionPriceText: positionAmt
-      ? positionAmt.testMode
-        ? `${formatKrw(selectedOption.priceKrw)} (시험 ${formatKrw(positionAmt.chargeKrw)})`
-        : formatKrw(selectedOption.priceKrw)
-      : '—',
-    discountText: selectedOption?.discountLabel || '',
-    memoBundleText:
-      Number(selectedOption?.memoBundle) > 0 ? `쪽지권 ${selectedOption.memoBundle}회 포함` : '',
-    badgeLines,
-    badgeSumText: formatKrw(badgeSum),
-  });
+  const orderRows = summaryReady
+    ? buildPositionOrderRows({
+        profileLabel: profile ? profile.label : '미선택',
+        roleText: role === 'study_room' ? '공부방' : role === 'tutor' ? '과외쌤' : roleLabel(role),
+        productName: selectedProduct?.name || productLabel(selectedCode),
+        regionValue:
+          selectedRegionScope?.label ||
+          (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
+        periodLabel,
+        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+        listPriceText:
+          selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
+            ? formatKrw(selectedOption.listPriceKrw)
+            : '',
+        positionPriceText: positionAmt
+          ? positionAmt.testMode
+            ? `${formatKrw(selectedOption.priceKrw)} (시험 ${formatKrw(positionAmt.chargeKrw)})`
+            : formatKrw(selectedOption.priceKrw)
+          : '—',
+        discountText: selectedOption?.discountLabel || '',
+        memoBundleText:
+          Number(selectedOption?.memoBundle) > 0 ? `쪽지권 ${selectedOption.memoBundle}회 포함` : '',
+        badgeLines,
+        badgeSumText: formatKrw(badgeSum),
+      })
+    : [
+        { label: '적용 프로필', value: profile ? profile.label : '미선택' },
+        { label: '상품', value: selectedProduct ? (selectedProduct.name || productLabel(selectedCode)) : '미선택' },
+        { label: '기간', value: selectedOption ? periodLabel : '미선택' },
+        { label: '노출상품 표시가', value: '—' },
+        { label: '자동연장', value: '없음' },
+      ];
   const primeProduct = products.find((p) => p.productCode === 'prime');
   const pickProduct = products.find((p) => p.productCode === 'pick');
   const restProducts = products.filter((p) => p.productCode !== 'prime' && p.productCode !== 'pick');
-  const isSelectedOffer = (product, index) =>
-    product.productCode === selectedCode || (!query.product && index === 0);
+  const isSelectedOffer = (product, _index) =>
+    Boolean(selectedCode) && product.productCode === selectedCode;
   const renderOffer = (product, lead, index) => {
     if (!product) return '';
     const name = product.name || productLabel(product.productCode);

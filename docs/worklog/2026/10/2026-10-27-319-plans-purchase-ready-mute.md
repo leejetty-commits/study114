@@ -28,3 +28,11 @@ RESTORE_BASE = `b80f7da3e813841a1cd76caef77e5ffe0e46465c`
 - loading 중 이전 캐시 확인 → 이전 ready면 유지(깜빡임 방지)
 - 반환: `{ ready, reason, label, phase, registerCheckHref }`
 - 적용: 카드 class · 클릭 · 요약 · 배지 · CTA (positions만)
+
+## 319b — 검수 미달 고침
+
+tip `127e5bcf` 검수(우동공과3 t565) 후 미달 3건 수정:
+
+1. **자동 선택 제거**: `selectedCode = query.product || ''` (products[0]/'prime' 폴백 삭제), `selectedOption` query.option 기반만, `isSelectedOffer` index===0 분기 삭제
+2. **요약 게이트**: `summaryReady = selectedProduct && selectedOption && selectedReadiness.ready` → false면 플레이스홀더(미선택/—), CTA 비활성
+3. **사유 표시**: periodReason에 지역 사유 뒤 readiness.label / '확인 중' / '준비 미완료' 표시
