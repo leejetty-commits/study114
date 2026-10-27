@@ -128,18 +128,18 @@ $previews = [];
 
 // ── 가입 확인 메일 ──
 $verifyCases = [
-    'verify-study-room' => ['study_room_owner', '공부방 원장님', '원장님, 우동공과에 오신 것을 진심으로 환영해요.'],
-    'verify-tutor'      => ['tutor', '과외쌤 선생님', '선생님, 우동공과에 오신 것을 진심으로 환영해요.'],
+    'verify-study-room' => ['study_room_owner', '공부방 원장님', '원장님, 가입해 주셔서 감사합니다. 우동공과에 오신 것을 진심으로 환영해요.'],
+    'verify-tutor'      => ['tutor', '과외쌤 선생님', '선생님, 가입해 주셔서 감사합니다. 우동공과에 오신 것을 진심으로 환영해요.'],
     'verify-student'    => ['guardian_student', '학생·학부모님', '전화번호와 상세 주소는 다른 회원에게 공개되지 않아요.'],
-    'verify-neutral'    => ['', '', '안녕하세요, 우동공과에 오신 것을 환영해요.'],
+    'verify-neutral'    => ['', '', '가입해 주셔서 감사합니다. 우동공과에 오신 것을 환영해요.'],
 ];
 foreach ($verifyCases as $id => [$roleType, $label, $bodyNeedle]) {
     $mail = EmailVerifyMailTemplate::build($roleType, $verifyLink, 24 * 60, $supportUrl);
     $previews[$id] = $mail;
     $badge = $label !== '' ? $label . ' 가입' : '우동공과 가입';
     $expectedSubject = $label !== ''
-        ? '[우동공과] ' . $label . ', 이메일 확인만 남았어요'
-        : '[우동공과] 이메일 확인만 남았어요';
+        ? '[우동공과] ' . $label . ', 가입해 주셔서 감사합니다 · 이메일 확인만 남았어요'
+        : '[우동공과] 가입해 주셔서 감사합니다 · 이메일 확인만 남았어요';
     check($mail['subject'] === $expectedSubject, "{$id}: 제목 「{$expectedSubject}」");
     check($kindOf($mail['subject']) === 'email_verify', "{$id}: mailKind = email_verify");
     commonChecks($id, $mail, $badge, $verifyLink, $verifyLinkEsc, $supportUrl, $forbidden);
@@ -149,6 +149,12 @@ foreach ($verifyCases as $id => [$roleType, $label, $bodyNeedle]) {
     check(str_contains($mail['plain'], '「확인 메일 다시 보내기」'), "{$id}: 다시 보내기 안내");
     check(str_contains($mail['plain'], '스팸 아님'), "{$id}: 스팸함 안내");
     check(str_contains($mail['plain'], '아무 일도 일어나지 않아요'), "{$id}: 직접 가입 안 한 경우 안내");
+    check(str_contains($mail['plain'], '가입해 주셔서 감사합니다'), "{$id}: 감사 인사 포함");
+    check(str_contains($mail['html'], '가입해 주셔서 감사합니다'), "{$id}: html 감사 인사 포함");
+    check(str_contains($mail['plain'], '이어서 하실 일'), "{$id}: highlight 제목 「이어서 하실 일」");
+    check(str_contains($mail['html'], '이어서 하실 일'), "{$id}: html highlight 제목");
+    check(str_contains($mail['html'], '참고해 주세요'), "{$id}: html notes_title 「참고해 주세요」");
+    check(str_contains($mail['subject'], '이메일 확인'), "{$id}: 제목에 「이메일 확인」 포함(mailKind 분류)");
 }
 
 // ── 비밀번호 재설정 메일 ──
