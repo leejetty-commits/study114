@@ -176,6 +176,8 @@ function fieldOkMap(s, room, photos) {
     price_amount: room?.price_amount || s?.price_amount,
     lessons_per_week: s?.lessons_per_week,
     feature_1: blank(s?.feature_1) ? s.feature_1 : room?.feature_1,
+    feature_2: blank(s?.feature_2) ? s.feature_2 : room?.feature_2,
+    feature_3: blank(s?.feature_3) ? s.feature_3 : room?.feature_3,
   };
   if (photos?.hasCover === true) {
     tierRoom.images = [
@@ -301,8 +303,8 @@ export function buildRegistrationCheckPreviewItem(s, room, photos) {
     intro_long: blank(s?.intro_long),
     slogan: blank(s?.slogan || room?.slogan || s?.intro_short || room?.intro_short),
     feature_1: blank(s?.feature_1 || room?.feature_1),
-    feature_2: blank(s?.feature_2),
-    feature_3: blank(s?.feature_3),
+    feature_2: blank(s?.feature_2 || room?.feature_2),
+    feature_3: blank(s?.feature_3 || room?.feature_3),
     career_years: s?.career_years ?? room?.career_years,
     education_office_registered: s?.education_office_registered ?? room?.education_office_registered,
     weekend_available: s?.weekend_available ?? room?.weekend_available,
@@ -393,8 +395,8 @@ function buildBoard(s, room, photos) {
     editSection: 'detail2',
     rows: [
       row('feature_1', '경력특징 1', s?.feature_1 || room?.feature_1, textStatus(s?.feature_1 || room?.feature_1)),
-      row('feature_2', '경력특징 2', s?.feature_2, textStatus(s?.feature_2)),
-      row('feature_3', '경력특징 3', s?.feature_3, textStatus(s?.feature_3)),
+      row('feature_2', '경력특징 2', s?.feature_2 || room?.feature_2, textStatus(s?.feature_2 || room?.feature_2)),
+      row('feature_3', '경력특징 3', s?.feature_3 || room?.feature_3, textStatus(s?.feature_3 || room?.feature_3)),
       row('career_years', '교습경력', career, textStatus(career)),
       row('university', '대학/대학원', [s?.university_name, s?.major_name].filter(blank).join(' · '), textStatus(s?.university_name)),
       row('edu_office', '교육청등록증', edu.value, edu.status),

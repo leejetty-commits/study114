@@ -230,6 +230,7 @@ function openDrawer(roomId, field, rerender) {
       saving = false;
       document.removeEventListener('keydown', onKey);
       closeLayer(wrap);
+      void s114Alert(RC_COPY.drawer.saveSuccess);
       rerender();
     } catch (err) {
       const msg =
