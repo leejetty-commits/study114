@@ -612,19 +612,19 @@
   gap: var(--space-1);
 }
 
-/* 328 — 요금제 shellFit 사이드메뉴 헤어라인 (회색 패널에서 보이도록 #cbd5e1) */
-.plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link {
+/* 328b — 요금제 shellFit 사이드메뉴 헤어라인 (li 사이 · #d4d4d8 위 보이는 #a1a1aa) */
+.plans-theme .plans-sf-sidenav .sup-nav__list > li {
   position: relative;
 }
 
-.plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link::before {
+.plans-theme .plans-sf-sidenav .sup-nav__list > li + li::before {
   content: "";
   position: absolute;
-  top: 0;
-  left: 0.35rem;
-  right: 0.35rem;
+  top: calc(var(--space-1) / -2 - 0.5px);
+  left: 0.6rem;
+  right: 0.6rem;
   height: 1px;
-  background: #cbd5e1;
+  background: #a1a1aa;
   pointer-events: none;
 }
 
@@ -1073,7 +1073,7 @@
     width: 100%;
   }
 
-  .plans-theme .plans-sf-sidenav .sup-nav__list > li + li > .sup-nav__link::before {
+  .plans-theme .plans-sf-sidenav .sup-nav__list > li + li::before {
     content: none;
   }
 

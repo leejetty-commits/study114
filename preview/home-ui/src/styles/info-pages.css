@@ -151,6 +151,28 @@
   }
 }
 
+/* 328b — 커뮤니티 좌측메뉴 헤어라인 (ul/li 없음: a.concern-nav__item 형제) */
+.concern-nav > .concern-nav__item + .concern-nav__item {
+  position: relative;
+}
+
+.concern-nav > .concern-nav__item + .concern-nav__item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0.35rem;
+  right: 0.35rem;
+  height: 1px;
+  background: var(--gray-200, #e5e7eb);
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .concern-nav > .concern-nav__item + .concern-nav__item::before {
+    content: none;
+  }
+}
+
 .if-nav-mobile {
   display: none;
 }
