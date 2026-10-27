@@ -34,26 +34,6 @@ export function renderPlansHubCinema(role) {
 }
 
 /**
- * 홈 우레일 안내 카드. 실제 연결은 기존 route 유지.
- * 주문요약·구매 CTA 없음.
- */
-export function renderPlansHubRailCard() {
-  return `
-    <div class="plans-hub-rail__card">
-      <h2 class="plans-hub-rail__title">이 페이지 역할</h2>
-      <p class="plans-hub-rail__tip">이 페이지는 안내·진입 허브입니다. 구매 선택은 노출상품·쪽지권 상세에서 이어집니다.</p>
-      <h2 class="plans-hub-rail__title">바로 가기</h2>
-      <div class="plans-hub-rail__links">
-        <a href="#/plans/positions" data-plans-nav="/plans/positions">노출상품 상세</a>
-        <a href="#/plans/access" data-plans-nav="/plans/access">쪽지권 상세</a>
-        <a href="#/mypage/plans/my" data-nav="/mypage/plans/my">이용중 내역 보기</a>
-        <a href="#/support" data-nav="/support">고객센터</a>
-      </div>
-      <a class="plans-hub-rail__help" href="#/support/contact" data-nav="/support/contact">문의하기</a>
-    </div>`;
-}
-
-/**
  * @param {{ noticesHtml?: string, role?: string }} [opts]
  */
 export function renderPlansHomeBody(opts = {}) {

@@ -10,7 +10,7 @@ import {
   getDefaultMypagePath,
   mypageNavLabel,
 } from './router.js';
-import { renderMypageNoticeStrip } from './mypage-notice-strip.js';
+import { renderMypageNoticeStrip, bindMypageNoticeStrip } from './mypage-notice-strip.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -152,6 +152,7 @@ export function renderMypageShell(currentPath, bodyHtml) {
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageShellEvents(root, rerender) {
   bindLayoutEvents(root, rerender);
+  bindMypageNoticeStrip(root);
   root.querySelectorAll('[data-mypage-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
       e.preventDefault();

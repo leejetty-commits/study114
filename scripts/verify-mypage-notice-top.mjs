@@ -66,7 +66,11 @@ for (const file of walkCss(join(ROOT, 'preview/home-ui/src/styles'))) {
 ok('(f) border-bottom 2px var(--gray-300) 이 스타일 한 곳', cssHits.length === 1 && cssHits[0].endsWith('mypage-ops.css:1'), cssHits.join(','));
 ok('(f) 그 선언은 .mypage-notice 안', () => {
   const rule = css.match(/\.mypage-notice \{[^}]*\}/);
-  return Boolean(rule && rule[0].includes(borderNeedle) && rule[0].includes('margin: 0 0 var(--space-6, 24px)'));
+  return Boolean(
+    rule &&
+      rule[0].includes(borderNeedle) &&
+      /margin:\s*0 0 var\(--space-6(?:,\s*24px)?\)/.test(rule[0]),
+  );
 });
 ok('(f) 화면 제목 구분선은 1px 로 별도', /\.mypage-content__head \{[\s\S]*?border-bottom:\s*1px solid var\(--mp-line\);/.test(css));
 ok('(M7) 제목 말줄임 유지', /\.mypage-notice__title \{[\s\S]*?text-overflow:\s*ellipsis;[\s\S]*?white-space:\s*nowrap;/.test(css));
@@ -284,11 +288,23 @@ function paint(role, label, path) {
   );
   if (n === 1) {
     ok(
-      `${role} ${label} 더보기·행은 #/support/notice`,
+      `${role} ${label} 더보기·행은 #/support/notice fallback`,
       (html.match(/href="#\/support\/notice"/g) || []).length >= 2,
+    );
+    ok(
+      `${role} ${label} 팝업 트리거 data-mypage-notice-*`,
+      html.includes('data-mypage-notice-more') && html.includes('data-mypage-notice-open='),
     );
   }
 }
+
+const noticeStripSrc = read('preview/home-ui/src/mypage/mypage-notice-strip.js');
+const noticePopupSrc = read('preview/home-ui/src/support/notice-popup.js');
+const homeNewsSrc = read('preview/home-ui/src/home-news-row.js');
+ok('(328) openNoticePopup 추출', noticePopupSrc.includes('export function openNoticePopup'));
+ok('(328) 스트립이 openNoticePopup 호출', noticeStripSrc.includes('openNoticePopup'));
+ok('(328) 홈이 notice-popup 재export', homeNewsSrc.includes("from './support/notice-popup.js'"));
+ok('(328) findNoticeOpener mypage 셀렉터', noticePopupSrc.includes('data-mypage-notice-open') && noticePopupSrc.includes('data-mypage-notice-more'));
 
 await login('guardian_student', 'guardian1@dev.local', '학생');
 const parentEntry = getDefaultMypagePath('parent');

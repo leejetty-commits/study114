@@ -121,6 +121,36 @@
   border-color: transparent;
 }
 
+/* 328 — 좌측메뉴 구분 헤어라인 (마이페이지 .mypage-nav__link + 규칙과 동일). 제외: p19 / plans 상단탭 / 관리자 / mypage */
+.guide-nav__list > li + li > .guide-nav__link,
+.support-app .sup-nav__list > li + li > .sup-nav__link,
+.sup-frame--library .sup-nav__list > li + li > .sup-nav__link,
+.sup-nav--policy .sup-nav__list > li + li > .sup-nav__link {
+  position: relative;
+}
+
+.guide-nav__list > li + li > .guide-nav__link::before,
+.support-app .sup-nav__list > li + li > .sup-nav__link::before,
+.sup-frame--library .sup-nav__list > li + li > .sup-nav__link::before,
+.sup-nav--policy .sup-nav__list > li + li > .sup-nav__link::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0.35rem;
+  right: 0.35rem;
+  height: 1px;
+  background: var(--gray-200, #e5e7eb);
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  /* 자료실·정책: 가로 wrap/스크롤 시 선 OFF (home-support-guide.css 767 기준) */
+  .sup-frame--library .sup-nav__list > li + li > .sup-nav__link::before,
+  .sup-nav--policy .sup-nav__list > li + li > .sup-nav__link::before {
+    content: none;
+  }
+}
+
 .if-nav-mobile {
   display: none;
 }
@@ -135,6 +165,10 @@
   .concern-nav > .concern-nav__item,
   .support-app .sup-nav__list {
     display: none;
+  }
+  .guide-nav__list > li + li > .guide-nav__link::before,
+  .support-app .sup-nav__list > li + li > .sup-nav__link::before {
+    content: none;
   }
   .if-nav-mobile {
     display: flex;

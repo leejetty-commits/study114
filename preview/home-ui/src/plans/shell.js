@@ -6,7 +6,7 @@ import { renderPlansPageTitle, renderPlansNav } from './nav.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { renderPromoWithRightRail } from '../right-rail.js';
 import { isPaidHubPath, isPaidStorefrontPath, isPaidTrackPath, wrapPaidStorefront } from './theme.js';
-import { renderPlansHubCinema, renderPlansHubRailCard } from './hub-home.js';
+import { renderPlansHubCinema } from './hub-home.js';
 import { getPlansEffectiveRole } from './profiles.js';
 
 /**
@@ -56,7 +56,6 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
         </div>
         <div class="plans-hub-gap-rail" aria-hidden="true"></div>
         <div class="plans-hub-rail">
-          ${isHub ? renderPlansHubRailCard() : ''}
           ${renderPromoWithRightRail('plans_right_rail', { navRole: plansRailNavRole() })}
         </div>
         <div class="plans-hub-gutter-r" aria-hidden="true"></div>
