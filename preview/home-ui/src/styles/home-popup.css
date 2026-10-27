@@ -16,7 +16,7 @@
 .home-popup__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(28, 25, 23, 0.46);
+  background: transparent;
   pointer-events: none;
 }
 
