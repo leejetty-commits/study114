@@ -38,7 +38,7 @@ const MATRIX = {
     memo_pick: [1, 2, 4, 6, 12],
   },
 };
-const MEMO = { '1회': 1000, '5회권': 4500, '10회권': 8000 };
+const MEMO = { '1회': 500, '5회권': 2250, '10회권': 4000 };
 const RATES = {
   study_room: { '2개월': 0.1, '3개월': 0.15, '6개월': 0.2 },
   tutor: { '2개월': 0.05, '3개월': 0.1, '6개월': 0.15 },
@@ -75,9 +75,9 @@ PERIODS.forEach((period, i) => {
   ok(`policy_memo_bundle_pick_${period}`, MATRIX.tutor.memo_pick[i] === [1, 2, 4, 6, 12][i]);
 });
 
-ok('policy_memo_1', MEMO['1회'] === 1000);
-ok('policy_memo_5', MEMO['5회권'] === 4500);
-ok('policy_memo_10', MEMO['10회권'] === 8000);
+ok('policy_memo_1', MEMO['1회'] === 500);
+ok('policy_memo_5', MEMO['5회권'] === 2250);
+ok('policy_memo_10', MEMO['10회권'] === 4000);
 ok('policy_no_20_sku', !('20회권' in MEMO));
 
 // list price reconstruction samples

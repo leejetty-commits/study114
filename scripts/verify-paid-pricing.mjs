@@ -25,7 +25,7 @@ function ok(name, cond) {
 ok('seed_empty_ssot_moved_to_server', PLAN_CATALOG_SEED.length === 0);
 ok('expire_days_120', PLAN_RUNTIME_DEFAULTS.credit_expire_days === 120);
 ok('packs_1_5_10', JSON.stringify(PLAN_RUNTIME_DEFAULTS.message_credit_pack) === '[1,5,10]');
-ok('charge_equals_sale', resolveCheckoutAmount(8000).chargeKrw === 8000);
+ok('charge_equals_sale', resolveCheckoutAmount(4000).chargeKrw === 4000);
 
 console.log(`\n${pass} PASS / ${fail} FAIL`);
 if (fail > 0) process.exit(1);

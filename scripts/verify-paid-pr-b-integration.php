@@ -58,9 +58,9 @@ $ticketSvc = new ProviderTicketService($tickets);
 $q5 = PaidCatalog::quote('memo_ticket', '5회권', null);
 $q10 = PaidCatalog::quote('memo_ticket', '10회권', null);
 $q1 = PaidCatalog::quote('memo_ticket', '1회', null);
-check('t01_price_5', (int) $q5['amount_won'] === 4500, (string) $q5['amount_won']);
-check('t01_price_10', (int) $q10['amount_won'] === 8000, (string) $q10['amount_won']);
-check('t01_price_1', (int) $q1['amount_won'] === 1000, (string) $q1['amount_won']);
+check('t01_price_5', (int) $q5['amount_won'] === 2250, (string) $q5['amount_won']);
+check('t01_price_10', (int) $q10['amount_won'] === 4000, (string) $q10['amount_won']);
+check('t01_price_1', (int) $q1['amount_won'] === 500, (string) $q1['amount_won']);
 
 expectThrow('t07_no_provider', static fn () => $svc->createOrder(40, 'memo_ticket', '5회권', null, null));
 
@@ -326,7 +326,7 @@ if ($has061) {
     $row = $pdo->prepare('SELECT catalog_version, amount_won FROM provider_payment_orders WHERE order_ref=?');
     $row->execute([$snap['order_ref']]);
     $s = $row->fetch(PDO::FETCH_ASSOC);
-    check('t21_061_snapshot', is_array($s) && (string) $s['catalog_version'] === PaidCatalog::VERSION && (int) $s['amount_won'] === 8000);
+    check('t21_061_snapshot', is_array($s) && (string) $s['catalog_version'] === PaidCatalog::VERSION && (int) $s['amount_won'] === 4000);
     $pdo->prepare('UPDATE provider_payment_orders SET status=\'cancelled\' WHERE order_ref=?')->execute([$snap['order_ref']]);
 } else {
     echo "SKIP t21_061_snapshot — catalog_version 없음\n";

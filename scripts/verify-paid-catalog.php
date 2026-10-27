@@ -38,7 +38,7 @@ function expectQuote(string $product, string $variant, ?string $role, int $sale)
 }
 
 // --- version / periods ---
-check('catalog_version', PaidCatalog::version() === '2026-09-04.1');
+check('catalog_version', PaidCatalog::version() === '2026-10-27.1');
 check('periods_5', PaidCatalog::periods() === ['2주', '1개월', '2개월', '3개월', '6개월']);
 check('calc_6m', PositionPeriodCalculator::VARIANT_MAP['6개월'] === ['month', 6]);
 
@@ -98,9 +98,9 @@ foreach ($periods as $i => $p) {
 }
 
 // --- memo tickets ---
-expectQuote('memo_ticket', '1회', null, 1000);
-expectQuote('memo_ticket', '5회권', null, 4500);
-expectQuote('memo_ticket', '10회권', null, 8000);
+expectQuote('memo_ticket', '1회', null, 500);
+expectQuote('memo_ticket', '5회권', null, 2250);
+expectQuote('memo_ticket', '10회권', null, 4000);
 $m1 = PaidCatalog::quote('memo_ticket', '1회', null);
 check('memo_1_immediate', $m1['ticket_kind'] === 'immediate' && $m1['balance_stored'] === false);
 $m5 = PaidCatalog::quote('memo_ticket', '5회권', null);
