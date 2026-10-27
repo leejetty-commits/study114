@@ -137,6 +137,33 @@ export const REFUND_COPY = {
   badgeFollowsPosition: '배지는 노출상품 환불 시 함께 처리됩니다.',
 };
 
+/** 330 — 구매이력 빈 탭 예시·안내 */
+export const HISTORY_EMPTY_COPY = {
+  loading: '불러오는 중…',
+  loadPartialFail: '일부 내역을 불러오지 못했어요. 잠시 후 다시 확인해 주세요.',
+  title: '아직 결제한 내역이 없어요',
+  exampleBadge: '예시',
+  exampleAria: '결제 예시 (실제 내역 아님)',
+  count: {
+    productName: '쪽지권 10회',
+    amount: '00,000원',
+    date: '2026.00.00',
+    body: '쪽지권을 구매하면 위 예시처럼 이곳에 표시되고, 환불도 여기서 신청할 수 있어요.',
+    cta: '쪽지권 보러 가기',
+    href: '#/plans/access',
+    nav: '/plans/access',
+  },
+  position: {
+    productName: '상단 노출 30일',
+    amount: '00,000원',
+    date: '2026.00.00',
+    body: '노출상품을 구매하면 위 예시처럼 이곳에 표시돼요.',
+    cta: '노출상품 보러 가기',
+    href: '#/plans/positions',
+    nav: '/plans/positions',
+  },
+};
+
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';

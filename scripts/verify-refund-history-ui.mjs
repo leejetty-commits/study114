@@ -187,7 +187,48 @@ ok('N7 프론트 금액 계산 0', () => {
 ok('N8 a28 position 차단 라벨', a28Copy.includes('blockedByPositionRefund'));
 ok('N9 a28 period_ended 라벨', a28Copy.includes('period_ended'));
 
+/* ── O. 330 빈 상태 예시·안내 ─────────────────────────── */
+
+ok('O1 HISTORY_EMPTY_COPY', copy.includes('HISTORY_EMPTY_COPY'));
+ok('O2 renderHistEmpty', screens.includes('function renderHistEmpty'));
+ok('O3 renderHistExampleRow', screens.includes('function renderHistExampleRow'));
+ok('O4 plans-hist-row--example', screens.includes('plans-hist-row--example'));
+ok('O5 빈 상태 제목', screens.includes('HISTORY_EMPTY_COPY.title') || copy.includes('아직 결제한 내역이 없어요'));
+ok('O6 예시 배지', screens.includes('exampleBadge') || screens.includes('예시'));
+ok('O7 0건만 예시', () => {
+  const idx = screens.indexOf('function renderPlansHistory');
+  const block = screens.slice(idx, idx + 2500);
+  return block.includes('renderHistEmpty') && block.includes('activeRows.length');
+});
+ok('O8 예시 행에 data-v3-cell 없음', () => {
+  const idx = screens.indexOf('function renderHistExampleRow');
+  if (idx < 0) return false;
+  const block = screens.slice(idx, screens.indexOf('function renderHistEmptyGuide', idx) + 1 || idx + 1200);
+  const end = screens.indexOf('function renderHistEmptyGuide', idx);
+  const body = screens.slice(idx, end > idx ? end : idx + 1200);
+  return !body.includes('data-v3-cell') && !body.includes('data-refund-') && !body.includes('data-history-cell');
+});
+ok('O9 예시 행에 data-refund- 없음', () => {
+  const idx = screens.indexOf('function renderHistExampleRow');
+  const end = screens.indexOf('function renderHistEmptyGuide', idx);
+  const body = screens.slice(idx, end > idx ? end : idx + 1200);
+  return !body.includes('data-refund-');
+});
+ok('O10 개발자 sourceNote 제거', () => {
+  return !screens.includes('서버 주문 내역과 이 기기의 임시 내역을 함께 표시')
+    && !screens.includes('이 기기의 임시 내역');
+});
+ok('O11 탭 15px CSS', () => {
+  const css = exists('preview/home-ui/src/styles/mypage-ops.css')
+    ? read('preview/home-ui/src/styles/mypage-ops.css')
+    : '';
+  const idx = css.indexOf('.plans-hist-tabs .plans-tab');
+  if (idx < 0) return false;
+  const block = css.slice(idx, idx + 300);
+  return /font-size:\s*15px/.test(block) && !/font-size:\s*1[7-9]px/.test(block) && !/font-size:\s*[2-9]\dpx/.test(block);
+});
+
 /* ── 결과 ────────────────────────────────────────────── */
 
-console.log(`\n=== 326+326b+327 verify-refund-history-ui: ${passed} passed, ${failed} failed ===`);
+console.log(`\n=== 326+326b+327+330 verify-refund-history-ui: ${passed} passed, ${failed} failed ===`);
 process.exit(failed > 0 ? 1 : 0);
