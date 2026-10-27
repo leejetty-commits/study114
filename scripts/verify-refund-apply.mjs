@@ -168,8 +168,9 @@ ok('J7 철회 후 재신청 안내 문구', svc.includes('철회 처리된 결�
 
 ok('K1 resolveOrderRefForPack 헬퍼', svc.includes('function resolveOrderRefForPack'));
 ok('K2 source_order_ref 컬럼 존재 체크', () => {
-  const idx = svc.indexOf('resolveOrderRefForPack');
-  const fn = svc.slice(idx, idx + 800);
+  const idx = svc.indexOf('function resolveOrderRefForPack');
+  if (idx < 0) return false;
+  const fn = svc.slice(idx, idx + 1500);
   return fn.includes('columnExists') && fn.includes('source_order_ref');
 });
 ok('K3 fallback user_id+pack_size 매칭', () => {
@@ -228,7 +229,56 @@ ok('M9 grok-sync 본인확인 기록', grokNote.includes('본인확인'));
 ok('M10 grok-sync 재환불 차단 기록', grokNote.includes('재환불 차단'));
 ok('M11 grok-sync position_ends_at 이월', grokNote.includes('position_ends_at') && grokNote.includes('327'));
 
+/* ── N. 327 position 정적 검사 ───────────────────────── */
+
+const posCalc = exists('src/Paid/PositionRefundCalculator.php') ? read('src/Paid/PositionRefundCalculator.php') : '';
+ok('N1 PositionRefundCalculator 존재', posCalc.length > 100);
+ok('N2 PositionRefundCalculator 순수 계산', posCalc.includes('DB') === false || !posCalc.includes('$this->pdo'));
+ok('N3 before_start_full', posCalc.includes('before_start_full'));
+ok('N4 after_start_prorata', posCalc.includes('after_start_prorata'));
+ok('N5 last_day', posCalc.includes('last_day'));
+ok('N6 period_ended', posCalc.includes('period_ended'));
+ok('N7 floor', posCalc.includes('floor('));
+ok('N8 needs_owner_decision 없음', !posCalc.includes('needs_owner_decision'));
+
+ok('N9 RefundService position 분기', svc.includes("kind === 'position'") || svc.includes('submitPosition'));
+ok('N10 RefundService position txn', () => {
+  const idx = svc.indexOf('function submitPosition');
+  if (idx < 0) return false;
+  const fn = svc.slice(idx, idx + 6000);
+  return fn.includes('lockPositionSubscription') && fn.includes('PositionRefundCalculator::calculate')
+    && fn.includes('revokeBadgesForPositionOrder') && fn.includes('freezePositionBundles')
+    && fn.includes('refund_requested') && fn.includes('markApproved');
+});
+ok('N11 PG 호출 문자열 0 (position)', () => {
+  const idx = svc.indexOf('function submitPosition');
+  if (idx < 0) return false;
+  const fn = svc.slice(idx, idx + 3000);
+  return !fn.includes('cancelPayment') && !fn.includes("'refunded'");
+});
+ok('N12 철회 복원 경로', svc.includes('function withdrawPosition'));
+ok('N13 관리자 position_ends_at 차단', () => {
+  const admin = exists('src/Admin/AdminCommerceService.php') ? read('src/Admin/AdminCommerceService.php') : '';
+  return admin.includes('isPositionBlockedByRefund');
+});
+ok('N14 isPositionBlockedByRefund', svc.includes('function isPositionBlockedByRefund'));
+
+ok('N15 프라임 철회 자리 확인', svc.includes('assertPrimeSlotAvailableForWithdraw'));
+ok('N16 배지 회수', svc.includes('revokeBadgesForPositionOrder'));
+ok('N17 번들 동결', svc.includes('freezePositionBundles'));
+ok('N18 badge_follows_position', svc.includes('badge_follows_position'));
+
+ok('N19 18d 정본', exists('docs/ssot/18d-position-refund-lock.md'));
+ok('N20 18c 후속 업데이트', () => {
+  const c = exists('docs/ssot/18c-memo-ticket-refund-lock.md') ? read('docs/ssot/18c-memo-ticket-refund-lock.md') : '';
+  return c.includes('18d') && !c.includes('→ 327)');
+});
+ok('N21 snapshot segment_started_on', () => {
+  const checkout = exists('src/Paid/ProviderCheckoutService.php') ? read('src/Paid/ProviderCheckoutService.php') : '';
+  return checkout.includes('segment_started_on');
+});
+
 /* ── 결과 ────────────────────────────────────────────── */
 
-console.log(`\n=== 326+326b verify-refund-apply: ${passed} passed, ${failed} failed ===`);
+console.log(`\n=== 326+326b+327 verify-refund-apply: ${passed} passed, ${failed} failed ===`);
 process.exit(failed > 0 ? 1 : 0);

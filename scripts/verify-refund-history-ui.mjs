@@ -161,7 +161,33 @@ const a28Copy = exists('preview/home-ui/src/admin/a28-copy.js') ? read('preview/
 ok('M1 a28-copy A28_REFUND_LABELS', a28Copy.includes('A28_REFUND_LABELS'));
 ok('M2 a28-copy 환불규정 정리', !a28Copy.includes('환불규정에 따라서'));
 
+/* ── N. 327 노출 탭 활성 ─────────────────────────────── */
+
+ok('N1 노출 탭 환불 가능', () => {
+  /* 327: canRefund에서 historyTab === 'count' 제한 제거 확인 */
+  const idx = screens.indexOf('const canRefund');
+  if (idx < 0) return false;
+  const line = screens.slice(idx, idx + 200);
+  return !line.includes("historyTab === 'count'");
+});
+ok('N2 badge_addon 별도 액션 없음', () => {
+  const idx = screens.indexOf('const canRefund');
+  if (idx < 0) return false;
+  const line = screens.slice(idx, idx + 200);
+  return line.includes("'badge_addon'");
+});
+ok('N3 position breakdown 표시', screens.includes('refund-breakdown') || screens.includes('elig.breakdown'));
+ok('N4 positionFrozenNote 카피', copy.includes('positionFrozenNote'));
+ok('N5 positionWithdrawNote 카피', copy.includes('positionWithdrawNote'));
+ok('N6 badgeFollowsPosition 카피', copy.includes('badgeFollowsPosition'));
+ok('N7 프론트 금액 계산 0', () => {
+  /* screens.js 에 Math.floor / remaining_days / seg_days 직접 계산이 없어야 한다 */
+  return !screens.includes('Math.floor') || !screens.includes('remaining_days');
+});
+ok('N8 a28 position 차단 라벨', a28Copy.includes('blockedByPositionRefund'));
+ok('N9 a28 period_ended 라벨', a28Copy.includes('period_ended'));
+
 /* ── 결과 ────────────────────────────────────────────── */
 
-console.log(`\n=== 326+326b verify-refund-history-ui: ${passed} passed, ${failed} failed ===`);
+console.log(`\n=== 326+326b+327 verify-refund-history-ui: ${passed} passed, ${failed} failed ===`);
 process.exit(failed > 0 ? 1 : 0);

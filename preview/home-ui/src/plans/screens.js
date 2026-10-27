@@ -1639,7 +1639,9 @@ function isCountProduct(r) {
 function renderHistoryRow(r) {
   const isExpanded = expandedOrderRef === r.orderRef;
   const isFromApi = r.source === 'api';
-  const canRefund = historyTab === 'count' && isFromApi && (r.status === 'paid' || r.status === 'refund_requested');
+  /* 327: 노출 탭도 환불 가능 (badge_addon 은 노출에 묶여 별도 액션 없음) */
+  const kind = r.productKind || r.product_kind || '';
+  const canRefund = isFromApi && kind !== 'badge_addon' && (r.status === 'paid' || r.status === 'refund_requested');
 
   let expandedHtml = '';
   if (isExpanded) {
@@ -1668,9 +1670,13 @@ function renderExpandedRow(r) {
   const status = r.status || '';
 
   if (status === 'refund_requested') {
+    const kind = r.productKind || r.product_kind || '';
+    const frozenMsg = kind === 'position' ? REFUND_COPY.positionFrozenNote : REFUND_COPY.frozenNote;
+    const withdrawNote = kind === 'position' ? REFUND_COPY.positionWithdrawNote : '';
     return `<tr class="history-expand-row"><td colspan="8">
       <div class="refund-action-box">
-        <p class="refund-action-box__status">${esc(REFUND_COPY.frozenNote)}</p>
+        <p class="refund-action-box__status">${esc(frozenMsg)}</p>
+        ${withdrawNote ? `<p class="refund-action-box__note">${esc(withdrawNote)}</p>` : ''}
         <label class="refund-action-box__label">${esc(REFUND_COPY.withdrawConfirmLabel)}
           <input type="text" data-refund-withdraw-confirm maxlength="10" placeholder="${esc(REFUND_COPY.withdrawConfirmPlaceholder)}" autocomplete="off" />
         </label>
@@ -1694,9 +1700,18 @@ function renderExpandedRow(r) {
       </td></tr>`;
     }
 
+    /* 327: position breakdown (서버 계산, 프론트 표시만) */
+    const breakdownHtml = Array.isArray(elig.breakdown) && elig.breakdown.length
+      ? `<ul class="refund-breakdown">${elig.breakdown.map((b) => `<li>${esc(b.label)}: ${formatKrw(b.refund_won)}${b.amount_won ? ` (결제 ${formatKrw(b.amount_won)})` : ''}</li>`).join('')}</ul>`
+      : '';
+    const usedInfo = typeof elig.used_count === 'number' && elig.used_count > 0
+      ? ` (사용 ${elig.used_count}회)`
+      : '';
+
     return `<tr class="history-expand-row"><td colspan="8">
       <div class="refund-action-box">
-        <p>환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong> (사용 ${elig.used_count}회)</p>
+        <p>환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong>${usedInfo}</p>
+        ${breakdownHtml}
         <label class="refund-action-box__label">사유 선택
           <select data-refund-reason-select>
             ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
@@ -1920,7 +1935,7 @@ export function renderPlansResult() {
         ${resultBadgeLines}
         ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본)</p>
+        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본, 배지 포함·같이 회수)</p>
         ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
