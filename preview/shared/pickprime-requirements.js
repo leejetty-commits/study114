@@ -31,7 +31,6 @@ const SCHOOL_OR_CAREER_LABEL = '학교·학과 또는 경력';
 
 const TUTOR_HINTS = {
   school_or_career: '대학명 또는 경력구간 중 하나면 됩니다',
-  main_material_note: '주교재를 적어 주세요',
   teaching_style_badges: '강의스타일을 1개 이상 고르세요. 최대 4개',
   intro_long: '상세 소개를 입력하면 카드와 확대카드에 보입니다',
   feature_2: '프라임 카드에 특징을 더 보여 줍니다',

@@ -43,7 +43,6 @@ final class TierRequirement
     /** @var array<string, string> */
     private const TUTOR_LABELS = [
         'school_or_career' => '학교·학과 또는 경력',
-        'main_material_note' => '주교재',
         'teaching_style_badges' => '강의스타일',
         'intro_long' => '상세 소개',
         'feature_2' => '특징 2',
@@ -390,7 +389,7 @@ final class TierRequirement
     private static function loadRoom(PDO $pdo, int $id): array
     {
         $stmt = $pdo->prepare(
-            'SELECT intro_short, intro_long, feature_1, teaching_style, price_amount,
+            'SELECT intro_short, intro_long, feature_1, feature_2, feature_3, teaching_style, price_amount,
                     lessons_per_week, teaching_style_ids, teaching_style_note, monthly_fee_manwon
              FROM study_rooms WHERE id = ?'
         );
