@@ -70,6 +70,7 @@ export const RC_COPY = {
     save: '저장',
     cancel: '닫기',
     saving: '저장 중…',
+    saveSuccess: '저장되었습니다.',
     failPrefix: '저장에 실패했습니다',
   },
   cover: {

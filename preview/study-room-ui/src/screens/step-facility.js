@@ -250,6 +250,7 @@ export function bindFacilityEvents(root, opts = {}) {
     withSaving(saveBtn, async () => {
       await persistFacility();
       if (typeof opts.onSaved === 'function') {
+        void s114Alert('저장되었습니다.');
         opts.onSaved();
         return;
       }
