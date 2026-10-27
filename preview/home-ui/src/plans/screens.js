@@ -681,6 +681,44 @@ export function getEligibility(profile, productCode, family = 'position') {
 }
 
 /**
+ * Position(Pick·Prime) 단일 구매 준비 게이트 (319).
+ * 카드 색·클릭·요약·배지·CTA가 이 함수 하나만 참조한다.
+ * @param {import('./profiles.js').ProviderProfile | null} profile
+ * @param {string} productCode 'pick' | 'prime'
+ * @param {string} role
+ * @returns {{ ready: boolean, reason: string, label: string, phase: string, registerCheckHref: string }}
+ */
+function isProductReady(profile, productCode, role) {
+  if (!profile) {
+    return { ready: false, reason: 'no-profile', label: '적용 프로필을 먼저 선택하세요', phase: '', registerCheckHref: '' };
+  }
+  const elig = getEligibility(profile, productCode);
+
+  if (elig.tierPhase === 'loading' && !elig.canBuy) {
+    const tierLoadingMsg = '구매 조건을 확인하고 있어요';
+    const nonTierMissing = elig.missing.filter((m) => m !== tierLoadingMsg);
+    if (nonTierMissing.length > 0) {
+      return { ready: false, reason: 'missing', label: nonTierMissing.join(' · '), phase: 'loading', registerCheckHref: elig.registerCheckHref || '' };
+    }
+    const entry = readTierCheck(profile.providerType, profile.id);
+    const side = productCode === 'prime' ? entry?.prime : entry?.pick;
+    if (side && side.can_buy !== false && tierLabels(side.missing).length === 0) {
+      return { ready: true, reason: 'ok', label: '', phase: 'loading', registerCheckHref: '' };
+    }
+    return { ready: false, reason: 'checking', label: '확인 중', phase: 'loading', registerCheckHref: '' };
+  }
+
+  if (!elig.canBuy) {
+    let reason = 'missing';
+    if (elig.tierPhase === 'error') reason = 'tier-error';
+    else if (elig.missing.some((m) => m.includes('지역') || m.includes('행정동'))) reason = 'region';
+    return { ready: false, reason, label: elig.missing.join(' · ') || '필수 입력을 완료해 주세요', phase: elig.tierPhase || '', registerCheckHref: elig.registerCheckHref || '' };
+  }
+
+  return { ready: true, reason: 'ok', label: '', phase: elig.tierPhase || 'ready', registerCheckHref: '' };
+}
+
+/**
  * @param {object} product
  * @param {import('./profiles.js').ProviderProfile | null} profile
  * @param {string} role
@@ -721,6 +759,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const eligibility = profile
     ? getEligibility(profile, product.productCode)
     : { canBuy: false, missing: ['적용 프로필을 먼저 선택하세요'], tierPhase: '' };
+  const readiness = isProductReady(profile, product.productCode, role);
   if (soldOut) {
     eligibility.canBuy = false;
     eligibility.missing = [
@@ -761,7 +800,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
       : '';
 
   const regionReady = Boolean(opts.regionReady);
-  const periodLocked = soldOut || !regionReady;
+  const periodLocked = soldOut || !regionReady || !readiness.ready;
   const periodOptions = sortPeriodOptions(options);
   const periodReason = !regionReady ? periodDisabledReason(role) : '';
   const periodCards = periodOptions
@@ -811,7 +850,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
 
   if (isStorefront) {
     return `
-    <div class="plans-sf-buy plans-catalog__item${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
+    <div class="plans-sf-buy plans-catalog__item${soldOut ? ' is-soldout' : ''}${!soldOut && !readiness.ready ? ' is-not-ready' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
       ${boardHtml}
       ${pickPreviewHtml}
       ${optionSelect}
@@ -823,7 +862,9 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const buyBtn = canPurchaseUi
     ? soldOut
       ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>예약대기만 가능</button>`
-      : `<button type="button" class="${ctaClass}" data-plans-select-product
+      : !readiness.ready
+        ? `<button type="button" class="btn btn--secondary plans-card__cta" disabled>${esc(readiness.reason === 'checking' ? '확인 중' : '준비 미완료')}</button>`
+        : `<button type="button" class="${ctaClass}" data-plans-select-product
          data-product-code="${esc(product.productCode)}"
          title="이 상품을 주문 요약에 반영">이 상품 선택</button>`
     : `<a href="${AUTH_UI_BASE}/#/login" class="btn btn--secondary plans-card__cta" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인 후 구매</a>`;
@@ -835,7 +876,7 @@ function renderPositionCard(product, profile, role, slots = null, opts = {}) {
   const media = `<div class="plans-card__media ${productMediaClass(product.productCode)}" aria-hidden="true">${badge}<span class="plans-card__media-ico">${productIcon(product.productCode)}</span></div>`;
 
   return `
-    <li class="plans-card plans-card--${layout} plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
+    <li class="plans-card plans-card--${layout} plans-catalog__item${product.featured ? ' is-featured' : ''}${soldOut ? ' is-soldout' : ''}${!soldOut && !readiness.ready ? ' is-not-ready' : ''}${primaryCta ? ' is-primary' : ''}" data-product-code="${esc(product.productCode)}">
       ${media}
       <div class="plans-card__body">
         <h3 class="plans-card__name">${esc(displayName)}</h3>
@@ -1056,6 +1097,9 @@ export function renderPlansPositions() {
     profile && selectedProduct
       ? getEligibility(profile, selectedProduct.productCode)
       : { canBuy: false, missing: [] };
+  const selectedReadiness = selectedProduct
+    ? isProductReady(profile, selectedProduct.productCode, role)
+    : { ready: false, reason: 'no-product', label: '', phase: '', registerCheckHref: '' };
   const roomPrimeSoldOut =
     role === 'study_room' &&
     selectedProduct?.productCode === 'prime' &&
@@ -1066,11 +1110,13 @@ export function renderPlansPositions() {
     !selectedProduct ||
     !applyReady ||
     roomPrimeSoldOut ||
+    !selectedReadiness.ready ||
     !selectedElig.canBuy ||
     (role === 'study_room' &&
       (selectedProduct?.productCode === 'prime' || selectedProduct?.productCode === 'pick') &&
       !selectedRegionScope);
-  const badgeLines = selectedBadges.map((code) => {
+  const effectiveBadges = selectedReadiness.ready ? selectedBadges : [];
+  const badgeLines = effectiveBadges.map((code) => {
     const price = badgePriceKrw(providerTypeKey, undefined, code, periodLabel);
     return {
       label: badgeDisplayName(code),
@@ -1201,7 +1247,8 @@ export function renderPlansPositions() {
               Boolean(query.product) &&
               Boolean(selectedOption) &&
               Boolean(selectedProduct) &&
-              !roomPrimeSoldOut,
+              !roomPrimeSoldOut &&
+              selectedReadiness.ready,
           })}
         </div>
 
@@ -1985,6 +2032,7 @@ export function bindPlansScreenEvents(root, rerender) {
           root.querySelector(`.plans-catalog__item[data-product-code="${productCode}"]`) ||
           root.querySelector('.plans-catalog__item.is-primary');
         if (card?.classList.contains('is-soldout')) return;
+        if (card?.classList.contains('is-not-ready')) return;
       }
 
       const isImmediate = option.apiVariant === '1회' || /^1회/.test(String(option.label || ''));
@@ -2060,6 +2108,7 @@ export function bindPlansScreenEvents(root, rerender) {
 
   root.querySelectorAll('[data-plans-select-product]').forEach((btn) => {
     btn.addEventListener('click', () => {
+      if (btn instanceof HTMLButtonElement && btn.disabled) return;
       const code = btn.getAttribute('data-product-code') || '';
       const itemEl = btn.closest('.plans-catalog__item');
       const select = itemEl?.querySelector('[data-plans-option]');
