@@ -354,7 +354,7 @@ function renderLowCreditBanner(tickets) {
     <div class="mypage-info-box is-warn plans-low-credit" role="status">
       <strong>쪽지권 안내</strong>
       <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">내 쪽지권 보기</a>
+      <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">내 상품 보기</a>
     </div>`;
 }
 
@@ -1387,7 +1387,7 @@ export function renderPlansAccess() {
                 ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
               <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
               <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
-              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 쪽지권 보기</a></p>
+              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 상품 보기</a></p>
             </div>`
                 : ''
             }
