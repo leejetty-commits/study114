@@ -178,6 +178,10 @@ final class ProviderCheckoutService
             $snapshot['ends_on'] = $period['ends_on'];
             $snapshot['end_exclusive_on'] = $period['end_exclusive_on'];
             $snapshot['grant_mode'] = $grantMode;
+            /* 327: extend 주문의 추가 구간 시작점 — 환불 계산에 사용 */
+            if ($grantMode === 'extend' && is_array($activeOwn)) {
+                $snapshot['segment_started_on'] = (string) ($activeOwn['end_exclusive_on'] ?? $period['started_on']);
+            }
         }
         if ($normalizedBadges !== []) {
             $snapshot['badge_codes'] = $normalizedBadges;

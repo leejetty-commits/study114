@@ -499,7 +499,7 @@ export function renderPolicyAccordion(family, role) {
       <div class="plans-policy-acc__body">
         <ul class="plans-tier-list">
           <li>시작 전: 전액 환불</li>
-          <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산</li>
+          <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산(배지 포함·같이 회수)</li>
           <li>만료 후 베이직카드(기본 노출)로 복귀 · ${providerPageName(role)}은 유지</li>
           <li>자동연장 없음</li>
         </ul>

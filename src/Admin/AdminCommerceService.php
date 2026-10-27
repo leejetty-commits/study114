@@ -93,6 +93,10 @@ final class AdminCommerceService
             if ($before === null) {
                 throw new InvalidArgumentException('포지션 구독을 찾을 수 없습니다.');
             }
+            /* 327: 환불 진행 중 차단 */
+            if ((new RefundService())->isPositionBlockedByRefund($id)) {
+                throw new InvalidArgumentException('환불 진행 중인 노출상품은 만료일을 수정할 수 없습니다.');
+            }
             if (!$this->repo->updatePositionEndsAt($id, $endsAt)) {
                 throw new InvalidArgumentException('만료일 보정에 실패했습니다.');
             }

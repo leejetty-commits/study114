@@ -127,6 +127,14 @@ export const REFUND_COPY = {
   frozenNote: '환불 진행 중에는 쪽지권을 사용할 수 없습니다.',
   withdrawnNoRerefund: '철회 처리된 결제는 다시 환불을 신청할 수 없습니다.',
   adminBlockedByRefund: '환불 진행 중인 팩은 수량을 수정할 수 없습니다.',
+  /* 327 position */
+  positionConfirmSubmit: '환불을 신청하면 노출·배지가 즉시 내려가고, 남은 무료 쪽지도 0이 됩니다. 진행할까요?',
+  positionConfirmWithdraw: '환불 신청을 철회하면 노출·배지·무료 쪽지가 복원됩니다. 철회할까요?',
+  positionFrozenNote: '환불 진행 중이므로 노출·배지·무료 쪽지가 정지 상태입니다.',
+  positionWithdrawNote: '철회하면 배지·무료 쪽지도 같이 돌아갑니다. 프라임은 자리 재배정 시 철회가 불가할 수 있습니다.',
+  positionSubmitSuccess: '환불 신청이 완료되었습니다. 노출과 배지가 내려갑니다.',
+  adminBlockedByPosition: '환불 진행 중인 노출상품은 만료일을 수정할 수 없습니다.',
+  badgeFollowsPosition: '배지는 노출상품 환불 시 함께 처리됩니다.',
 };
 
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
