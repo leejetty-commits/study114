@@ -295,6 +295,19 @@ a.plans-chip:hover {
   opacity: 0.88;
 }
 
+/* 319: 구매 준비 미완료 — 무채색 + 클릭 무효 */
+.plans-card.is-not-ready,
+.plans-sf-buy.is-not-ready {
+  filter: grayscale(0.65);
+  opacity: 0.72;
+}
+
+.plans-card.is-not-ready .plans-card__cta,
+.plans-card.is-not-ready .plans-period-card__btn,
+.plans-sf-buy.is-not-ready .plans-period-card__btn {
+  cursor: not-allowed;
+}
+
 .plans-card__media {
   position: relative;
   height: 7.5rem;
