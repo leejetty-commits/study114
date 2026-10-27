@@ -694,16 +694,11 @@ function isProductReady(profile, productCode, role) {
   }
   const elig = getEligibility(profile, productCode);
 
-  if (elig.tierPhase === 'loading' && !elig.canBuy) {
+  if (elig.tierPhase === 'loading') {
     const tierLoadingMsg = '구매 조건을 확인하고 있어요';
     const nonTierMissing = elig.missing.filter((m) => m !== tierLoadingMsg);
     if (nonTierMissing.length > 0) {
       return { ready: false, reason: 'missing', label: nonTierMissing.join(' · '), phase: 'loading', registerCheckHref: elig.registerCheckHref || '' };
-    }
-    const entry = readTierCheck(profile.providerType, profile.id);
-    const side = productCode === 'prime' ? entry?.prime : entry?.pick;
-    if (side && side.can_buy !== false && tierLabels(side.missing).length === 0) {
-      return { ready: true, reason: 'ok', label: '', phase: 'loading', registerCheckHref: '' };
     }
     return { ready: false, reason: 'checking', label: '확인 중', phase: 'loading', registerCheckHref: '' };
   }

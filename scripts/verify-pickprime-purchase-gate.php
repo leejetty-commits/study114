@@ -73,13 +73,23 @@ check('tutor_prime_open_without_material', TierRequirement::missingFromRecord('t
 
 $emptyRoom = TierRequirement::missingFromRecord('study_room', 'pick', []);
 check('room_empty_pick', ids($emptyRoom) === TierRequirement::ROOM_PICK_IDS, implode(',', ids($emptyRoom)));
-$roomPick = TierRequirement::missingFromRecord('study_room', 'pick', [
+$roomPickOpen = [
     'images' => [['image_type' => 'cover', 'image_path' => '/uploads/cover.jpg']],
-    'intro_short' => '한 줄',
+    'intro_long' => '공부방 소개',
     'monthly_fee_manwon' => '30',
     'teaching_style_ids' => ['kind'],
-]);
+    'feature_1' => '경력특징 하나',
+];
+$roomPick = TierRequirement::missingFromRecord('study_room', 'pick', $roomPickOpen);
 check('room_pick_open_without_expanded', $roomPick === []);
+$roomNoIntro = $roomPickOpen;
+$roomNoIntro['intro_long'] = '';
+$roomNoIntroIds = ids(TierRequirement::missingFromRecord('study_room', 'pick', $roomNoIntro));
+check('room_pick_blocked_without_intro_long', in_array('intro_long', $roomNoIntroIds, true), implode(',', $roomNoIntroIds));
+$roomNoFeature1 = $roomPickOpen;
+$roomNoFeature1['feature_1'] = '   ';
+$roomNoFeature1Ids = ids(TierRequirement::missingFromRecord('study_room', 'pick', $roomNoFeature1));
+check('room_pick_blocked_without_feature_1', in_array('feature_1', $roomNoFeature1Ids, true), implode(',', $roomNoFeature1Ids));
 
 $checkout = file_get_contents(dirname(__DIR__) . '/src/Paid/ProviderCheckoutService.php');
 $createAt = strpos($checkout, 'function createOrder');
@@ -124,6 +134,55 @@ $pdo->exec(
 $pdo->exec("INSERT INTO tutors (id, university_name) VALUES (7, '')");
 $loaded = TierRequirement::missingFor($pdo, 'tutor', 7, 'pick');
 check('pdo_empty_tutor', count($loaded) === count(TierRequirement::TUTOR_PICK_IDS), (string) count($loaded));
+
+$pdo->exec(
+    'CREATE TABLE study_rooms (
+        id INTEGER PRIMARY KEY,
+        intro_short TEXT,
+        intro_long TEXT,
+        feature_1 TEXT,
+        feature_2 TEXT,
+        feature_3 TEXT,
+        teaching_style TEXT,
+        price_amount INTEGER,
+        lessons_per_week TEXT,
+        teaching_style_ids TEXT,
+        teaching_style_note TEXT,
+        monthly_fee_manwon TEXT
+    )'
+);
+$pdo->exec(
+    'CREATE TABLE study_room_images (
+        study_room_id INTEGER,
+        image_type TEXT,
+        image_path TEXT,
+        original_filename TEXT,
+        prime_1280_path TEXT,
+        basic_720_path TEXT,
+        is_system_default INTEGER
+    )'
+);
+$insertRoom = $pdo->prepare(
+    'INSERT INTO study_rooms (
+        id, intro_short, intro_long, feature_1, feature_2, feature_3,
+        teaching_style, price_amount, lessons_per_week, teaching_style_ids,
+        teaching_style_note, monthly_fee_manwon
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+);
+$insertRoom->execute([31, '', '공부방 소개', '경력특징 하나', '경력특징 둘', '경력특징 셋', 'kind', 30000, '2', 'kind', '스타일 설명', '30']);
+$insertRoom->execute([32, '', '공부방 소개', '경력특징 하나', '경력특징 둘', '', 'kind', 30000, '2', 'kind', '스타일 설명', '30']);
+$insertImage = $pdo->prepare(
+    'INSERT INTO study_room_images (study_room_id, image_type, image_path, original_filename, is_system_default)
+     VALUES (?, ?, ?, ?, 0)'
+);
+$insertImage->execute([31, 'cover', '/uploads/cover-31.jpg', 'cover-31.jpg']);
+$insertImage->execute([32, 'cover', '/uploads/cover-32.jpg', 'cover-32.jpg']);
+$pdoPick = ids(TierRequirement::missingFor($pdo, 'study_room', 31, 'pick'));
+check('pdo_room_pick_full', $pdoPick === [], implode(',', $pdoPick));
+$pdoPrime = ids(TierRequirement::missingFor($pdo, 'study_room', 31, 'prime'));
+check('pdo_room_prime_full', $pdoPrime === [], implode(',', $pdoPrime));
+$pdoPrimeMiss = ids(TierRequirement::missingFor($pdo, 'study_room', 32, 'prime'));
+check('pdo_room_prime_missing_feature_3', $pdoPrimeMiss === ['feature_3'], implode(',', $pdoPrimeMiss));
 
 $stylePdo = new PDO('sqlite::memory:');
 $stylePdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
