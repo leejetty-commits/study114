@@ -2068,6 +2068,198 @@
   }
 }
 
+/* ── 329 v3 구매이력 행 ── */
+.plans-hist-tabs {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+  margin-bottom: 8px;
+}
+.plans-hist-tabs .plans-tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+}
+.plans-hist-tabs .plans-tab.is-active {
+  color: #111;
+  font-weight: 700;
+  border-bottom-color: #111;
+}
+.plans-hist-row {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.plans-hist-row.is-refund-active {
+  border-left: 3px solid #2563eb;
+}
+.plans-hist-row__bar {
+  display: flex;
+  align-items: stretch;
+  flex-direction: column;
+}
+.plans-hist-row__info {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 9px 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.plans-hist-row__name {
+  font-weight: 600;
+}
+.plans-hist-row__meta {
+  color: #777;
+  font-size: 12px;
+  margin-left: 4px;
+}
+.plans-hist-row__st {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #e5e7eb;
+  margin-left: 4px;
+}
+.plans-hist-row__st--ing {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.plans-hist-row__st--ok {
+  background: #dcfce7;
+  color: #166534;
+}
+.plans-hist-row__st--no {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.plans-hist-row__acts {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid #e5e7eb;
+}
+.plans-hist-row__acts button {
+  flex: 1;
+  border: 0;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 0;
+  padding: 8px 2px;
+  font-size: 11.5px;
+  min-height: 36px;
+  min-width: 0;
+  white-space: nowrap;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+}
+.plans-hist-row__acts button:first-child {
+  border-left: 0;
+}
+.plans-hist-row__acts button:disabled {
+  background: #f1f5f9;
+  color: #aaa;
+  cursor: not-allowed;
+}
+.plans-hist-row__acts button.is-cell-active {
+  box-shadow: inset 0 -3px 0 #111;
+  font-weight: 700;
+}
+.plans-hist-row__acts button.is-primary {
+  background: #2563eb;
+  color: #fff;
+}
+.plans-hist-row__panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background: #f8fafc;
+}
+.plans-hist-row.is-open .plans-hist-row__panel {
+  max-height: 900px;
+  border-top: 1px dashed #cbd5e1;
+}
+.plans-hist-row__panel-inner {
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.plans-hist-row__panel-inner table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.plans-hist-row__panel-inner td {
+  padding: 3px 0;
+}
+.plans-hist-row__panel-inner td:last-child {
+  text-align: right;
+}
+.plans-hist-steps {
+  display: flex;
+  gap: 4px;
+  margin: 8px 0;
+}
+.plans-hist-steps div {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  padding: 5px 0;
+  border-radius: 4px;
+  background: #e5e7eb;
+}
+.plans-hist-steps .is-done {
+  background: #16a34a;
+  color: #fff;
+}
+.plans-hist-steps .is-current {
+  background: #2563eb;
+  color: #fff;
+}
+.plans-hist-steps .is-rejected {
+  background: #dc2626;
+  color: #fff;
+}
+.refund-formula {
+  font-family: monospace;
+  background: #eef2ff;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin: 6px 0;
+  font-size: 12px;
+}
+@media (min-width: 900px) {
+  .plans-hist-row__bar {
+    flex-direction: row;
+    align-items: center;
+  }
+  .plans-hist-row__info {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+  }
+  .plans-hist-row__acts {
+    border-top: 0;
+    border-left: 1px solid #e5e7eb;
+    width: 240px;
+    max-width: 240px;
+    flex: 0 0 240px;
+  }
+  .plans-hist-row__acts button {
+    padding: 0 1px;
+    font-size: 11px;
+    min-height: 40px;
+  }
+}
+
 /* ── 쪽지·후기함 (마이페이지 안만. 바깥 후기 시트 .review-sheet는 그대로) ── */
 .mypage-content .msg-hub {
   margin: 0 0 var(--space-6);

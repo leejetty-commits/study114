@@ -111,9 +111,10 @@ export const MYPAGE_PATH_TO_SCREEN = {
   '/mypage/account': 'P15-11',
 };
 
-/** @deprecated 구 라우트 — P15-10 제출자료 상태 */
+/** @deprecated 구 라우트 — P15-10 제출자료 상태 · 329b 결제내역→구매이력 */
 export const MYPAGE_LEGACY_ALIASES = {
   '/mypage/verification': '/mypage/submission-docs',
+  '/mypage/plans/history': '/mypage/plans',
 };
 
 /** @param {string} hashPath hash without # e.g. /mypage/home */
@@ -244,7 +245,7 @@ export function screenTitle(screenId, path, role) {
     'P17-07': '내 문의 내역',
     'P15-09': '구매이력',
     'P18-04': '구매이력',
-    'P18-05': '구매내역',
+    'P18-05': '구매이력',
     'P15-10': '제출자료 상태',
     'P23-04': '신뢰·증빙자료 제출',
     'P23-04a': '제출 작성',

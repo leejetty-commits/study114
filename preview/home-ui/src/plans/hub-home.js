@@ -121,10 +121,10 @@ export function renderPlansHomeBody(opts = {}) {
 
       <section class="faq-cta-block" aria-labelledby="faqTitle">
         <h2 id="faqTitle">궁금한 점이 있나요?</h2>
-        <p>환불·만료·이용 중인 상품은 상세·내 상품·고객센터에서 확인할 수 있습니다.</p>
+        <p>환불·만료·이용 중인 상품은 상세·구매이력·고객센터에서 확인할 수 있습니다.</p>
         <div class="btn-row">
           <a class="plans-hub-outline" href="#/support" data-nav="/support">고객센터</a>
-          <a class="plans-hub-outline" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 상품</a>
+          <a class="plans-hub-outline" href="#/mypage/plans" data-nav="/mypage/plans">구매이력</a>
         </div>
       </section>
     </div>`;
