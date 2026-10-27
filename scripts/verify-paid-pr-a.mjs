@@ -220,7 +220,7 @@ function extractListConst(name) {
 
 const VERSION = extractStringConst('VERSION');
 const PERIODS = extractListConst('PERIODS');
-ok('catalog_version', VERSION === '2026-09-04.1');
+ok('catalog_version', VERSION === '2026-10-27.1');
 ok('periods_5', PERIODS.join(',') === '2주,1개월,2개월,3개월,6개월');
 
 // Robust numeric matrix extractors
@@ -340,9 +340,9 @@ PERIODS.forEach((p, i) => {
   ok(`src_memo_prime_${p}`, MEMO_BUNDLE.prime[i] === [2, 5, 10, 15, 30][i]);
   ok(`src_memo_pick_${p}`, MEMO_BUNDLE.pick[i] === [1, 2, 4, 6, 12][i]);
 });
-ok('src_memo_1', MEMO_TICKETS['1회']?.sale_price_krw === 1000 && MEMO_TICKETS['1회'].ticket_kind === 'immediate');
-ok('src_memo_5', MEMO_TICKETS['5회권']?.sale_price_krw === 4500 && MEMO_TICKETS['5회권'].expire_days === 120);
-ok('src_memo_10', MEMO_TICKETS['10회권']?.sale_price_krw === 8000);
+ok('src_memo_1', MEMO_TICKETS['1회']?.sale_price_krw === 500 && MEMO_TICKETS['1회'].ticket_kind === 'immediate');
+ok('src_memo_5', MEMO_TICKETS['5회권']?.sale_price_krw === 2250 && MEMO_TICKETS['5회권'].expire_days === 120);
+ok('src_memo_10', MEMO_TICKETS['10회권']?.sale_price_krw === 4000);
 ok('src_no_20', !MEMO_TICKETS['20회권']);
 
 function priceRow(role, sale, period) {

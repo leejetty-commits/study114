@@ -14,7 +14,7 @@ test.describe('PR-A history catalog snapshot', () => {
     });
     const created = await create.json();
     expect(create.ok()).toBeTruthy();
-    expect(created.amount_won).toBe(8000);
+    expect(created.amount_won).toBe(4000);
 
     const history = await request.get('/api/paid/history.php');
     const body = await history.json();
@@ -23,15 +23,15 @@ test.describe('PR-A history catalog snapshot', () => {
 
     const row = body.orders.find((item) => item.order_ref === created.order_ref);
     expect(row).toBeTruthy();
-    expect(row.amount_won).toBe(8000);
+    expect(row.amount_won).toBe(4000);
     expect(row.product_id).toBe('memo_ticket');
     expect(row.variant_label).toBe('10회권');
     expect(row.status).toBe('pending');
     expect(row).toHaveProperty('catalog_version');
     if (row.catalog_version) {
-      expect(row.catalog_version).toBe('2026-09-04.1');
-      expect(row.list_price_won).toBe(10000);
-      expect(row.discount_won).toBe(2000);
+      expect(row.catalog_version).toBe('2026-10-27.1');
+      expect(row.list_price_won).toBe(5000);
+      expect(row.discount_won).toBe(1000);
     } else {
       expect(row.catalog_version).toBeNull();
     }

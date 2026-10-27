@@ -14,7 +14,7 @@ use InvalidArgumentException;
  */
 final class PaidCatalog
 {
-    public const VERSION = '2026-09-04.1';
+    public const VERSION = '2026-10-27.1';
 
     /** 픽 한 묶음 칸 수 — 서버 단일 기본값 (296). 프론트는 카탈로그 pick_set_size 만 읽는다. */
     public const PICK_SET_SIZE = 10;
@@ -79,10 +79,10 @@ final class PaidCatalog
             'option_id' => 'memo_1',
             'ticket_kind' => 'immediate',
             'credit_count' => 1,
-            'list_price_krw' => 1000,
+            'list_price_krw' => 500,
             'discount_rate' => 0.0,
             'discount_krw' => 0,
-            'sale_price_krw' => 1000,
+            'sale_price_krw' => 500,
             'expire_days' => null,
             'balance_stored' => false,
             'label' => '1회 즉시권',
@@ -91,10 +91,10 @@ final class PaidCatalog
             'option_id' => 'memo_5',
             'ticket_kind' => 'pack',
             'credit_count' => 5,
-            'list_price_krw' => 5000,
+            'list_price_krw' => 2500,
             'discount_rate' => 0.10,
-            'discount_krw' => 500,
-            'sale_price_krw' => 4500,
+            'discount_krw' => 250,
+            'sale_price_krw' => 2250,
             'expire_days' => 120,
             'balance_stored' => true,
             'label' => '5회권',
@@ -103,10 +103,10 @@ final class PaidCatalog
             'option_id' => 'memo_10',
             'ticket_kind' => 'pack',
             'credit_count' => 10,
-            'list_price_krw' => 10000,
+            'list_price_krw' => 5000,
             'discount_rate' => 0.20,
-            'discount_krw' => 2000,
-            'sale_price_krw' => 8000,
+            'discount_krw' => 1000,
+            'sale_price_krw' => 4000,
             'expire_days' => 120,
             'balance_stored' => true,
             'label' => '10회권',
@@ -184,7 +184,7 @@ final class PaidCatalog
 
         return [
             'catalog_version' => self::VERSION,
-            'locked_on' => '2026-09-04',
+            'locked_on' => '2026-10-27',
             'periods' => self::PERIODS,
             'discount_rates' => self::DISCOUNT_RATES,
             'memo_pack_expire_days' => 120,

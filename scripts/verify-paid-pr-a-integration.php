@@ -170,13 +170,13 @@ if ($phase === 'pre061') {
     check('schema_061_absent', $hasCatalogCol === false);
 
     $created = $svc->createOrder($userId, 'memo_ticket', '5회권', 'tutor', 1);
-    check('checkout_memo5_amount', (int) $created['amount_won'] === 4500, (string) $created['amount_won']);
+    check('checkout_memo5_amount', (int) $created['amount_won'] === 2250, (string) $created['amount_won']);
     check('checkout_memo5_pending', ($created['status'] ?? '') === 'pending');
     check('checkout_ignores_client_price_contract', !array_key_exists('client_amount', $created));
 
     $row = $pdo->prepare('SELECT amount_won FROM provider_payment_orders WHERE order_ref = ?');
     $row->execute([$created['order_ref']]);
-    check('db_amount_server_sale', (int) $row->fetchColumn() === 4500);
+    check('db_amount_server_sale', (int) $row->fetchColumn() === 2250);
 
     expectThrow('reject_20회권', static fn () => $svc->createOrder($userId, 'memo_ticket', '20회권'));
     expectThrow('reject_unknown_sku', static fn () => $svc->createOrder($userId, 'unknown_sku', '1개월', 'tutor', 1));
@@ -202,21 +202,21 @@ if ($phase === 'pre061') {
             $memoRow = $o;
         }
     }
-    check('history_amount_4500', is_array($memoRow) && (int) $memoRow['amount_won'] === 4500);
+    check('history_amount_2250', is_array($memoRow) && (int) $memoRow['amount_won'] === 2250);
     check('history_catalog_null_without_061', is_array($memoRow) && $memoRow['catalog_version'] === null);
 }
 
 if ($phase === 'post061') {
     check('schema_061_present', $hasCatalogCol === true);
     $created = $svc->createOrder($userId, 'memo_ticket', '10회권', 'tutor', 1);
-    check('post061_amount', (int) $created['amount_won'] === 8000);
+    check('post061_amount', (int) $created['amount_won'] === 4000);
     $row = $pdo->prepare(
         'SELECT amount_won, catalog_version, list_price_won FROM provider_payment_orders WHERE order_ref = ?'
     );
     $row->execute([$created['order_ref']]);
     $snap = $row->fetch(PDO::FETCH_ASSOC);
     check('post061_snapshot_version', is_array($snap) && (string) $snap['catalog_version'] === PaidCatalog::VERSION);
-    check('post061_snapshot_amount', is_array($snap) && (int) $snap['amount_won'] === 8000);
+    check('post061_snapshot_amount', is_array($snap) && (int) $snap['amount_won'] === 4000);
 
     $prime = $svc->createOrder($userId, 'prime', '1개월', 'tutor', 1);
     check('post061_prime_recalc', (int) $prime['amount_won'] === 30000);
