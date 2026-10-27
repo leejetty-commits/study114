@@ -14,6 +14,7 @@ export const ORDER_STATUS_KO = {
   paid: '결제 완료',
   failed: '결제 실패',
   cancelled: '취소',
+  refund_requested: '환불 진행중',
   refunded: '환불',
 };
 export const SMS_STATUS_KO = {

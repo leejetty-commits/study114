@@ -469,7 +469,7 @@ export function renderAccessPurchaseCheck() {
         <h2 class="plans-sf-panel__title">구매 전 확인</h2>
       </header>
       <p>5회권과 10회권은 구매일부터 120일 동안 사용할 수 있습니다. 사용 중인 유료 묶음권은 중복 구매할 수 없으니 예상 사용량을 확인하고 필요한 만큼만 구매하세요.</p>
-      <p class="plans-muted">사용기한이 지나면 남은 횟수는 소멸하며 환불·연장되지 않습니다.</p>
+      <p class="plans-muted">사용기한(120일) 경과 시 잔여 소멸(환불액 0) · 연장 없음. 환불은 결제 후 7일 이내 사용 구간별(환불규정 · 서버 정본).</p>
     </section>`;
 }
 
@@ -485,8 +485,8 @@ export function renderPolicyAccordion(family, role) {
         <div class="plans-policy-acc__body">
           <ul class="plans-tier-list">
             <li>1회 즉시권: 7일 이내 미발송 시 전액 · 발송 완료 또는 7일 경과 시 0원</li>
-            <li>5회권·10회권: 사용 구간별 환불표는 서버·약관 정본을 따릅니다</li>
-            <li>120일 만료 시 남은 횟수 소멸 · 연장·환불 없음</li>
+            <li>5회권·10회권: 결제 후 7일 이내 · 사용 구간별 환불표(서버·약관 정본)</li>
+            <li>120일 만료 시 잔여 소멸(환불액 0) · 연장 없음</li>
             <li>회사 귀책 발송 실패는 횟수 복구를 우선합니다</li>
           </ul>
           <p class="mypage-muted">환불 가능 여부와 금액은 프론트가 계산하지 않으며, 요청 시 서버가 확정합니다.</p>

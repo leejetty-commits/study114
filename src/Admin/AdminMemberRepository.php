@@ -318,13 +318,13 @@ final class AdminMemberRepository
         ];
     }
 
-    /** 결제 유무. 목록 LIMIT와 무관하게 paid·refunded 주문이 있으면 true. */
+    /** 결제 유무. 목록 LIMIT와 무관하게 paid·refund_requested·refunded 주문이 있으면 true. */
     public function hasPayment(int $userId): bool
     {
         $stmt = $this->pdo->prepare(
             "SELECT EXISTS(
                 SELECT 1 FROM provider_payment_orders
-                WHERE user_id = ? AND status IN ('paid', 'refunded')
+                WHERE user_id = ? AND status IN ('paid', 'refund_requested', 'refunded')
             )"
         );
         $stmt->execute([$userId]);

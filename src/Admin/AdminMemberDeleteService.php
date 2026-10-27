@@ -390,7 +390,7 @@ final class AdminMemberDeleteService
         return is_array($row) ? $row : null;
     }
 
-    /** 결제 행을 잠그고 건수를 센다. paid·refunded 만 결제 있음으로 본다. */
+    /** 결제 행을 잠그고 건수를 센다. paid·refund_requested·refunded 만 결제 있음으로 본다. */
     private function lockPaymentCount(int $userId): int
     {
         $stmt = $this->pdo->prepare(
@@ -399,7 +399,7 @@ final class AdminMemberDeleteService
         $stmt->execute([$userId]);
         $paid = 0;
         foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $status) {
-            if (in_array((string) $status, ['paid', 'refunded'], true)) {
+            if (in_array((string) $status, ['paid', 'refund_requested', 'refunded'], true)) {
                 $paid++;
             }
         }

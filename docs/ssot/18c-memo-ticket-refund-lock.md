@@ -49,9 +49,19 @@
 
 ---
 
+## DB 기반 (325 · 2026-10-28)
+
+- `provider_payment_orders.status` ENUM 6값: `pending` · `paid` · `failed` · `cancelled` · **`refund_requested`** · **`refunded`**
+- `provider_refund_requests` 테이블 (order_ref UNIQUE) — DDL: `sql/schema/083_refund_foundation.sql`
+- 관리자 쿼리 2곳(`AdminMemberRepository` · `AdminMemberDeleteService`) → `paid` · `refund_requested` · `refunded`
+- 사용자 라벨: `refund_requested` → **「진행중」**, 관리자: **「환불 진행중」**
+- **적용 전 phpMyAdmin 실행 필수** (Actions는 SQL을 실행하지 않음)
+
+---
+
 ## 후속 (이 문서 밖)
 
-- PG 취소/부분취소 API 연동
-- `provider_payment_orders.status` `refunded` ENUM
-- 노출상품(프라임·픽) 환불 계산기 — **별도 티켓**
+- PG 취소/부분취소 API 연동 (→ 326)
+- 환불 신청 UI/API 본체 · 팩 freeze · 자동승인 (→ 326)
+- 노출상품(프라임·픽) 환불 계산기 — **별도 티켓** (→ 327)
 - 관리자 환불 화면

@@ -50,6 +50,7 @@ export const ORDER_STATUS_LABELS = {
   failed: '결제 실패',
   canceled: '결제 취소',
   cancelled: '결제 취소',
+  refund_requested: '진행중',
   refunded: '환불 완료',
 };
 
