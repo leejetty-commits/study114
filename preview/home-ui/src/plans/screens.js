@@ -72,6 +72,7 @@ import {
   REFUND_REASON_CHOICES,
   REFUND_STATUS_LABELS,
   REFUND_COPY,
+  HISTORY_EMPTY_COPY,
 } from '../mypage/mypage-copy.js';
 import {
   resolveRoomPrimeInventory,
@@ -1567,7 +1568,7 @@ let openCell = null;
 /** @type {{ orderRef: string, data: object }|null} 환불 자격 캐시 */
 let refundEligCache = null;
 
-/** P18-05 결제내역 (329 v3: 행 기반 목록, 셀 분할) */
+/** P18-05 결제내역 (329 v3: 행 기반 목록, 셀 분할 · 330 빈 상태) */
 export function renderPlansHistory() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
@@ -1579,32 +1580,77 @@ export function renderPlansHistory() {
   }
 
   const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
-  const sourceNote = historyCache.loaded
-    ? historyCache.fromApi
-      ? '서버 주문 내역과 이 기기의 임시 내역을 함께 표시'
-      : '서버 연결 전 · 이 기기의 임시 내역'
-    : '불러오는 중…';
+  /* 330: 정상 fromApi 는 sourceNote 비노출. 「서버」「기기」「임시」 사용자 노출 금지 */
+  let sourceNoteHtml = '';
+  if (!historyCache.loaded) {
+    sourceNoteHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loading)}</p>`;
+  } else if (!historyCache.fromApi) {
+    sourceNoteHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loadPartialFail)}</p>`;
+  }
 
   const countRows = rows.filter((r) => isCountProduct(r));
   const positionRows = rows.filter((r) => !isCountProduct(r));
   const activeRows = historyTab === 'count' ? countRows : positionRows;
 
+  let listHtml;
+  if (!historyCache.loaded) {
+    listHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loading)}</p>`;
+  } else if (activeRows.length) {
+    listHtml = activeRows.map((r) => renderHistV3Row(r)).join('');
+  } else {
+    listHtml = renderHistEmpty(historyTab);
+  }
+
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">구매이력</p>
-      <p class="mypage-muted">${esc(sourceNote)}</p>
+      ${sourceNoteHtml}
       <div class="plans-hist-tabs" role="tablist">
         <button type="button" role="tab" class="plans-tab${historyTab === 'count' ? ' is-active' : ''}" data-history-tab="count" aria-selected="${historyTab === 'count'}">쪽지권</button>
         <button type="button" role="tab" class="plans-tab${historyTab === 'position' ? ' is-active' : ''}" data-history-tab="position" aria-selected="${historyTab === 'position'}">노출상품</button>
       </div>
       <div class="plans-history-layout" role="tabpanel">
-        ${
-          activeRows.length
-            ? activeRows.map((r) => renderHistV3Row(r)).join('')
-            : `<p class="mypage-muted">내역이 없습니다.</p>`
-        }
+        ${listHtml}
       </div>
     </section>`;
+}
+
+/** 330: 탭별 빈 상태 — 예시 1행 + 안내 */
+function renderHistEmpty(tab) {
+  return `${renderHistExampleRow(tab)}${renderHistEmptyGuide(tab)}`;
+}
+
+/** 330: 흐린 예시 행 (클릭·환불 이벤트 속성 없음) */
+function renderHistExampleRow(tab) {
+  const pack = tab === 'position' ? HISTORY_EMPTY_COPY.position : HISTORY_EMPTY_COPY.count;
+  const disabledActs = ['내역', '환불', '진행상황', '종료', '소멸']
+    .map((label) => `<button type="button" disabled tabindex="-1">${esc(label)}</button>`)
+    .join('');
+  return `
+    <div class="plans-hist-example-wrap">
+      <span class="plans-hist-row__example-badge">${esc(HISTORY_EMPTY_COPY.exampleBadge)}</span>
+      <div class="plans-hist-row plans-hist-row--example" aria-label="${esc(HISTORY_EMPTY_COPY.exampleAria)}">
+        <div class="plans-hist-row__bar">
+          <div class="plans-hist-row__info">
+            <span class="plans-hist-row__name">${esc(pack.productName)}</span><span class="plans-hist-row__meta plans-hist-row__meta--placeholder">${esc(pack.amount)} · ${esc(pack.date)}</span>
+          </div>
+          <div class="plans-hist-row__acts">
+            ${disabledActs}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/** 330: 빈 상태 안내 + CTA */
+function renderHistEmptyGuide(tab) {
+  const pack = tab === 'position' ? HISTORY_EMPTY_COPY.position : HISTORY_EMPTY_COPY.count;
+  return `
+    <div class="plans-hist-empty">
+      <p class="plans-hist-empty__title">${esc(HISTORY_EMPTY_COPY.title)}</p>
+      <p class="plans-hist-empty__body">${esc(pack.body)}</p>
+      <a href="${esc(pack.href)}" class="btn btn--primary" data-plans-nav="${esc(pack.nav)}">${esc(pack.cta)}</a>
+    </div>`;
 }
 
 /** @param {object} r */

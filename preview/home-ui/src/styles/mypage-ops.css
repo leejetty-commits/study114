@@ -2079,7 +2079,7 @@
   text-align: center;
   padding: 10px;
   color: #666;
-  font-size: 14px;
+  font-size: 15px; /* 330: 14→15 */
   font-weight: 500;
   background: none;
   border: 0;
@@ -2258,6 +2258,49 @@
     font-size: 11px;
     min-height: 40px;
   }
+}
+
+/* ── 330 구매이력 빈 상태 예시·안내 ── */
+.plans-hist-example-wrap {
+  position: relative;
+  margin-bottom: 10px;
+}
+.plans-hist-row__example-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-bottom: 6px;
+  background: #fff;
+  opacity: 1;
+}
+.plans-hist-row--example {
+  border: 1px dashed #d1d5db;
+  opacity: 0.55;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+.plans-hist-row--example .plans-hist-row__meta--placeholder {
+  letter-spacing: 0.02em;
+}
+.plans-hist-empty {
+  text-align: center;
+  padding: 16px 12px 8px;
+}
+.plans-hist-empty__title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #111;
+}
+.plans-hist-empty__body {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
 }
 
 /* ── 쪽지·후기함 (마이페이지 안만. 바깥 후기 시트 .review-sheet는 그대로) ── */
