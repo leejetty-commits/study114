@@ -8,7 +8,9 @@
 > **대체 정본:** [`docs/internal/57-paid-badges-api-contract.md`](../internal/57-paid-badges-api-contract.md) · [`55-card-visual-lock.md`](../internal/55-card-visual-lock.md)  
 > 허용 코드만: 공부방 `hot`/`subject_track` · 과외쌤 `hot`/`jjokjipge`/`sky`
 
-**상태: placeholder (배지 목록 deprecated)** (포지션·횟수권 구조는 [18장 §19](18-paid-services-rough.md#19-수익모델-최신-잠금안-2026-07-07) 참고 · **숫자·PG 미확정**)  
+**상태: placeholder (배지 목록 deprecated)** (포지션·횟수권 구조는 [18장 §19](18-paid-services-rough.md#19-수익모델-최신-잠금안-2026-07-07) 참고 · **숫자·PG 미확정**)
+
+> ⚠️ **실 판매가·환불표 정본은 코드(`PaidCatalog.php`)와 [`18c-memo-ticket-refund-lock.md`](18c-memo-ticket-refund-lock.md)**. 아래 10원 더미와 혼동 금지.  
 **작성:** 2026-07-04 · **갱신:** 2026-07-07 · **배지축 폐기 표시:** 2026-08-22  
 **역할:** **기간형·횟수권** 더미 단가 — UX·전환 실험 후 잠금
 
