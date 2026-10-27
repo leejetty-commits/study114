@@ -200,9 +200,15 @@ export function renderMypageScreen(path) {
   if (path === '/mypage/student-review') return renderStudentReview(r);
   if (path === CONTACT_HISTORY_PATH) return renderContactHistory();
   if (path === MESSAGES_BASE || isMessagesDetailPath(path)) return renderMessagesScreen(path);
-  if (path === '/mypage/plans') return renderPlans(r);
+  if (path === '/mypage/plans') return renderPlansV3(r);
   if (path === '/mypage/plans/my') return renderPlansMyInventory(r);
-  if (path === '/mypage/plans/history') return renderPlansHistory();
+  /* 별칭 누락 시 안전망: MYPAGE_LEGACY_ALIASES 가 먼저 처리하는 것이 정본 */
+  if (path === '/mypage/plans/history') {
+    if (typeof window !== 'undefined' && window.location?.hash !== '#/mypage/plans') {
+      window.location.replace('#/mypage/plans');
+    }
+    return renderPlansV3(r);
+  }
   if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
   if (path === '/mypage/submission-board' || path.startsWith('/mypage/submission-board/')) {
     if (r === 'study_room' || r === 'parent') return renderSubmissionDocs(r);
@@ -836,6 +842,25 @@ function renderPlans(role) {
         }
       </section>
     </div>`;
+}
+
+/** 329 v3: #/mypage/plans 구매이력 본화면 — v3 행 목록 */
+function renderPlansV3(role) {
+  if (role === 'parent') {
+    return `
+      <section class="mypage-panel">
+        <h2 class="mypage-subhead">이용 안내</h2>
+        <div class="mypage-info-box">
+          <p>학생 계정은 공부방과 과외쌤을 찾고, 찜하고, 상담하는 기본 기능을 편하게 이용할 수 있어요.</p>
+          <p class="mypage-muted">${GUARDIAN_PLANS_COPY.body}</p>
+        </div>
+        <a href="#/support/faq" class="btn btn--secondary" data-nav="/support/faq">이용 안내 보기</a>
+      </section>`;
+  }
+
+  return `
+    ${renderProviderNoticeBanners()}
+    ${renderPlansHistory()}`;
 }
 
 /** #/mypage/plans/my — 프로필별 쪽지권 재고 (PR-B status 정본) */

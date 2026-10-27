@@ -520,10 +520,10 @@ export function renderBasicFreeRow(role) {
 export function renderAccessAuxLinks() {
   return `
     <div class="plans-access-aux">
-      <p>보유 중인 쪽지권의 <strong>남은 횟수</strong>와 <strong>사용기한</strong>은 마이페이지 <strong>구매이력</strong>의 <strong>내 상품</strong>에서 확인할 수 있습니다.</p>
+      <p>보유 중인 쪽지권의 <strong>남은 횟수</strong>와 <strong>사용기한</strong>은 <strong>마이페이지 구매이력</strong>에서 확인할 수 있습니다.</p>
       <p>보낸 쪽지와 이어진 대화는 <strong>쪽지·후기함</strong>에서 확인할 수 있습니다.</p>
       <p class="plans-access-aux__links">
-        <a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 상품 보기</a>
+        <a class="plans-access-aux__link" href="#/mypage/plans" data-nav="/mypage/plans">구매이력 보기</a>
         <a class="plans-access-aux__link" href="#/mypage/messages" data-nav="/mypage/messages">쪽지·후기함 보기</a>
       </p>
     </div>`;

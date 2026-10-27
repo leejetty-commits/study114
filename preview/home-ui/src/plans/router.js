@@ -9,7 +9,7 @@ export const PLANS_REDIRECTS = {
   '/mypage/paid': '/mypage/plans',
   '/mypage/paid/usage': '/mypage/plans/my',
   '/plans/my': '/mypage/plans/my',
-  '/plans/history': '/mypage/plans/history',
+  '/plans/history': '/mypage/plans',
 };
 
 /** @type {Record<string, PlansScreenId>} */
@@ -56,8 +56,8 @@ export function plansScreenTitle(screenId) {
     'P18-01': '상품홈',
     'P18-02': '노출상품',
     'P18-03': '쪽지권',
-    'P18-04': '내 상품',
-    'P18-05': '결제내역',
+    'P18-04': '구매이력',
+    'P18-05': '구매이력',
     'P18-06': '결제',
     'P18-07': '결제 결과',
   };

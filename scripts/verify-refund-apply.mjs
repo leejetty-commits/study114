@@ -93,12 +93,12 @@ ok('F4 withdrawRefund', paidApi.includes('withdrawRefund'));
 
 const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
 ok('F5 history 탭 UI', screens.includes('data-history-tab'));
-ok('F6 확장행 토글', screens.includes('data-history-expand'));
+ok('F6 v3 셀 토글', screens.includes('data-v3-cell'));
 ok('F7 환불 신청 버튼', screens.includes('data-refund-submit'));
 ok('F8 환불 철회 버튼', screens.includes('data-refund-withdraw'));
 ok('F9 환불 사유 선택', screens.includes('data-refund-reason-select'));
 ok('F10 historyTab 상태', screens.includes("let historyTab = 'count'"));
-ok('F11 expandedOrderRef 상태', screens.includes('let expandedOrderRef'));
+ok('F11 openCell 상태 (v3)', screens.includes('let openCell'));
 ok('F12 refundEligCache', screens.includes('refundEligCache'));
 ok('F13 isCountProduct 분기', screens.includes('isCountProduct'));
 

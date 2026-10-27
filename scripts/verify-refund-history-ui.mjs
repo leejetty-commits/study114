@@ -41,13 +41,13 @@ ok('A2 탭 data 속성', screens.includes('data-history-tab="count"') && screens
 ok('A3 탭 aria-selected', screens.includes('aria-selected'));
 ok('A4 tabpanel', screens.includes('role="tabpanel"'));
 
-/* ── B. 확장행 구조 ──────────────────────────────────── */
+/* ── B. 329 v3 행·셀 구조 ────────────────────────────── */
 
-ok('B1 확장 토글 속성', screens.includes('data-history-expand'));
-ok('B2 확장 행 클래스', screens.includes('history-expand-row'));
-ok('B3 is-expanded 클래스', screens.includes('is-expanded'));
-ok('B4 renderExpandedRow 함수', screens.includes('function renderExpandedRow'));
-ok('B5 renderHistoryRow 함수', screens.includes('function renderHistoryRow'));
+ok('B1 v3 셀 토글 속성', screens.includes('data-v3-cell'));
+ok('B2 v3 행 클래스', screens.includes('plans-hist-row'));
+ok('B3 is-open 클래스', screens.includes('is-open'));
+ok('B4 renderV3Panel 함수', screens.includes('function renderV3Panel'));
+ok('B5 renderHistV3Row 함수', screens.includes('function renderHistV3Row'));
 
 /* ── C. 환불 액션 박스 ───────────────────────────────── */
 
@@ -61,7 +61,7 @@ ok('C6 환불예정액 표시', screens.includes('환불 예정액'));
 /* ── D. 이벤트 바인딩 ────────────────────────────────── */
 
 ok('D1 탭 click 바인딩', screens.includes("[data-history-tab]") && screens.includes('addEventListener'));
-ok('D2 확장 click 바인딩', screens.includes("[data-history-expand]"));
+ok('D2 v3 셀 click 바인딩', screens.includes("[data-v3-cell]"));
 ok('D3 submitRefund 호출', screens.includes('submitRefund'));
 ok('D4 withdrawRefund 호출', screens.includes('withdrawRefund'));
 ok('D5 fetchRefundEligibility 호출', screens.includes('fetchRefundEligibility'));
@@ -99,7 +99,7 @@ ok('G1 isCountProduct 함수', screens.includes('function isCountProduct'));
 ok('G2 product_kind 체크', screens.includes("kind === 'count'") || screens.includes("=== 'count'"));
 ok('G3 쪽지 regex fallback', screens.includes('/쪽지/'));
 ok('G4 mock/local 행 환불 불가', () => {
-  const fn = screens.slice(screens.indexOf('function renderHistoryRow'));
+  const fn = screens.slice(screens.indexOf('function resolveV3Cells'));
   return fn.includes("isFromApi") && fn.includes("r.source === 'api'");
 });
 

@@ -353,19 +353,19 @@ function productLabel(code) {
   return '이용 상품';
 }
 
-/** 내 상품·홈 요약용. 구매면(#/plans/access)에서는 사용하지 않음. */
+/** 구매이력·홈 요약용. 구매면(#/plans/access)에서는 사용하지 않음. */
 function renderLowCreditBanner(tickets) {
   if (!tickets) return '';
   const warns = [];
   if (isLowCredit(tickets.memo?.remaining)) {
-    warns.push(`쪽지권 남은 횟수 ${tickets.memo.remaining}회 — 내 상품에서 확인하세요`);
+    warns.push(`쪽지권 남은 횟수 ${tickets.memo.remaining}회 — 구매이력에서 확인하세요`);
   }
   if (!warns.length) return '';
   return `
     <div class="mypage-info-box is-warn plans-low-credit" role="status">
       <strong>쪽지권 안내</strong>
       <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <a href="#/mypage/plans/my" class="btn btn--secondary btn--sm" data-nav="/mypage/plans/my">내 상품 보기</a>
+      <a href="#/mypage/plans" class="btn btn--secondary btn--sm" data-nav="/mypage/plans">구매이력 보기</a>
     </div>`;
 }
 
@@ -1398,7 +1398,7 @@ export function renderPlansAccess() {
                 ? `<div class="plans-access-hold" data-plans-access-status="active-pack" role="status">
               <p>사용 중인 쪽지권이 있습니다. 남은 횟수를 모두 사용하거나 사용기한이 지난 뒤 새 묶음권을 구매할 수 있습니다.</p>
               <p>5회권과 10회권은 지금 살 수 없습니다. 1회 즉시권은 계속 구매할 수 있습니다.</p>
-              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 상품 보기</a></p>
+              <p class="plans-access-hold__nav"><a class="plans-access-aux__link" href="#/mypage/plans" data-nav="/mypage/plans">구매이력 보기</a></p>
             </div>`
                 : ''
             }
@@ -1437,13 +1437,13 @@ export function renderPlansAccess() {
     </section>`;
 }
 
-/** P18-04 내 상품 */
+/** P18-04 이용 현황 (#/mypage/plans/my) */
 export function renderPlansMy() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">내 상품</p>
+        <p class="mypage-lead">구매이력</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1466,7 +1466,7 @@ export function renderPlansMy() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">내 상품 이용 현황</p>
+      <p class="mypage-lead">이용 현황</p>
       ${renderProviderNoticeBanners()}
       ${
         syncLoading || syncPending
@@ -1553,28 +1553,27 @@ export function renderPlansMy() {
           .join('')}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/mypage/plans/history" class="btn btn--secondary" data-nav="/mypage/plans/history">결제내역</a>
-        <a href="#/mypage/plans" class="btn btn--secondary" data-nav="/mypage/plans">이용 현황</a>
+        <a href="#/mypage/plans" class="btn btn--secondary" data-nav="/mypage/plans">구매이력</a>
       </div>
     </section>`;
 }
 
-/** 326: 결제내역 탭(쪽지권/노출) 상태 */
+/** 326→329 v3: 결제내역 탭(쪽지권/노출) 상태 */
 let historyTab = 'count';
 
-/** @type {string|null} 확장 중인 행의 orderRef */
-let expandedOrderRef = null;
+/** 329 v3: 현재 열린 셀 { orderRef, cell } | null */
+let openCell = null;
 
 /** @type {{ orderRef: string, data: object }|null} 환불 자격 캐시 */
 let refundEligCache = null;
 
-/** P18-05 결제내역 (326 탭·확장행·환불 액션) */
+/** P18-05 결제내역 (329 v3: 행 기반 목록, 셀 분할) */
 export function renderPlansHistory() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제내역</p>
+        <p class="mypage-lead">구매이력</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1585,9 +1584,6 @@ export function renderPlansHistory() {
       ? '서버 주문 내역과 이 기기의 임시 내역을 함께 표시'
       : '서버 연결 전 · 이 기기의 임시 내역'
     : '불러오는 중…';
-  const receiptRow = openReceiptOrderRef
-    ? rows.find((r) => r.orderRef === openReceiptOrderRef) || null
-    : null;
 
   const countRows = rows.filter((r) => isCountProduct(r));
   const positionRows = rows.filter((r) => !isCountProduct(r));
@@ -1595,35 +1591,18 @@ export function renderPlansHistory() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">결제내역</p>
+      <p class="mypage-lead">구매이력</p>
       <p class="mypage-muted">${esc(sourceNote)}</p>
-      <div class="plans-history-tabs" role="tablist">
+      <div class="plans-hist-tabs" role="tablist">
         <button type="button" role="tab" class="plans-tab${historyTab === 'count' ? ' is-active' : ''}" data-history-tab="count" aria-selected="${historyTab === 'count'}">쪽지권</button>
         <button type="button" role="tab" class="plans-tab${historyTab === 'position' ? ' is-active' : ''}" data-history-tab="position" aria-selected="${historyTab === 'position'}">노출상품</button>
       </div>
       <div class="plans-history-layout" role="tabpanel">
-      <table class="plans-table" aria-label="결제내역">
-        <thead>
-          <tr>
-            <th>주문번호</th>
-            <th>상품</th>
-            <th>프로필</th>
-            <th>금액</th>
-            <th>수단</th>
-            <th>일시</th>
-            <th>상태</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${
-            activeRows.length
-              ? activeRows.map((r) => renderHistoryRow(r)).join('')
-              : `<tr><td colspan="8" class="mypage-muted">내역이 없습니다.</td></tr>`
-          }
-        </tbody>
-      </table>
-      ${receiptRow ? renderReceiptPanel(receiptRow) : ''}
+        ${
+          activeRows.length
+            ? activeRows.map((r) => renderHistV3Row(r)).join('')
+            : `<p class="mypage-muted">내역이 없습니다.</p>`
+        }
       </div>
     </section>`;
 }
@@ -1635,97 +1614,246 @@ function isCountProduct(r) {
   return kind === 'count' || /쪽지/.test(name);
 }
 
-/** @param {object} r */
-function renderHistoryRow(r) {
-  const isExpanded = expandedOrderRef === r.orderRef;
-  const isFromApi = r.source === 'api';
-  /* 327: 노출 탭도 환불 가능 (badge_addon 은 노출에 묶여 별도 액션 없음) */
-  const kind = r.productKind || r.product_kind || '';
-  const canRefund = isFromApi && kind !== 'badge_addon' && (r.status === 'paid' || r.status === 'refund_requested');
+/* ── 329 v3 행 렌더 ── */
 
-  let expandedHtml = '';
-  if (isExpanded) {
-    expandedHtml = renderExpandedRow(r);
+/**
+ * 행 상태 결정: 어떤 셀이 활성(클릭 가능)인지
+ * @param {object} r order row
+ * @returns {{ detail:boolean, refund:boolean, progress:boolean, ended:boolean, expired:boolean, statusBadge:string, statusClass:string }}
+ */
+function resolveV3Cells(r) {
+  const status = r.status || '';
+  const kind = r.productKind || r.product_kind || '';
+  const isFromApi = r.source === 'api';
+  const remaining = typeof r.remaining === 'number' ? r.remaining : null;
+  const refundStatus = r.refundStatus || r.refund_status || '';
+  const hasRefundRequest = status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved';
+  /* PG HOLD(301): refunded 상태는 아직 UI에 노출하지 않는다 */
+  const isRefundRejected = refundStatus === 'rejected';
+  const isWithdrawn = refundStatus === 'cancelled';
+  const isPaid = status === 'paid';
+  const isExpired = status === 'expired' || !!r.expired;
+  const isEnded = remaining === 0 && !isExpired && !hasRefundRequest;
+
+  const canRefund = isFromApi && kind !== 'badge_addon'
+    && (isPaid || status === 'refund_requested')
+    && !isWithdrawn;
+
+  let statusBadge = '';
+  let statusClass = '';
+  if (hasRefundRequest) {
+    statusBadge = '환불 검토 중';
+    statusClass = 'plans-hist-row__st--ing';
+  } else if (isRefundRejected) {
+    statusBadge = '환불 반려';
+    statusClass = 'plans-hist-row__st--no';
   }
 
-  return `
-    <tr class="${isExpanded ? 'is-expanded' : ''}">
-      <td><code>${esc(r.orderRef)}</code></td>
-      <td>${esc(typeof r.productName === 'string' ? r.productName : r.productName)}</td>
-      <td>${esc(r.providerLabel)}</td>
-      <td>${formatKrw(r.amountKrw)}</td>
-      <td>${esc(paymentMethodLabel(r.paymentMethod))}</td>
-      <td>${esc(String(r.paidAt).slice(0, 16).replace('T', ' '))}</td>
-      <td>${esc(orderStatusLabel(r.status))}</td>
-      <td>
-        <button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">상세</button>
-        ${canRefund ? `<button type="button" class="btn btn--secondary btn--sm" data-history-expand="${esc(r.orderRef)}">${isExpanded ? '접기' : '환불'}</button>` : ''}
-      </td>
-    </tr>
-    ${expandedHtml}`;
+  return {
+    detail: isFromApi,
+    refund: canRefund && !hasRefundRequest,
+    progress: hasRefundRequest || isRefundRejected,
+    ended: isEnded,
+    expired: isExpired,
+    statusBadge,
+    statusClass,
+  };
 }
 
-/** @param {object} r */
-function renderExpandedRow(r) {
+/** v3 행 하나 렌더 */
+function renderHistV3Row(r) {
+  const ref = r.orderRef || '';
+  const cells = resolveV3Cells(r);
+  const isOpen = openCell?.orderRef === ref;
+  const curCell = isOpen ? openCell.cell : '';
+  const isRefundActive = cells.refund || cells.progress;
+
+  const nameText = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
+  const amountText = formatKrw(r.amountKrw);
+  const dateText = esc(String(r.paidAt || '').slice(0, 10));
+  const remainingText = typeof r.remaining === 'number' ? ` · 남은 ${r.remaining}` : '';
+  const metaText = `${amountText} · ${dateText}${remainingText}`;
+
+  const badgeHtml = cells.statusBadge
+    ? `<span class="plans-hist-row__st ${cells.statusClass}">${esc(cells.statusBadge)}</span>`
+    : '';
+
+  const cellBtn = (name, enabled, isPrimary) => {
+    if (!enabled) return `<button type="button" disabled>${esc(name)}</button>`;
+    const cls = [
+      curCell === name ? 'is-cell-active' : '',
+      isPrimary ? 'is-primary' : '',
+    ].filter(Boolean).join(' ');
+    return `<button type="button" class="${cls}" data-v3-cell="${esc(name)}" data-v3-ref="${esc(ref)}">${esc(name)}</button>`;
+  };
+
+  const panelHtml = isOpen ? renderV3Panel(r, curCell) : '';
+
+  return `
+    <div class="plans-hist-row${isOpen ? ' is-open' : ''}${isRefundActive ? ' is-refund-active' : ''}" data-v3-row="${esc(ref)}">
+      <div class="plans-hist-row__bar">
+        <div class="plans-hist-row__info">
+          <span class="plans-hist-row__name">${nameText}</span>${badgeHtml}<span class="plans-hist-row__meta">${metaText}</span>
+        </div>
+        <div class="plans-hist-row__acts">
+          ${cellBtn('내역', cells.detail, false)}
+          ${cellBtn('환불', cells.refund, true)}
+          ${cellBtn('진행상황', cells.progress, false)}
+          ${cellBtn('종료', cells.ended, false)}
+          ${cellBtn('소멸', cells.expired, false)}
+        </div>
+      </div>
+      <div class="plans-hist-row__panel">${panelHtml}</div>
+    </div>`;
+}
+
+/**
+ * v3 패널 내용 (셀별)
+ * @param {object} r
+ * @param {string} cell  '내역'|'환불'|'진행상황'|'종료'|'소멸'
+ */
+function renderV3Panel(r, cell) {
+  const ref = r.orderRef || '';
+
+  if (cell === '내역') return renderV3DetailPanel(r);
+  if (cell === '환불') return renderV3RefundPanel(r);
+  if (cell === '진행상황') return renderV3ProgressPanel(r);
+  if (cell === '종료') return renderV3EndedPanel(r);
+  if (cell === '소멸') return renderV3ExpiredPanel(r);
+  return '';
+}
+
+function renderV3DetailPanel(r) {
+  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
+  const amount = formatKrw(r.amountKrw);
+  const dateText = esc(String(r.paidAt || '').slice(0, 10));
+  const remaining = typeof r.remaining === 'number' ? r.remaining : '—';
+  const used = typeof r.usedCount === 'number' ? r.usedCount : (typeof r.used_count === 'number' ? r.used_count : '—');
+
+  return `<div class="plans-hist-row__panel-inner">
+    <b>구성</b>
+    <table>
+      <tr><td>${name}</td><td>${amount}</td></tr>
+      <tr><td>결제일</td><td>${dateText}</td></tr>
+      ${typeof r.remaining === 'number' ? `<tr><td>사용</td><td>${used}회 / 남은 ${remaining}회</td></tr>` : ''}
+    </table>
+  </div>`;
+}
+
+function renderV3RefundPanel(r) {
+  const elig = refundEligCache?.orderRef === r.orderRef ? refundEligCache.data : null;
+  const kind = r.productKind || r.product_kind || '';
+
+  if (!elig) {
+    return `<div class="plans-hist-row__panel-inner"><p>환불 가능 여부를 확인하는 중…</p></div>`;
+  }
+
+  if (!elig.eligible) {
+    return `<div class="plans-hist-row__panel-inner"><p>${esc(elig.message || REFUND_COPY.notEligible)}</p></div>`;
+  }
+
+  const breakdownHtml = Array.isArray(elig.breakdown) && elig.breakdown.length
+    ? `<ul class="refund-breakdown">${elig.breakdown.map((b) => `<li>${esc(b.label)}: ${formatKrw(b.refund_won)}${b.amount_won ? ` (결제 ${formatKrw(b.amount_won)})` : ''}</li>`).join('')}</ul>`
+    : '';
+  const usedInfo = typeof elig.used_count === 'number' && elig.used_count > 0
+    ? ` (사용 ${elig.used_count}회)`
+    : '';
+
+  return `<div class="plans-hist-row__panel-inner">
+    <b>환불 가능</b>
+    <div class="refund-formula">환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong>${usedInfo}</div>
+    ${breakdownHtml}
+    <label class="refund-action-box__label">사유 선택
+      <select data-refund-reason-select>
+        ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
+      </select>
+    </label>
+    <label class="refund-action-box__label">상세 (선택)
+      <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
+    </label>
+    <button type="button" class="btn btn--primary btn--sm" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
+  </div>`;
+}
+
+function renderV3ProgressPanel(r) {
+  const refundStatus = r.refundStatus || r.refund_status || '';
+  const kind = r.productKind || r.product_kind || '';
   const status = r.status || '';
 
-  if (status === 'refund_requested') {
-    const kind = r.productKind || r.product_kind || '';
+  if (status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved') {
     const frozenMsg = kind === 'position' ? REFUND_COPY.positionFrozenNote : REFUND_COPY.frozenNote;
     const withdrawNote = kind === 'position' ? REFUND_COPY.positionWithdrawNote : '';
-    return `<tr class="history-expand-row"><td colspan="8">
-      <div class="refund-action-box">
-        <p class="refund-action-box__status">${esc(frozenMsg)}</p>
-        ${withdrawNote ? `<p class="refund-action-box__note">${esc(withdrawNote)}</p>` : ''}
-        <label class="refund-action-box__label">${esc(REFUND_COPY.withdrawConfirmLabel)}
-          <input type="text" data-refund-withdraw-confirm maxlength="10" placeholder="${esc(REFUND_COPY.withdrawConfirmPlaceholder)}" autocomplete="off" />
-        </label>
-        <button type="button" class="btn btn--secondary btn--sm" data-refund-withdraw="${esc(r.orderRef)}">환불 철회</button>
-      </div>
-    </td></tr>`;
+    const stepsHtml = renderProgressSteps(refundStatus || 'requested');
+    return `<div class="plans-hist-row__panel-inner">
+      ${stepsHtml}
+      <p>${esc(frozenMsg)}</p>
+      ${withdrawNote ? `<p class="mypage-muted">${esc(withdrawNote)}</p>` : ''}
+      <label class="refund-action-box__label">${esc(REFUND_COPY.withdrawConfirmLabel)}
+        <input type="text" data-refund-withdraw-confirm maxlength="10" placeholder="${esc(REFUND_COPY.withdrawConfirmPlaceholder)}" autocomplete="off" />
+      </label>
+      <button type="button" class="btn btn--secondary btn--sm" data-refund-withdraw="${esc(r.orderRef)}">환불 철회</button>
+    </div>`;
   }
 
-  if (status === 'paid') {
-    const elig = refundEligCache?.orderRef === r.orderRef ? refundEligCache.data : null;
+  /* PG HOLD(301): refunded 패널은 PG 실환불 해제 전까지 표시하지 않는다 */
 
-    if (!elig) {
-      return `<tr class="history-expand-row"><td colspan="8">
-        <div class="refund-action-box"><p>환불 가능 여부를 확인하는 중…</p></div>
-      </td></tr>`;
-    }
-
-    if (!elig.eligible) {
-      return `<tr class="history-expand-row"><td colspan="8">
-        <div class="refund-action-box"><p>${esc(elig.message || REFUND_COPY.notEligible)}</p></div>
-      </td></tr>`;
-    }
-
-    /* 327: position breakdown (서버 계산, 프론트 표시만) */
-    const breakdownHtml = Array.isArray(elig.breakdown) && elig.breakdown.length
-      ? `<ul class="refund-breakdown">${elig.breakdown.map((b) => `<li>${esc(b.label)}: ${formatKrw(b.refund_won)}${b.amount_won ? ` (결제 ${formatKrw(b.amount_won)})` : ''}</li>`).join('')}</ul>`
-      : '';
-    const usedInfo = typeof elig.used_count === 'number' && elig.used_count > 0
-      ? ` (사용 ${elig.used_count}회)`
-      : '';
-
-    return `<tr class="history-expand-row"><td colspan="8">
-      <div class="refund-action-box">
-        <p>환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong>${usedInfo}</p>
-        ${breakdownHtml}
-        <label class="refund-action-box__label">사유 선택
-          <select data-refund-reason-select>
-            ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
-          </select>
-        </label>
-        <label class="refund-action-box__label">상세 (선택)
-          <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
-        </label>
-        <button type="button" class="btn btn--primary btn--sm" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
-      </div>
-    </td></tr>`;
+  if (refundStatus === 'rejected') {
+    return `<div class="plans-hist-row__panel-inner">
+      ${renderProgressSteps('rejected')}
+      <p class="mypage-muted">${esc(r.refundRejectReason || '환불이 반려되었습니다.')}</p>
+    </div>`;
   }
 
-  return '';
+  return `<div class="plans-hist-row__panel-inner"><p class="mypage-muted">진행 정보가 없습니다.</p></div>`;
+}
+
+function renderProgressSteps(refundStatus) {
+  /* PG HOLD(301): 승인 단계까지만 표시 (실환불 UI는 이후 tip) */
+  const steps = [
+    { label: '신청', key: 'requested' },
+    { label: '검토 중', key: 'reviewing' },
+    { label: '승인', key: 'approved' },
+  ];
+  const isRejected = refundStatus === 'rejected';
+  const doneKeys = isRejected
+    ? ['requested', 'reviewing']
+    : refundStatus === 'approved'
+      ? ['requested', 'reviewing', 'approved']
+      : ['requested'];
+  const curKey = isRejected ? null : (refundStatus === 'requested' ? 'reviewing' : null);
+
+  let html = '<div class="plans-hist-steps">';
+  for (const s of steps) {
+    const isDone = doneKeys.includes(s.key);
+    const isCur = s.key === curKey;
+    const cls = isDone ? 'is-done' : isCur ? 'is-current' : '';
+    html += `<div class="${cls}">${esc(s.label)}</div>`;
+  }
+  if (isRejected) {
+    html += `<div class="is-rejected">반려</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderV3EndedPanel(r) {
+  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
+  const amount = formatKrw(r.amountKrw);
+  return `<div class="plans-hist-row__panel-inner">
+    <b>구성</b>
+    <table><tr><td>${name}</td><td>${amount}</td></tr></table>
+    <div class="refund-formula">남은 0회 → 종료</div>
+  </div>`;
+}
+
+function renderV3ExpiredPanel(r) {
+  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
+  const dateText = esc(r.expiredAt || r.expired_at || '');
+  const remaining = typeof r.remaining === 'number' ? r.remaining : 0;
+  return `<div class="plans-hist-row__panel-inner">
+    <table><tr><td>만료</td><td>${dateText ? `${dateText} · 유효기간 경과` : '유효기간 경과'}</td></tr></table>
+    <div class="refund-formula">남은 ${remaining}회 → 소멸 (환불 대상 아님)</div>
+  </div>`;
 }
 
 /** P18-06 checkout */
@@ -1940,7 +2068,7 @@ export function renderPlansResult() {
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
       <div class="mypage-actions-row">
-        <a href="#/mypage/plans/my" class="btn btn--primary" data-nav="/mypage/plans/my">내 상품 보기</a>
+        <a href="#/mypage/plans" class="btn btn--primary" data-nav="/mypage/plans">구매이력 보기</a>
         ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">운영 화면으로</a>` : ''}
         ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
         <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품센터</a>
@@ -2082,64 +2210,70 @@ export function bindPlansScreenEvents(root, rerender) {
         });
     }
   }
-  if ((path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
+  /* 329 v3: 구매이력 히스토리 로딩 (#/mypage/plans 본화면에서도) */
+  if ((path === '/mypage/plans' || path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
     loadHistoryRows().then((result) => {
       historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
       rerender();
     });
   }
 
-  /* 326 탭 전환 */
+  /* 329 v3: 탭 전환 (쪽지권/노출상품) */
   root.querySelectorAll('[data-history-tab]').forEach((btn) => {
     btn.addEventListener('click', () => {
       historyTab = btn.getAttribute('data-history-tab') || 'count';
-      expandedOrderRef = null;
+      openCell = null;
       refundEligCache = null;
       rerender();
     });
   });
 
-  /* 326 확장행 토글 + 자격 조회 */
-  root.querySelectorAll('[data-history-expand]').forEach((btn) => {
+  /* 329 v3: 셀 토글 */
+  root.querySelectorAll('[data-v3-cell]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      const ref = btn.getAttribute('data-history-expand');
-      if (expandedOrderRef === ref) {
-        expandedOrderRef = null;
+      const ref = btn.getAttribute('data-v3-ref') || '';
+      const cell = btn.getAttribute('data-v3-cell') || '';
+      const same = openCell?.orderRef === ref && openCell?.cell === cell;
+      if (same) {
+        openCell = null;
         refundEligCache = null;
         rerender();
         return;
       }
-      expandedOrderRef = ref;
-      refundEligCache = null;
+      openCell = { orderRef: ref, cell };
+      if (cell !== '환불') {
+        refundEligCache = null;
+      }
       rerender();
-      if (ref) {
+      if (cell === '환불' && ref) {
         fetchRefundEligibility(ref)
           .then((data) => {
             refundEligCache = { orderRef: ref, data };
-            if (expandedOrderRef === ref) rerender();
+            if (openCell?.orderRef === ref && openCell?.cell === '환불') rerender();
           })
           .catch(() => {
             refundEligCache = { orderRef: ref, data: { eligible: false, message: '확인에 실패했습니다.' } };
-            if (expandedOrderRef === ref) rerender();
+            if (openCell?.orderRef === ref && openCell?.cell === '환불') rerender();
           });
       }
     });
   });
 
-  /* 326 환불 신청 */
+  /* 329 v3: 환불 신청 (326 로직 유지) */
   root.querySelectorAll('[data-refund-submit]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const ref = btn.getAttribute('data-refund-submit');
       if (!ref) return;
-      const box = btn.closest('.refund-action-box');
-      const reasonChoice = box?.querySelector('[data-refund-reason-select]')?.value || '';
-      const detail = box?.querySelector('[data-refund-detail]')?.value || '';
+      const panel = btn.closest('.plans-hist-row__panel-inner');
+      const reasonChoice = panel?.querySelector('[data-refund-reason-select]')?.value || '';
+      const detail = panel?.querySelector('[data-refund-detail]')?.value || '';
+      const kind = btn.closest('.plans-hist-row')?.getAttribute('data-v3-row') || '';
       if (!confirm(REFUND_COPY.confirmSubmit)) return;
       try {
         await submitRefund(ref, { reason_choice: reasonChoice, detail });
         void s114Alert(REFUND_COPY.submitSuccess);
         historyCache.loaded = false;
-        expandedOrderRef = null;
+        openCell = null;
         refundEligCache = null;
         invalidateHistoryCache();
         rerender();
@@ -2153,13 +2287,13 @@ export function bindPlansScreenEvents(root, rerender) {
     });
   });
 
-  /* 326+326b 환불 철회 (본인확인) */
+  /* 329 v3: 환불 철회 (326b 본인확인 유지) */
   root.querySelectorAll('[data-refund-withdraw]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const ref = btn.getAttribute('data-refund-withdraw');
       if (!ref) return;
-      const box = btn.closest('.refund-action-box');
-      const confirmInput = box?.querySelector('[data-refund-withdraw-confirm]');
+      const panel = btn.closest('.plans-hist-row__panel-inner');
+      const confirmInput = panel?.querySelector('[data-refund-withdraw-confirm]');
       const confirmText = confirmInput?.value?.trim() || '';
       if (confirmText !== REFUND_COPY.withdrawConfirmText) {
         void s114Alert(`「${REFUND_COPY.withdrawConfirmText}」을(를) 정확히 입력해 주세요.`);
@@ -2170,7 +2304,7 @@ export function bindPlansScreenEvents(root, rerender) {
         await withdrawRefund(ref, confirmText);
         void s114Alert(REFUND_COPY.withdrawSuccess);
         historyCache.loaded = false;
-        expandedOrderRef = null;
+        openCell = null;
         refundEligCache = null;
         invalidateHistoryCache();
         rerender();
