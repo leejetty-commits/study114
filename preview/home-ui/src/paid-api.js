@@ -14,6 +14,7 @@ export const PAID_ENDPOINTS = {
   catalog: '/api/paid/catalog.php',
   waitlist: '/api/paid/waitlist.php',
   tierCheck: '/api/paid/tier-check.php',
+  refund: '/api/paid/refund.php',
 };
 
 async function parseJson(res) {
@@ -193,6 +194,40 @@ export async function registerPrimeWaitlist(studyRoomId, payload = {}) {
       study_room_id: Number(studyRoomId),
       ...payload,
     }),
+  });
+  return parseJson(res);
+}
+
+/* ── 326 환불 ─────────────────────────────────────── */
+
+/** @param {string} orderRef */
+export async function fetchRefundEligibility(orderRef) {
+  const qs = `?order_ref=${encodeURIComponent(orderRef)}`;
+  const res = await fetch(`${PAID_ENDPOINTS.refund}${qs}`, { ...CREDENTIALS });
+  return parseJson(res);
+}
+
+/**
+ * @param {string} orderRef
+ * @param {{ reason_choice?: string, detail?: string }} [reason]
+ */
+export async function submitRefund(orderRef, reason = {}) {
+  const res = await fetch(PAID_ENDPOINTS.refund, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...CREDENTIALS,
+    body: JSON.stringify({ action: 'submit', order_ref: orderRef, ...reason }),
+  });
+  return parseJson(res);
+}
+
+/** @param {string} orderRef @param {string} confirmText */
+export async function withdrawRefund(orderRef, confirmText) {
+  const res = await fetch(PAID_ENDPOINTS.refund, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    ...CREDENTIALS,
+    body: JSON.stringify({ action: 'withdraw', order_ref: orderRef, confirm_text: confirmText }),
   });
   return parseJson(res);
 }

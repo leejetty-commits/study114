@@ -61,7 +61,18 @@ import {
   appendHistoryRow,
   paymentMethodLabel,
   orderStatusLabel,
+  invalidateHistoryCache,
 } from './history-mock.js';
+import {
+  fetchRefundEligibility,
+  submitRefund,
+  withdrawRefund,
+} from '../paid-api.js';
+import {
+  REFUND_REASON_CHOICES,
+  REFUND_STATUS_LABELS,
+  REFUND_COPY,
+} from '../mypage/mypage-copy.js';
 import {
   resolveRoomPrimeInventory,
   getSlotForProduct,
@@ -1548,7 +1559,16 @@ export function renderPlansMy() {
     </section>`;
 }
 
-/** P18-05 결제내역 */
+/** 326: 결제내역 탭(쪽지권/노출) 상태 */
+let historyTab = 'count';
+
+/** @type {string|null} 확장 중인 행의 orderRef */
+let expandedOrderRef = null;
+
+/** @type {{ orderRef: string, data: object }|null} 환불 자격 캐시 */
+let refundEligCache = null;
+
+/** P18-05 결제내역 (326 탭·확장행·환불 액션) */
 export function renderPlansHistory() {
   const role = getPlansEffectiveRole();
   if (role === 'parent' || role === 'guest') {
@@ -1569,11 +1589,19 @@ export function renderPlansHistory() {
     ? rows.find((r) => r.orderRef === openReceiptOrderRef) || null
     : null;
 
+  const countRows = rows.filter((r) => isCountProduct(r));
+  const positionRows = rows.filter((r) => !isCountProduct(r));
+  const activeRows = historyTab === 'count' ? countRows : positionRows;
+
   return `
     <section class="mypage-panel">
       <p class="mypage-lead">결제내역</p>
       <p class="mypage-muted">${esc(sourceNote)}</p>
-      <div class="plans-history-layout">
+      <div class="plans-history-tabs" role="tablist">
+        <button type="button" role="tab" class="plans-tab${historyTab === 'count' ? ' is-active' : ''}" data-history-tab="count" aria-selected="${historyTab === 'count'}">쪽지권</button>
+        <button type="button" role="tab" class="plans-tab${historyTab === 'position' ? ' is-active' : ''}" data-history-tab="position" aria-selected="${historyTab === 'position'}">노출상품</button>
+      </div>
+      <div class="plans-history-layout" role="tabpanel">
       <table class="plans-table" aria-label="결제내역">
         <thead>
           <tr>
@@ -1589,22 +1617,8 @@ export function renderPlansHistory() {
         </thead>
         <tbody>
           ${
-            rows.length
-              ? rows
-                  .map(
-                    (r) => `
-            <tr>
-              <td><code>${esc(r.orderRef)}</code></td>
-              <td>${esc(r.productName)}</td>
-              <td>${esc(r.providerLabel)}</td>
-              <td>${formatKrw(r.amountKrw)}</td>
-              <td>${esc(paymentMethodLabel(r.paymentMethod))}</td>
-              <td>${esc(String(r.paidAt).slice(0, 16).replace('T', ' '))}</td>
-              <td>${esc(orderStatusLabel(r.status))}</td>
-              <td><button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">상세</button></td>
-            </tr>`,
-                  )
-                  .join('')
+            activeRows.length
+              ? activeRows.map((r) => renderHistoryRow(r)).join('')
               : `<tr><td colspan="8" class="mypage-muted">내역이 없습니다.</td></tr>`
           }
         </tbody>
@@ -1612,6 +1626,91 @@ export function renderPlansHistory() {
       ${receiptRow ? renderReceiptPanel(receiptRow) : ''}
       </div>
     </section>`;
+}
+
+/** @param {object} r */
+function isCountProduct(r) {
+  const kind = r.productKind || r.product_kind || '';
+  const name = (typeof r.productName === 'string' ? r.productName : '') || '';
+  return kind === 'count' || /쪽지/.test(name);
+}
+
+/** @param {object} r */
+function renderHistoryRow(r) {
+  const isExpanded = expandedOrderRef === r.orderRef;
+  const isFromApi = r.source === 'api';
+  const canRefund = historyTab === 'count' && isFromApi && (r.status === 'paid' || r.status === 'refund_requested');
+
+  let expandedHtml = '';
+  if (isExpanded) {
+    expandedHtml = renderExpandedRow(r);
+  }
+
+  return `
+    <tr class="${isExpanded ? 'is-expanded' : ''}">
+      <td><code>${esc(r.orderRef)}</code></td>
+      <td>${esc(typeof r.productName === 'string' ? r.productName : r.productName)}</td>
+      <td>${esc(r.providerLabel)}</td>
+      <td>${formatKrw(r.amountKrw)}</td>
+      <td>${esc(paymentMethodLabel(r.paymentMethod))}</td>
+      <td>${esc(String(r.paidAt).slice(0, 16).replace('T', ' '))}</td>
+      <td>${esc(orderStatusLabel(r.status))}</td>
+      <td>
+        <button type="button" class="btn btn--secondary btn--sm" data-plans-receipt-open="${esc(r.orderRef)}">상세</button>
+        ${canRefund ? `<button type="button" class="btn btn--secondary btn--sm" data-history-expand="${esc(r.orderRef)}">${isExpanded ? '접기' : '환불'}</button>` : ''}
+      </td>
+    </tr>
+    ${expandedHtml}`;
+}
+
+/** @param {object} r */
+function renderExpandedRow(r) {
+  const status = r.status || '';
+
+  if (status === 'refund_requested') {
+    return `<tr class="history-expand-row"><td colspan="8">
+      <div class="refund-action-box">
+        <p class="refund-action-box__status">${esc(REFUND_COPY.frozenNote)}</p>
+        <label class="refund-action-box__label">${esc(REFUND_COPY.withdrawConfirmLabel)}
+          <input type="text" data-refund-withdraw-confirm maxlength="10" placeholder="${esc(REFUND_COPY.withdrawConfirmPlaceholder)}" autocomplete="off" />
+        </label>
+        <button type="button" class="btn btn--secondary btn--sm" data-refund-withdraw="${esc(r.orderRef)}">환불 철회</button>
+      </div>
+    </td></tr>`;
+  }
+
+  if (status === 'paid') {
+    const elig = refundEligCache?.orderRef === r.orderRef ? refundEligCache.data : null;
+
+    if (!elig) {
+      return `<tr class="history-expand-row"><td colspan="8">
+        <div class="refund-action-box"><p>환불 가능 여부를 확인하는 중…</p></div>
+      </td></tr>`;
+    }
+
+    if (!elig.eligible) {
+      return `<tr class="history-expand-row"><td colspan="8">
+        <div class="refund-action-box"><p>${esc(elig.message || REFUND_COPY.notEligible)}</p></div>
+      </td></tr>`;
+    }
+
+    return `<tr class="history-expand-row"><td colspan="8">
+      <div class="refund-action-box">
+        <p>환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong> (사용 ${elig.used_count}회)</p>
+        <label class="refund-action-box__label">사유 선택
+          <select data-refund-reason-select>
+            ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
+          </select>
+        </label>
+        <label class="refund-action-box__label">상세 (선택)
+          <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
+        </label>
+        <button type="button" class="btn btn--primary btn--sm" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
+      </div>
+    </td></tr>`;
+  }
+
+  return '';
 }
 
 /** P18-06 checkout */
@@ -1974,6 +2073,101 @@ export function bindPlansScreenEvents(root, rerender) {
       rerender();
     });
   }
+
+  /* 326 탭 전환 */
+  root.querySelectorAll('[data-history-tab]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      historyTab = btn.getAttribute('data-history-tab') || 'count';
+      expandedOrderRef = null;
+      refundEligCache = null;
+      rerender();
+    });
+  });
+
+  /* 326 확장행 토글 + 자격 조회 */
+  root.querySelectorAll('[data-history-expand]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const ref = btn.getAttribute('data-history-expand');
+      if (expandedOrderRef === ref) {
+        expandedOrderRef = null;
+        refundEligCache = null;
+        rerender();
+        return;
+      }
+      expandedOrderRef = ref;
+      refundEligCache = null;
+      rerender();
+      if (ref) {
+        fetchRefundEligibility(ref)
+          .then((data) => {
+            refundEligCache = { orderRef: ref, data };
+            if (expandedOrderRef === ref) rerender();
+          })
+          .catch(() => {
+            refundEligCache = { orderRef: ref, data: { eligible: false, message: '확인에 실패했습니다.' } };
+            if (expandedOrderRef === ref) rerender();
+          });
+      }
+    });
+  });
+
+  /* 326 환불 신청 */
+  root.querySelectorAll('[data-refund-submit]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ref = btn.getAttribute('data-refund-submit');
+      if (!ref) return;
+      const box = btn.closest('.refund-action-box');
+      const reasonChoice = box?.querySelector('[data-refund-reason-select]')?.value || '';
+      const detail = box?.querySelector('[data-refund-detail]')?.value || '';
+      if (!confirm(REFUND_COPY.confirmSubmit)) return;
+      try {
+        await submitRefund(ref, { reason_choice: reasonChoice, detail });
+        void s114Alert(REFUND_COPY.submitSuccess);
+        historyCache.loaded = false;
+        expandedOrderRef = null;
+        refundEligCache = null;
+        invalidateHistoryCache();
+        rerender();
+        loadHistoryRows().then((result) => {
+          historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
+          rerender();
+        });
+      } catch (err) {
+        void s114Alert(err?.message || '환불 신청에 실패했습니다.');
+      }
+    });
+  });
+
+  /* 326+326b 환불 철회 (본인확인) */
+  root.querySelectorAll('[data-refund-withdraw]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ref = btn.getAttribute('data-refund-withdraw');
+      if (!ref) return;
+      const box = btn.closest('.refund-action-box');
+      const confirmInput = box?.querySelector('[data-refund-withdraw-confirm]');
+      const confirmText = confirmInput?.value?.trim() || '';
+      if (confirmText !== REFUND_COPY.withdrawConfirmText) {
+        void s114Alert(`「${REFUND_COPY.withdrawConfirmText}」을(를) 정확히 입력해 주세요.`);
+        return;
+      }
+      if (!confirm(REFUND_COPY.confirmWithdraw)) return;
+      try {
+        await withdrawRefund(ref, confirmText);
+        void s114Alert(REFUND_COPY.withdrawSuccess);
+        historyCache.loaded = false;
+        expandedOrderRef = null;
+        refundEligCache = null;
+        invalidateHistoryCache();
+        rerender();
+        loadHistoryRows().then((result) => {
+          historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
+          rerender();
+        });
+      } catch (err) {
+        void s114Alert(err?.message || '환불 철회에 실패했습니다.');
+      }
+    });
+  });
 
   root.querySelectorAll('[data-plans-receipt-open]').forEach((btn) => {
     btn.addEventListener('click', () => {

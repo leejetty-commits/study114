@@ -1125,7 +1125,7 @@ function renderAccount(role, profile) {
             <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
             <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
             <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
-            <li>환불은 환불규정에 따라서 조치를 해 드립니다.</li>
+            <li>환불은 결제 후 7일 이내 · 사용 구간별 환불표(서버 정본)에 따라 처리됩니다.</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
             ${renderWithdrawReasonChoices(role === 'parent' ? 'student' : role, {

@@ -7,6 +7,7 @@ namespace Study114\Admin;
 use InvalidArgumentException;
 use Study114\Database\Connection;
 use Study114\Paid\PaidCatalog;
+use Study114\Paid\RefundService;
 
 final class AdminCommerceService
 {
@@ -119,6 +120,9 @@ final class AdminCommerceService
             $before = $this->repo->getTicketPackById($id);
             if ($before === null) {
                 throw new InvalidArgumentException('횟수권 팩을 찾을 수 없습니다.');
+            }
+            if ((new RefundService())->isPackBlockedByRefund($id)) {
+                throw new InvalidArgumentException('환불 진행 중인 팩은 잔여횟수를 수정할 수 없습니다.');
             }
             if (!$this->repo->updateTicketRemaining($id, $remaining)) {
                 throw new InvalidArgumentException('잔여횟수 보정에 실패했습니다.');

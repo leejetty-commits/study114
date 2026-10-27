@@ -98,6 +98,37 @@ export function waitlistStatusLabel(row) {
   return WAITLIST_STATUS_LABELS[/** @type {keyof typeof WAITLIST_STATUS_LABELS} */ (String(row?.status || ''))] || UNKNOWN_STATUS_LABEL;
 }
 
+/* ── 326 환불 사유 ────────────────────────────────── */
+
+export const REFUND_REASON_CHOICES = [
+  { value: 'no_longer_needed', label: '더 이상 필요하지 않음' },
+  { value: 'wrong_purchase', label: '잘못 구매' },
+  { value: 'price_concern', label: '가격 문제' },
+  { value: 'other', label: '기타' },
+];
+
+export const REFUND_STATUS_LABELS = {
+  requested: '심사중',
+  approved: '승인(환불 대기)',
+  rejected: '거절',
+  refunded: '환불 완료',
+  cancelled: '철회',
+};
+
+export const REFUND_COPY = {
+  confirmSubmit: '환불을 신청하면 해당 쪽지권이 즉시 동결됩니다. 진행할까요?',
+  confirmWithdraw: '환불 신청을 철회하면 쪽지권이 복원됩니다. 철회할까요?',
+  withdrawConfirmLabel: '본인확인: 아래에 「환불철회」를 입력하세요.',
+  withdrawConfirmText: '환불철회',
+  withdrawConfirmPlaceholder: '환불철회',
+  submitSuccess: '환불 신청이 완료되었습니다.',
+  withdrawSuccess: '환불 신청이 철회되었습니다.',
+  notEligible: '이 주문은 환불 조건에 해당하지 않습니다.',
+  frozenNote: '환불 진행 중에는 쪽지권을 사용할 수 없습니다.',
+  withdrawnNoRerefund: '철회 처리된 결제는 다시 환불을 신청할 수 없습니다.',
+  adminBlockedByRefund: '환불 진행 중인 팩은 수량을 수정할 수 없습니다.',
+};
+
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';
