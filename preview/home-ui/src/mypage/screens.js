@@ -858,6 +858,21 @@ function renderPlansV3(role) {
       </section>`;
   }
 
+  if (plansHydratePhase === 'loading' || plansHydratePhase === 'idle') {
+    return `
+      <section class="mypage-panel" data-plans-hydrate="loading">
+        <p class="mypage-info-box">구매 이력·상품 상태를 확인하는 중입니다.</p>
+      </section>`;
+  }
+  if (plansHydratePhase === 'timeout' || plansHydratePhase === 'error') {
+    return `
+      <section class="mypage-panel" data-plans-hydrate="${plansHydratePhase}">
+        <p class="mypage-info-box" role="alert">구매 이력을 불러오지 못했습니다.
+          <button type="button" class="btn btn--secondary btn--sm" data-plans-hydrate-retry>다시 시도</button>
+        </p>
+      </section>`;
+  }
+
   return `
     ${renderProviderNoticeBanners()}
     ${renderPlansHistory()}`;
@@ -1526,9 +1541,12 @@ function bindWithdrawEvents(root) {
 }
 
 let plansStatusHydrateAttempted = false;
+/** @type {'idle'|'loading'|'ready'|'timeout'|'error'} */
+let plansHydratePhase = 'idle';
 /** @type {import('../plans/history-mock.js').HistoryRow[] | null} */
 let plansHistoryRows = null;
 let contactHistoryHydrateAttempted = false;
+const PLANS_HYDRATE_TIMEOUT_MS = 8000;
 
 const PRIME_MATCH_LABEL = '조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?';
 
@@ -1643,8 +1661,14 @@ export function bindMypageScreenEvents(root, rerender) {
       schedulePlansStatusHydrate(hydrateProfile, rerender, path);
     });
   }
+  root.querySelector('[data-plans-hydrate-retry]')?.addEventListener('click', () => {
+    plansStatusHydrateAttempted = false;
+    plansHydratePhase = 'idle';
+    rerender();
+  });
   if (!plansStatusHydrateAttempted && path === '/mypage/plans') {
     plansStatusHydrateAttempted = true;
+    plansHydratePhase = 'loading';
     const jobs = [
       hydratePaidCaches(),
       hydrateProviderNotices(),
@@ -1654,9 +1678,21 @@ export function bindMypageScreenEvents(root, rerender) {
       }),
     ];
     if (isMessagesApiMode()) jobs.push(hydrateMessagesCache());
-    Promise.allSettled(jobs)
-      .then(() => rerender())
-      .catch((err) => console.warn('[mypage/plans] hydrate failed', err));
+    const all = Promise.allSettled(jobs);
+    const timed = Promise.race([
+      all.then(() => 'ready'),
+      new Promise((resolve) => setTimeout(() => resolve('timeout'), PLANS_HYDRATE_TIMEOUT_MS)),
+    ]);
+    timed
+      .then((phase) => {
+        plansHydratePhase = phase === 'timeout' ? 'timeout' : 'ready';
+        rerender();
+      })
+      .catch((err) => {
+        console.warn('[mypage/plans] hydrate failed', err);
+        plansHydratePhase = 'error';
+        rerender();
+      });
   }
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);

@@ -203,12 +203,19 @@ export function bootTutorStudentDemand(index, rerender) {
   studentKey = key;
   studentLive = null;
   studentStatus = regionId ? 'loading' : 'no-region';
-  studentBoot = loadTutorStudentDemand(regionId).then((result) => {
-    if (studentKey !== key) return;
-    studentLive = result.items;
-    studentStatus = result.status;
-    if (typeof rerender === 'function') rerender();
-  });
+  studentBoot = loadTutorStudentDemand(regionId)
+    .then((result) => {
+      if (studentKey !== key) return;
+      studentLive = result.items;
+      studentStatus = result.status;
+      if (typeof rerender === 'function') rerender();
+    })
+    .catch(() => {
+      if (studentKey !== key) return;
+      studentLive = [];
+      studentStatus = 'error';
+      if (typeof rerender === 'function') rerender();
+    });
   return studentBoot;
 }
 
@@ -258,23 +265,38 @@ export function bootTutorHomeTutors(rerender) {
   tutorKey = regionId;
   tutorLive = null;
   tutorStatus = regionId ? 'loading' : 'no-region';
-  tutorBoot = loadTutorHomeTutors(regionId).then((result) => {
-    if (tutorKey !== regionId) return;
-    tutorLive = result.items;
-    tutorStatus = result.status;
-    if (typeof rerender === 'function') rerender();
-  });
+  tutorBoot = loadTutorHomeTutors(regionId)
+    .then((result) => {
+      if (tutorKey !== regionId) return;
+      tutorLive = result.items;
+      tutorStatus = result.status;
+      if (typeof rerender === 'function') rerender();
+    })
+    .catch(() => {
+      if (tutorKey !== regionId) return;
+      tutorLive = [];
+      tutorStatus = 'error';
+      if (typeof rerender === 'function') rerender();
+    });
   return tutorBoot;
+}
+
+/** @param {Promise<unknown>} job @param {number} ms */
+function settleWithin(job, ms) {
+  return Promise.race([
+    Promise.resolve(job).catch(() => null),
+    new Promise((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 }
 
 async function ensureHomeRegions() {
   try {
-    if (isRegistrationsApiMode()) await hydrateRegistrationsCache();
+    if (isRegistrationsApiMode()) await settleWithin(hydrateRegistrationsCache(), 5000);
   } catch {
     /* 캐시가 있으면 그 값으로 칩을 그린다 */
   }
   try {
-    await ensureTutorCityUnits();
+    await settleWithin(ensureTutorCityUnits(), 5000);
   } catch {
     /* 라벨 해석이 안 되면 대표 라벨만 남긴다 */
   }

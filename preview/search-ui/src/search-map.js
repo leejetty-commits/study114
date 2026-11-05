@@ -145,9 +145,13 @@ function renderFloatMap(parts, items, ctx) {
     : studyRoom
       ? ` data-geocode-region="true" data-member-map="true" data-pin-center="false" data-geocode-query="${esc(String(ctx.geocodeQuery ?? '')).replace(/"/g, '&quot;')}"`
       : '';
+  // 회원·저장 지역이 없으면 게스트 대치/역삼 잔류 문구를 쓰지 않는다.
   const heading = guestMap
     ? readGuestBaseline().room
-    : parts.dong || (student ? region : '') || memberPlacePrompt(ctx.viewerRole);
+    : parts.dong ||
+      (student ? region : '') ||
+      (region && !/대치|역삼/.test(region) ? region : '') ||
+      memberPlacePrompt(ctx.viewerRole);
 
   const bannerAside = ctx.hideMapBanner === true
     ? ''

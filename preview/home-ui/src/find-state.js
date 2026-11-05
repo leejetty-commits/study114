@@ -36,3 +36,10 @@ export function resetFindState(findState) {
   findState.homeSelf = false;
   findState.hasRequestSummary = false;
 }
+
+/*
+ * failFindLoadIfStuck 미도입 근거:
+ * 목록 fetch는 search-api.js SEARCH_API_TIMEOUT_MS(8s)+AbortController가
+ * AbortError → searchError로 끊는다. runFindSearchWithFilters finally가
+ * searchLoading=false로 내린다. 별도 폴링 고착 헬퍼는 중복이라 두지 않는다.
+ */

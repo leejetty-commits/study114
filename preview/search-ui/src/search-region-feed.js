@@ -17,23 +17,35 @@ export function getStudentDemandForRegion(_regionHint, _opts = {}) {
 
 /**
  * @param {import('./state.js').SearchTab} tab
- * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean, hopeType?: 'tutor'|'study_room', regionLabel?: string, studyRoomHome?: boolean, promoFind?: boolean, promoStudent?: boolean, tutorHome?: boolean, tutorFindInitial?: boolean, liveItems?: object[], liveStudentItems?: object[], liveTutorItems?: object[]|null }} [ctx]
- * @returns {{ items: object[], regionLabel: string, pending?: boolean }}
+ * @param {{ tutorRegionIndex?: number, role?: import('./state.js').ViewerRole, homeSelf?: boolean, hopeType?: 'tutor'|'study_room', regionLabel?: string, studyRoomHome?: boolean, promoFind?: boolean, promoStudent?: boolean, tutorHome?: boolean, tutorFindInitial?: boolean, liveItems?: object[], liveStudentItems?: object[], liveTutorItems?: object[]|null, feedStatus?: 'idle'|'loading'|'ready'|'error'|'no-region' }} [ctx]
+ * @returns {{ items: object[], regionLabel: string, pending?: boolean, status?: string }}
  */
 export function getRegionFeed(tab, ctx = {}) {
+  const settled =
+    ctx.feedStatus === 'ready' || ctx.feedStatus === 'error' || ctx.feedStatus === 'no-region';
+
   if (tab === 'room' && (ctx.studyRoomHome || ctx.promoFind)) {
-    const items = Array.isArray(ctx.liveItems) ? ctx.liveItems : [];
-    return { items, regionLabel: String(ctx.regionLabel || '').trim() };
+    const regionLabel = String(ctx.regionLabel || '').trim();
+    if (!Array.isArray(ctx.liveItems)) {
+      return { items: [], regionLabel, pending: !settled, status: ctx.feedStatus };
+    }
+    return {
+      items: ctx.liveItems,
+      regionLabel,
+      status: ctx.feedStatus || 'ready',
+      pending: false,
+    };
   }
 
   if (tab === 'student' && ctx.promoStudent) {
     const regionLabel = String(ctx.regionLabel || '').trim();
     if (!Array.isArray(ctx.liveStudentItems)) {
-      return { items: [], regionLabel, pending: true };
+      return { items: [], regionLabel, pending: !settled, status: ctx.feedStatus };
     }
     return {
       items: mapSearchResultsToExposure('student', ctx.liveStudentItems),
       regionLabel,
+      status: ctx.feedStatus || 'ready',
     };
   }
 
@@ -41,11 +53,12 @@ export function getRegionFeed(tab, ctx = {}) {
   if (tab === 'tutor' && (ctx.tutorHome || ctx.tutorFindInitial)) {
     const regionLabel = String(ctx.regionLabel || '').trim();
     if (!Array.isArray(ctx.liveTutorItems)) {
-      return { items: [], regionLabel, pending: true };
+      return { items: [], regionLabel, pending: !settled, status: ctx.feedStatus };
     }
     return {
       items: mapSearchResultsToExposure('tutor', ctx.liveTutorItems),
       regionLabel,
+      status: ctx.feedStatus || 'ready',
     };
   }
 

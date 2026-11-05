@@ -9,10 +9,14 @@ import {
 import { getRegionFeed, getStudentDemandForRegion } from './search-region-feed.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
+  getStudyRoomHomeFeedStatus,
   getStudyRoomHomeLiveItems,
+  getStudyRoomStudentFeedStatus,
   getStudyRoomStudentLiveItems,
   peekStudyRoomPromo1,
   resolveStudyRoomMapQuery,
+  retryStudyRoomHome,
+  retryStudyRoomStudentDemand,
   studyRoomPromo1Dong,
 } from '@home-ui/study-room-home-seed.js';
 import {
@@ -68,11 +72,14 @@ import {
 } from './student-saved-region.js';
 import {
   REGION_LIST_ERROR,
+  REGION_NEED_CITY,
   activityLabelFromRegionId,
   bindRegionCascades,
+  cascadeIncompleteHint,
   normalizeCities,
   regionIdFromActivityLabel,
   renderRegionCascade,
+  resolveCascade,
 } from '../../shared/region-cascade.js';
 import {
   TUTOR_UNIT_LIST_ERROR,
@@ -522,6 +529,15 @@ export function bootStudentFindFeed(tab, state, rerender) {
     .then(() => rerender());
 }
 
+/** 학생 홈·찾기 목록 실패 재시도. */
+export function retryStudentFindFeed(tab, state, rerender) {
+  if (state.role !== 'parent') return;
+  const filters = studentFeedFilters(tab, state);
+  if (!filters) return;
+  studentFeeds.delete(studentFeedKey(tab, filters));
+  bootStudentFindFeed(tab, state, rerender);
+}
+
 /**
  * 카카오 주소 결과 → 화면 위치. 학생은 시·도 약칭(경기)을 정식 이름으로 펴고,
  * 이 탭의 보기 전용 위치로만 둔다(서버 저장 지역·임시값을 덮지 않는다).
@@ -593,7 +609,8 @@ function discardStaleGuestLocation() {
   }
 }
 
-const GU_PICK_HINT = '시·군·구까지 선택해 주세요';
+/** @deprecated 표시 정본은 REGION_NEED_CITY / cascadeIncompleteHint */
+const GU_PICK_HINT = REGION_NEED_CITY;
 const DONG_RETRY_HINT = '동을 다시 선택해 주세요';
 const STEP3_PENDING_HINT = '주소 확인 중입니다. 잠시 후 다시 검색해 주세요.';
 const STEP3_COMPLEX_HINT = '등록된 아파트단지가 없습니다. 주소찾기로 다시 선택해 주세요.';
@@ -752,9 +769,28 @@ function axisRegionLabel(tab, state, id) {
     : activityLabelFromRegionId(String(id ?? ''), findCityUnits);
 }
 
-/** @param {import('./state.js').SearchTab} tab @param {FindSurfaceState} state */
-function findPickHint(tab, state) {
-  return isTutorUnitAxis(tab, state) ? TUTOR_UNIT_PICK_HINT : GU_PICK_HINT;
+/**
+ * 시·도만 고른 경우 cascadeIncompleteHint(REGION_NEED_CITY)를 쓴다.
+ * @param {import('./state.js').SearchTab} tab
+ * @param {FindSurfaceState} state
+ * @param {HTMLFormElement} [form]
+ */
+function findPickHint(tab, state, form) {
+  if (isTutorUnitAxis(tab, state)) return TUTOR_UNIT_PICK_HINT;
+  const cascade = form?.querySelector?.('[data-region-cascade]');
+  if (cascade && findCityUnits.length) {
+    const sidoSel = cascade.querySelector('[data-field="region_sido"]');
+    const citySel = cascade.querySelector('[data-field="region_city"]');
+    const guSel = cascade.querySelector('[data-field="region_gu"]');
+    const resolved = resolveCascade(findCityUnits, {
+      sidoName: sidoSel instanceof HTMLSelectElement ? sidoSel.value : '',
+      cityName: citySel instanceof HTMLSelectElement ? citySel.value : '',
+      guName: guSel instanceof HTMLSelectElement ? guSel.value : '',
+    });
+    const incomplete = cascadeIncompleteHint(resolved);
+    if (incomplete) return incomplete;
+  }
+  return REGION_NEED_CITY;
 }
 
 /**
@@ -1450,18 +1486,21 @@ function regionFeedContext(tab, state, role, surfaceType = '') {
   const promoFind = role === 'study_room' && tab === 'room' && state.studyRoomHome !== true;
   if ((ctx.studyRoomHome || promoFind) && tab === 'room') {
     const live = getStudyRoomHomeLiveItems();
-    ctx.liveItems = Array.isArray(live) ? live : [];
+    ctx.liveItems = Array.isArray(live) ? live : live;
     ctx.promoFind = promoFind;
+    ctx.feedStatus = getStudyRoomHomeFeedStatus();
   }
   if (tab === 'student' && role === 'study_room' && !state.searchExecuted) {
     ctx.promoStudent = true;
     ctx.liveStudentItems = getStudyRoomStudentLiveItems();
     ctx.hopeType = 'study_room';
+    ctx.feedStatus = getStudyRoomStudentFeedStatus();
   }
   if (tab === 'student' && role === 'tutor' && state.tutorStudentSnap === true && !state.searchExecuted) {
     ctx.promoStudent = true;
     ctx.hopeType = 'tutor';
     ctx.liveStudentItems = getTutorStudentLiveItems();
+    ctx.feedStatus = getTutorStudentFeedStatus();
   }
   if (tab === 'tutor') {
     ctx.tutorRegionIndex = resolveTutorRegionIndex(state);
@@ -1469,6 +1508,7 @@ function regionFeedContext(tab, state, role, surfaceType = '') {
   if (tab === 'tutor' && role === 'tutor' && state.homeSelf === true && !state.searchExecuted) {
     ctx.tutorHome = true;
     ctx.liveTutorItems = getTutorHomeTutorLiveItems();
+    ctx.feedStatus = getTutorHomeTutorFeedStatus();
   }
   if (
     tab === 'tutor' &&
@@ -1479,6 +1519,7 @@ function regionFeedContext(tab, state, role, surfaceType = '') {
   ) {
     ctx.tutorFindInitial = true;
     ctx.liveTutorItems = getTutorHomeTutorLiveItems();
+    ctx.feedStatus = getTutorHomeTutorFeedStatus();
   }
   if (tab === 'student' && (state.studentHopeType === 'tutor' || state.studentHopeType === 'study_room')) {
     ctx.hopeType = state.studentHopeType;
@@ -2763,9 +2804,14 @@ export function renderFindResultSection(tab, state, role, options = {}) {
   if (role === 'parent' && !state.searchExecuted) {
     const status = state.studentFeedStatus || 'idle';
     if (status === 'loading' || status === 'error') {
+      const errorBody =
+        status === 'error'
+          ? `${GUEST_FEED_ERROR}
+          <button type="button" class="btn btn--secondary btn--sm" data-parent-feed-retry>다시 시도</button>`
+          : GUEST_FEED_LOADING;
       return `
       <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
-        <p class="search-results__hint"${status === 'error' ? ' role="alert"' : ''}>${status === 'error' ? GUEST_FEED_ERROR : GUEST_FEED_LOADING}</p>
+        <p class="search-results__hint"${status === 'error' ? ' role="alert"' : ''}>${errorBody}</p>
       </section>`;
     }
     if (!regionLabel) {
@@ -2790,11 +2836,25 @@ export function renderFindResultSection(tab, state, role, options = {}) {
       </section>`;
   }
 
-  if (tab === 'student' && role === 'study_room' && !state.searchExecuted && state.studentDemandPending) {
-    return `
-      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}">
-        <p class="search-results__hint">학생 목록을 불러오는 중입니다.</p>
+  if (tab === 'student' && role === 'study_room' && !state.searchExecuted) {
+    const status = getStudyRoomStudentFeedStatus();
+    const wrap = (inner) => `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}" data-room-student-feed="${esc(status)}">
+        ${inner}
       </section>`;
+    if (status === 'error') {
+      return wrap(
+        `<p class="search-results__hint" role="alert">${GUEST_FEED_ERROR}
+          <button type="button" class="btn btn--secondary btn--sm" data-room-student-retry>다시 시도</button>
+        </p>`,
+      );
+    }
+    if (status === 'loading' || status === 'idle' || state.studentDemandPending) {
+      return wrap(`<p class="search-results__hint">학생 목록을 불러오는 중입니다.</p>`);
+    }
+    if (status === 'no-region') {
+      return wrap(`<p class="search-results__hint">홍보지역을 등록하면 우리동네 학생 목록을 볼 수 있어요.</p>`);
+    }
   }
 
   /* 과외쌤 홈 학생 탭 — 활동지역 없음 / 조회 중 / 조회 실패 / 조회 끝 0건을 서로 다르게 그린다. */
@@ -2864,9 +2924,32 @@ export function renderFindResultSection(tab, state, role, options = {}) {
     }
   }
 
+  if (
+    tab === 'room' &&
+    role === 'study_room' &&
+    state.studyRoomHome === true &&
+    !state.searchExecuted
+  ) {
+    const status = getStudyRoomHomeFeedStatus();
+    const wrap = (inner) => `
+      <section class="search-results search-results--pre" aria-label="내 지역 목록" ${debugAttrs} data-surface-type="${esc(surfaceType)}" data-room-home-feed="${esc(status)}">
+        ${inner}
+      </section>`;
+    if (status === 'error') {
+      return wrap(
+        `<p class="search-results__hint" role="alert">${GUEST_FEED_ERROR}
+          <button type="button" class="btn btn--secondary btn--sm" data-room-home-retry>다시 시도</button>
+        </p>`,
+      );
+    }
+    if (status === 'loading' || status === 'idle' || !Array.isArray(getStudyRoomHomeLiveItems())) {
+      return wrap(`<p class="search-results__hint">${GUEST_FEED_LOADING}</p>`);
+    }
+  }
+
   if (!state.searchExecuted) {
     const studyRoomHomeReady =
-      role === 'study_room' && tab === 'room' && state.studyRoomHome === true && Array.isArray(getStudyRoomHomeLiveItems());
+      role === 'study_room' && tab === 'room' && state.studyRoomHome === true && Array.isArray(getStudyRoomHomeLiveItems()) && getStudyRoomHomeFeedStatus() === 'ready';
     const tierHtml = renderSearchTierResults(tab, activeItems, { ...tierCtx, studyRoomHomeReady }, {
       mode: 'region',
       regionLabel,
@@ -2997,8 +3080,15 @@ export async function runFindSearch(tab, form, state, role, rerender) {
   }
   state.searchPage = 1;
   if (guPickIncomplete(form, tab, state)) {
+    const hintText = findPickHint(tab, state, form);
+    state.findScopeHint = hintText;
     const hint = form.querySelector('[data-find-gu-field] .search-field__hint');
-    if (hint) hint.textContent = findPickHint(tab, state);
+    if (hint) hint.textContent = hintText;
+    const cascadeHint = form.querySelector('[data-region-cascade-hint]');
+    if (cascadeHint instanceof HTMLElement) {
+      cascadeHint.hidden = false;
+      cascadeHint.textContent = hintText;
+    }
     state.searchTotal = 0;
     return;
   }
@@ -3083,11 +3173,16 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
   if (stale()) return;
   if (step3SearchBlocked(state, tab)) return;
   if (findScopeMissing(tab, filters)) {
-    state.findScopeHint = findPickHint(tab, state);
+    state.findScopeHint = REGION_NEED_CITY;
     state._needsSearchRestore = false;
     if (typeof document !== 'undefined') {
       const hint = document.querySelector('[data-find-gu-field] .search-field__hint');
       if (hint) hint.textContent = state.findScopeHint;
+      const cascadeHint = document.querySelector('[data-region-cascade-hint]');
+      if (cascadeHint instanceof HTMLElement) {
+        cascadeHint.hidden = false;
+        cascadeHint.textContent = state.findScopeHint;
+      }
     }
     rerender();
     return;
@@ -3448,6 +3543,16 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
   if (ctx.getTab() === 'room') {
     bindSearchMapPinLinks(root, refreshActiveResultItems(ctx.getTab(), state(), ctx.role));
   }
+
+  root.querySelector('[data-room-student-retry]')?.addEventListener('click', () => {
+    retryStudyRoomStudentDemand(rerender);
+  });
+  root.querySelector('[data-room-home-retry]')?.addEventListener('click', () => {
+    retryStudyRoomHome(rerender);
+  });
+  root.querySelector('[data-parent-feed-retry]')?.addEventListener('click', () => {
+    retryStudentFindFeed(ctx.getTab(), state(), rerender);
+  });
 
   bindListSortControls(root, rerender, {
     onSortChange: (kind, _sort, listId) => {

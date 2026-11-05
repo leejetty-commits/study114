@@ -145,28 +145,43 @@ function promoteRegionLabelFilters(filters, tab) {
   }
 }
 
+/** 목록 fetch 고착 방지 — 호출부는 catch 후 에러/재시도로 그린다. */
+export const SEARCH_API_TIMEOUT_MS = 8000;
+
 /**
  * @param {import('./state.js').SearchTab} tab
  * @param {Record<string, string | string[]>} filters
  * @param {{ page?: number, limit?: number, sort?: string }} [opts]
  */
 export async function searchApi(tab, filters, opts = {}) {
-  const res = await fetch('/api/search/search.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      tab,
-      filters,
-      page: opts.page ?? 1,
-      limit: opts.limit ?? 20,
-      sort: opts.sort ?? 'latest',
-    }),
-  });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), SEARCH_API_TIMEOUT_MS);
+  try {
+    const res = await fetch('/api/search/search.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tab,
+        filters,
+        page: opts.page ?? 1,
+        limit: opts.limit ?? 20,
+        sort: opts.sort ?? 'latest',
+      }),
+      signal: ctrl.signal,
+    });
 
-  const body = await res.json();
-  if (!res.ok || !body.ok) {
-    throw new Error(body.message || `검색 서버 오류 (${res.status})`);
+    const body = await res.json();
+    if (!res.ok || !body.ok) {
+      throw new Error(body.message || `검색 서버 오류 (${res.status})`);
+    }
+
+    return body;
+  } catch (err) {
+    if (err && typeof err === 'object' && /** @type {{ name?: string }} */ (err).name === 'AbortError') {
+      throw new Error('목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-
-  return body;
 }
