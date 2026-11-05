@@ -47,7 +47,7 @@ import { renderBasicRow } from '../exposure-render.js';
 import { bindUserActionEvents } from '../user-actions-ui.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
-import { getEmptyCopy } from '../empty-state-copy.js';
+import { getEmptyCopy, getWishlistRecentEmptyCopy } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -334,10 +334,59 @@ function renderWishlistEntry(entry) {
     </div>`;
 }
 
-function renderWishlistEmpty() {
+/** 찜 빈 칸에서 「최근 본 목록」을 연 상태. 해시 이동 없이 칸 안만 바꾼다. */
+const wishlistRecentOpen = { study_room: false, tutor: false };
+
+function resetWishlistRecentOpen() {
+  wishlistRecentOpen.study_room = false;
+  wishlistRecentOpen.tutor = false;
+}
+
+/** @param {{ kind: string, id: number, title: string, viewedAt: string, lastRoute?: string|null, lastAction?: string }} e */
+function renderRecentRow(e) {
+  const item = resolveBasketItem(e);
+  const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
+  const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
+  const resumeToken =
+    e.lastRoute || e.lastAction ? `<p>${esc(formatResumeToken(e.lastRoute, e.lastAction))}</p>` : '';
+  const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
+  const kindLabel = e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
+  return `
+          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
+            <div>
+              <p class="mp-card__row-title">${esc(e.title)} ${stickers} ${lifecycleBadge}</p>
+              ${resumeToken}
+              <p>${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</p>
+            </div>
+            <div class="mypage-entity__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail
+                data-kind="${e.kind}" data-id="${e.id}" data-last-route="${esc(e.lastRoute || 'mypage')}">다시 보기</button>
+            </div>
+          </li>`;
+}
+
+/** @param {'study_room'|'tutor'} kind */
+function renderWishlistRecentPanel(kind) {
+  const role = getNavRole();
+  const items = getRecentViews(role === 'parent' || role === 'study_room' || role === 'tutor' ? role : 'study_room').filter(
+    (e) => e.kind === kind,
+  );
+  if (!items.length) {
+    const copy = getWishlistRecentEmptyCopy(kind);
+    return `<p class="mp-card__empty">${esc(copy.title)}</p>`;
+  }
+  return `
+    <ul class="mp-card__rows" data-mypage-wish-recent-list="${kind}" aria-label="${esc(kind === 'tutor' ? '최근 본 과외쌤' : '최근 본 공부방')}">
+      ${items.map(renderRecentRow).join('')}
+    </ul>`;
+}
+
+/** @param {'study_room'|'tutor'} kind */
+function renderWishlistEmpty(kind) {
+  if (wishlistRecentOpen[kind]) return renderWishlistRecentPanel(kind);
   const copy = getEmptyCopy('wishlist');
   const cta = copy.cta
-    ? `<div class="mp-card__foot"><a href="#/mypage/recent" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/recent">${esc(copy.cta)}</a></div>`
+    ? `<div class="mp-card__foot"><button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-recent="${kind}">${esc(copy.cta)}</button></div>`
     : '';
   return `
     <p class="mp-card__empty">${esc(copy.title)}</p>
@@ -345,9 +394,10 @@ function renderWishlistEmpty() {
     ${cta}`;
 }
 
+/** @param {'study_room'|'tutor'} kind @param {string} label */
 function renderWishlistSection(kind, label) {
   const entries = getWishlistEntries(kind);
-  if (!entries.length) return renderWishlistEmpty();
+  if (!entries.length) return renderWishlistEmpty(kind);
   return `
     <div class="browse-list browse-list--table mypage-wish-cards" role="list" data-mypage-wishlist="${kind}" aria-label="찜한 ${esc(label)}">
       ${entries.map(renderWishlistEntry).join('')}
@@ -358,6 +408,7 @@ let wishlistRefreshKey = '';
 if (typeof window !== 'undefined') {
   window.addEventListener?.('hashchange', () => {
     wishlistRefreshKey = '';
+    resetWishlistRecentOpen();
   });
 }
 
@@ -504,32 +555,7 @@ function renderRecent(role) {
   return `
     <section class="mp-card">
       <ul class="mp-card__rows">
-        ${items
-          .map((e) => {
-            const item = resolveBasketItem(e);
-            const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
-            const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
-            const resumeToken =
-              e.lastRoute || e.lastAction
-                ? `<p>${esc(formatResumeToken(e.lastRoute, e.lastAction))}</p>`
-                : '';
-            const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
-            const kindLabel =
-              e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
-            return `
-          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
-            <div>
-              <p class="mp-card__row-title">${esc(e.title)} ${stickers} ${lifecycleBadge}</p>
-              ${resumeToken}
-              <p>${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</p>
-            </div>
-            <div class="mypage-entity__actions">
-              <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail
-                data-kind="${e.kind}" data-id="${e.id}" data-last-route="${esc(e.lastRoute || 'mypage')}">다시 보기</button>
-            </div>
-          </li>`;
-          })
-          .join('')}
+        ${items.map(renderRecentRow).join('')}
       </ul>
     </section>`;
 }
@@ -1701,6 +1727,14 @@ export function bindMypageScreenEvents(root, rerender) {
   if (path === '/mypage/wishlist') {
     bindWishlistCardEvents(root, rerender);
     scheduleWishlistRefresh(rerender);
+    root.querySelectorAll('[data-mypage-wish-recent]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const kind = btn.getAttribute('data-mypage-wish-recent');
+        if (kind !== 'study_room' && kind !== 'tutor') return;
+        wishlistRecentOpen[kind] = true;
+        rerender();
+      });
+    });
   }
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {
