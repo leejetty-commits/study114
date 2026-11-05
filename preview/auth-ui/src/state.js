@@ -26,6 +26,9 @@ export const signupState = {
   accountDraft: null,
   profileGender: null,
   basicRegister: {},
+  /** 기본폼 값을 넣은 계정. 다른 계정이면 비운다. */
+  draftUserId: null,
+  basicDraftHydrated: false,
   extraRegister: {},
   lastSignup: null,
   /** @type {Array<{id: number, label: string}>} */
@@ -88,6 +91,8 @@ export function resetSignupState() {
   signupState.accountDraft = null;
   signupState.profileGender = null;
   signupState.basicRegister = {};
+  signupState.draftUserId = null;
+  signupState.basicDraftHydrated = false;
   signupState.extraRegister = {};
   signupState.basicRegisterResult = null;
   signupState.lastSignup = null;

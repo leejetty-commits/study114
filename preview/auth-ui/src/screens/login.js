@@ -9,6 +9,8 @@ import {
 import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
 import { AUTH_WELCOME_COPY, loginFailureMessage } from '../../../shared/auth-welcome-copy.js';
 import { withLoginWelcome } from '../../../shared/login-welcome.js';
+import { getChromeUser } from '../../../shared/chrome-session.js';
+import { homeHashUrl, roleHomeHashPath } from '../../../shared/site-nav-config.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -26,6 +28,11 @@ function readOAuthError() {
 }
 
 export function renderLogin() {
+  const sessionUser = getChromeUser();
+  if (sessionUser && sessionUser.email_verified !== false) {
+    window.location.replace(homeHashUrl(roleHomeHashPath(sessionUser)));
+    return '<div class="auth-boot" hidden></div>';
+  }
   const returnTo = getLoginReturnTo();
   const oauthError = readOAuthError();
 

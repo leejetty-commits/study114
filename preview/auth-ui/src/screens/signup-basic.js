@@ -332,10 +332,10 @@ function renderStudentBasic() {
   const tutorUnits = getCityUnits(signupState.tutorUnits || []);
   const savedTutorRegionId = savedStudentTutorRegionId(d);
   return `
-    <form data-form="basic-student" class="basic-register student-basic">
+    <form data-form="basic-student" class="basic-register student-basic" autocomplete="off">
       <div class="student-basic__field">
         <label class="form-label form-label--required" for="public_display_name">표시명</label>
-        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
+        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="off" />
         <p class="form-hint">${AUTH_WELCOME_COPY.basicDisplayNameHint}</p>
         ${studentFieldErrorHtml('public_display_name')}
       </div>
@@ -451,7 +451,7 @@ function renderStudyRoomBasic() {
     saved_regions: d.saved_regions,
   };
   return `
-    <form data-form="basic-study-room" class="basic-register">
+    <form data-form="basic-study-room" class="basic-register" autocomplete="off">
       <p class="auth-section-title">기본등록</p>
       <p class="form-note mb-4">교습형태 · 이름 · 대상 학교급 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번은 필수입니다. 홍보 2·3번은 선택입니다.</p>
       ${renderStudyRoomBasicFields({
@@ -476,7 +476,7 @@ function renderTutorBasic() {
   }));
   const citiesReady = units.some((u) => /^\d+$/.test(String(u.id)));
   return `
-    <form data-form="basic-tutor" class="basic-register">
+    <form data-form="basic-tutor" class="basic-register" autocomplete="off">
       <p class="auth-section-title">과외쌤 가입정보</p>
       <p class="form-note mb-4">과외 활동을 시작하기 위한 정보를 입력해 주세요.</p>
       ${
@@ -661,6 +661,35 @@ async function loadIncompleteBasicDraft(role) {
   };
 }
 
+/** HTML에 그린 값으로 되돌린다. 브라우저가 직전 계정으로 채운 칸만 지운다. */
+function keepRenderedValues(form) {
+  if (!form) return;
+  let touched = false;
+  form.addEventListener('input', () => {
+    touched = true;
+  }, { once: true });
+  const restore = () => {
+    if (touched || !form.isConnected) return;
+    form.querySelectorAll('input, select, textarea').forEach((el) => {
+      if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return;
+      if (el.type === 'radio' || el.type === 'checkbox') {
+        if (el.checked !== el.defaultChecked) el.checked = el.defaultChecked;
+        return;
+      }
+      if (el instanceof HTMLSelectElement) {
+        const idx = [...el.options].findIndex((opt) => opt.defaultSelected);
+        const intended = idx >= 0 ? idx : 0;
+        if (el.selectedIndex !== intended) el.selectedIndex = intended;
+        return;
+      }
+      if (el.value !== el.defaultValue) el.value = el.defaultValue;
+    });
+  };
+  restore();
+  window.setTimeout(restore, 50);
+  window.setTimeout(restore, 400);
+}
+
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
 
@@ -706,22 +735,35 @@ export function bindSignupBasicEvents(root) {
         }
       }
       role = serverRole;
+      const switchedAccount =
+        signupState.draftUserId != null && Number(signupState.draftUserId) !== Number(me.user_id);
+      if (switchedAccount) {
+        signupState.basicRegister = {};
+        signupState.accountDraft = null;
+        signupState.basicRegisterResult = null;
+        signupState.profileGender = null;
+        signupState.basicDraftHydrated = false;
+      }
+      if (me.user_id != null) signupState.draftUserId = me.user_id;
+      const repaintBasic = () => {
+        const app = document.getElementById('app');
+        if (!app) return;
+        app.innerHTML = renderSignupBasic();
+        bindSignupBasicEvents(app);
+      };
       if (!signupState.basicDraftHydrated && (serverRole === 'tutor' || serverRole === 'study_room')) {
         signupState.basicDraftHydrated = true;
         const draft = await loadIncompleteBasicDraft(serverRole).catch(() => null);
         if (draft) {
           if (!signupState.basicRegister) signupState.basicRegister = {};
-          signupState.basicRegister[serverRole] = {
-            ...(signupState.basicRegister[serverRole] || {}),
-            ...draft,
-          };
-          const app = document.getElementById('app');
-          if (app) {
-            app.innerHTML = renderSignupBasic();
-            bindSignupBasicEvents(app);
-          }
+          signupState.basicRegister[serverRole] = { ...draft };
+          repaintBasic();
           return;
         }
+      }
+      if (switchedAccount) {
+        repaintBasic();
+        return;
       }
       roleReady = true;
     })
@@ -731,6 +773,7 @@ export function bindSignupBasicEvents(root) {
     signupState.role = role;
   }
   const form = root.querySelector('form[data-form^="basic-"]');
+  keepRenderedValues(form);
 
   if (role === 'tutor') {
     bindTutorRegionSlotEvents(root, getCityUnits(signupState.tutorUnits || []));

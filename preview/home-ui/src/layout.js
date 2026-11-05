@@ -529,6 +529,7 @@ export function bindLayoutEvents(root, rerender) {
       } else if (action === 'util-recent') {
         navigate('/mypage/recent');
       } else if (action === 'util-logout') {
+        document.getElementById('app')?.replaceChildren();
         logout()
           .then(() => {
             navigate('/guest');

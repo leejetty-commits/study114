@@ -168,6 +168,7 @@ function shouldPaintBeforeSession() {
   // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
   if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
+  if (screen === 'guest') return false;
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
@@ -383,6 +384,18 @@ function init() {
       const app = document.getElementById('app');
       if (app) app.innerHTML = '';
     }, true);
+    window.addEventListener('pagehide', () => {
+      document.getElementById('app')?.replaceChildren();
+    });
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      initAuthSession()
+        .then(() => {
+          sessionChecked = true;
+          render();
+        })
+        .catch((err) => showBootError(err));
+    });
     window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
       // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
@@ -529,6 +542,7 @@ function init() {
           ROLE_HOME[user.role_type]
         ) {
           navigate(ROLE_HOME[user.role_type]);
+          if (!bootReady) render();
           return;
         }
         if (pending === '/community' || pending === '/community/' || (pending && pending.startsWith('/community/'))) {

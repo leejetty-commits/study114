@@ -77,6 +77,15 @@ function init() {
 
   window.addEventListener('hashchange', render);
   window.addEventListener('themechange', render);
+  window.addEventListener('pagehide', () => {
+    document.getElementById('app')?.replaceChildren();
+  });
+  window.addEventListener('pageshow', (event) => {
+    if (!event.persisted) return;
+    initChromeSession({ basicGate: false })
+      .catch(() => null)
+      .finally(render);
+  });
   Promise.all([
     initChromeSession({ basicGate: false }).catch(() => null),
     fetchRegions()
