@@ -187,10 +187,10 @@ final class BPdo extends PDO {
         if (str_contains($sql, 'SELECT tutor_display_name, main_subject_note')) {
             return ['rows' => [$this->tutor]];
         }
-        if (str_contains($sql, 'FROM study_room_regions')) {
+        if (str_contains($sql, 'FROM study_room_regions') && !str_contains($sql, 'FROM users u')) {
             return ['column' => $this->roomSlot ? 1 : false];
         }
-        if (str_contains($sql, 'FROM tutor_regions')) {
+        if (str_contains($sql, 'FROM tutor_regions') && !str_contains($sql, 'FROM users u')) {
             return ['column' => $this->tutorSlot ? 1 : false];
         }
         if (str_contains($sql, 'INSERT INTO provider_system_notices')) {

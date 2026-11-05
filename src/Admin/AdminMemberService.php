@@ -319,7 +319,22 @@ final class AdminMemberService
             'createdAt' => (string) ($row['created_at'] ?? ''),
             'isMaster' => $this->roles->isMasterEmail($email),
             'isOperatorAccount' => $this->isOperatorAccount($email, $row['admin_level'] ?? null),
+            'studyRoomName' => (string) ($row['study_room_name'] ?? ''),
+            'tutorDisplayName' => (string) ($row['tutor_display_name'] ?? ''),
+            'primaryRegionLabel' => self::primaryRegionLabel($row),
         ];
+    }
+
+    /** @param array<string, mixed> $row */
+    private static function primaryRegionLabel(array $row): string
+    {
+        $tutor = trim((string) ($row['tutor_region_label'] ?? ''));
+        $room = trim((string) ($row['room_region_label'] ?? ''));
+        if ($tutor !== '' && $room !== '') {
+            return $tutor . ' / ' . $room;
+        }
+
+        return $tutor !== '' ? $tutor : $room;
     }
 
     private function isOperatorAccount(string $email, mixed $adminLevel): bool
@@ -392,6 +407,9 @@ final class AdminMemberService
             'hasPayment' => $this->repo->hasPayment($userId),
             'isMaster' => $this->roles->isMasterEmail((string) $row['email']),
             'isOperatorAccount' => $this->isOperatorAccount((string) $row['email'], $row['admin_level'] ?? null),
+            'studyRoomName' => (string) ($row['study_room_name'] ?? ''),
+            'tutorDisplayName' => (string) ($row['tutor_display_name'] ?? ''),
+            'primaryRegionLabel' => self::primaryRegionLabel($row),
         ];
     }
 

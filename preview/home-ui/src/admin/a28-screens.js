@@ -312,6 +312,9 @@ function buildMemberDetail(id, apiDetail = null) {
       students: src.profileCounts?.students ?? src.studentCount ?? 0,
     },
     hasPayment: src.hasPayment === true,
+    studyRoomName: src.studyRoomName || '',
+    tutorDisplayName: src.tutorDisplayName || '',
+    primaryRegionLabel: src.primaryRegionLabel || '',
     _source: fromApi ? 'api' : 'seed-dummy',
   };
 }
@@ -1392,6 +1395,9 @@ function renderMembers() {
         <td>${esc(m.name || '—')}<br><small>${esc(m.email)}</small></td>
         <td>${esc(m.phone || '—')}</td>
         <td>${esc(role)}${m.isMaster ? ' · 마스터' : ''}</td>
+        <td>${esc(m.studyRoomName || '—')}</td>
+        <td>${esc(m.tutorDisplayName || '—')}</td>
+        <td>${esc(m.primaryRegionLabel || '—')}</td>
         <td>${esc(status)}</td>
         <td>${esc(tier)}${m.activePositions ? ` · 노출 상품 ${m.activePositions}개` : ''}</td>
         <td>${m.oauthLinked ? '연동' : '—'}${m.oauthPending ? ' · 역할대기' : ''}</td>
@@ -1473,6 +1479,9 @@ function renderMembers() {
           <dt>이름</dt><dd>${esc(detail.name || '—')}</dd>
           <dt>역할</dt><dd>${esc(roleLabel)}</dd>
           <dt>상태</dt><dd>${esc(A28_MEMBER_STATUS_LABELS[detail.status] || detail.status)}</dd>
+          <dt>공부방 이름</dt><dd>${esc(detail.studyRoomName || '—')}</dd>
+          <dt>과외쌤 별칭</dt><dd>${esc(detail.tutorDisplayName || '—')}</dd>
+          <dt>홍보지역1</dt><dd>${esc(detail.primaryRegionLabel || '—')}</dd>
           <dt>등록 카드 수</dt><dd>${esc(cardCountLabel)}${cardAside}</dd>
           <dt>결제</dt><dd>${esc(paymentLabel)}${payAside}</dd>
           <dt>전화</dt><dd>${esc(detail.phone || '—')}</dd>
@@ -1522,7 +1531,7 @@ function renderMembers() {
        ${chip('withdrawn', '탈퇴')}
      </div>
      <form class="admin-filter-bar" data-member-filter>
-       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·식별번호" value="${esc(filters.q || '')}" />
+       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·식별번호·공부방·과외쌤·지역" value="${esc(filters.q || '')}" />
        <select name="status" class="admin-input--sm">
          <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
          <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
@@ -1549,8 +1558,8 @@ function renderMembers() {
        ${master ? '<button type="button" class="btn btn--danger btn--sm" data-member-bulk="delete" title="최대 6명">선택 삭제</button>' : ''}
      </div>
      <table class="sup-admin-table">
-       <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
-       <tbody>${rows || '<tr><td colspan="10" class="sup-empty">회원 없음</td></tr>'}</tbody>
+       <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>공부방</th><th>과외쌤</th><th>홍보지역1</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
+       <tbody>${rows || '<tr><td colspan="13" class="sup-empty">회원 없음</td></tr>'}</tbody>
      </table>
      ${detailHtml}`,
   );

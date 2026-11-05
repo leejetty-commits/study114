@@ -8,6 +8,29 @@ use PDO;
 
 final class AdminMemberRepository
 {
+    private const PROVIDER_IDENT_COLUMNS = "
+        (SELECT sr.study_room_name FROM study_rooms sr
+         WHERE sr.user_id = u.id AND sr.deleted_at IS NULL
+         ORDER BY sr.id ASC LIMIT 1) AS study_room_name,
+        (SELECT t.tutor_display_name FROM tutors t
+         WHERE t.user_id = u.id
+         ORDER BY t.id ASC LIMIT 1) AS tutor_display_name,
+        (SELECT CASE
+           WHEN rg.sido_code IN ('11','26','27','28','30','31','36') THEN rg.sido_name
+           ELSE CONCAT(rg.sido_name, ' ', rg.sigungu_name)
+         END
+         FROM tutor_regions tr
+         INNER JOIN regions rg ON rg.id = tr.region_id
+         WHERE tr.tutor_id = (SELECT t2.id FROM tutors t2 WHERE t2.user_id = u.id ORDER BY t2.id ASC LIMIT 1)
+         ORDER BY tr.is_primary DESC, tr.priority_order ASC
+         LIMIT 1) AS tutor_region_label,
+        (SELECT CONCAT_WS(' ', rg.sido_name, rg.sigungu_name, rg.dong_name)
+         FROM study_room_regions srr
+         INNER JOIN regions rg ON rg.id = srr.region_id
+         WHERE srr.study_room_id = (SELECT sr2.id FROM study_rooms sr2 WHERE sr2.user_id = u.id AND sr2.deleted_at IS NULL ORDER BY sr2.id ASC LIMIT 1)
+           AND srr.is_primary = 1
+         LIMIT 1) AS room_region_label";
+
     public function __construct(private readonly PDO $pdo)
     {
     }
@@ -60,7 +83,8 @@ final class AdminMemberRepository
                          CASE WHEN u.status = \'withdrawn\' THEN 0 ELSE (
                            SELECT COUNT(*) FROM students s WHERE s.guardian_user_id = u.id
                          ) END
-                       ) AS student_count
+                       ) AS student_count,
+                       ' . self::PROVIDER_IDENT_COLUMNS . '
                 FROM users u
                 LEFT JOIN user_profiles p ON p.user_id = u.id
                 WHERE ' . implode(' AND ', $where) . '
@@ -147,12 +171,30 @@ final class AdminMemberRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(u.email LIKE ? OR p.real_name LIKE ? OR p.phone LIKE ? OR CAST(u.id AS CHAR) = ?)';
+            $where[] = '(u.email LIKE ? OR p.real_name LIKE ? OR p.phone LIKE ? OR CAST(u.id AS CHAR) = ?'
+                . ' OR EXISTS (SELECT 1 FROM study_rooms _sr WHERE _sr.user_id = u.id AND _sr.deleted_at IS NULL AND _sr.study_room_name LIKE ?)'
+                . ' OR EXISTS (SELECT 1 FROM tutors _t WHERE _t.user_id = u.id AND _t.tutor_display_name LIKE ?)'
+                . ' OR EXISTS (SELECT 1 FROM tutor_regions _tr'
+                . '   INNER JOIN tutors _t2 ON _t2.id = _tr.tutor_id AND _t2.user_id = u.id'
+                . '   INNER JOIN regions _rg ON _rg.id = _tr.region_id'
+                . '   WHERE _rg.sido_name LIKE ? OR _rg.sigungu_name LIKE ?)'
+                . ' OR EXISTS (SELECT 1 FROM study_room_regions _srr'
+                . '   INNER JOIN study_rooms _sr2 ON _sr2.id = _srr.study_room_id AND _sr2.user_id = u.id AND _sr2.deleted_at IS NULL'
+                . '   INNER JOIN regions _rg2 ON _rg2.id = _srr.region_id'
+                . '   WHERE _srr.is_primary = 1 AND (_rg2.sido_name LIKE ? OR _rg2.sigungu_name LIKE ? OR _rg2.dong_name LIKE ?))'
+                . ')';
             $like = '%' . $q . '%';
             $params[] = $like;
             $params[] = $like;
             $params[] = $like;
             $params[] = $q;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
+            $params[] = $like;
         }
 
         if ($includeStatus) {
@@ -185,7 +227,8 @@ final class AdminMemberRepository
             'SELECT u.id, u.email, u.status, u.admin_level, u.email_verified_at, u.oauth_role_pending,
                     u.last_login_at, u.created_at, u.updated_at, u.deleted_at,
                     p.real_name, p.phone, p.gender, p.birth_date,
-                    p.address_line1, p.sms_opt_in, p.email_opt_in
+                    p.address_line1, p.sms_opt_in, p.email_opt_in,
+                    ' . self::PROVIDER_IDENT_COLUMNS . '
              FROM users u
              LEFT JOIN user_profiles p ON p.user_id = u.id
              WHERE u.id = ?
