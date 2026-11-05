@@ -699,8 +699,11 @@ function keepRenderedValues(form) {
     });
   };
   restore();
-  window.setTimeout(restore, 50);
-  window.setTimeout(restore, 400);
+  const schedule = typeof globalThis.setTimeout === 'function' ? globalThis.setTimeout.bind(globalThis) : null;
+  if (schedule) {
+    schedule(restore, 50);
+    schedule(restore, 400);
+  }
 }
 
 export function bindSignupBasicEvents(root) {
