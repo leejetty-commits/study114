@@ -1946,6 +1946,7 @@ export function bindMembersScreen(root, rerender, navigate) {
       status: String(fd.get('status') || 'all'),
       role_type: String(fd.get('role_type') || 'all'),
     };
+    a28Ui.openMemberId = null;
     try {
       if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
       rerender();
@@ -1957,6 +1958,7 @@ export function bindMembersScreen(root, rerender, navigate) {
     btn.addEventListener('click', async () => {
       const status = String(btn.getAttribute('data-member-status-chip') || 'all');
       a28Ui.memberFilters = { ...a28Ui.memberFilters, status };
+      a28Ui.openMemberId = null;
       try {
         if (isAdminApiMode()) await hydrateMembersCache(a28Ui.memberFilters);
         rerender();
@@ -1989,7 +1991,14 @@ export function bindMembersScreen(root, rerender, navigate) {
   if (a28Ui.openMemberId) {
     ensureMemberSupportInquiries(a28Ui.openMemberId, rerender);
     const drawer = root.querySelector(`[data-admin-drawer="member-${a28Ui.openMemberId}"]`);
-    if (drawer) drawer.hidden = false;
+    if (drawer) {
+      drawer.hidden = false;
+      drawer.querySelectorAll('[data-admin-drawer-close]').forEach((el) => {
+        el.addEventListener('click', () => {
+          a28Ui.openMemberId = null;
+        });
+      });
+    }
   }
   root.querySelectorAll('[data-member-action]').forEach((btn) => {
     btn.addEventListener('click', async () => {
