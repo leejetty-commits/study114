@@ -300,6 +300,7 @@ final class BasicRegisterService
             $studyroomFee = $this->cheonwonInputToWon($this->optionalUnsignedInt($input, 'preferred_studyroom_fee_amount'));
         }
         $requestSummary = $this->optionalBoundedString($input, 'request_summary', 200);
+        $primeMatchOptIn = $this->optIn01($input, 'prime_match_opt_in');
 
         $complete = StudentBasicCompleteness::isComplete([
             'public_display_name'            => $publicName,
@@ -339,6 +340,9 @@ final class BasicRegisterService
         try {
             if ($this->columnExists($pdo, 'students', 'preferred_studyroom_region_basis')) {
                 $basicValues['preferred_studyroom_region_basis'] = $studyroomBasis;
+            }
+            if ($this->columnExists($pdo, 'students', 'prime_match_opt_in')) {
+                $basicValues['prime_match_opt_in'] = $primeMatchOptIn;
             }
             $existingStudentId = $this->lockedExistingId(
                 $pdo,
@@ -1095,6 +1099,17 @@ final class BasicRegisterService
         }
 
         return number_format($n, 7, '.', '');
+    }
+
+    /** 체크가 없으면 0. 연락처·실명은 이 값과 함께 저장하지 않는다. */
+    private function optIn01(array $input, string $key): int
+    {
+        if (!array_key_exists($key, $input)) {
+            return 0;
+        }
+        $value = $input[$key];
+
+        return $value === true || $value === 1 || $value === '1' || $value === 'on' ? 1 : 0;
     }
 
     private function columnExists(PDO $pdo, string $table, string $column): bool

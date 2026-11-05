@@ -1097,6 +1097,19 @@ function renderAccount(role, profile) {
         </div>
       </article>
 
+      ${
+        role === 'parent'
+          ? `<article class="account-card" data-prime-match-card hidden>
+        <div class="account-card__head">
+          <h3 class="account-card__title">프라임 추천</h3>
+          <p class="account-card__desc">체크하지 않으면 추천 대상에서 빠집니다. 연락처와 실명은 넘기지 않습니다.</p>
+        </div>
+        <div class="account-card__body" data-prime-match-list></div>
+        <p class="form-error" data-prime-match-error hidden role="alert"></p>
+      </article>`
+          : ''
+      }
+
       <article class="account-card account-card--session">
         <div class="account-card__head">
           <h3 class="account-card__title">로그인 관리</h3>
@@ -1517,6 +1530,76 @@ let plansStatusHydrateAttempted = false;
 let plansHistoryRows = null;
 let contactHistoryHydrateAttempted = false;
 
+const PRIME_MATCH_LABEL = '조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?';
+
+/** @param {HTMLElement} root */
+function bindPrimeMatchConsentEvents(root) {
+  const card = root.querySelector('[data-prime-match-card]');
+  const list = root.querySelector('[data-prime-match-list]');
+  if (!card || !list) return;
+  const errorEl = root.querySelector('[data-prime-match-error]');
+  const showError = (message) => {
+    if (!errorEl) return;
+    errorEl.hidden = !message;
+    errorEl.textContent = message || '';
+  };
+
+  fetch('/api/registrations/students.php', { credentials: 'include' })
+    .then((res) => res.json().then((data) => ({ res, data })))
+    .then(({ res, data }) => {
+      if (!res.ok || !data.ok || !Array.isArray(data.students) || data.students.length === 0) {
+        return;
+      }
+      const students = [...data.students].sort((a, b) => Number(a.id) - Number(b.id));
+      list.innerHTML = students
+        .map((student) => {
+          const id = Number(student.id);
+          const on = Number(student.prime_match_opt_in) === 1;
+          const name = String(student.public_display_name || '').trim();
+          const nameHtml =
+            students.length > 1 && name ? `<p class="account-meta__hint">${esc(name)}</p>` : '';
+          return `${nameHtml}<label class="account-check">
+            <input type="checkbox" data-prime-match-opt-in data-student-id="${id}"${on ? ' checked' : ''} />
+            <span>${esc(PRIME_MATCH_LABEL)}</span>
+          </label>`;
+        })
+        .join('');
+      card.hidden = false;
+      list.querySelectorAll('[data-prime-match-opt-in]').forEach((box) => {
+        box.addEventListener('change', async () => {
+          if (!(box instanceof HTMLInputElement)) return;
+          const studentId = Number(box.dataset.studentId);
+          const next = box.checked ? 1 : 0;
+          box.disabled = true;
+          showError('');
+          try {
+            const save = await fetch('/api/registrations/students.php', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                id: studentId,
+                action: 'update',
+                prime_match_opt_in: next,
+              }),
+            });
+            const saved = await save.json().catch(() => ({}));
+            if (!save.ok || !saved.ok) {
+              box.checked = next !== 1;
+              throw new Error(saved.message || '저장하지 못했습니다.');
+            }
+            box.checked = Number(saved.student?.prime_match_opt_in) === 1;
+          } catch (err) {
+            showError(err instanceof Error ? err.message : '저장하지 못했습니다.');
+          } finally {
+            box.disabled = false;
+          }
+        });
+      });
+    })
+    .catch(() => {});
+}
+
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
   const path = getMypagePath();
@@ -1578,6 +1661,7 @@ export function bindMypageScreenEvents(root, rerender) {
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
   bindWithdrawEvents(root);
+  bindPrimeMatchConsentEvents(root);
   if (path === '/mypage/wishlist') {
     bindWishlistCardEvents(root, rerender);
     scheduleWishlistRefresh(rerender);

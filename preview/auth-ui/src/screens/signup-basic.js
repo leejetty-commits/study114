@@ -421,6 +421,19 @@ function renderStudentBasic() {
         <input class="form-input" id="request_summary" name="request_summary" maxlength="200" value="${esc(d.request_summary || '')}" />
         <p class="form-hint">카드에 한 줄로 보일 요청입니다. 이 칸만 비워도 됩니다.</p>
       </div>
+      <div class="student-basic__field">
+        <label class="form-check" for="prime_match_opt_in">
+          <input
+            class="form-check__input"
+            type="checkbox"
+            id="prime_match_opt_in"
+            name="prime_match_opt_in"
+            value="1"
+            ${d.prime_match_opt_in === 1 || d.prime_match_opt_in === '1' || d.prime_match_opt_in === true ? 'checked' : ''}
+          />
+          <span class="form-check__label">조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?</span>
+        </label>
+      </div>
       <div class="student-basic__actions">
         <button type="submit" class="btn btn--primary btn--block">다음</button>
       </div>
@@ -938,6 +951,8 @@ export function bindSignupBasicEvents(root) {
         return;
       }
       if (region.patch) Object.assign(data, region.patch);
+      const primeBox = form.querySelector('[name="prime_match_opt_in"]');
+      data.prime_match_opt_in = primeBox instanceof HTMLInputElement && primeBox.checked ? 1 : 0;
     }
 
     if (role === 'tutor') {

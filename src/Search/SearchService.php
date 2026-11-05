@@ -297,7 +297,9 @@ final class SearchService
         $result = match ($tab) {
             'room'    => $this->searchRooms($pdo, $filters, $limit, $offset, $sort, null, $includePreciseCoordinates, $guestPublishedOnly),
             'tutor'   => $this->searchTutors($pdo, $filters, $limit, $offset, $sort, null, $guestPublishedOnly),
-            'student' => $this->searchStudents($pdo, $filters, $limit, $offset, $sort, $includeStudentRequestText),
+            'student' => $this->isEnabledFilter($filters, 'prime_match')
+                ? $this->primeMatchSummaries($pdo, $limit, $offset)
+                : $this->searchStudents($pdo, $filters, $limit, $offset, $sort, $includeStudentRequestText),
         };
         $result['sort'] = $sort;
 
@@ -1477,6 +1479,77 @@ final class SearchService
             $item['teaching_style_badges'] = $badgeMap[$id] ?? [];
         }
         unset($item);
+
+        return ['tab' => 'student', 'total' => $total, 'rows' => $rows, 'items' => $items];
+    }
+
+    /**
+     * 프라임 과외쌤에게 쪽지로 보낼 요약만. 동의 OFF·미공개는 빠진다.
+     * student_name·연락처·실명 컬럼은 읽지 않는다.
+     *
+     * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
+     */
+    private function primeMatchSummaries(PDO $pdo, int $limit, int $offset): array
+    {
+        $col = $pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+        );
+        $col->execute(['students', 'prime_match_opt_in']);
+        if (!$col->fetchColumn()) {
+            return ['tab' => 'student', 'total' => 0, 'rows' => [], 'items' => []];
+        }
+
+        $whereSql = "s.exposure_status = 'published' AND s.deleted_at IS NULL AND s.prime_match_opt_in = 1 AND "
+            . WithdrawnOwnerSql::notWithdrawn('s.guardian_user_id');
+        $count = $pdo->query('SELECT COUNT(DISTINCT s.id) FROM students s WHERE ' . $whereSql);
+        $total = (int) $count->fetchColumn();
+
+        $sql = "
+            SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.request_summary,
+                   s.preferred_lesson_type, s.published_at, sst.subject_name,
+                   r.dong_name, r.sigungu_name
+            FROM students s
+            LEFT JOIN regions r ON r.id = CASE WHEN s.preferred_lesson_type = 'study_room'
+                THEN s.preferred_studyroom_region_id ELSE s.preferred_tutor_region_id END
+            LEFT JOIN student_subject_targets sst ON sst.student_id = s.id AND sst.is_primary = 1
+            WHERE {$whereSql}
+            ORDER BY s.published_at DESC, s.id DESC
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $items = [];
+        $rows = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $title = trim((string) ($row['public_display_name'] ?? ''));
+            if ($title === '') {
+                $title = '학생';
+            }
+            $region = trim((string) (($row['preferred_lesson_type'] ?? '') === 'study_room'
+                ? ($row['dong_name'] ?? '')
+                : ($row['sigungu_name'] ?? '')));
+            $summary = trim((string) ($row['request_summary'] ?? ''));
+            $subject = trim((string) ($row['subject_name'] ?? ''));
+            $item = [
+                'id' => (int) $row['id'],
+                'title' => $title,
+                'grade_level' => $row['grade_level'],
+                'summary' => $summary,
+                'subject_name' => $subject !== '' ? $subject : null,
+                'region_label' => $region,
+                'preferred_lesson_type' => $row['preferred_lesson_type'] ?? null,
+            ];
+            $items[] = $item;
+            $rows[] = [
+                'left' => $title,
+                'center' => implode("\n", array_filter([$subject, $region, $summary])),
+                'right' => '',
+            ];
+        }
 
         return ['tab' => 'student', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
