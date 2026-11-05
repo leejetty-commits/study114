@@ -13,8 +13,12 @@ import { normalizeLocation } from '../../shared/location-display.js';
 
 /** @type {object[]|null} */
 let liveItems = null;
+/** @type {'idle'|'loading'|'ready'|'error'|'no-region'} */
+let liveStatus = 'idle';
 /** @type {object[]|null} null = 학생 수요 조회 전 */
 let studentLive = null;
+/** @type {'idle'|'loading'|'ready'|'error'|'no-region'} */
+let studentStatus = 'idle';
 let studentKey = '';
 /** @type {Promise<void>|null} */
 let studentBoot = null;
@@ -169,9 +173,33 @@ export function getStudyRoomHomeLiveItems() {
   return liveItems;
 }
 
+/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'} */
+export function getStudyRoomHomeFeedStatus() {
+  return liveStatus;
+}
+
 /** 홍보1 + 희망유형 공부방. null 이면 로딩. */
 export function getStudyRoomStudentLiveItems() {
   return studentLive;
+}
+
+/** @returns {'idle'|'loading'|'ready'|'error'|'no-region'} */
+export function getStudyRoomStudentFeedStatus() {
+  return studentStatus;
+}
+
+/** 실패 후 같은 키로 다시 받을 수 있게 부트 가드를 푼다. */
+export function retryStudyRoomStudentDemand(rerender) {
+  studentBoot = null;
+  studentKey = '';
+  return bootStudyRoomStudentDemand(rerender);
+}
+
+/** 홈 공부방 목록 실패 재시도. */
+export function retryStudyRoomHome(rerender, opts = {}) {
+  bootPromise = null;
+  liveKey = '';
+  return bootStudyRoomHome(rerender, opts);
 }
 
 /**
@@ -186,27 +214,40 @@ export function bootStudyRoomStudentDemand(rerender) {
   if (studentBoot && studentKey === key) return studentBoot;
   studentKey = key;
   studentLive = null;
+  studentStatus = regionId ? 'loading' : 'no-region';
   // rerender 는 .then 안에서만 부른다. 지역이 없어 요청이 없는 경로도 studentBoot 대입이 끝난 뒤에 다시 그린다
   // (같은 틱에 부르면 다시 그리기가 이 함수를 다시 불러 가드를 지나 무한 반복한다).
-  studentBoot = loadStudentDemand(regionId).then((items) => {
-    studentLive = items;
-    if (typeof rerender === 'function') rerender();
-  });
+  studentBoot = loadStudentDemand(regionId)
+    .then((result) => {
+      if (studentKey !== key) return;
+      studentLive = result.items;
+      studentStatus = result.status;
+      if (typeof rerender === 'function') rerender();
+    })
+    .catch(() => {
+      if (studentKey !== key) return;
+      studentLive = [];
+      studentStatus = 'error';
+      if (typeof rerender === 'function') rerender();
+    });
   return studentBoot;
 }
 
-/** @param {string} regionId @returns {Promise<object[]>} */
+/**
+ * @param {string} regionId
+ * @returns {Promise<{ items: object[]|null, status: 'ready'|'error'|'no-region' }>}
+ */
 async function loadStudentDemand(regionId) {
-  if (!regionId) return [];
+  if (!regionId) return { items: null, status: 'no-region' };
   try {
     const result = await searchApi(
       'student',
       { preferred_lesson_type: 'study_room', preferred_studyroom_region_id: regionId },
       { limit: 20, sort: 'latest' },
     );
-    return Array.isArray(result.items) ? result.items : [];
+    return { items: Array.isArray(result.items) ? result.items : [], status: 'ready' };
   } catch {
-    return [];
+    return { items: null, status: 'error' };
   }
 }
 
@@ -371,17 +412,23 @@ export function bootStudyRoomHome(rerender, opts = {}) {
     });
   }
   liveKey = key;
+  liveItems = null;
+  liveStatus =
+    filters.region_id || filters.region_label || filters.complex_id ? 'loading' : 'no-region';
   bootPromise = (async () => {
     const loadList = async () => {
       if (!(filters.region_id || filters.region_label || filters.complex_id)) {
         liveItems = [];
+        liveStatus = 'no-region';
         return;
       }
       try {
         const result = await searchApi('room', filters, { limit: 20, sort: 'latest' });
         liveItems = (result.items || []).map(mapLiveRoom);
+        liveStatus = 'ready';
       } catch {
         liveItems = [];
+        liveStatus = 'error';
       }
     };
     if (opts.viewsAfterList === true) {

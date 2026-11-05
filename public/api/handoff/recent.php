@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Database\Connection;
 use Study114\Handoff\HandoffApi;
 use Study114\Handoff\HandoffService;
 
@@ -46,6 +47,26 @@ HandoffApi::run(static function (): void {
         $title = (string) ($input['title_snapshot'] ?? $input['title'] ?? '');
         if ($title === '') {
             HandoffApi::fail(422, 'validation', 'title_snapshot이 필요합니다.');
+        }
+        $lastAction = (string) ($input['last_action'] ?? 'view_detail');
+        if ($lastAction === 'view_detail' && ($targetType === 'study_room' || $targetType === 'tutor')) {
+            $dup = Connection::get()->prepare(
+                'SELECT 1 FROM provider_profile_views
+                 WHERE target_type = ? AND target_id = ? AND viewer_user_id = ?
+                   AND viewed_at >= DATE_SUB(NOW(), INTERVAL 20 SECOND)
+                 LIMIT 1'
+            );
+            $dup->execute([$targetType, $targetId, $userId]);
+            if ($dup->fetchColumn()) {
+                $service->patchRecentHandoff(
+                    $userId,
+                    $targetType,
+                    $targetId,
+                    isset($input['last_route']) ? (string) $input['last_route'] : null,
+                    $lastAction,
+                );
+                HandoffApi::ok(['recorded' => true, 'deduped' => true]);
+            }
         }
         $service->recordRecentView(
             $userId,

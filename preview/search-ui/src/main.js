@@ -26,7 +26,20 @@ import { hydrateExposureBridge } from '@home-ui/exposure-bridge.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
+import { closeDetailModal } from '@home-ui/detail-decision/detail-shell.js';
+import { closeCompareModal } from '@home-ui/compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
+
+/** 찾기 탭·해시 전환 시 모달·토스트 정리 + 맨 위 스크롤 */
+function dismissRouteOverlays() {
+  closeDetailModal();
+  closeCompareModal();
+  const toast = document.getElementById('p24-toast');
+  if (toast) toast.classList.remove('is-visible');
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
 
 /**
  * 세션 확정 후에만 GPS·복원 검색을 1회 돌린다. 첫 셸은 me.php를 기다리지 않는다.
@@ -73,6 +86,7 @@ function init() {
   window.addEventListener('hashchange', () => {
     if (!bootReady) return;
     if (window.location.hash === paintedHash) return;
+    dismissRouteOverlays();
     render();
   });
   if (!hadHash) {

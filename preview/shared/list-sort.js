@@ -276,9 +276,12 @@ export function renderListSortSelect(kind, current, opts = {}) {
 export function bindListSortControls(root, rerender, hooks = {}) {
   root.querySelectorAll('[data-list-sort]').forEach((el) => {
     if (!(el instanceof HTMLSelectElement)) return;
+    const kind = /** @type {ListSortKind} */ (el.dataset.listSortKind || 'study_room');
+    const mode = /** @type {'search'|'home'} */ (el.dataset.listSortMode || 'search');
+    // URL ?sort= 과 드롭다운을 맞춘다 (첫 페인트 불일치 방지).
+    const fromHash = readListSortFromHash(kind, { mode });
+    if (el.value !== fromHash) el.value = fromHash;
     el.addEventListener('change', () => {
-      const kind = /** @type {ListSortKind} */ (el.dataset.listSortKind || 'study_room');
-      const mode = /** @type {'search'|'home'} */ (el.dataset.listSortMode || 'search');
       const sort = normalizeListSort(kind, el.value);
       const listId = el.dataset.listSortList || '';
       writeListSortToHash(kind, sort, {

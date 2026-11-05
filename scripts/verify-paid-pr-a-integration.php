@@ -184,14 +184,23 @@ if ($phase === 'pre061') {
     expectThrow('reject_unknown_period', static fn () => $svc->createOrder($userId, 'prime', '3주', 'tutor', 1));
     expectThrow('reject_wrong_role_badge', static fn () => $svc->createOrder($userId, 'subject_track', '1개월', 'tutor', 1));
 
-    $badge = $svc->createOrder($userId, 'hot', '포지션종속', 'tutor', 1);
-    check('badge_inherited_period', ($badge['variant_label'] ?? '') === '1개월');
-    check('badge_inherited_amount', (int) $badge['amount_won'] === 10000, (string) $badge['amount_won']);
+    $badgeEx = null;
+    try {
+        $svc->createOrder($userId, 'hot', '포지션종속', 'tutor', 1);
+    } catch (InvalidArgumentException $e) {
+        $badgeEx = $e->getMessage();
+    }
+    check('badge_addon_rejected', $badgeEx !== null);
+    check('badge_addon_exact_policy', str_contains((string) $badgeEx, '이용기간 중 배지 추가·교체'));
 
-    expectThrow(
-        'badge_period_mismatch',
-        static fn () => $svc->createOrder($userId, 'hot', '2개월', 'tutor', 1),
-    );
+    $badgeEx2 = null;
+    try {
+        $svc->createOrder($userId, 'hot', '2개월', 'tutor', 1);
+    } catch (InvalidArgumentException $e) {
+        $badgeEx2 = $e->getMessage();
+    }
+    check('badge_addon_variant_rejected', $badgeEx2 !== null);
+    check('badge_addon_variant_exact_policy', str_contains((string) $badgeEx2, '이용기간 중 배지 추가·교체'));
 
     $history = $svc->listOrders($userId, 20);
     $refs = array_column($history['orders'], 'order_ref');
@@ -218,7 +227,7 @@ if ($phase === 'post061') {
     check('post061_snapshot_version', is_array($snap) && (string) $snap['catalog_version'] === PaidCatalog::VERSION);
     check('post061_snapshot_amount', is_array($snap) && (int) $snap['amount_won'] === 4000);
 
-    $prime = $svc->createOrder($userId, 'prime', '1개월', 'tutor', 1);
+    $prime = $svc->createOrder($userId, 'prime', '1개월', 'tutor', 1, [], [], ['city_id' => 5]);
     check('post061_prime_recalc', (int) $prime['amount_won'] === 30000);
 }
 

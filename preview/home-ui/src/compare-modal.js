@@ -7,8 +7,11 @@ import {
 import { resolveDisplayValue } from './exposure-format.js';
 import { resolveCardVisualLayers, renderPromoBadgeRow, renderTrustBadgeRow } from './card-visual.js';
 import { isLoggedIn } from './auth-session.js';
+import { lookupAllExposureItems } from './exposure-lookup.js';
+import { getCompareItems, isInCompare, toggleCompare } from './user-actions-state.js';
 import { openDeepAccessLoginGate } from '../../shared/guest-gate-ui.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
+import { refreshBackToTop } from '../../shared/back-to-top.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -108,7 +111,7 @@ function renderCompareTable(items, rows, kind) {
   const colHeaders = cols.map((c, i) => {
     const name =
       c.study_room_name || c.tutor_display_name || `선택 ${i + 1}`;
-    return `<th scope="col">${esc(name)}</th>`;
+    return `<th scope="col">${esc(name)}<div><button type="button" class="btn btn--secondary btn--sm" data-action="compare-remove" data-item-kind="${kind}" data-item-id="${c.id}">비교에서 빼기</button></div></th>`;
   });
 
   return `
@@ -153,7 +156,7 @@ function renderCompareEmpty(kind) {
  * @param {'study_room' | 'tutor'} kind
  * @param {Array<object>} [items]
  */
-export function openCompareModal(kind, items = []) {
+export function openCompareModal(kind, items = [], rerender) {
   if (!isLoggedIn()) {
     openDeepAccessLoginGate({ source: 'compare', providerType: kind === 'tutor' ? 'tutor' : 'study_room' });
     return;
@@ -197,9 +200,27 @@ export function openCompareModal(kind, items = []) {
 
   document.body.appendChild(root);
   document.body.style.overflow = 'hidden';
+  refreshBackToTop();
 
   root.querySelectorAll('[data-action="compare-close"]').forEach((el) => {
     el.addEventListener('click', closeCompareModal);
+  });
+  root.querySelectorAll('[data-action="compare-remove"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const itemKind = btn.dataset.itemKind || kind;
+      const id = Number(btn.dataset.itemId);
+      if (!isInCompare(itemKind, id)) return;
+      const result = toggleCompare(itemKind, id);
+      if (result?.inCompare === false) {
+        for (const it of lookupAllExposureItems(itemKind, id)) {
+          it.compare_count = Math.max(0, (Number(it.compare_count) || 0) - 1);
+        }
+      }
+      const next = getCompareItems(itemKind);
+      if (!next.length) closeCompareModal();
+      else openCompareModal(itemKind, next, rerender);
+      rerender?.();
+    });
   });
 
   root.addEventListener('keydown', (e) => {
@@ -211,6 +232,7 @@ export function closeCompareModal() {
   const root = document.getElementById('compare-modal-root');
   if (root) root.remove();
   document.body.style.overflow = '';
+  refreshBackToTop();
 }
 
 /**

@@ -26,6 +26,7 @@ import {
   failStudentBranchSession,
   noteSessionStudentBranch,
 } from '../../shared/student-branch-store.js';
+import { clearAuthClientResidue } from '../../shared/chrome-session.js';
 
 const CREDENTIALS = { credentials: 'include' };
 
@@ -314,5 +315,24 @@ export async function logout() {
   resetExposureBridge();
   deactivateBoardApi();
   resetConcernData();
+  clearAuthClientResidue();
+  leaveMyRouteForGuest();
   window.dispatchEvent(new CustomEvent('auth:logout'));
+}
+
+/** 마이 라우트에 로그인 게이트를 그리지 않고 게스트로 넘긴다. 히스토리는 기존처럼 쌓는다. */
+function leaveMyRouteForGuest() {
+  try {
+    const raw = (window.location.hash || '').replace(/^#/, '').split('?')[0];
+    const path = raw.startsWith('/') ? raw : `/${raw}`;
+    const my =
+      path === '/mypage' ||
+      path.startsWith('/mypage/') ||
+      path === '/messages' ||
+      path.startsWith('/messages/');
+    if (!my) return;
+    if (window.location.hash.split('?')[0] !== '#/guest') window.location.hash = '#/guest';
+  } catch {
+    /* ignore */
+  }
 }

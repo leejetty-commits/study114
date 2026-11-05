@@ -4,10 +4,23 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Database\Connection;
 use Study114\Handoff\HandoffApi;
 use Study114\Handoff\HandoffService;
 
 HandoffApi::bootstrap();
+
+function handoff_owner_user_id(string $targetType, int $targetId): ?int
+{
+    $sql = $targetType === 'study_room'
+        ? 'SELECT user_id FROM study_rooms WHERE id = ?'
+        : 'SELECT user_id FROM tutors WHERE id = ?';
+    $stmt = Connection::get()->prepare($sql);
+    $stmt->execute([$targetId]);
+    $owner = $stmt->fetchColumn();
+
+    return $owner === false ? null : (int) $owner;
+}
 
 HandoffApi::run(static function (): void {
     $service = new HandoffService();
@@ -34,6 +47,10 @@ HandoffApi::run(static function (): void {
         HandoffApi::assertProviderTargetType($targetType);
         if ($targetId <= 0) {
             HandoffApi::fail(422, 'validation', 'target_id가 필요합니다.');
+        }
+        $ownerId = handoff_owner_user_id($targetType, $targetId);
+        if ($ownerId !== null && $ownerId === $userId) {
+            HandoffApi::fail(403, 'own_card', '내 카드는 비교에 담을 수 없습니다.');
         }
         $result = $service->toggleCompare($userId, $targetType, $targetId);
         HandoffApi::ok([

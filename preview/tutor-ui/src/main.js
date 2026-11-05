@@ -115,10 +115,7 @@ function render() {
     bindGuestGateLinks(app);
     bindSiteChrome(app, {
       getRole: getChromeNavRole,
-      logout: async () => {
-        await chromeLogout();
-        render();
-      },
+      logout: () => chromeLogout(),
     });
     syncSiteHeaderOffset();
     ensureSiteHeaderOffsetListeners();

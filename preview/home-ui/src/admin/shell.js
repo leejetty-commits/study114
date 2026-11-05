@@ -105,6 +105,18 @@ function renderSidebar(activePath) {
     </aside>`;
 }
 
+/** 비관리자 거부. 좌측 메뉴·브레드크럼 없음. */
+export function renderAdminDeniedFrame(bodyHtml) {
+  return renderAppShellWithPromo({
+    toolbar: renderPreviewToolbar(),
+    headerHtml: '',
+    mainHtml: bodyHtml,
+    footerHtml: renderFooter(),
+    slotKey: null,
+    appClass: 'home-app',
+  });
+}
+
 /** @param {string} path @param {string} bodyHtml */
 export function renderAdminShell(path, bodyHtml) {
   const user = getAuthUser();

@@ -6,13 +6,17 @@
 
 import { studyRoomPromo1Label, pickOwnStudyRoom } from '../study-room-home-seed.js';
 import { tutorHomePrimaryLabel, tutorHomeRegionsReady } from '../tutor-home-seed.js';
-import { primaryHopeRegionLabel } from '../../../shared/student-hope-regions.js';
 import { tutorUnitLabelFromId } from '../../../shared/tutor-unit-cascade.js';
 import { ensureTutorCityUnits, getTutorCityUnits, tutorCityUnitsError, tutorCityUnitsReady } from '../tutor-reg/city-units.js';
 import { getStudents } from '../student-reg/store.js';
 import { getTutors } from '../tutor-reg/store.js';
 import { getStudyRooms } from '../study-room-reg/store.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
+import {
+  pickStudentRecord,
+  studentBranch,
+  studentSavedRegionFromRecord,
+} from '../../../search-ui/src/student-saved-region.js';
 
 export const ACCOUNT_REGION_UNSET = '등록 전';
 
@@ -80,11 +84,19 @@ function finish(raw) {
  * }} [ctx]
  * @returns {{ pending: boolean, text: string }}
  */
+/** 홈·찾기와 같은 저장 지역 라벨(id만 있으면 「등록 지역」). */
+function studentAccountRegionLabel(student) {
+  const saved = studentSavedRegionFromRecord(student);
+  if (!saved) return '';
+  const place = studentBranch(saved) === 'study_room' ? saved.studyroom : saved.tutor;
+  return place?.label || '';
+}
+
 export function accountRegionView(role, ctx = {}) {
   if (ctx.loaded === false) return { pending: true, text: '' };
   const kind = roleKind(role);
   if (kind === 'study_room') return finish(studyRoomPromo1Label(ctx.room));
-  if (kind === 'student') return finish(ctx.student ? primaryHopeRegionLabel(ctx.student) : '');
+  if (kind === 'student') return finish(ctx.student ? studentAccountRegionLabel(ctx.student) : '');
   if (kind === 'tutor') {
     const phase = ctx.unitsPhase || 'ready';
     const client = tutorClientLabel(ctx.tutor, ctx.units || []);
@@ -112,8 +124,7 @@ function pickAccountTutor() {
 }
 
 function pickAccountStudent() {
-  const students = getStudents().filter((row) => row && row.id && row.exposure_status !== 'deleted');
-  return students[0] || null;
+  return pickStudentRecord(getStudents());
 }
 
 function liveUnitsPhase() {
@@ -151,9 +162,14 @@ let chain = Promise.resolve();
  */
 export function ensureAccountRegionLabel(role) {
   const job = chain.then(async () => {
+    const settle = (p, ms) =>
+      Promise.race([
+        Promise.resolve(p).catch(() => null),
+        new Promise((resolve) => setTimeout(() => resolve(null), ms)),
+      ]);
     if (isRegistrationsApiMode()) {
       try {
-        await hydrateRegistrationsCache();
+        await settle(hydrateRegistrationsCache(), 5000);
       } catch {
         /* 이미 있는 캐시를 그대로 표시한다 */
       }
@@ -161,13 +177,15 @@ export function ensureAccountRegionLabel(role) {
     registrationsSettled = true;
     if (roleKind(role) === 'tutor') {
       try {
-        await ensureTutorCityUnits();
+        await settle(ensureTutorCityUnits(), 5000);
       } catch {
         /* 조합이 안 되면 primary_region_label */
       }
     }
   });
-  chain = job.catch(() => {});
+  chain = job.catch(() => {
+    registrationsSettled = true;
+  });
   return job;
 }
 

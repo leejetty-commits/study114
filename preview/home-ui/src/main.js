@@ -82,7 +82,7 @@ import { renderPromo, bindPromoEvents } from './promo/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
-import { renderAdmin, bindAdminEvents } from './admin/index.js';
+import { renderAdmin, bindAdminEvents, renderAdminDenied } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
 import {
   renderRegisterIntro,
@@ -126,7 +126,17 @@ import { mountHomePopup } from './home-popup/mount.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
+import { closeDetailModal } from './detail-decision/detail-shell.js';
+import { closeCompareModal } from './compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
+
+/** 해시 이동 시 body에 남은 상세·비교 모달·비교 토스트 제거 */
+function dismissRouteOverlays() {
+  closeDetailModal();
+  closeCompareModal();
+  const toast = document.getElementById('p24-toast');
+  if (toast) toast.classList.remove('is-visible');
+}
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -168,6 +178,7 @@ function shouldPaintBeforeSession() {
   // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
   if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
+  if (screen === 'guest') return false;
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
@@ -180,6 +191,13 @@ function renderScreen() {
   if (applyPlansRedirects()) return;
   const app = document.getElementById('app');
   if (isAdminRoute()) {
+    if (!isAdminUser()) {
+      app.innerHTML = renderAdminDenied();
+      bindAdminEvents(app, render);
+      mountOpsChrome(app);
+      mountHomePopup(app);
+      return;
+    }
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
     mountOpsChrome(app);
@@ -304,8 +322,16 @@ function showBootError(err) {
   console.error(err);
 }
 
+function leaveLegacyAdminEntry() {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  if (path !== '/adm' && path !== '/bbs/admin.php') return false;
+  window.location.replace('/#/guest');
+  return true;
+}
+
 function init() {
   try {
+    if (leaveLegacyAdminEntry()) return;
     importNeighborhoodGreetingHandoff();
     if (!SHOW_PREVIEW_TOOLBAR) {
       document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
@@ -383,11 +409,24 @@ function init() {
       const app = document.getElementById('app');
       if (app) app.innerHTML = '';
     }, true);
+    window.addEventListener('pagehide', () => {
+      document.getElementById('app')?.replaceChildren();
+    });
+    window.addEventListener('pageshow', (event) => {
+      if (!event.persisted) return;
+      initAuthSession()
+        .then(() => {
+          sessionChecked = true;
+          render();
+        })
+        .catch((err) => showBootError(err));
+    });
     window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
       // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
+      dismissRouteOverlays();
       try {
         render();
       } catch (e) {
@@ -529,6 +568,7 @@ function init() {
           ROLE_HOME[user.role_type]
         ) {
           navigate(ROLE_HOME[user.role_type]);
+          if (!bootReady) render();
           return;
         }
         if (pending === '/community' || pending === '/community/' || (pending && pending.startsWith('/community/'))) {

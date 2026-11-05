@@ -9,6 +9,7 @@ import {
 } from './handoff-copy.js';
 import { notifyCompareToggle } from './handoff-utils.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
+import { lookupAllExposureItems } from './exposure-lookup.js';
 import {
   addCompareFromWishlist,
   clearCompare,
@@ -16,6 +17,7 @@ import {
   getCompareItems,
   getExposureItem,
   getWishlistItems,
+  isOwnProviderCard,
   isWishlisted,
   isInCompare,
   removeWishlist,
@@ -28,6 +30,23 @@ import { toggleRecommendation } from './search-api.js';
 
 function esc(s) {
   return String(s ?? '').replace(/</g, '&lt;');
+}
+
+const OWN_CARD_HINT = '내 카드에는 찜·비교·쪽지를 할 수 없습니다.';
+
+/** @param {'study_room'|'tutor'} kind @param {number|string} id @param {number} delta @param {'wish_count'|'compare_count'} field */
+function shiftPublicCount(kind, id, delta, field) {
+  for (const it of lookupAllExposureItems(kind, id)) {
+    it[field] = Math.max(0, (Number(it[field]) || 0) + delta);
+  }
+}
+
+let wishlistRefresh = null;
+
+function refreshOpenWishlist() {
+  if (!document.getElementById('wishlist-modal-root') || typeof wishlistRefresh !== 'function') return;
+  const fn = wishlistRefresh;
+  fn();
 }
 
 function itemTitle(kind, item) {
@@ -98,6 +117,11 @@ function closeWishlistModal() {
 
 /** @param {() => void} [onUpdate] */
 export function openWishlistModal(onUpdate) {
+  wishlistRefresh = () => {
+    closeWishlistModal();
+    openWishlistModal(onUpdate);
+    onUpdate?.();
+  };
   closeWishlistModal();
   const root = document.createElement('div');
   root.id = 'wishlist-modal-root';
@@ -254,16 +278,27 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
     });
   });
 
+  root.querySelectorAll('[data-action="wish-toggle"], [data-action="compare-toggle"], [data-action="open-detail-memo"]').forEach((btn) => {
+    if (!isOwnProviderCard(btn.dataset.itemKind, btn.dataset.itemId)) return;
+    btn.disabled = true;
+    btn.title = OWN_CARD_HINT;
+  });
+
   root.querySelectorAll('[data-action="wish-toggle"]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       const kind = btn.dataset.itemKind;
       const numId = Number(btn.dataset.itemId);
+      if (isOwnProviderCard(kind, numId)) {
+        void s114Alert(OWN_CARD_HINT);
+        return;
+      }
       const wasWished = isWishlisted(kind, numId);
-      toggleWishlist(kind, numId);
-      const item = getExposureItem(kind, numId);
-      if (item) item.wish_count = Math.max(0, (Number(item.wish_count) || 0) + (wasWished ? -1 : 1));
+      const added = toggleWishlist(kind, numId);
+      if (added === false && !wasWished) return;
+      shiftPublicCount(kind, numId, wasWished ? -1 : 1, 'wish_count');
+      refreshOpenWishlist();
       rerender();
     });
   });
@@ -274,12 +309,19 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
       e.stopPropagation();
       const kind = btn.dataset.itemKind;
       const numId = Number(btn.dataset.itemId);
+      if (isOwnProviderCard(kind, numId)) {
+        void s114Alert(OWN_CARD_HINT);
+        return;
+      }
       const wasCompared = isInCompare(kind, numId);
       const result = toggleCompare(kind, numId);
+      if (result?.own) {
+        void s114Alert(OWN_CARD_HINT);
+        return;
+      }
       if (!notifyCompareToggle(result, kind, { sourceRoute })) return;
-      const item = getExposureItem(kind, numId);
-      if (item && result.inCompare !== undefined) {
-        item.compare_count = Math.max(0, (Number(item.compare_count) || 0) + (wasCompared ? -1 : 1));
+      if (result.inCompare !== undefined) {
+        shiftPublicCount(kind, numId, wasCompared ? -1 : 1, 'compare_count');
       }
       rerender();
     });
@@ -288,13 +330,16 @@ export function bindUserActionEvents(root, rerender, opts = {}) {
   root.querySelectorAll('[data-action="compare-bar-open"]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const kind = btn.dataset.compareKind || 'study_room';
-      openCompareModal(kind, getCompareItems(kind));
+      openCompareModal(kind, getCompareItems(kind), rerender);
     });
   });
 
   root.querySelectorAll('[data-action="compare-bar-clear"]').forEach((btn) => {
     btn.addEventListener('click', () => {
-      clearCompare(btn.dataset.compareKind || 'study_room');
+      const kind = btn.dataset.compareKind || 'study_room';
+      const ids = getCompareIds(kind);
+      clearCompare(kind);
+      for (const id of ids) shiftPublicCount(kind, id, -1, 'compare_count');
       rerender();
     });
   });

@@ -486,6 +486,9 @@ export function resolveLocationByPriority(sources, axis = 'room') {
   return empty;
 }
 
+/** 위치권한 거부·무응답 포함 — 5초 안에 대체 경로로 넘어간다. */
+export const GPS_TIMEOUT_MS = 5000;
+
 /** @returns {Promise<{ lat: number, lng: number }|null>} */
 export function tryBrowserGps() {
   return new Promise((resolve) => {
@@ -494,17 +497,28 @@ export function tryBrowserGps() {
       resolve(null);
       return;
     }
+    let settled = false;
+    const finish = (value, reason) => {
+      if (settled) return;
+      settled = true;
+      if (value) logLocationDebug('gps-ok', value);
+      else logLocationDebug('gps-fail', { reason: reason || 'timeout' });
+      resolve(value);
+    };
+    const hardCap = setTimeout(() => finish(null, 'hard-timeout'), GPS_TIMEOUT_MS);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        logLocationDebug('gps-ok', coords);
-        resolve(coords);
+        clearTimeout(hardCap);
+        finish(
+          { lat: pos.coords.latitude, lng: pos.coords.longitude },
+          'ok',
+        );
       },
       (err) => {
-        logLocationDebug('gps-fail', { reason: err?.message || 'denied' });
-        resolve(null);
+        clearTimeout(hardCap);
+        finish(null, err?.message || 'denied');
       },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 120000 },
+      { enableHighAccuracy: false, timeout: GPS_TIMEOUT_MS, maximumAge: 120000 },
     );
   });
 }

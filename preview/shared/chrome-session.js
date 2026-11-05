@@ -95,6 +95,26 @@ export async function initChromeSession({ basicGate = true } = {}) {
   return null;
 }
 
+const CLIENT_RESIDUE_KEYS = [
+  'study114-preview-active-role',
+  'study114-preview-students-v3',
+  'study114-preview-tutors-v1',
+  'study114-preview-study-rooms-v1',
+  'study114_tutor_id',
+  'study114_study_room_id',
+  'study114.regionRegister.seed',
+  'study114.displayName.justSaved',
+];
+
+/** 로그아웃 뒤 같은 탭에 남는 가입 폼·표시 역할 저장값. */
+export function clearAuthClientResidue() {
+  try {
+    CLIENT_RESIDUE_KEYS.forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    /* ignore */
+  }
+}
+
 export async function chromeLogout() {
   try {
     await fetch('/api/auth/logout.php', { method: 'POST', credentials: 'include' });
@@ -103,4 +123,5 @@ export async function chromeLogout() {
   }
   currentUser = null;
   clearStoredStudentBranch();
+  clearAuthClientResidue();
 }

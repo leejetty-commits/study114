@@ -134,6 +134,7 @@ final class StudentHubRepository
         'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
         'student_gender_group', 'preferred_student_count_group',
         'preferred_tutor_gender', 'memo_status', 'request_summary', 'special_request_note',
+        'prime_match_opt_in',
     ];
 
     /**
@@ -209,6 +210,16 @@ final class StudentHubRepository
             if ($branchChanged) {
                 foreach ([...self::TUTOR_REGION_COLUMNS, ...self::STUDYROOM_REGION_COLUMNS] as $col) {
                     $values[$col] = $values[$col] ?? null;
+                }
+            }
+            if (array_key_exists('prime_match_opt_in', $values)) {
+                $colStmt = $this->pdo->prepare(
+                    'SELECT 1 FROM information_schema.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+                );
+                $colStmt->execute(['students', 'prime_match_opt_in']);
+                if (!$colStmt->fetchColumn()) {
+                    throw new \InvalidArgumentException('prime_match_opt_in: 저장 컬럼이 없습니다.');
                 }
             }
             foreach ($values as $col => $value) {
@@ -330,10 +341,19 @@ final class StudentHubRepository
     ];
 
     /** DB NOT NULL 이라 비울 수 없는 컬럼 */
-    private const PATCH_NOT_NULL = ['memo_status'];
+    private const PATCH_NOT_NULL = ['memo_status', 'prime_match_opt_in'];
 
     private function normalizeStudentColumn(string $col, mixed $value): mixed
     {
+        if ($col === 'prime_match_opt_in') {
+            if ($value === true || $value === 1 || $value === '1' || $value === 'on') {
+                return 1;
+            }
+            if ($value === false || $value === 0 || $value === '0' || $value === null || $value === '') {
+                return 0;
+            }
+            throw new \InvalidArgumentException('prime_match_opt_in: 값을 확인해 주세요.');
+        }
         if ($value !== null && !is_string($value) && !is_int($value)) {
             throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
         }
@@ -594,6 +614,7 @@ final class StudentHubRepository
             'preferred_studyroom_fee_amount'=> $row['preferred_studyroom_fee_amount'] !== null ? (int) $row['preferred_studyroom_fee_amount'] : null,
             'preferred_tutor_gender'        => $row['preferred_tutor_gender'] !== null ? (string) $row['preferred_tutor_gender'] : null,
             'request_summary'               => $row['request_summary'] !== null ? (string) $row['request_summary'] : null,
+            'prime_match_opt_in'            => ((int) ($row['prime_match_opt_in'] ?? 0)) === 1 ? 1 : 0,
             'special_request_note'          => $row['special_request_note'] !== null ? (string) $row['special_request_note'] : null,
             'updated_at'                    => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'                  => $row['published_at'] !== null

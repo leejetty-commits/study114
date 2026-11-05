@@ -1,16 +1,22 @@
 import { getAdminPath } from '../state.js';
-import { initAuthSession } from '../auth-session.js';
+import { initAuthSession, isAdminUser } from '../auth-session.js';
 import { normalizeAdminPath } from './router.js';
-import { renderAdminShell, bindAdminShellEvents } from './shell.js';
+import { renderAdminShell, renderAdminDeniedFrame, bindAdminShellEvents } from './shell.js';
 import { renderA28Screen, bindA28ScreenEvents } from './a28-screens.js';
 import {
   canAccessAdminPath,
   renderAdminAccessGate,
+  renderNonAdminDenied,
   mustChangeAdminPassword,
   renderMustChangePasswordGate,
 } from './admin-guard.js';
 
+export function renderAdminDenied() {
+  return renderAdminDeniedFrame(renderNonAdminDenied());
+}
+
 export function renderAdmin() {
+  if (!isAdminUser()) return renderAdminDenied();
   const path = getAdminPath();
   const normalized = normalizeAdminPath(path) || '/admin';
   if (mustChangeAdminPassword()) {
@@ -26,6 +32,7 @@ export function renderAdmin() {
 export function bindAdminEvents(root, rerender) {
   const path = getAdminPath();
   bindAdminShellEvents(root, rerender);
+  if (!isAdminUser()) return;
 
   const mustForm = root.querySelector('[data-form="admin-must-change-password"]');
   if (mustForm instanceof HTMLFormElement) {

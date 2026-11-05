@@ -57,6 +57,7 @@ echo "=== 2) harness + 062 + extra + 063 + memo-status + 061 ==="
 "${MYSQL[@]}" < sql/schema/063_student_memo_fulfillment.sql
 "${MYSQL[@]}" < scripts/fixtures/paid-pr-b-memo-status.sql
 "${MYSQL[@]}" < sql/schema/061_payment_catalog_snapshot.sql
+"${MYSQL[@]}" < sql/schema/066_tutor_position_city_subject.sql
 
 echo
 echo "=== 2b) 062 legacy dry-run counts ==="

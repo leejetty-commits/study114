@@ -118,6 +118,19 @@ export const EMPTY_COPY = {
     body: '관심 있는 대상을 저장해 두고, 최근 본 목록에서도 이어갈 수 있어요.',
     cta: '최근 본 목록',
   },
+  /** 찜 화면 칸 안 「최근 본 목록」 0건 — 최근열람 메뉴(P15-07) empty와 분리 */
+  wishlistRecentRoom: {
+    screenId: 'P15-06',
+    title: '최근 본 공부방이 없습니다',
+    body: '',
+    cta: null,
+  },
+  wishlistRecentTutor: {
+    screenId: 'P15-06',
+    title: '최근 본 과외쌤이 없습니다',
+    body: '',
+    cta: null,
+  },
   recent: {
     screenId: 'P15-07',
     title: '아직 둘러본 곳이 없어요.',
@@ -335,10 +348,15 @@ export function getErrorCopy(kind) {
 }
 
 /**
- * @param {'wishlist'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'|'plansExposure'|'memoUsedTargets'|'plansHistory'} key
+ * @param {'wishlist'|'wishlistRecentRoom'|'wishlistRecentTutor'|'recent'|'messages'|'compare'|'compareNeedMore'|'studentReview'|'students'|'studentsTab'|'contactHistory'|'plansExposure'|'memoUsedTargets'|'plansHistory'} key
  */
 export function getEmptyCopy(key) {
   return EMPTY_COPY[key] || { title: '항목이 없습니다', body: '', cta: null };
+}
+
+/** @param {'study_room'|'tutor'} kind */
+export function getWishlistRecentEmptyCopy(kind) {
+  return getEmptyCopy(kind === 'tutor' ? 'wishlistRecentTutor' : 'wishlistRecentRoom');
 }
 
 /**

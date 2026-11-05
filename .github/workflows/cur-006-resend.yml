@@ -128,6 +128,9 @@ jobs:
       - name: Withdraw reasons (anonymous / one-time link / admin summary)
         run: php scripts/verify-withdraw-reason.php
 
+      - name: Install Node dependencies
+        run: npm ci
+
       - name: Node static contract
         run: npm run verify:cur-006-resend
 

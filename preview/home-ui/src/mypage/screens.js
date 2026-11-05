@@ -47,7 +47,7 @@ import { renderBasicRow } from '../exposure-render.js';
 import { bindUserActionEvents } from '../user-actions-ui.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { notifyCompareToggle } from '../handoff-utils.js';
-import { getEmptyCopy } from '../empty-state-copy.js';
+import { getEmptyCopy, getWishlistRecentEmptyCopy } from '../empty-state-copy.js';
 import { renderMessagesScreen } from '../messages/screens.js';
 import { isMessagesDetailPath, MESSAGES_BASE, threadPath } from '../messages/router.js';
 import { isStudentRegPath } from '../student-reg/router.js';
@@ -334,10 +334,59 @@ function renderWishlistEntry(entry) {
     </div>`;
 }
 
-function renderWishlistEmpty() {
+/** 찜 빈 칸에서 「최근 본 목록」을 연 상태. 해시 이동 없이 칸 안만 바꾼다. */
+const wishlistRecentOpen = { study_room: false, tutor: false };
+
+function resetWishlistRecentOpen() {
+  wishlistRecentOpen.study_room = false;
+  wishlistRecentOpen.tutor = false;
+}
+
+/** @param {{ kind: string, id: number, title: string, viewedAt: string, lastRoute?: string|null, lastAction?: string }} e */
+function renderRecentRow(e) {
+  const item = resolveBasketItem(e);
+  const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
+  const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
+  const resumeToken =
+    e.lastRoute || e.lastAction ? `<p>${esc(formatResumeToken(e.lastRoute, e.lastAction))}</p>` : '';
+  const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
+  const kindLabel = e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
+  return `
+          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
+            <div>
+              <p class="mp-card__row-title">${esc(e.title)} ${stickers} ${lifecycleBadge}</p>
+              ${resumeToken}
+              <p>${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</p>
+            </div>
+            <div class="mypage-entity__actions">
+              <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail
+                data-kind="${e.kind}" data-id="${e.id}" data-last-route="${esc(e.lastRoute || 'mypage')}">다시 보기</button>
+            </div>
+          </li>`;
+}
+
+/** @param {'study_room'|'tutor'} kind */
+function renderWishlistRecentPanel(kind) {
+  const role = getNavRole();
+  const items = getRecentViews(role === 'parent' || role === 'study_room' || role === 'tutor' ? role : 'study_room').filter(
+    (e) => e.kind === kind,
+  );
+  if (!items.length) {
+    const copy = getWishlistRecentEmptyCopy(kind);
+    return `<p class="mp-card__empty">${esc(copy.title)}</p>`;
+  }
+  return `
+    <ul class="mp-card__rows" data-mypage-wish-recent-list="${kind}" aria-label="${esc(kind === 'tutor' ? '최근 본 과외쌤' : '최근 본 공부방')}">
+      ${items.map(renderRecentRow).join('')}
+    </ul>`;
+}
+
+/** @param {'study_room'|'tutor'} kind */
+function renderWishlistEmpty(kind) {
+  if (wishlistRecentOpen[kind]) return renderWishlistRecentPanel(kind);
   const copy = getEmptyCopy('wishlist');
   const cta = copy.cta
-    ? `<div class="mp-card__foot"><a href="#/mypage/recent" class="btn btn--secondary btn--sm" data-mypage-nav="/mypage/recent">${esc(copy.cta)}</a></div>`
+    ? `<div class="mp-card__foot"><button type="button" class="btn btn--secondary btn--sm" data-mypage-wish-recent="${kind}">${esc(copy.cta)}</button></div>`
     : '';
   return `
     <p class="mp-card__empty">${esc(copy.title)}</p>
@@ -345,9 +394,10 @@ function renderWishlistEmpty() {
     ${cta}`;
 }
 
+/** @param {'study_room'|'tutor'} kind @param {string} label */
 function renderWishlistSection(kind, label) {
   const entries = getWishlistEntries(kind);
-  if (!entries.length) return renderWishlistEmpty();
+  if (!entries.length) return renderWishlistEmpty(kind);
   return `
     <div class="browse-list browse-list--table mypage-wish-cards" role="list" data-mypage-wishlist="${kind}" aria-label="찜한 ${esc(label)}">
       ${entries.map(renderWishlistEntry).join('')}
@@ -358,6 +408,7 @@ let wishlistRefreshKey = '';
 if (typeof window !== 'undefined') {
   window.addEventListener?.('hashchange', () => {
     wishlistRefreshKey = '';
+    resetWishlistRecentOpen();
   });
 }
 
@@ -504,32 +555,7 @@ function renderRecent(role) {
   return `
     <section class="mp-card">
       <ul class="mp-card__rows">
-        ${items
-          .map((e) => {
-            const item = resolveBasketItem(e);
-            const lifecycleBadge = item ? renderBasketLifecycleBadge(e.kind, item) : '';
-            const stickers = item ? renderDecisionStickers(e.kind, e.id) : '';
-            const resumeToken =
-              e.lastRoute || e.lastAction
-                ? `<p>${esc(formatResumeToken(e.lastRoute, e.lastAction))}</p>`
-                : '';
-            const muted = item ? isBasketLifecycleMuted(item, e.kind) : false;
-            const kindLabel =
-              e.kind === 'study_room' ? '공부방' : e.kind === 'tutor' ? '과외쌤' : '학생';
-            return `
-          <li class="mp-card__row mp-card__row--split${muted ? ' is-muted' : ''}">
-            <div>
-              <p class="mp-card__row-title">${esc(e.title)} ${stickers} ${lifecycleBadge}</p>
-              ${resumeToken}
-              <p>${esc(kindLabel)} · ${new Date(e.viewedAt).toLocaleString('ko-KR')}</p>
-            </div>
-            <div class="mypage-entity__actions">
-              <button type="button" class="btn btn--secondary btn--sm" data-mypage-recent-detail
-                data-kind="${e.kind}" data-id="${e.id}" data-last-route="${esc(e.lastRoute || 'mypage')}">다시 보기</button>
-            </div>
-          </li>`;
-          })
-          .join('')}
+        ${items.map(renderRecentRow).join('')}
       </ul>
     </section>`;
 }
@@ -858,6 +884,21 @@ function renderPlansV3(role) {
       </section>`;
   }
 
+  if (plansHydratePhase === 'loading' || plansHydratePhase === 'idle') {
+    return `
+      <section class="mypage-panel" data-plans-hydrate="loading">
+        <p class="mypage-info-box">구매 이력·상품 상태를 확인하는 중입니다.</p>
+      </section>`;
+  }
+  if (plansHydratePhase === 'timeout' || plansHydratePhase === 'error') {
+    return `
+      <section class="mypage-panel" data-plans-hydrate="${plansHydratePhase}">
+        <p class="mypage-info-box" role="alert">구매 이력을 불러오지 못했습니다.
+          <button type="button" class="btn btn--secondary btn--sm" data-plans-hydrate-retry>다시 시도</button>
+        </p>
+      </section>`;
+  }
+
   return `
     ${renderProviderNoticeBanners()}
     ${renderPlansHistory()}`;
@@ -1096,6 +1137,19 @@ function renderAccount(role, profile) {
           </dl>
         </div>
       </article>
+
+      ${
+        role === 'parent'
+          ? `<article class="account-card" data-prime-match-card hidden>
+        <div class="account-card__head">
+          <h3 class="account-card__title">프라임 추천</h3>
+          <p class="account-card__desc">체크하지 않으면 추천 대상에서 빠집니다. 연락처와 실명은 넘기지 않습니다.</p>
+        </div>
+        <div class="account-card__body" data-prime-match-list></div>
+        <p class="form-error" data-prime-match-error hidden role="alert"></p>
+      </article>`
+          : ''
+      }
 
       <article class="account-card account-card--session">
         <div class="account-card__head">
@@ -1513,9 +1567,82 @@ function bindWithdrawEvents(root) {
 }
 
 let plansStatusHydrateAttempted = false;
+/** @type {'idle'|'loading'|'ready'|'timeout'|'error'} */
+let plansHydratePhase = 'idle';
 /** @type {import('../plans/history-mock.js').HistoryRow[] | null} */
 let plansHistoryRows = null;
 let contactHistoryHydrateAttempted = false;
+const PLANS_HYDRATE_TIMEOUT_MS = 8000;
+
+const PRIME_MATCH_LABEL = '조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?';
+
+/** @param {HTMLElement} root */
+function bindPrimeMatchConsentEvents(root) {
+  const card = root.querySelector('[data-prime-match-card]');
+  const list = root.querySelector('[data-prime-match-list]');
+  if (!card || !list) return;
+  const errorEl = root.querySelector('[data-prime-match-error]');
+  const showError = (message) => {
+    if (!errorEl) return;
+    errorEl.hidden = !message;
+    errorEl.textContent = message || '';
+  };
+
+  fetch('/api/registrations/students.php', { credentials: 'include' })
+    .then((res) => res.json().then((data) => ({ res, data })))
+    .then(({ res, data }) => {
+      if (!res.ok || !data.ok || !Array.isArray(data.students) || data.students.length === 0) {
+        return;
+      }
+      const students = [...data.students].sort((a, b) => Number(a.id) - Number(b.id));
+      list.innerHTML = students
+        .map((student) => {
+          const id = Number(student.id);
+          const on = Number(student.prime_match_opt_in) === 1;
+          const name = String(student.public_display_name || '').trim();
+          const nameHtml =
+            students.length > 1 && name ? `<p class="account-meta__hint">${esc(name)}</p>` : '';
+          return `${nameHtml}<label class="account-check">
+            <input type="checkbox" data-prime-match-opt-in data-student-id="${id}"${on ? ' checked' : ''} />
+            <span>${esc(PRIME_MATCH_LABEL)}</span>
+          </label>`;
+        })
+        .join('');
+      card.hidden = false;
+      list.querySelectorAll('[data-prime-match-opt-in]').forEach((box) => {
+        box.addEventListener('change', async () => {
+          if (!(box instanceof HTMLInputElement)) return;
+          const studentId = Number(box.dataset.studentId);
+          const next = box.checked ? 1 : 0;
+          box.disabled = true;
+          showError('');
+          try {
+            const save = await fetch('/api/registrations/students.php', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                id: studentId,
+                action: 'update',
+                prime_match_opt_in: next,
+              }),
+            });
+            const saved = await save.json().catch(() => ({}));
+            if (!save.ok || !saved.ok) {
+              box.checked = next !== 1;
+              throw new Error(saved.message || '저장하지 못했습니다.');
+            }
+            box.checked = Number(saved.student?.prime_match_opt_in) === 1;
+          } catch (err) {
+            showError(err instanceof Error ? err.message : '저장하지 못했습니다.');
+          } finally {
+            box.disabled = false;
+          }
+        });
+      });
+    })
+    .catch(() => {});
+}
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
@@ -1560,8 +1687,14 @@ export function bindMypageScreenEvents(root, rerender) {
       schedulePlansStatusHydrate(hydrateProfile, rerender, path);
     });
   }
+  root.querySelector('[data-plans-hydrate-retry]')?.addEventListener('click', () => {
+    plansStatusHydrateAttempted = false;
+    plansHydratePhase = 'idle';
+    rerender();
+  });
   if (!plansStatusHydrateAttempted && path === '/mypage/plans') {
     plansStatusHydrateAttempted = true;
+    plansHydratePhase = 'loading';
     const jobs = [
       hydratePaidCaches(),
       hydrateProviderNotices(),
@@ -1571,16 +1704,37 @@ export function bindMypageScreenEvents(root, rerender) {
       }),
     ];
     if (isMessagesApiMode()) jobs.push(hydrateMessagesCache());
-    Promise.allSettled(jobs)
-      .then(() => rerender())
-      .catch((err) => console.warn('[mypage/plans] hydrate failed', err));
+    const all = Promise.allSettled(jobs);
+    const timed = Promise.race([
+      all.then(() => 'ready'),
+      new Promise((resolve) => setTimeout(() => resolve('timeout'), PLANS_HYDRATE_TIMEOUT_MS)),
+    ]);
+    timed
+      .then((phase) => {
+        plansHydratePhase = phase === 'timeout' ? 'timeout' : 'ready';
+        rerender();
+      })
+      .catch((err) => {
+        console.warn('[mypage/plans] hydrate failed', err);
+        plansHydratePhase = 'error';
+        rerender();
+      });
   }
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
   bindWithdrawEvents(root);
+  bindPrimeMatchConsentEvents(root);
   if (path === '/mypage/wishlist') {
     bindWishlistCardEvents(root, rerender);
     scheduleWishlistRefresh(rerender);
+    root.querySelectorAll('[data-mypage-wish-recent]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const kind = btn.getAttribute('data-mypage-wish-recent');
+        if (kind !== 'study_room' && kind !== 'tutor') return;
+        wishlistRecentOpen[kind] = true;
+        rerender();
+      });
+    });
   }
   root.querySelectorAll('[data-mypage-wish-remove]').forEach((btn) => {
     btn.addEventListener('click', () => {

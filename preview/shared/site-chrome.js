@@ -213,6 +213,7 @@ export function bindSiteChrome(root, handlers = {}) {
       if (!action) return;
 
       if (action === 'util-logout') {
+        root.replaceChildren();
         Promise.resolve(logout ? logout() : null).then(() => {
           goSameTab(homeHashUrl('/guest'));
         });

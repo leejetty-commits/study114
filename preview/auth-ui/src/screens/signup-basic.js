@@ -332,10 +332,10 @@ function renderStudentBasic() {
   const tutorUnits = getCityUnits(signupState.tutorUnits || []);
   const savedTutorRegionId = savedStudentTutorRegionId(d);
   return `
-    <form data-form="basic-student" class="basic-register student-basic">
+    <form data-form="basic-student" class="basic-register student-basic" autocomplete="off">
       <div class="student-basic__field">
         <label class="form-label form-label--required" for="public_display_name">표시명</label>
-        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="nickname" />
+        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="off" />
         <p class="form-hint">${AUTH_WELCOME_COPY.basicDisplayNameHint}</p>
         ${studentFieldErrorHtml('public_display_name')}
       </div>
@@ -421,6 +421,19 @@ function renderStudentBasic() {
         <input class="form-input" id="request_summary" name="request_summary" maxlength="200" value="${esc(d.request_summary || '')}" />
         <p class="form-hint">카드에 한 줄로 보일 요청입니다. 이 칸만 비워도 됩니다.</p>
       </div>
+      <div class="student-basic__field">
+        <label class="form-check" for="prime_match_opt_in">
+          <input
+            class="form-check__input"
+            type="checkbox"
+            id="prime_match_opt_in"
+            name="prime_match_opt_in"
+            value="1"
+            ${d.prime_match_opt_in === 1 || d.prime_match_opt_in === '1' || d.prime_match_opt_in === true ? 'checked' : ''}
+          />
+          <span class="form-check__label">조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?</span>
+        </label>
+      </div>
       <div class="student-basic__actions">
         <button type="submit" class="btn btn--primary btn--block">다음</button>
       </div>
@@ -451,7 +464,7 @@ function renderStudyRoomBasic() {
     saved_regions: d.saved_regions,
   };
   return `
-    <form data-form="basic-study-room" class="basic-register">
+    <form data-form="basic-study-room" class="basic-register" autocomplete="off">
       <p class="auth-section-title">기본등록</p>
       <p class="form-note mb-4">교습형태 · 이름 · 대상 학교급 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번은 필수입니다. 홍보 2·3번은 선택입니다.</p>
       ${renderStudyRoomBasicFields({
@@ -476,7 +489,7 @@ function renderTutorBasic() {
   }));
   const citiesReady = units.some((u) => /^\d+$/.test(String(u.id)));
   return `
-    <form data-form="basic-tutor" class="basic-register">
+    <form data-form="basic-tutor" class="basic-register" autocomplete="off">
       <p class="auth-section-title">과외쌤 가입정보</p>
       <p class="form-note mb-4">과외 활동을 시작하기 위한 정보를 입력해 주세요.</p>
       ${
@@ -661,6 +674,38 @@ async function loadIncompleteBasicDraft(role) {
   };
 }
 
+/** HTML에 그린 값으로 되돌린다. 브라우저가 직전 계정으로 채운 칸만 지운다. */
+function keepRenderedValues(form) {
+  if (!form) return;
+  let touched = false;
+  form.addEventListener('input', () => {
+    touched = true;
+  }, { once: true });
+  const restore = () => {
+    if (touched || !form.isConnected) return;
+    form.querySelectorAll('input, select, textarea').forEach((el) => {
+      if (el.type === 'hidden' || el.type === 'submit' || el.type === 'button') return;
+      if (el.type === 'radio' || el.type === 'checkbox') {
+        if (el.checked !== el.defaultChecked) el.checked = el.defaultChecked;
+        return;
+      }
+      if (el instanceof HTMLSelectElement) {
+        const idx = [...el.options].findIndex((opt) => opt.defaultSelected);
+        const intended = idx >= 0 ? idx : 0;
+        if (el.selectedIndex !== intended) el.selectedIndex = intended;
+        return;
+      }
+      if (el.value !== el.defaultValue) el.value = el.defaultValue;
+    });
+  };
+  restore();
+  const schedule = typeof globalThis.setTimeout === 'function' ? globalThis.setTimeout.bind(globalThis) : null;
+  if (schedule) {
+    schedule(restore, 50);
+    schedule(restore, 400);
+  }
+}
+
 export function bindSignupBasicEvents(root) {
   bindGlobalEvents(root);
 
@@ -706,22 +751,35 @@ export function bindSignupBasicEvents(root) {
         }
       }
       role = serverRole;
+      const switchedAccount =
+        signupState.draftUserId != null && Number(signupState.draftUserId) !== Number(me.user_id);
+      if (switchedAccount) {
+        signupState.basicRegister = {};
+        signupState.accountDraft = null;
+        signupState.basicRegisterResult = null;
+        signupState.profileGender = null;
+        signupState.basicDraftHydrated = false;
+      }
+      if (me.user_id != null) signupState.draftUserId = me.user_id;
+      const repaintBasic = () => {
+        const app = document.getElementById('app');
+        if (!app) return;
+        app.innerHTML = renderSignupBasic();
+        bindSignupBasicEvents(app);
+      };
       if (!signupState.basicDraftHydrated && (serverRole === 'tutor' || serverRole === 'study_room')) {
         signupState.basicDraftHydrated = true;
         const draft = await loadIncompleteBasicDraft(serverRole).catch(() => null);
         if (draft) {
           if (!signupState.basicRegister) signupState.basicRegister = {};
-          signupState.basicRegister[serverRole] = {
-            ...(signupState.basicRegister[serverRole] || {}),
-            ...draft,
-          };
-          const app = document.getElementById('app');
-          if (app) {
-            app.innerHTML = renderSignupBasic();
-            bindSignupBasicEvents(app);
-          }
+          signupState.basicRegister[serverRole] = { ...draft };
+          repaintBasic();
           return;
         }
+      }
+      if (switchedAccount) {
+        repaintBasic();
+        return;
       }
       roleReady = true;
     })
@@ -731,6 +789,7 @@ export function bindSignupBasicEvents(root) {
     signupState.role = role;
   }
   const form = root.querySelector('form[data-form^="basic-"]');
+  keepRenderedValues(form);
 
   if (role === 'tutor') {
     bindTutorRegionSlotEvents(root, getCityUnits(signupState.tutorUnits || []));
@@ -895,6 +954,8 @@ export function bindSignupBasicEvents(root) {
         return;
       }
       if (region.patch) Object.assign(data, region.patch);
+      const primeBox = form.querySelector('[name="prime_match_opt_in"]');
+      data.prime_match_opt_in = primeBox instanceof HTMLInputElement && primeBox.checked ? 1 : 0;
     }
 
     if (role === 'tutor') {

@@ -283,7 +283,7 @@ check(strpos($screens, 'path === MEMBER_MAIL_PATH') < strpos($screens, "path.sta
 check(str_contains($bind, 'if (path === MEMBER_MAIL_PATH) bindMemberMail(root);'), 'screen: 이벤트 연결');
 $ui = (string) file_get_contents($root . '/preview/home-ui/src/admin/a28-member-mail.js');
 check(str_contains($ui, 'sandbox=""') && str_contains($ui, 'frame.srcdoc'), 'screen: 미리보기는 스크립트 없는 iframe');
-check(str_contains($ui, 'window.confirm(C.confirmPause(name))') && str_contains($ui, "if (!enable && !window.confirm"), 'screen: 멈출 때만 확인 창');
+check(str_contains($ui, 's114Confirm(C.confirmPause(name)') && str_contains($ui, 'if (!enable && !(await s114Confirm'), 'screen: 멈출 때만 확인 창');
 check(str_contains($ui, 'status === 429') && str_contains($ui, 'status === 403') && str_contains($ui, 'status === 503'), 'screen: 닷홈이 4xx 본문을 바꿔도 상태 코드로 안내');
 
 $doc = (string) @file_get_contents($root . '/docs/internal/74-member-mail-lock.md');

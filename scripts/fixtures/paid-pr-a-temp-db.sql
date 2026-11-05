@@ -27,6 +27,12 @@ CREATE TABLE tutors (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   user_id BIGINT UNSIGNED NOT NULL,
   tutor_display_name VARCHAR(50) NOT NULL DEFAULT 'e2e',
+  university_name VARCHAR(100) NULL,
+  career_year_band VARCHAR(20) NULL,
+  main_material_note VARCHAR(255) NULL,
+  intro_long TEXT NULL,
+  feature_2 VARCHAR(255) NULL,
+  feature_3 VARCHAR(255) NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -100,7 +106,8 @@ CREATE TABLE provider_ticket_packs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO users (id, email) VALUES (4, 'tutor-owner1@dev.local');
-INSERT INTO tutors (id, user_id) VALUES (1, 4);
+INSERT INTO tutors (id, user_id, university_name, career_year_band, intro_long, feature_2, feature_3)
+  VALUES (1, 4, 'CI대학교', 'y4_6', 'CI 프라임 테스트 소개', '특징2', '특징3');
 INSERT INTO study_rooms (id, user_id, deleted_at) VALUES (1, 4, NULL);
 INSERT INTO provider_position_subscriptions
   (user_id, sku_code, duration_type, duration_value, period_days,
@@ -108,3 +115,56 @@ INSERT INTO provider_position_subscriptions
 VALUES
   (4, 'pick', 'month', 1, 30, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 1 MONTH),
    NOW(), DATE_ADD(NOW(), INTERVAL 1 MONTH), 'tutor', 1, 'manual');
+
+-- CI-only: 과외쌤 축(066) · 등록점검(TierRequirement) 지원 테이블 ----------
+
+CREATE TABLE IF NOT EXISTS regions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  sido_code VARCHAR(5) NOT NULL DEFAULT '',
+  sido_name VARCHAR(50) NOT NULL DEFAULT '',
+  sigungu_code VARCHAR(10) NOT NULL DEFAULT '',
+  sigungu_name VARCHAR(50) NOT NULL DEFAULT '',
+  unit_level ENUM('sido', 'sigungu', 'dong') NOT NULL DEFAULT 'sido',
+  official_code VARCHAR(20) NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  is_selectable TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tutor_regions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  tutor_id BIGINT UNSIGNED NOT NULL,
+  region_id BIGINT UNSIGNED NOT NULL,
+  priority_order INT NOT NULL DEFAULT 0,
+  is_primary TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tutor_subject_targets (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  tutor_id BIGINT UNSIGNED NOT NULL,
+  subject_master_id BIGINT UNSIGNED NULL,
+  subject_name VARCHAR(50) NOT NULL DEFAULT '',
+  is_primary TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tutor_teaching_style_badges (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  tutor_id BIGINT UNSIGNED NOT NULL,
+  badge_name VARCHAR(50) NOT NULL,
+  display_order INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO regions (id, sido_code, sido_name, sigungu_code, sigungu_name, unit_level, official_code, is_active)
+  VALUES (5, '11', '서울특별시', '', '', 'sido', '1100000000', 1);
+
+INSERT INTO tutor_regions (tutor_id, region_id, priority_order, is_primary)
+  VALUES (1, 5, 1, 1);
+
+INSERT INTO tutor_subject_targets (tutor_id, subject_master_id, subject_name, is_primary)
+  VALUES (1, 1, '수학', 1);
+
+INSERT INTO tutor_teaching_style_badges (tutor_id, badge_name, display_order)
+  VALUES (1, 'passion', 1), (1, 'meticulous', 2);

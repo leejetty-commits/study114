@@ -6,7 +6,11 @@
  */
 
 import { getStudentsCache, isRegistrationsApiMode } from '@home-ui/registrations-backend.js';
-import { persistFindDefaultsFromStudent, replaceStoredHopeRegions } from '../../shared/student-hope-regions.js';
+import {
+  cityLabelFromRegionLabel,
+  persistFindDefaultsFromStudent,
+  replaceStoredHopeRegions,
+} from '../../shared/student-hope-regions.js';
 import { registerParentBranchSource } from '../../shared/site-nav-config.js';
 import { DEFAULT_STUDENT_HOPE_TYPE } from './student-hope-type.js';
 
@@ -34,8 +38,9 @@ function placeLabel(value) {
 /** @param {unknown} id @param {unknown} label @param {'sigungu'|'dong'} scope @returns {StudentPlace|null} */
 function place(id, label, scope) {
   const pid = positiveId(id);
-  const text = placeLabel(label);
-  return pid && text ? { id: pid, label: text, scope } : null;
+  if (!pid) return null;
+  // 서버가 id만 주고 label을 비워도 희망지역 등록으로 취급한다.
+  return { id: pid, label: placeLabel(label) || '등록 지역', scope };
 }
 
 /** 기본등록이 쓰는 행(id 오름차순 첫 행, 삭제 제외). @param {unknown} rows */
@@ -55,10 +60,20 @@ export function studentSavedRegionFromRecord(row) {
   if (!row || typeof row !== 'object') return null;
   const lessonType =
     row.preferred_lesson_type === 'study_room' ? 'study_room' : row.preferred_lesson_type === 'tutor' ? 'tutor' : null;
+  const legacyLabel = placeLabel(row.region_label);
+  // id만 있고 label이 비어도 등록된 희망지역으로 본다(홈·찾기·마이 모순 방지).
   return {
     lessonType,
-    tutor: place(row.preferred_tutor_region_id, row.preferred_tutor_region_label, 'sigungu'),
-    studyroom: place(row.preferred_studyroom_region_id, row.preferred_studyroom_region_label, 'dong'),
+    tutor: place(
+      row.preferred_tutor_region_id,
+      row.preferred_tutor_region_label || cityLabelFromRegionLabel(legacyLabel),
+      'sigungu',
+    ),
+    studyroom: place(
+      row.preferred_studyroom_region_id,
+      row.preferred_studyroom_region_label || legacyLabel,
+      'dong',
+    ),
   };
 }
 

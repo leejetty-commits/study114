@@ -82,6 +82,11 @@ fi
 echo "061 applied — catalog_version present"
 
 echo
+echo "=== 4c) apply sql/schema/066_tutor_position_city_subject.sql (tutor axis) ==="
+"${MYSQL[@]}" < sql/schema/066_tutor_position_city_subject.sql
+echo "066 applied"
+
+echo
 echo "=== 5b) checkout create on 061-present DB ==="
 php scripts/verify-paid-pr-a-integration.php --phase=post061
 

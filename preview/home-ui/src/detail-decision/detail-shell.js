@@ -22,7 +22,8 @@ import {
 import { renderTutorDetailBody } from './tutor-detail.js';
 import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
-import { toggleWishlist, toggleCompare, isWishlisted } from '../user-actions-state.js';
+import { toggleWishlist, toggleCompare, isWishlisted, isInCompare, isOwnProviderCard } from '../user-actions-state.js';
+import { lookupAllExposureItems } from '../exposure-lookup.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock, bindRightRailEvents } from '../right-rail.js';
 import { maskPublicDisplayName } from '../student-blind-teaser.js';
@@ -32,14 +33,23 @@ import { goHomeHashPath } from '../spa-navigation.js';
 import { bindProviderReviewMount } from '../provider-reviews/ui.js';
 import { bindReviewSheetTriggers, openReviewSheet } from '../provider-reviews/sheet.js';
 import { isLoggedIn } from '../auth-session.js';
+import { previewState } from '../state.js';
 import { guardGuestDeepAccess } from '../guest-deep-access.js';
 import { loadPromoChannelForCard } from './promo-channel-load.js';
 import { renderItemActions } from '../exposure-render.js';
 import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
 import { toggleRecommendation } from '../search-api.js';
+import { refreshBackToTop } from '../../../shared/back-to-top.js';
 
 const MODAL_ID = 'p24-detail-modal';
 let promoOpenSeq = 0;
+
+/** @param {'study_room'|'tutor'} kind @param {number|string} id @param {number} delta @param {'wish_count'|'compare_count'} field */
+function shiftPublicCount(kind, id, delta, field) {
+  for (const it of lookupAllExposureItems(kind, id)) {
+    it[field] = Math.max(0, (Number(it[field]) || 0) + delta);
+  }
+}
 
 export function closeDetailModal() {
   const modal = document.getElementById(MODAL_ID);
@@ -49,6 +59,7 @@ export function closeDetailModal() {
   modal?.remove();
   document.body.style.overflow = '';
   document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
+  refreshBackToTop();
 }
 
 function itemTitle(kind, item) {
@@ -60,6 +71,9 @@ function itemTitle(kind, item) {
 export function resolvePrimaryCta(kind, item, viewer) {
   if (viewer === 'guest') {
     return { label: '로그인하고 문의하기', action: 'login', disabled: false };
+  }
+  if ((kind === 'study_room' || kind === 'tutor') && isOwnProviderCard(kind, item?.id)) {
+    return { label: '내 카드', action: 'close', disabled: true, title: '내 카드에는 쪽지를 보낼 수 없습니다.' };
   }
   if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room' || viewer === 'admin')) {
     const canPublish = item.exposure_status === 'published';
@@ -237,6 +251,19 @@ function bindFloatingDrag(wrap) {
   });
 }
 
+const profileViewAt = new Map();
+
+/** 같은 카드를 한 번에 여러 번 열어도 조회는 한 번만. */
+function shouldCountProfileView(kind, id) {
+  if (kind !== 'study_room' && kind !== 'tutor') return true;
+  const key = `${kind}:${Number(id)}`;
+  const now = Date.now();
+  const prev = profileViewAt.get(key) || 0;
+  if (now - prev < 20000) return false;
+  profileViewAt.set(key, now);
+  return true;
+}
+
 /**
  * @param {{ kind: 'study_room'|'tutor'|'student', item: object, viewer: string, onRerender?: () => void, sourceRoute?: string }} opts
  */
@@ -244,6 +271,9 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   if ((kind === 'study_room' || kind === 'tutor') && !isLoggedIn()) {
     guardGuestDeepAccess('card_detail', { providerType: kind, providerId: Number(item?.id) || 0 });
     return;
+  }
+  if (viewer !== 'guest' && item && shouldCountProfileView(kind, item.id)) {
+    recordRecentView(kind, item.id, itemTitle(kind, item), { sourceRoute, lastAction: 'view_detail' });
   }
   if ((kind === 'study_room' || kind === 'tutor') && item && !item._promoChannelLoaded) {
     const seq = ++promoOpenSeq;
@@ -258,8 +288,27 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
   closeDetailModal();
 
   const title = itemTitle(kind, item);
-  if (viewer !== 'guest') {
-    recordRecentView(kind, item.id, title, { sourceRoute, lastAction: 'view_detail' });
+  if ((kind === 'study_room' || kind === 'tutor') && item) {
+    const peers = lookupAllExposureItems(kind, item.id);
+    const lists = [
+      previewState.studyRoomFind?.activeResultItems,
+      previewState.tutorFind?.activeResultItems,
+      previewState.parentFind?.activeResultItems,
+      previewState.studyRoomFind?.searchExposureItems,
+      previewState.tutorFind?.searchExposureItems,
+      previewState.parentFind?.searchExposureItems,
+    ];
+    const live = peers.find((row) => lists.some((list) => Array.isArray(list) && list.includes(row))) || peers[0];
+    if (live) {
+      for (const row of peers) {
+        row.wish_count = live.wish_count;
+        row.compare_count = live.compare_count;
+        row.message_count = live.message_count;
+      }
+      item.wish_count = live.wish_count;
+      item.compare_count = live.compare_count;
+      item.message_count = live.message_count;
+    }
   }
   const subtitle =
     kind === 'student'
@@ -289,6 +338,11 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
           compareKind: kind,
           itemId: item.id,
           item,
+          wish_count: item.wish_count,
+          compare_count: item.compare_count,
+          message_count: item.message_count,
+          recommend_count: item.recommend_count,
+          review_count: item.review_count,
         })}</div>`
       : '';
   const floating = viewer === 'guest';
@@ -345,6 +399,12 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     </div>`;
 
   document.body.appendChild(wrap);
+  if ((kind === 'study_room' || kind === 'tutor') && isOwnProviderCard(kind, item.id)) {
+    wrap.querySelectorAll('[data-action="wish-toggle"], [data-action="compare-toggle"], [data-action="open-detail-memo"]').forEach((btn) => {
+      btn.disabled = true;
+      btn.title = '내 카드에는 찜·비교·쪽지를 할 수 없습니다.';
+    });
+  }
   bindRightRailEvents(wrap);
   document.body.classList.add('p24-detail-open');
   if (floating) {
@@ -356,6 +416,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     document.body.style.overflow = 'hidden';
     bindDetailModalHashNavigation(wrap, { guest: false });
   }
+  refreshBackToTop();
 
   if (kind === 'study_room' && !floating) {
     const mapAccordion = wrap.querySelector('.p24-map-accordion');
@@ -476,10 +537,14 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
       e.preventDefault();
       e.stopPropagation();
       const wishKind = btn.dataset.itemKind;
-      const wasWishlisted = isWishlisted(wishKind, btn.dataset.itemId);
-      toggleWishlist(wishKind, btn.dataset.itemId);
+      const wishId = btn.dataset.itemId;
+      if (isOwnProviderCard(wishKind, wishId)) return;
+      const wasWishlisted = isWishlisted(wishKind, wishId);
+      const added = toggleWishlist(wishKind, wishId);
+      if (added === false && !wasWishlisted) return;
+      shiftPublicCount(wishKind, wishId, wasWishlisted ? -1 : 1, 'wish_count');
       notifyWishToggle(!wasWishlisted, { sourceRoute });
-      if (!wasWishlisted) patchRecentHandoff(wishKind, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'wish_add' });
+      if (!wasWishlisted) patchRecentHandoff(wishKind, wishId, { lastRoute: sourceRoute, lastAction: 'wish_add' });
       onRerender?.();
       openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
     });
@@ -490,9 +555,16 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
       e.preventDefault();
       e.stopPropagation();
       const compareKindBtn = btn.dataset.itemKind;
-      const result = toggleCompare(compareKindBtn, btn.dataset.itemId);
+      const compareId = btn.dataset.itemId;
+      if (isOwnProviderCard(compareKindBtn, compareId)) return;
+      const wasCompared = isInCompare(compareKindBtn, compareId);
+      const result = toggleCompare(compareKindBtn, compareId);
+      if (result?.own) return;
       if (!notifyCompareToggle(result, compareKindBtn, { sourceRoute: 'detail' })) return;
-      if (result.inCompare) patchRecentHandoff(compareKindBtn, btn.dataset.itemId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
+      if (result.inCompare !== undefined) {
+        shiftPublicCount(compareKindBtn, compareId, wasCompared ? -1 : 1, 'compare_count');
+      }
+      if (result.inCompare) patchRecentHandoff(compareKindBtn, compareId, { lastRoute: sourceRoute, lastAction: 'compare_add' });
       onRerender?.();
       openDetailModal({ kind, item, viewer, onRerender, sourceRoute });
     });

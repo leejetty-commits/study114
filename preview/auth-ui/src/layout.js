@@ -1,4 +1,4 @@
-import { ROLE_LABELS } from './state.js';
+import { ROLE_LABELS, resetSignupState } from './state.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import {
   renderSiteHeader,
@@ -234,7 +234,10 @@ export function bindGlobalEvents(root) {
 
   bindSiteChrome(root, {
     getRole: getChromeNavRole,
-    logout: () => chromeLogout(),
+    logout: () => {
+      resetSignupState();
+      return chromeLogout();
+    },
     guardNavigation: (action) => {
       const user = getChromeUser();
       if (user && !user.email_verified && getCurrentPath() === '/signup/verify-email') {

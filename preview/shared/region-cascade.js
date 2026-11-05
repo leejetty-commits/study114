@@ -8,6 +8,16 @@ import { refreshInputFill } from './input-fill.js';
 
 export const REGION_LIST_ERROR = '지역 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
 export const REGION_RESELECT = '지역을 다시 선택해 주세요';
+/** 시·도만 고른 채 검색하면 무반응처럼 보이므로 다음 단계를 안내한다. */
+export const REGION_NEED_CITY = '시·군(또는 구)까지 선택한 뒤 검색해 주세요.';
+
+/** @param {{ complete?: boolean, showCity?: boolean, showGu?: boolean }} resolved */
+export function cascadeIncompleteHint(resolved) {
+  if (!resolved || resolved.complete) return '';
+  if (resolved.showGu) return '구까지 선택해 주세요.';
+  if (resolved.showCity) return REGION_NEED_CITY;
+  return REGION_RESELECT;
+}
 
 /**
  * @typedef {object} CityUnit
@@ -263,6 +273,9 @@ export function renderRegionCascade(opts = {}) {
   const cities = sidoName ? listCityNames(units, sidoName) : [];
   const gus = sidoName && cityName ? listGuRows(units, sidoName, cityName) : [];
 
+  const incompleteHint =
+    !stale && sidoName && !resolved.complete ? cascadeIncompleteHint(resolved) : '';
+
   return `
     <div data-region-cascade>
       ${
@@ -270,6 +283,7 @@ export function renderRegionCascade(opts = {}) {
           ? `<p class="form-note p19-field__hint" data-region-stale>${esc(REGION_RESELECT)}</p>`
           : '<p class="form-note p19-field__hint" data-region-stale hidden></p>'
       }
+      <p class="form-note p19-field__hint" data-region-cascade-hint ${incompleteHint ? '' : 'hidden'}>${esc(incompleteHint)}</p>
       <div class="form-group">
         <label class="form-label" for="${esc(prefix)}_sido">시·도</label>
         <select class="${esc(selectClass)}" id="${esc(prefix)}_sido" data-field="region_sido" ${opts.required ? 'required' : ''}>
@@ -339,10 +353,17 @@ export function syncRegionCascade(el, units) {
   if (cityLabelEl) cityLabelEl.textContent = resolved.cityLabel;
   if (hiddenId instanceof HTMLInputElement) hiddenId.value = resolved.regionId;
   if (hiddenLabel instanceof HTMLInputElement) hiddenLabel.value = resolved.label;
-  const stale = el.querySelector('[data-region-stale]');
-  if (stale instanceof HTMLElement && (sidoName || cityName || guName)) {
-    stale.hidden = true;
-    stale.textContent = '';
+  const staleHint = el.querySelector('[data-region-stale]');
+  if (staleHint instanceof HTMLElement && (sidoName || cityName || guName) && !staleHint.hidden) {
+    // 사용자가 다시 고르기 시작하면 stale 안내는 접는다(기존 동작).
+    staleHint.hidden = true;
+    staleHint.textContent = '';
+  }
+  const cascadeHint = el.querySelector('[data-region-cascade-hint]');
+  if (cascadeHint instanceof HTMLElement) {
+    const incomplete = sidoName && !resolved.complete ? cascadeIncompleteHint(resolved) : '';
+    cascadeHint.hidden = !incomplete;
+    cascadeHint.textContent = incomplete;
   }
   refreshInputFill(el);
 }

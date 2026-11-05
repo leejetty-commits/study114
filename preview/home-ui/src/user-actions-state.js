@@ -6,6 +6,9 @@
 
 import { COMPARE_MAX } from './exposure-schema.js';
 import { lookupExposureItem } from './exposure-lookup.js';
+import { getAuthUser } from './auth-session.js';
+import { getStudyRooms } from './study-room-reg/store.js';
+import { getTutors } from './tutor-reg/store.js';
 import {
   isHandoffApiMode,
   getUserActionsCache,
@@ -98,6 +101,20 @@ export function getCompareItems(kind) {
   return getCompareIds(kind).map((id) => getExposureItem(kind, id)).filter(Boolean);
 }
 
+/** 로그인한 공급자의 자기 카드. 찜·비교·쪽지 대상이 아니다. */
+export function isOwnProviderCard(kind, id) {
+  const n = Number(id);
+  if (!Number.isFinite(n) || n <= 0) return false;
+  const role = getAuthUser()?.role_type;
+  if (kind === 'study_room' && role === 'study_room_owner') {
+    return getStudyRooms().some((row) => !row?.deleted_at && Number(row.id) === n);
+  }
+  if (kind === 'tutor' && role === 'tutor') {
+    return getTutors().some((row) => !row?.deleted_at && Number(row.id) === n);
+  }
+  return false;
+}
+
 /** @param {ProviderKind} kind @param {number|string} id */
 export function isWishlisted(kind, id) {
   return loadState().wishlist[kind].includes(Number(id));
@@ -111,6 +128,7 @@ export function isInCompare(kind, id) {
 /** @param {ProviderKind} kind @param {number|string} id */
 export function toggleWishlist(kind, id) {
   const numId = Number(id);
+  if (isOwnProviderCard(kind, numId)) return false;
   rememberIfKnown(kind, numId);
   if (isHandoffApiMode()) {
     return optimisticToggleWishlist(kind, numId);
@@ -131,6 +149,7 @@ export function toggleWishlist(kind, id) {
  */
 export function toggleCompare(kind, id) {
   const numId = Number(id);
+  if (isOwnProviderCard(kind, numId)) return { inCompare: false, own: true };
   rememberIfKnown(kind, numId);
   if (isHandoffApiMode()) {
     const state = getUserActionsCache();
