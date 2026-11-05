@@ -172,6 +172,8 @@ export const WISHLIST_CARD_UNAVAILABLE = '지금은 볼 수 없는 카드예요'
 
 export const WISHLIST_CARD_UNKNOWN = '카드 정보를 불러오지 못했어요';
 
+export const DETAIL_CARD_GONE = '이 카드는 더 이상 볼 수 없습니다';
+
 export const STUDENT_REVIEW_NOTE = '관심 있는 학생을 저장해 두고, 준비가 되었을 때 쪽지를 이어가세요.';
 
 export const MESSAGES_SUMMARY_LEAD = '새 쪽지와 진행 중인 대화를 한곳에서 확인하세요.';

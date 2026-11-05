@@ -34,7 +34,7 @@ import {
 } from '../handoff-lifecycle.js';
 import { formatResumeToken } from '../handoff-resume.js';
 import { renderDecisionStickers } from '../handoff-sticker.js';
-import { openDetailDecision } from '../detail-decision/index.js';
+import { openDetailDecision, showP24Toast } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
@@ -93,6 +93,7 @@ import {
   WISHLIST_NOTE,
   WISHLIST_CARD_UNAVAILABLE,
   WISHLIST_CARD_UNKNOWN,
+  DETAIL_CARD_GONE,
   REGISTRATIONS_LEAD,
   CONTACT_HISTORY_COPY,
   memoPackProviderLabel,
@@ -438,7 +439,10 @@ function bindWishlistCardEvents(root, rerender) {
     if (kind !== 'study_room' && kind !== 'tutor') return;
     const open = (id) => {
       const entry = getWishlistEntries(kind).find((e) => e.id === id);
-      if (!entry || entry.status !== 'visible' || !entry.item) return;
+      if (!entry || entry.status !== 'visible' || !entry.item) {
+        showP24Toast(DETAIL_CARD_GONE);
+        return;
+      }
       openDetailDecision({ kind, id, item: entry.item, viewer: getNavRole(), onRerender: rerender, sourceRoute: 'wishlist' });
     };
     list.querySelectorAll('[data-provider-id][data-provider-kind]').forEach((article) => {

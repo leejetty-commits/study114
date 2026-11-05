@@ -10,9 +10,10 @@ import { guardGuestDeepAccess, canOpenDetailForViewer } from '../guest-deep-acce
 import { getHomeBasicPool } from '../home-basic-live.js';
 import { getFavoriteCard } from '../handoff-backend.js';
 import { lookupRegisteredProviderItem, rememberProviderItem } from './provider-item-registry.js';
+import { showP24Toast } from './detail-utils.js';
 
 export { closeDetailModal, openDetailModal } from './detail-shell.js';
-export { showP24Toast } from './detail-utils.js';
+export { showP24Toast };
 
 /** 화면 프리뷰 role보다 로그인 세션 역할 우선 (관리자가 #/guest에 있어도 admin) */
 function resolveViewerRole(explicit) {
@@ -78,7 +79,10 @@ export function openDetailDecision({ kind, id, viewer, onRerender, sourceRoute =
     return;
   }
   const item = itemOverride || resolveDetailItem(kind, id);
-  if (!item) return;
+  if (!item) {
+    showP24Toast('이 카드는 더 이상 볼 수 없습니다');
+    return;
+  }
   rememberProviderItem(kind, item);
   // 29#3 · 7.18: 학생 로그인 — 다른 학생 카드·상세 시장 비교 열람 허용 (실명·연락·쪽지·민감정보 금지)
   openDetailModal({
