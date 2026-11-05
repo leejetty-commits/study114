@@ -39,6 +39,7 @@ import { loadPromoChannelForCard } from './promo-channel-load.js';
 import { renderItemActions } from '../exposure-render.js';
 import { bindProtectedGuestActions } from '../../../shared/guest-gate-ui.js';
 import { toggleRecommendation } from '../search-api.js';
+import { refreshBackToTop } from '../../../shared/back-to-top.js';
 
 const MODAL_ID = 'p24-detail-modal';
 let promoOpenSeq = 0;
@@ -58,6 +59,7 @@ export function closeDetailModal() {
   modal?.remove();
   document.body.style.overflow = '';
   document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
+  refreshBackToTop();
 }
 
 function itemTitle(kind, item) {
@@ -414,6 +416,7 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     document.body.style.overflow = 'hidden';
     bindDetailModalHashNavigation(wrap, { guest: false });
   }
+  refreshBackToTop();
 
   if (kind === 'study_room' && !floating) {
     const mapAccordion = wrap.querySelector('.p24-map-accordion');

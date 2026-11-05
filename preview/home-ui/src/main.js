@@ -126,7 +126,17 @@ import { mountHomePopup } from './home-popup/mount.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
+import { closeDetailModal } from './detail-decision/detail-shell.js';
+import { closeCompareModal } from './compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
+
+/** 해시 이동 시 body에 남은 상세·비교 모달·비교 토스트 제거 */
+function dismissRouteOverlays() {
+  closeDetailModal();
+  closeCompareModal();
+  const toast = document.getElementById('p24-toast');
+  if (toast) toast.classList.remove('is-visible');
+}
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
@@ -416,6 +426,7 @@ function init() {
       // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
+      dismissRouteOverlays();
       try {
         render();
       } catch (e) {

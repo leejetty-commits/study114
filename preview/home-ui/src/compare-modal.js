@@ -11,6 +11,7 @@ import { lookupAllExposureItems } from './exposure-lookup.js';
 import { getCompareItems, isInCompare, toggleCompare } from './user-actions-state.js';
 import { openDeepAccessLoginGate } from '../../shared/guest-gate-ui.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
+import { refreshBackToTop } from '../../shared/back-to-top.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -199,6 +200,7 @@ export function openCompareModal(kind, items = [], rerender) {
 
   document.body.appendChild(root);
   document.body.style.overflow = 'hidden';
+  refreshBackToTop();
 
   root.querySelectorAll('[data-action="compare-close"]').forEach((el) => {
     el.addEventListener('click', closeCompareModal);
@@ -230,6 +232,7 @@ export function closeCompareModal() {
   const root = document.getElementById('compare-modal-root');
   if (root) root.remove();
   document.body.style.overflow = '';
+  refreshBackToTop();
 }
 
 /**

@@ -1,5 +1,6 @@
 /**
  * 맨 위 플로팅 버튼 — 문서가 1뷰포트보다 길 때만 표시
+ * 상세·비교 모달이 열려 있으면 숨김 (닫기·✉ 가림 방지)
  */
 
 const BTN_ID = 'study114-back-to-top';
@@ -9,7 +10,20 @@ function pageOverflows() {
   return doc.scrollHeight > window.innerHeight + 48;
 }
 
+function isModalOpen() {
+  return Boolean(
+    document.getElementById('p24-detail-modal') ||
+      document.getElementById('compare-modal-root') ||
+      document.body.classList.contains('p24-detail-open'),
+  );
+}
+
 function syncVisibility(btn) {
+  if (isModalOpen()) {
+    btn.hidden = true;
+    btn.classList.remove('is-visible');
+    return;
+  }
   const overflows = pageOverflows();
   if (!overflows) {
     btn.hidden = true;
@@ -20,6 +34,12 @@ function syncVisibility(btn) {
   const show = window.scrollY > 96;
   btn.hidden = false;
   btn.classList.toggle('is-visible', show);
+}
+
+/** 모달 open/close 직후 가시성 즉시 동기화 */
+export function refreshBackToTop() {
+  const btn = document.getElementById(BTN_ID);
+  if (btn) syncVisibility(btn);
 }
 
 /**
