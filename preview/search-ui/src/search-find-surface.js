@@ -32,6 +32,20 @@ import { collectFiltersFromForm, searchApi, settleRoomAddressFilters, settleStud
 import { renderListPagination } from '@home-ui/list-pagination.js';
 import { complexNameFromKakao } from '../../shared/complex-name-from-kakao.js';
 import { mapSearchResultsToExposure } from './search-exposure-mapper.js';
+
+/** 공부방 매퍼가 빠뜨리는 찜·비교·쪽지 집계를 검색 원본에서 다시 붙인다. */
+function withPublicCounts(tab, raw, mapped) {
+  if (tab !== 'room' && tab !== 'tutor') return mapped;
+  const byId = new Map((Array.isArray(raw) ? raw : []).map((row) => [Number(row?.id), row]));
+  return mapped.map((item) => {
+    const src = byId.get(Number(item?.id));
+    if (!src) return item;
+    item.wish_count = Number(src.wish_count) || 0;
+    item.compare_count = Number(src.compare_count) || 0;
+    item.message_count = Number(src.message_count) || 0;
+    return item;
+  });
+}
 import { renderBrowseList, renderGuestPaginatedListBlock } from '@home-ui/exposure-render.js';
 import { seedRecommendedFromItems } from '@home-ui/user-actions-ui.js';
 import { SECTION_HEADINGS, renderSectionTitleBar } from '@home-ui/section-headings.js';
@@ -179,7 +193,7 @@ function bootGuestFeed(tab, rerender) {
       return fetchGuestScopedItems(tab, filters);
     })
     .then((raw) => {
-      guestFeeds[tab] = { status: 'ready', items: mapSearchResultsToExposure(tab, raw) };
+      guestFeeds[tab] = { status: 'ready', items: withPublicCounts(tab, raw, mapSearchResultsToExposure(tab, raw)) };
       rerender();
     })
     .catch((err) => {
@@ -499,7 +513,7 @@ export function bootStudentFindFeed(tab, state, rerender) {
   studentFeeds.set(key, { status: 'loading', items: [] });
   fetchGuestScopedItems(tab, filters)
     .then((raw) => {
-      studentFeeds.set(key, { status: 'ready', items: mapSearchResultsToExposure(tab, raw) });
+      studentFeeds.set(key, { status: 'ready', items: withPublicCounts(tab, raw, mapSearchResultsToExposure(tab, raw)) });
     })
     .catch((err) => {
       console.warn('[student-find-feed]', tab, err);
@@ -3107,7 +3121,7 @@ export async function runFindSearchWithFilters(tab, filters, state, role, rerend
     if (stale()) return;
     if (state.searchRows) state.searchRows = result.rows || [];
     if (state.searchItems) state.searchItems = result.items || [];
-    state.searchExposureItems = mapSearchResultsToExposure(tab, result.items || []);
+    state.searchExposureItems = withPublicCounts(tab, result.items || [], mapSearchResultsToExposure(tab, result.items || []));
     state.searchTotal = Number(result.total) || 0;
     if (tab === 'room' || tab === 'tutor') {
       seedRecommendedFromItems(tab === 'room' ? 'study_room' : 'tutor', state.searchExposureItems);

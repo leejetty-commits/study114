@@ -171,15 +171,17 @@ function warnHandoff(err) {
 
 /** @param {'study_room'|'tutor'} kind @param {number} id @returns {boolean} */
 export function optimisticToggleWishlist(kind, id) {
+  const numId = Number(id);
   const list = userActionsCache.wishlist[kind];
-  const idx = list.indexOf(id);
+  const idx = list.indexOf(numId);
   const wasInList = idx >= 0;
   if (wasInList) {
     list.splice(idx, 1);
+    favoriteCards[kind].delete(numId);
   } else {
-    list.push(id);
+    list.push(numId);
   }
-  queueToggleFavorite(kind, id, wasInList);
+  queueToggleFavorite(kind, numId, wasInList);
   return !wasInList;
 }
 
@@ -306,7 +308,16 @@ export function queueClearCompare(kind) {
 
 /** @param {'study_room'|'tutor'} kind @param {number} id */
 export function queueRemoveFavorite(kind, id) {
-  removeFavorite(kind, id).catch(warnHandoff);
+  const numId = Number(id);
+  const items = lookupAllExposureItems(kind, numId);
+  removeFavorite(kind, numId)
+    .then((data) => {
+      favoriteCards[kind].delete(numId);
+      if (data?.wish_count !== undefined) {
+        for (const it of items) it.wish_count = data.wish_count;
+      }
+    })
+    .catch(warnHandoff);
 }
 
 /**

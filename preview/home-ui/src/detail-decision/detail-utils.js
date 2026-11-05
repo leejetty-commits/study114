@@ -1,6 +1,7 @@
 import { formatMonthlyWon, formatTutorFeeCard, formatTutorLessonPlaces } from '../exposure-format.js';
-import { operatorInquirySummary, resolveStudyRoomCardCta, isInquiryReceiving } from '../study-room-reg/inquiry-display.js';
-import { getCompareIds, isInCompare, getCompareItems } from '../user-actions-state.js';
+import { operatorInquirySummary, resolveStudyRoomCardCta, isInquiryReceiving, inquiryClosedReasonLabel } from '../study-room-reg/inquiry-display.js';
+import { getCompareIds, isInCompare, getCompareItems, isOwnProviderCard } from '../user-actions-state.js';
+import { checkFirstMemoPermission } from '../messages/permissions.js';
 import { COMPARE_MAX } from '../exposure-schema.js';
 import { compareRibbonText, compareOpenCta } from '../handoff-copy.js';
 import { TRUST_PLATFORM_DISCLAIMER } from '../lifecycle-copy.js';
@@ -87,11 +88,50 @@ export function buildTrustStrip(kind, item) {
   return renderCardVisualPolicyBlock(kind, item, esc);
 }
 
+/**
+ * 쪽지 가능은 실제로 보낼 수 있을 때만. 불가면 사유 한 줄.
+ * @param {'study_room'|'tutor'|'student'} kind
+ * @param {object} item
+ * @param {string} viewer
+ * @returns {{ ok: boolean, line: string }}
+ */
+export function messageAvailability(kind, item, viewer) {
+  if (viewer === 'guest') return { ok: false, line: '로그인 후 쪽지' };
+  if ((kind === 'study_room' || kind === 'tutor') && isOwnProviderCard(kind, item?.id)) {
+    return { ok: false, line: '내 카드에는 쪽지를 보낼 수 없습니다.' };
+  }
+  if (kind === 'student') {
+    const memo = studentMemoContactLabel(item);
+    if (!memo.ok) return { ok: false, line: memo.label };
+    const perm = checkFirstMemoPermission({ kind: 'student', role: viewer });
+    if (!perm.ok && perm.reason === 'paid_gate') return { ok: false, line: '쪽지권이 필요합니다.' };
+    if (!perm.ok) return { ok: false, line: '이 계정으로는 쪽지를 보낼 수 없습니다.' };
+    return { ok: true, line: '쪽지 가능' };
+  }
+  if (kind === 'study_room') {
+    if (viewer !== 'parent') return { ok: false, line: '학생 계정에서만 쪽지를 보낼 수 있습니다.' };
+    if (!isInquiryReceiving(item?.inquiry_status)) {
+      const reason = inquiryClosedReasonLabel(item?.inquiry_status) || '잠시 쉼';
+      return { ok: false, line: `쪽지 불가 · ${reason}` };
+    }
+    return { ok: true, line: '쪽지 가능' };
+  }
+  if (kind === 'tutor') {
+    if (viewer !== 'parent') return { ok: false, line: '학생 계정에서만 쪽지를 보낼 수 있습니다.' };
+    if (item?.inquiry_status && !isInquiryReceiving(item.inquiry_status)) {
+      const reason = inquiryClosedReasonLabel(item.inquiry_status) || '잠시 쉼';
+      return { ok: false, line: `쪽지 불가 · ${reason}` };
+    }
+    return { ok: true, line: '쪽지 가능' };
+  }
+  return { ok: false, line: '쪽지를 보낼 수 없습니다.' };
+}
+
 /** @param {'study_room'|'tutor'|'student'} kind @param {object} item @param {string} viewer */
 export function buildJudgmentTokens(kind, item, viewer) {
   if (kind === 'study_room') {
     const price = formatMonthlyWon(item.price_amount);
-    const inquiry = studyRoomParentInquiryLine(item.inquiry_status);
+    const inquiry = messageAvailability(kind, item, viewer).line;
     const loc =
       viewer === 'guest' ? coarseRegionForGuest(item.location_label, 'study_room') : item.location_label;
     return [loc, item.grade_band, item.main_subject_note, inquiry, price].filter(Boolean);
@@ -101,7 +141,7 @@ export function buildJudgmentTokens(kind, item, viewer) {
     const places = formatTutorLessonPlaces(item.lesson_places);
     const loc =
       viewer === 'guest' ? coarseRegionForGuest(item.location_label, 'tutor') : item.location_label;
-    const contactToken = viewer === 'guest' ? '로그인 후 쪽지' : '쪽지 가능';
+    const contactToken = messageAvailability(kind, item, viewer).line;
     return [loc, item.main_subject_note, places, contactToken, fee].filter(Boolean);
   }
   const budget =
@@ -113,7 +153,7 @@ export function buildJudgmentTokens(kind, item, viewer) {
     : null;
   const memo =
     viewer === 'tutor' || viewer === 'study_room'
-      ? studentMemoContactLabel(item).label
+      ? messageAvailability('student', item, viewer).line
       : null;
   return [item.grade_level, item.subject_label, item.location_label, '대면', memo || budgetStr].filter(Boolean);
 }
@@ -268,28 +308,29 @@ export function buildContactPanel(kind, item, viewer) {
     return `<div class="p24-contact">${renderPermissionStateCard('guest', { loginHref })}</div>`;
   }
   if (kind === 'student' && (viewer === 'tutor' || viewer === 'study_room')) {
-    const memo = studentMemoContactLabel(item);
+    const memo = messageAvailability(kind, item, viewer);
     if (item.exposure_status !== 'published') {
       return `<div class="p24-contact">${renderPermissionStateCard('student_protection')}</div>`;
     }
     if (!memo.ok) {
-      return `<ul class="p24-contact"><li class="p24-contact__item is-locked">🔒 ${esc(memo.label)}</li></ul>`;
+      return `<ul class="p24-contact"><li class="p24-contact__item is-locked">🔒 ${esc(memo.line)}</li></ul>`;
     }
-    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">✓ ${esc(memo.label)}</li></ul>`;
+    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">✓ ${esc(memo.line)}</li></ul>`;
   }
   if (kind === 'student' && viewer === 'parent') {
     return `<ul class="p24-contact"><li class="p24-contact__item is-locked">비교 열람만 · 쪽지·연락처 비공개</li></ul>`;
   }
   if (kind === 'study_room') {
-    const cta = resolveStudyRoomCardCta(item.inquiry_status);
-    const ok = isInquiryReceiving(item.inquiry_status);
-    const label = ok
-      ? `✓ ${cta.label}`
-      : `🔒 ${cta.label}${cta.reasonLine ? ` · ${cta.reasonLine}` : ''}`;
-    return `<ul class="p24-contact"><li class="p24-contact__item${ok ? ' is-ok' : ' is-locked'}">${label}</li></ul>`;
+    const memo = messageAvailability(kind, item, viewer);
+    const cls = memo.ok ? ' is-ok' : ' is-locked';
+    const mark = memo.ok ? '✓' : '🔒';
+    return `<ul class="p24-contact"><li class="p24-contact__item${cls}">${mark} ${esc(memo.line)}</li></ul>`;
   }
   if (kind === 'tutor') {
-    return `<ul class="p24-contact"><li class="p24-contact__item is-ok">✓ 쪽지 시작 가능</li></ul>`;
+    const memo = messageAvailability(kind, item, viewer);
+    const cls = memo.ok ? ' is-ok' : ' is-locked';
+    const mark = memo.ok ? '✓' : '🔒';
+    return `<ul class="p24-contact"><li class="p24-contact__item${cls}">${mark} ${esc(memo.line)}</li></ul>`;
   }
   return '';
 }
