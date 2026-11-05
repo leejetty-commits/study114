@@ -82,7 +82,7 @@ import { renderPromo, bindPromoEvents } from './promo/index.js';
 import { renderSupport, bindSupportEvents } from './support/index.js';
 import { renderPolicy, bindPolicyEvents } from './policy-index.js';
 import { renderLibrary, bindLibraryEvents } from './library/index.js';
-import { renderAdmin, bindAdminEvents } from './admin/index.js';
+import { renderAdmin, bindAdminEvents, renderAdminDenied } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
 import {
   renderRegisterIntro,
@@ -181,6 +181,13 @@ function renderScreen() {
   if (applyPlansRedirects()) return;
   const app = document.getElementById('app');
   if (isAdminRoute()) {
+    if (!isAdminUser()) {
+      app.innerHTML = renderAdminDenied();
+      bindAdminEvents(app, render);
+      mountOpsChrome(app);
+      mountHomePopup(app);
+      return;
+    }
     app.innerHTML = renderAdmin();
     bindAdminEvents(app, render);
     mountOpsChrome(app);
@@ -305,8 +312,16 @@ function showBootError(err) {
   console.error(err);
 }
 
+function leaveLegacyAdminEntry() {
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  if (path !== '/adm' && path !== '/bbs/admin.php') return false;
+  window.location.replace('/#/guest');
+  return true;
+}
+
 function init() {
   try {
+    if (leaveLegacyAdminEntry()) return;
     importNeighborhoodGreetingHandoff();
     if (!SHOW_PREVIEW_TOOLBAR) {
       document.documentElement.style.setProperty('--preview-toolbar-h', '0px');

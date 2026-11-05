@@ -1,4 +1,4 @@
-import { getAuthUser, isAdminUser, isLoggedIn } from '../auth-session.js';
+import { getAuthUser, isAdminUser, isLoggedIn, ROLE_HOME } from '../auth-session.js';
 import {
   canAccessAdminMenu,
   getCurrentAdminLevel,
@@ -25,6 +25,25 @@ export function mustChangeAdminPassword() {
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+}
+
+function roleHomePath() {
+  const role = getAuthUser()?.role_type;
+  if (role && role !== 'admin' && ROLE_HOME[role]) return ROLE_HOME[role];
+  return '/guest';
+}
+
+/** 비관리자·비로그인. 관리자 사이드바·브레드크럼을 넣지 않는다. */
+export function renderNonAdminDenied() {
+  const loggedIn = isLoggedIn();
+  const home = roleHomePath();
+  return `
+    <section class="admin-state admin-state--denied">
+      <h2>운영자 전용</h2>
+      <p>이 화면을 보려면 운영자 권한이 필요합니다.</p>
+      <p class="admin-state__hint">${loggedIn ? '현재 계정에는 운영자 권한이 없습니다.' : '로그인 후 운영자 역할이 있어야 합니다.'}</p>
+      <a href="#${home}" class="btn btn--secondary btn--sm" data-nav="${home}">역할 홈으로</a>
+    </section>`;
 }
 
 /** @param {string} path */
