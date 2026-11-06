@@ -1502,62 +1502,18 @@ body.is-drawer-open {
   border-top: 1px solid var(--gray-200);
 }
 
-/* ── 모바일 히어로 맵 아코디언 (≤719px) ── */
-.hero-map__toggle {
-  display: none;
-}
-
+/* ── 모바일 히어로 맵: 회색 여백 제거 (≤719px) ── */
 @media (max-width: 719px) {
-  .hero-map__banner { order: -1; }
-  .hero-map__toggle { order: 1; }
-  .hero-map__canvas { order: 2; }
-
-  /* 배너: 항상 보임, 위쪽 배치 */
-  .hero-map__banner {
-    border-bottom: 1px solid var(--gray-100);
-  }
-
-  /* 토글 버튼 */
-  .hero-map__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-2);
-    width: 100%;
-    padding: var(--space-3) var(--space-4);
-    border: none;
-    border-top: 1px solid var(--gray-100);
-    background: var(--gray-50);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    color: var(--brand-blue);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .hero-map__toggle-arrow {
-    transition: transform 0.2s ease;
-  }
-
-  .hero-map__toggle[aria-expanded="true"] .hero-map__toggle-arrow {
-    transform: rotate(180deg);
-  }
-
-  /* 지도: 접힌 상태 = 완전히 숨김 */
   .hero-map__canvas {
-    display: none;
+    min-height: 0;
   }
 
-  /* 지도: 펼친 상태 */
-  .hero-map.is-map-expanded .hero-map__canvas {
-    display: flex;
+  .hero-map__surface {
     min-height: 0;
-    aspect-ratio: 4 / 3;
   }
 
-  .hero-map.is-map-expanded .hero-map__surface {
+  .naver-map-mount-host {
     min-height: 0;
-    aspect-ratio: 4 / 3;
   }
 }
 
