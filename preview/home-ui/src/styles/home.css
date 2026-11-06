@@ -1502,31 +1502,22 @@ body.is-drawer-open {
   border-top: 1px solid var(--gray-200);
 }
 
-@media (max-width: 640px) {
-  .naver-map-mount-host,
-  .naver-map-mount {
-    min-height: 9rem;
-  }
-
-  .hero-map__canvas,
-  .hero-map__surface {
-    min-height: 9rem;
-  }
-}
-
-/* ── Hero map toggle button (모바일 아코디언) ── */
+/* ── 모바일 히어로 맵 아코디언 (≤719px) ── */
 .hero-map__toggle {
   display: none;
 }
 
 @media (max-width: 719px) {
-  /* 배너를 위로, 지도를 아래로 재배치 */
+  .hero-map__banner { order: -1; }
+  .hero-map__toggle { order: 1; }
+  .hero-map__canvas { order: 2; }
+
+  /* 배너: 항상 보임, 위쪽 배치 */
   .hero-map__banner {
-    order: -1;
     border-bottom: 1px solid var(--gray-100);
   }
 
-  /* 토글 버튼 표시 */
+  /* 토글 버튼 */
   .hero-map__toggle {
     display: flex;
     align-items: center;
@@ -1542,7 +1533,6 @@ body.is-drawer-open {
     color: var(--brand-blue);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    order: 1;
   }
 
   .hero-map__toggle-arrow {
@@ -1553,35 +1543,20 @@ body.is-drawer-open {
     transform: rotate(180deg);
   }
 
-  /* 지도 접기: 기본 숨김 — 모든 내부 요소 높이 완전 제거 */
+  /* 지도: 접힌 상태 = 완전히 숨김 */
   .hero-map__canvas {
-    order: 2;
-    overflow: hidden;
-    max-height: 0;
-    min-height: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    transition: max-height 0.3s ease;
+    display: none;
   }
 
-  .hero-map__canvas .hero-map__surface,
-  .hero-map__canvas .naver-map-mount-host,
-  .hero-map__canvas .naver-map-mount {
-    min-height: 0 !important;
-    height: 0 !important;
-  }
-
-  /* 지도 펼침 */
+  /* 지도: 펼친 상태 */
   .hero-map.is-map-expanded .hero-map__canvas {
-    max-height: 75vh;
-    min-height: 0 !important;
+    display: flex;
+    min-height: 0;
+    aspect-ratio: 4 / 3;
   }
 
-  .hero-map.is-map-expanded .hero-map__canvas .hero-map__surface,
-  .hero-map.is-map-expanded .hero-map__canvas .naver-map-mount-host,
-  .hero-map.is-map-expanded .hero-map__canvas .naver-map-mount {
-    min-height: 0 !important;
-    height: 100% !important;
+  .hero-map.is-map-expanded .hero-map__surface {
+    min-height: 0;
     aspect-ratio: 4 / 3;
   }
 }
