@@ -552,6 +552,14 @@ button.live-rail-card {
   }
 }
 
+/* C-11: 모바일 480px 이하 우측 레일 숨김 — 카드 목록 아래 밀림 방지 */
+@media (max-width: 480px) {
+  .home-sidebar.home-sidebar--live-rail,
+  .home-sidebar.right-rail {
+    display: none;
+  }
+}
+
 body.is-rail-media-open {
   overflow: hidden;
 }

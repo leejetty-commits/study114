@@ -2652,7 +2652,7 @@ export function renderCompactFindForm(tab, state, options = {}) {
   const formHtml = hideSearchForm
     ? ''
     : `
-    <form class="search-form search-form--compact search-form--detail3" ${formAttr}>
+    <form class="search-form search-form--compact search-form--detail3" data-filter-expanded="${state.expanded}" ${formAttr}>
       <aside class="search-form__title-col" aria-label="상세검색">
         <span class="search-form__title-ico" aria-hidden="true">⌕</span>
         <strong class="search-form__title">상세검색</strong>

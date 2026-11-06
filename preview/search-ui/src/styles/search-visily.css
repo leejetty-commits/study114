@@ -270,6 +270,11 @@
   .search-form--detail3 .search-grid--detail {
     grid-template-columns: 1fr;
   }
+
+  /* C-11: 모바일 필터 기본 접힘 — 펼치기 전까지 기본 필드 숨김 */
+  .search-form--detail3[data-filter-expanded="false"] .search-section--compact {
+    display: none;
+  }
 }
 
 /* ── 베이직·찾기결과: 컴팩트 가로카드(좌 썸네일+우 정보) × 2단 그리드 ── */

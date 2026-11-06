@@ -932,6 +932,17 @@ a.sup-term-chip:hover {
   .home-body {
     padding: var(--space-4) var(--space-3) var(--space-8);
   }
+
+  /* C-11: 모바일 헤더 높이 축소 — 유틸 바 숨김 */
+  .home-header__util {
+    display: none;
+  }
+
+  /* C-11: 모바일 GNB 항목 잘림 방지 — 패딩·글씨 축소 */
+  .home-gnb-mobile .home-gnb__item {
+    padding: 0.25rem 0.35rem;
+    font-size: 0.6875rem;
+  }
 }
 
 /* ?? ??? ?? (?? ?? ?? ? ?? ?? ?? = ??) ?? */
