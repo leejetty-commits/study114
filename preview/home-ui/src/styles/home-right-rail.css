@@ -511,6 +511,19 @@ button.live-rail-card {
   box-shadow: none;
 }
 
+/* Part C — 우측 레일 아코디언 (≤1023px) ============================= */
+
+/* 데스크톱(기본, ≥1024px): summary 숨기고 panel 항상 표시 — 사이드바 그대로 */
+.plans-rail-fold > .plans-rail-fold__summary {
+  display: none;
+}
+
+.plans-rail-fold > .plans-rail-fold__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 @media (max-width: 1023px) {
   .home-sidebar.home-sidebar--live-rail,
   .home-sidebar.right-rail {
@@ -550,13 +563,66 @@ button.live-rail-card {
   .right-rail--mobile-hide {
     display: none !important;
   }
-}
 
-/* C-11: 모바일 480px 이하 우측 레일 숨김 — 카드 목록 아래 밀림 방지 */
-@media (max-width: 480px) {
-  .home-sidebar.home-sidebar--live-rail,
-  .home-sidebar.right-rail {
+  /* collapse 슬롯: 소형 화면에서도 숨기지 않고 아코디언으로 표시 */
+  .home-sidebar.right-rail--mobile-collapse {
+    display: flex;
+  }
+
+  /* plans-rail-fold: 아코디언 외곽 */
+  .plans-rail-fold {
+    border-radius: var(--radius-surface);
+    border: 1px solid var(--uds-line);
+    background: var(--uds-surface);
+    overflow: hidden;
+  }
+
+  /* summary: 아코디언 헤더 */
+  .plans-rail-fold > .plans-rail-fold__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    font-family: inherit;
+    font-size: var(--fs-14);
+    font-weight: var(--fw-semibold);
+    color: var(--uds-ink);
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* 기본 화살표 제거 */
+  .plans-rail-fold > .plans-rail-fold__summary::-webkit-details-marker {
     display: none;
+  }
+
+  /* 커스텀 화살표 */
+  .plans-rail-fold > .plans-rail-fold__summary::after {
+    content: '▾';
+    flex: 0 0 auto;
+    font-size: var(--fs-14);
+    color: var(--uds-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .plans-rail-fold[open] > .plans-rail-fold__summary::after {
+    transform: rotate(180deg);
+  }
+
+  /* panel: 닫힘 기본 */
+  .plans-rail-fold > .plans-rail-fold__panel {
+    display: none;
+  }
+
+  /* panel: 열림 */
+  .plans-rail-fold[open] > .plans-rail-fold__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-4);
+    border-top: 1px solid var(--uds-line);
   }
 }
 
