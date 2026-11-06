@@ -901,6 +901,158 @@ a.sup-term-chip:hover {
   flex-shrink: 0;
 }
 
+/* ── Hamburger button (모바일 only) ── */
+.home-hamburger {
+  display: none;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-hamburger__bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--gray-700);
+  border-radius: 1px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+@media (max-width: 899px) {
+  .home-hamburger {
+    display: flex;
+  }
+
+  /* 수평 스크롤 GNB 숨기고 햄버거로 교체 */
+  .home-gnb-mobile {
+    display: none;
+  }
+
+  /* 유틸바도 숨기고 드로어 안으로 */
+  .home-header__util {
+    display: none;
+  }
+}
+
+/* ── Drawer ── */
+.home-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+}
+
+.home-drawer[hidden] {
+  display: none !important;
+}
+
+.home-drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.home-drawer__panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(18rem, 85vw);
+  background: #fff;
+  box-shadow: -4px 0 24px rgba(15, 23, 42, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.home-drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.home-drawer__title {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.home-drawer__close {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+  border-radius: 0.5rem;
+  background: #fff;
+  cursor: pointer;
+}
+
+.home-drawer__gnb {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+}
+
+.home-drawer__gnb .home-gnb__item {
+  display: flex;
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+  border-radius: 0;
+  white-space: normal;
+}
+
+.home-drawer__gnb .home-gnb__item:hover {
+  background: var(--gray-50);
+}
+
+.home-drawer__gnb .home-gnb__item.is-active {
+  color: var(--brand-blue);
+  background: var(--brand-blue-light);
+}
+
+.home-drawer__util {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--gray-100);
+  gap: var(--space-1);
+}
+
+.home-drawer__util .home-util__link {
+  display: flex;
+  padding: var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+
+.home-drawer__util .home-util__account {
+  display: flex;
+  margin-bottom: var(--space-2);
+  max-width: none;
+  border-radius: 0.5rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+body.is-drawer-open {
+  overflow: hidden;
+}
+
 .temp-notice {
   display: flex;
   align-items: flex-start;
@@ -931,17 +1083,6 @@ a.sup-term-chip:hover {
 
   .home-body {
     padding: var(--space-4) var(--space-3) var(--space-8);
-  }
-
-  /* C-11: 모바일 헤더 높이 축소 — 유틸 바 숨김 */
-  .home-header__util {
-    display: none;
-  }
-
-  /* C-11: 모바일 GNB 항목 잘림 방지 — 패딩·글씨 축소 */
-  .home-gnb-mobile .home-gnb__item {
-    padding: 0.25rem 0.35rem;
-    font-size: 0.6875rem;
   }
 }
 
