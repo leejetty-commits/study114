@@ -58,7 +58,7 @@ export const PAYMENT_METHOD_LABELS = {
   card: '카드',
   transfer: '계좌이체',
   vbank: '무통장 입금',
-  dev_mock: '카드(시험 결제)',
+  dev_mock: '카드',
 };
 
 export const PROVIDER_TYPE_LABELS = {
@@ -146,8 +146,8 @@ export const HISTORY_EMPTY_COPY = {
   exampleAria: '결제 예시 (실제 내역 아님)',
   count: {
     productName: '쪽지권 10회',
-    amount: '00,000원',
-    date: '2026.00.00',
+    amount: '—',
+    date: '—',
     body: '쪽지권을 구매하면 위 예시처럼 이곳에 표시되고, 환불도 여기서 신청할 수 있어요.',
     cta: '쪽지권 보러 가기',
     href: '#/plans/access',
@@ -155,8 +155,8 @@ export const HISTORY_EMPTY_COPY = {
   },
   position: {
     productName: '상단 노출 30일',
-    amount: '00,000원',
-    date: '2026.00.00',
+    amount: '—',
+    date: '—',
     body: '노출상품을 구매하면 위 예시처럼 이곳에 표시돼요.',
     cta: '노출상품 보러 가기',
     href: '#/plans/positions',

@@ -91,7 +91,7 @@ function renderComparePolicyAxis(kind, cols) {
           </tr>
         </tbody>
       </table>
-      <p class="compare-policy__note">모바일·좁은 폭: 신뢰는 최대 2개 · 액션 레일은 비교표에 복제하지 않음</p>
+      <p class="compare-policy__note">좁은 화면에서는 신뢰 배지가 최대 2개만 표시됩니다</p>
     </div>`;
 }
 
@@ -140,7 +140,7 @@ function renderCompareTable(items, rows, kind) {
         </tbody>
       </table>
     </div>
-    <p class="compare-modal__note">6장 · 사용자가 ⇄로 선택한 ${cols.length}건 · 상단=카드 정책축 · 하단=상세 비교표</p>
+    <p class="compare-modal__note">선택한 ${cols.length}건 · 상단 요약 · 하단 상세 비교</p>
   `;
 }
 
@@ -173,8 +173,8 @@ export function openCompareModal(kind, items = [], rerender) {
   const title = kind === 'study_room' ? '공부방 비교검색' : '과외쌤 비교검색';
   const sub =
     kind === 'tutor'
-      ? '상단 정책축(유료·신뢰·통계) + 경량 비교표 · 최대 3개'
-      : '상단 정책축(유료·신뢰·통계) + 비교표 · 최대 3개';
+      ? '유료·신뢰·통계 요약 + 비교표 · 최대 3개'
+      : '유료·신뢰·통계 요약 + 비교표 · 최대 3개';
 
   const root = document.createElement('div');
   root.id = 'compare-modal-root';
