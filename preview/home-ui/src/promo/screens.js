@@ -1,7 +1,7 @@
 import { STUDY_ROOM_PROMO } from './study-room-content.js';
 import { TUTOR_PROMO } from './tutor-content.js';
 import { PARENT_PROMO } from './parent-content.js';
-import { searchUiUrl, STUDY_ROOM_REGISTER_URL, TUTOR_REGISTER_URL } from '../../../shared/preview-links.js';
+import { searchUiUrl } from '../../../shared/preview-links.js';
 import { signupUrl } from '../../../shared/route-access.js';
 import { getNavRole } from '../state.js';
 
@@ -36,7 +36,7 @@ function ctaAnchor(label, href, className) {
 
 /** 293-4: 공부방 홍보 랜딩 v2 본문 렌더 */
 function renderStudyRoomV2(c) {
-  const reg = STUDY_ROOM_REGISTER_URL;
+  const reg = signupUrl();
   const fp = c.community.footParts;
 
   const wwbItems = (items, divStyle) =>
@@ -146,7 +146,7 @@ function renderStudyRoomPromo() {
 
 /** 293-5: 과외쌤 홍보 랜딩 v2 본문 렌더 */
 function renderTutorV2(c) {
-  const reg = TUTOR_REGISTER_URL;
+  const reg = signupUrl();
   const pv = c.hero.preview;
 
   const wwbItems = (items) =>
