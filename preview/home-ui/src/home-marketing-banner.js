@@ -39,7 +39,7 @@ export const HOME_BANNER_COPY = {
   compare: {
     id: 'compare',
     eyebrow: '우동공과 · 우리동네 공부방 과외쌤',
-    headline: '우리동네 공부방·과외, 한눈에 비교하고 찾으세요',
+    headline: '우리동네 공부방, 한눈에 비교하고 찾으세요',
     lines: [
       '지역별로 모아 보고, 수업방식·대상·강점까지 비교해',
       '우리 아이에게 맞는 공부방과 과외쌤을 더 쉽게 찾을 수 있어요',

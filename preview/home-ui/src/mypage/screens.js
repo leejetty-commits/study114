@@ -457,17 +457,26 @@ function bindWishlistCardEvents(root, rerender) {
 }
 
 function renderWishlist() {
+  const role = getNavRole();
+  const showRoom = role !== 'tutor';
+  const showTutor = role !== 'study_room';
+  const roomSection = showRoom
+    ? `<section class="mp-card">
+        <h2 class="mp-card__title">공부방</h2>
+        ${renderWishlistSection('study_room', '공부방')}
+      </section>`
+    : '';
+  const tutorSection = showTutor
+    ? `<section class="mp-card">
+        <h2 class="mp-card__title">과외쌤</h2>
+        ${renderWishlistSection('tutor', '과외쌤')}
+      </section>`
+    : '';
   return `
     <p class="mypage-note">${WISHLIST_NOTE}</p>
     <div class="mp-card-stack">
-      <section class="mp-card">
-        <h2 class="mp-card__title">공부방</h2>
-        ${renderWishlistSection('study_room', '공부방')}
-      </section>
-      <section class="mp-card">
-        <h2 class="mp-card__title">과외쌤</h2>
-        ${renderWishlistSection('tutor', '과외쌤')}
-      </section>
+      ${roomSection}
+      ${tutorSection}
     </div>`;
 }
 

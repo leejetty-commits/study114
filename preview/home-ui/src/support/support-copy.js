@@ -391,8 +391,13 @@ export const TICKET_CATEGORIES = [
   { value: 'policy', label: '정책·이용 문의' },
   { value: 'account', label: '계정·로그인' },
   { value: 'other', label: '기타' },
-  { value: 'unhide_request', label: '숨김 해제 요청' },
+  { value: 'unhide_request', label: '숨김 해제 요청', roles: ['study_room', 'tutor', 'admin'] },
 ];
+
+/** 역할에 맞는 문의 유형만 반환 */
+export function getTicketCategoriesForRole(role) {
+  return TICKET_CATEGORIES.filter((c) => !c.roles || c.roles.includes(role));
+}
 
 export const TICKET_ADMIN_GROUPS = [
   { value: 'open', label: '처리 전' },

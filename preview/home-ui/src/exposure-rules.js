@@ -157,7 +157,14 @@ export function pickZeroNote(kind) {
   return kind === 'tutor' ? '아직 추천 과외쌤이 없어요' : '아직 추천 공부방이 없어요';
 }
 
-export function getPrimeEmptyCopy(kind) {
+export function getPrimeEmptyCopy(kind, opts = {}) {
+  if (opts.viewerRole === 'parent') {
+    return {
+      title: kind === 'tutor' ? '아직 추천 과외쌤이 없어요' : '아직 추천 공부방이 없어요',
+      body: '해당 지역에 등록된 추천 정보가 아직 없습니다',
+      cta: '',
+    };
+  }
   const s = getPlanRuntimeSettings();
   if (kind === 'tutor') {
     return {

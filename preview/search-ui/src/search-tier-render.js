@@ -45,7 +45,7 @@ function renderStudentHomeVacantTiers(kind, place, opts, surfaceAttr = 'data-stu
       : { prime: SECTION_HEADINGS.primeTutor, pick: SECTION_HEADINGS.pickTutor, basic: SECTION_HEADINGS.basicTutor, color: 'content-section--blue' };
   const boxOpts = { ...opts, guest: false };
   const primeWithMedia = opts.viewerRole === 'tutor' || opts.viewerRole === 'study_room';
-  const prime = renderEmptyPrimePromoRow(kind, undefined, { withMedia: primeWithMedia });
+  const prime = renderEmptyPrimePromoRow(kind, undefined, { withMedia: primeWithMedia, viewerRole: opts.viewerRole });
   const pick = renderPickVacantMarkup(kind, opts);
   const pickBlock = homePickZeroPromoCount(opts) === 0 ? pick : `<div class="expo-grid--5">${pick}</div>`;
   return `
