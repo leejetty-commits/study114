@@ -1514,6 +1514,65 @@ body.is-drawer-open {
   }
 }
 
+/* ── Hero map toggle button (모바일 아코디언) ── */
+.hero-map__toggle {
+  display: none;
+}
+
+@media (max-width: 719px) {
+  /* 배너를 위로, 지도를 아래로 재배치 */
+  .hero-map__banner {
+    order: -1;
+    border-bottom: 1px solid var(--gray-100);
+  }
+
+  /* 토글 버튼 표시 */
+  .hero-map__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    border-top: 1px solid var(--gray-100);
+    background: var(--gray-50);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--brand-blue);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    order: 1;
+  }
+
+  .hero-map__toggle-arrow {
+    transition: transform 0.2s ease;
+  }
+
+  .hero-map__toggle[aria-expanded="true"] .hero-map__toggle-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* 지도 접기: 기본 숨김 */
+  .hero-map__canvas {
+    order: 2;
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.3s ease;
+  }
+
+  /* 지도 펼침 */
+  .hero-map.is-map-expanded .hero-map__canvas {
+    max-height: 75vh;
+  }
+
+  .hero-map.is-map-expanded .hero-map__canvas,
+  .hero-map.is-map-expanded .hero-map__surface {
+    min-height: 0;
+    aspect-ratio: 4 / 3;
+  }
+}
+
 /* ?? Content section (no outer panel) ?? */
 .content-section {
   margin-bottom: var(--space-5);

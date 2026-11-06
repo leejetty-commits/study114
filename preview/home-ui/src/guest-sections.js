@@ -77,7 +77,7 @@ export function renderGuestHero() {
   const cta = `${room} 공부방·과외쌤 찾기`;
   return `
     <section class="hero-map hero-map--float-rail" aria-label="우리동네 지도" data-study-room-map data-map-variant="hero" data-region-label="${room}" data-map-lat="${GUEST_MAP_CENTER.lat}" data-map-lng="${GUEST_MAP_CENTER.lng}" data-fit-bounds="false">
-      <div class="hero-map__canvas">
+      <div class="hero-map__canvas" data-hero-map-canvas>
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${dong} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>
         </div>
@@ -94,6 +94,10 @@ export function renderGuestHero() {
           <div><dt>학생</dt><dd data-guest-axis-count="studentRequests">—</dd></div>
         </dl>
       </aside>
+      <button type="button" class="hero-map__toggle" data-action="hero-map-toggle" aria-expanded="false" aria-controls="hero-map-canvas">
+        <span class="hero-map__toggle-text">지도 보기</span>
+        <span class="hero-map__toggle-arrow">▾</span>
+      </button>
     </section>
   `;
 }
