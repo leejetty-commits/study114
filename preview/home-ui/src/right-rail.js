@@ -643,16 +643,19 @@ function actionCtasForContext(slotKey, ctx) {
   ];
 }
 
-function actionGuideCopy(slotKey) {
+function actionGuideCopy(slotKey, ctx) {
   if (slotKey === 'detail_right_rail') return { eyebrow: '사용 팁', title: '지금 필요한 안내' };
   if (slotKey === 'search_right_rail') return { eyebrow: '초보 가이드', title: '처음 찾는 분께' };
   if (slotKey === 'plans_right_rail') return { eyebrow: '상품 안내', title: '지금 필요한 안내' };
   if (slotKey === 'register_right_rail') return { eyebrow: '작성 도움', title: '지금 필요한 안내' };
+  if (ctx?.navRole === 'study_room') return { eyebrow: '운영 안내', title: '공부방 운영 도움' };
+  if (ctx?.navRole === 'tutor') return { eyebrow: '활동 안내', title: '과외쌤 활동 도움' };
+  if (ctx?.navRole === 'parent') return { eyebrow: '탐색 안내', title: '찜·비교·쪽지 활용법' };
   return { eyebrow: '지금 필요한 안내', title: '이번 시즌 추천 행동' };
 }
 
 function renderActionGuideSlot(slotKey, ctx) {
-  const copy = actionGuideCopy(slotKey);
+  const copy = actionGuideCopy(slotKey, ctx);
   const ctas = actionCtasForContext(slotKey, ctx);
   const featured = ctas[0];
   const rest = ctx.featuredOnly ? [] : ctas.slice(1, 2);

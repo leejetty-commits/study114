@@ -161,7 +161,9 @@ export function getPrimeEmptyCopy(kind, opts = {}) {
   if (opts.viewerRole === 'parent') {
     return {
       title: kind === 'tutor' ? '아직 추천 과외쌤이 없어요' : '아직 추천 공부방이 없어요',
-      body: '해당 지역에 등록된 추천 정보가 아직 없습니다',
+      body: kind === 'tutor'
+        ? '이 지역 과외쌤 전체 목록은 아래에서 확인할 수 있어요'
+        : '이 지역 공부방 전체 목록은 아래에서 확인할 수 있어요',
       cta: '',
     };
   }

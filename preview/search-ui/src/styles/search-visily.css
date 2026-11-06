@@ -414,6 +414,21 @@
   overflow: hidden;
 }
 
+.expo-own-label {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #3b82f6;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 3px;
+  padding: 0 0.3em;
+  margin-left: 0.3em;
+  vertical-align: baseline;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 .expo-hcard__loc {
   margin: 0;
   font-size: 0.6875rem;
