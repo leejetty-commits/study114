@@ -116,7 +116,7 @@ export const EMPTY_COPY = {
     screenId: 'P15-06',
     title: '아직 찜한 대상이 없습니다',
     body: '마음에 드는 공부방이나 과외쌤을 찜해 두면, 나중에 비교하거나 쪽지를 보낼 수 있어요.',
-    cta: '공부방·과외쌤 찾아보기',
+    cta: '최근 본 목록',
   },
   /** 찜 화면 칸 안 「최근 본 목록」 0건 — 최근열람 메뉴(P15-07) empty와 분리 */
   wishlistRecentRoom: {
@@ -147,13 +147,13 @@ export const EMPTY_COPY = {
     screenId: 'P25-xx',
     title: '비교할 후보가 없습니다',
     body: '찜한 공부방이나 과외쌤을 비교함에 담아 보세요.',
-    cta: '찜 목록 보기',
+    cta: '탐색하기',
   },
   compareNeedMore: {
     screenId: 'P25-04',
     title: '비교할 후보가 더 필요합니다',
     body: '비교하려면 후보를 하나 더 담아 주세요.',
-    cta: '찜 목록에서 추가',
+    cta: '탐색하기',
   },
   studentReview: {
     screenId: 'P25-S10',

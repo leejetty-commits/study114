@@ -145,8 +145,8 @@ const SURFACE_BANNER = {
     layout: 'cinema',
     image: '/assets/banners/connect.webp',
     ctas: [
-      { label: '쪽지함으로', href: '#/mypage/messages', nav: '/mypage/messages', kind: 'primary' },
-      { label: '유료상품 알아보기', href: '#/plans', nav: '/plans', kind: 'secondary' },
+      { label: '쪽지함으로', href: HOME_MESSAGES, external: true, kind: 'primary' },
+      { label: '유료상품 알아보기', href: HOME_PLANS, external: true, kind: 'secondary' },
     ],
   },
   plans: {

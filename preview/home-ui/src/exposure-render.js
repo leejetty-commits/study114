@@ -24,7 +24,7 @@ import {
 import { getGuestListPage } from './state.js';
 import { getAuthUser } from './auth-session.js';
 import { navRoleFromAuthUser } from './nav-config.js';
-import { isWishlisted, isInCompare } from './user-actions-state.js';
+import { isWishlisted, isInCompare, isOwnProviderCard } from './user-actions-state.js';
 import { isRecommendedLocal } from './user-actions-ui.js';
 import {
   renderStudentProviderActions,
@@ -354,13 +354,8 @@ export function renderMedia(image_path, alt, ratio, opts = {}) {
   const src = String(image_path || '').trim();
   const large = String(opts.srcLarge || '').trim();
   if (!src) {
-    if (logo) {
-      return `<div class="${cls}"><img src="${esc(logo)}" alt="${esc(alt || '우동공과')}" loading="lazy" /></div>`;
-    }
-    const initial = placeholderInitial(alt);
-    return `<div class="${cls} expo-media--placeholder" role="img" aria-label="${esc(alt || '프로필')}">
-    <span class="expo-media__ph-initial" aria-hidden="true">${esc(initial)}</span>
-  </div>`;
+    const fallback = logo || CARD_DEFAULT_BASIC;
+    return `<div class="${cls}"><img src="${esc(fallback)}" alt="${esc(alt || '우동공과')}" loading="lazy" /></div>`;
   }
   const srcset = large && large !== src ? ` srcset="${esc(src)} 1x, ${esc(large)} 2x"` : '';
   const onerror = logo
@@ -404,7 +399,14 @@ function listingImageLarge(item) {
 }
 
 function cardIdentityAttrs(item, kind) {
-  return `data-provider-id="${item.id}" data-provider-kind="${kind}"`;
+  const own = isOwnProviderCard(kind, item.id) ? ' data-own-card' : '';
+  return `data-provider-id="${item.id}" data-provider-kind="${kind}"${own}`;
+}
+
+/** 자카드 라벨 — 본인 카드면 「내 카드」 표시. 다른 카드는 빈 문자열. */
+function renderOwnCardLabel(kind, id) {
+  if (!isOwnProviderCard(kind, id)) return '';
+  return '<span class="expo-own-label" aria-label="내 카드">내 카드</span>';
 }
 
 function renderStudyRoomMediaOverlay(item) {
@@ -498,11 +500,12 @@ function studyRoomPriceCell(item) {
 }
 
 function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = false }, actions = '') {
+  const ownLabel = renderOwnCardLabel('study_room', item.id);
   const badgeCell = `${renderPromoBadgeRow(resolveCardVisualLayers('study_room', item).promoBadges, esc)}${renderTrustBadges(trustBadgesForItem('study_room', item))}`;
   if (stack) {
     // 픽 카드 (13개 = 베이직9 + 특징1 + 신뢰배지 + 수업스타일 + 소개)
     const rows = [
-      [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
+      [{ html: `${esc(slotDash(item.study_room_name))}${ownLabel}`, col: 2, cls: 'expo-tbl__cell--name' }],
       [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
       [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
       [labeled('과목', item.main_subject_note, { col: 2 })],
@@ -520,7 +523,7 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
 
   // 프라임 카드 (15개 = 베이직9 + 특징1~3 + 신뢰배지 + 수업스타일 + 수업스타일 추가설명 + 주회수 + 소개)
   const rows = [
-    [valOnly(item.study_room_name, { cls: 'expo-tbl__cell--name', col: 2 })],
+    [{ html: `${esc(slotDash(item.study_room_name))}${ownLabel}`, col: 2, cls: 'expo-tbl__cell--name' }],
     [{ html: badgeCell, col: 2, cls: 'expo-tbl__cell--badges' }],
     [labeled('대상', item.grade_band), studyRoomPriceCell(item)],
     [labeled('과목', item.main_subject_note, { col: 2 })],
@@ -538,6 +541,7 @@ function studyRoomTableRows(item, { showIntro = true, featureMax = 3, stack = fa
 }
 
 function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99, stack = false }, actions = '') {
+  const ownLabel = renderOwnCardLabel('tutor', item.id);
   const verifyCell = {
     html: `<span class="expo-tbl__label">제출자료</span> ${renderVerificationCell(item, verifyMax === 1 ? 1 : 99)}`,
     cls: 'expo-tbl__cell--verify',
@@ -549,8 +553,10 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
   };
 
   if (stack) {
+    const nameCell = nameWithGenderCell(item.tutor_display_name, item.gender);
+    if (ownLabel) nameCell.html += ownLabel;
     const rows = [
-      [nameWithGenderCell(item.tutor_display_name, item.gender), verifyCell],
+      [nameCell, verifyCell],
       [badgeCell],
       [labeled('대상', item.grade_band || '—', { col: 2 })],
       [labeled('과목', item.main_subject_note, { col: 2 })],
@@ -571,8 +577,10 @@ function tutorTableRows(item, { showIntro = true, featureMax = 3, verifyMax = 99
     return appendSloganAndActions(rows, item, actions, { showIntro });
   }
 
+  const primeNameCell = nameWithGenderCell(item.tutor_display_name, item.gender);
+  if (ownLabel) primeNameCell.html += ownLabel;
   const rows = [
-    [nameWithGenderCell(item.tutor_display_name, item.gender), verifyCell],
+    [primeNameCell, verifyCell],
     [badgeCell],
     [labeled('대상', item.grade_band || '—'), labeled('과목', item.main_subject_note)],
     [labeled('수업장소', optionalTutorPlaces(item.lesson_places)), labeled('원생수', formatTutorStudentTarget(item))],
@@ -867,6 +875,7 @@ function renderBasicStudyRoomRow(item, opts) {
         <div class="expo-hcard__top">
           <div class="expo-hcard__title-row">
             <h3 class="expo-hcard__name">${esc(item.study_room_name || '')}</h3>
+            ${renderOwnCardLabel('study_room', item.id)}
             <span class="expo-hcard__loc">${esc(slotDash(locationLabel))}</span>
           </div>
           <p class="expo-hcard__price">${esc(formatMonthlyWon(item.price_amount))}</p>
@@ -947,6 +956,7 @@ function renderBasicTutorRow(item, opts) {
         <div class="expo-hcard__top">
           <div class="expo-hcard__title-row">
             <h3 class="expo-hcard__name">${nameLine}</h3>
+            ${renderOwnCardLabel('tutor', item.id)}
             <span class="expo-hcard__loc">${esc(slotDash(locationLabel))}</span>
           </div>
           <p class="expo-hcard__price">${esc(formatTutorFeeCard(item))}</p>
