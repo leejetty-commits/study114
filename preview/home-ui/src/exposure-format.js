@@ -30,6 +30,9 @@ export function formatMonthlyWon(price_amount) {
   if (Number.isNaN(n)) return String(price_amount);
   if (n <= 0) return '—';
   const cheon = Math.round(n / 1000);
+  if (cheon >= 10 && cheon % 10 === 0) {
+    return `월 ${(cheon / 10).toLocaleString('ko-KR')}만원~`;
+  }
   return `월 ${cheon.toLocaleString('ko-KR')}천원~`;
 }
 

@@ -1059,7 +1059,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>시험 결제 화면 (실제 PG 연동 전 · 금액은 서버 판매가)</span>
+      <span>결제 테스트 모드 (금액은 카탈로그 기준)</span>
     </label>`;
 }
 
@@ -2020,7 +2020,7 @@ export function renderPlansCheckout() {
         <li class="is-done"><strong>3. 금액 확인</strong>
           <p>표시가 ${formatKrw(previewTotal)}
             ${isPosition && badgeDisplay ? ` · 노출 ${formatKrw(positionDisplay)} · 배지 소계 ${formatKrw(badgeDisplay)}` : ''}
-            ${amt.testMode ? ` · <em>시험 결제 화면</em>` : ''}</p>
+            ${amt.testMode ? ` · <em>테스트 모드</em>` : ''}</p>
         </li>
         <li>
           <strong>4. 약관 동의</strong>
@@ -2045,7 +2045,7 @@ export function renderPlansCheckout() {
         </li>
         <li>
           <strong>6. 결제 진행</strong>
-          <p class="mypage-muted">현재는 시험 결제 화면이며 실제 결제 연동은 준비 중입니다.</p>
+          <p class="mypage-muted">현재는 결제 테스트 모드이며 실제 결제 연동은 준비 중입니다.</p>
           <div class="mypage-actions-row">
             <button type="button" class="btn btn--primary" data-plans-pay ${tierBlocked ? 'disabled' : ''}>결제하기</button>
             <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
