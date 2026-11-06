@@ -25,6 +25,7 @@ export function renderSignupAccountContact() {
           <label class="form-label form-label--required" for="account-phone">휴대폰</label>
           <input class="form-input" type="tel" id="account-phone" name="phone" placeholder="010-0000-0000" inputmode="numeric" maxlength="13" autocomplete="tel" required />
           <p class="form-hint">휴대폰 번호는 계정 안내에만 쓰이며, 다른 사용자에게 보이지 않습니다.</p>
+          <p class="form-error" data-phone-error hidden role="alert"></p>
         </div>
         <p class="form-error" data-contact-error hidden role="alert"></p>
         <button type="submit" class="btn btn--primary btn--block">저장하고 계속</button>
@@ -38,6 +39,7 @@ export function bindSignupAccountContactEvents(root) {
   bindGlobalEvents(root);
   const form = root.querySelector('[data-form="account-contact"]');
   const errorEl = root.querySelector('[data-contact-error]');
+  const phoneErrorEl = root.querySelector('[data-phone-error]');
   const emailWrap = root.querySelector('[data-email-wrap]');
   const emailInput = root.querySelector('#account-email');
   const phoneInput = root.querySelector('#account-phone');
@@ -72,6 +74,10 @@ export function bindSignupAccountContactEvents(root) {
       errorEl.hidden = true;
       errorEl.textContent = '';
     }
+    if (phoneErrorEl) {
+      phoneErrorEl.hidden = true;
+      phoneErrorEl.textContent = '';
+    }
     const fd = new FormData(form);
     const phone = String(fd.get('phone') ?? '').trim();
     const email = String(fd.get('email') ?? '').trim();
@@ -80,9 +86,9 @@ export function bindSignupAccountContactEvents(root) {
     }
     if (!isValidMobile(phone)) {
       void s114Alert(PHONE_GUIDE);
-      if (errorEl) {
-        errorEl.hidden = false;
-        errorEl.textContent = '휴대폰 번호를 정확히 입력해 주세요.';
+      if (phoneErrorEl) {
+        phoneErrorEl.hidden = false;
+        phoneErrorEl.textContent = '휴대폰 번호를 정확히 입력해 주세요.';
       }
       phoneInput?.focus();
       return;

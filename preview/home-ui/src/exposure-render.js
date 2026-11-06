@@ -79,6 +79,12 @@ function slotDash(text) {
   return s || '—';
 }
 
+/** 선택 칸 — 값이 비어 있으면 빈 문자열(칸 자체를 숨기는 용도) */
+function slotOptional(text) {
+  const s = String(text ?? '').trim();
+  return s && s !== '—' ? s : '';
+}
+
 /** 괄호 필드 — 값만 */
 function valOnly(text, opts = {}) {
   const { cls: extraCls, ...rest } = opts;
@@ -802,6 +808,13 @@ function renderHcardSlot(label, value) {
   return `<li class="expo-hcard__meta-item"><span class="expo-hcard__k">${esc(label)}</span><span class="expo-hcard__v">${esc(slotDash(value))}</span></li>`;
 }
 
+/** 선택 칸 — 값이 비어 있으면 칸 자체를 렌더하지 않는다 (「—」 과다 방지). */
+function renderHcardSlotOptional(label, value) {
+  const v = slotOptional(value);
+  if (!v) return '';
+  return `<li class="expo-hcard__meta-item"><span class="expo-hcard__k">${esc(label)}</span><span class="expo-hcard__v">${esc(v)}</span></li>`;
+}
+
 function renderHcardSlogan(slogan) {
   return `<p class="expo-hcard__slogan"><span class="expo-hcard__k">슬로건</span> ${esc(slotDash(slogan))}</p>`;
 }
@@ -941,9 +954,9 @@ function renderBasicTutorRow(item, opts) {
         <ul class="expo-hcard__meta">
           ${renderHcardSlot('대상', item.grade_band)}
           ${renderHcardSlot('과목', item.main_subject_note)}
-          ${renderHcardSlot('원생수', formatTutorStudentTarget(item))}
-          ${renderHcardSlot('수업장소', optionalTutorPlaces(item.lesson_places))}
-          <li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(slotDash(schedule))}</span></li>
+          ${renderHcardSlotOptional('원생수', formatTutorStudentTarget(item))}
+          ${renderHcardSlotOptional('수업장소', optionalTutorPlaces(item.lesson_places))}
+          ${slotOptional(schedule) ? `<li class="expo-hcard__meta-item"><span class="expo-hcard__v">${esc(schedule)}</span></li>` : ''}
         </ul>
         <div class="expo-hcard__tags"><span class="expo-hcard__k">특징</span>${tags || `<span class="expo-hcard__v">—</span>`}</div>
         ${renderHcardSlogan(item.slogan)}
@@ -1113,12 +1126,12 @@ function renderBasicStudentRow(item, opts) {
         <ul class="expo-hcard__meta">
           ${renderHcardSlot('학년', item.grade_level)}
           ${renderHcardSlot('과목', item.subject_label)}
-          ${renderHcardSlot('수업장소', formatStudentPlaces(item.lesson_places))}
-          ${renderHcardSlot('원생수', formatStudentLessonTarget(item))}
-          ${renderHcardSlot('일정', schedule)}
-          ${renderHcardSlot('한 줄 요청', request)}
-          ${renderHcardSlot('특이요청', specialRequest)}
-          ${renderHcardSlot('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
+          ${renderHcardSlotOptional('수업장소', formatStudentPlaces(item.lesson_places))}
+          ${renderHcardSlotOptional('원생수', formatStudentLessonTarget(item))}
+          ${renderHcardSlotOptional('일정', schedule)}
+          ${renderHcardSlotOptional('한 줄 요청', request)}
+          ${renderHcardSlotOptional('특이요청', specialRequest)}
+          ${renderHcardSlotOptional('강의스타일', formatTeachingStyleBadges(item.teaching_style_badges, 2))}
         </ul>
       </div>
       ${side}
