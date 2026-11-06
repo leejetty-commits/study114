@@ -11,7 +11,7 @@ namespace Study114\Paid;
  */
 final class PaidCheckoutGate
 {
-    public const CLOSED_MESSAGE = '결제 기능을 준비하고 있어요. 곧 열릴 예정이에요';
+    public const CLOSED_MESSAGE = '결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.';
 
     public static function mockCompleteAllowed(): bool
     {
