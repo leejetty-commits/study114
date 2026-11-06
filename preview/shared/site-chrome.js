@@ -113,11 +113,14 @@ export function renderSiteHeader(opts = {}) {
   const gnbItems = GNB_MAIN.map((item) => renderGnbLink(item, role, gnbOpts)).join('');
   const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, role, gnbOpts)).join('');
 
+  const utilHtml = renderUtilBar(role, showAuth, user);
+  const drawerGnb = GNB_MAIN.map((item) => renderGnbLink(item, role, gnbOpts)).join('');
+
   return `
     <header class="home-header site-chrome-header" data-site-chrome>
       <div class="home-header__util">
         <div class="home-header__util-inner">
-          <nav class="home-util" aria-label="유틸 메뉴">${renderUtilBar(role, showAuth, user)}</nav>
+          <nav class="home-util" aria-label="유틸 메뉴">${utilHtml}</nav>
         </div>
       </div>
       <div class="home-header__main">
@@ -126,9 +129,25 @@ export function renderSiteHeader(opts = {}) {
             <img src="/assets/brand/src/udong-pin.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark.png" alt="우동공과" class="home-header__wordmark" />
           </a>
           <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
+          <button type="button" class="home-hamburger" data-action="hamburger-toggle" aria-label="메뉴 열기" aria-expanded="false">
+            <span class="home-hamburger__bar"></span>
+            <span class="home-hamburger__bar"></span>
+            <span class="home-hamburger__bar"></span>
+          </button>
         </div>
       </div>
       <nav class="home-gnb-mobile" aria-label="모바일 메뉴">${mobileGnb}</nav>
+      <div class="home-drawer" data-drawer hidden>
+        <div class="home-drawer__backdrop" data-action="drawer-close"></div>
+        <nav class="home-drawer__panel" aria-label="메뉴">
+          <div class="home-drawer__head">
+            <span class="home-drawer__title">메뉴</span>
+            <button type="button" class="home-drawer__close" data-action="drawer-close" aria-label="메뉴 닫기">✕</button>
+          </div>
+          <div class="home-drawer__gnb">${drawerGnb}</div>
+          <div class="home-drawer__util">${utilHtml}</div>
+        </nav>
+      </div>
     </header>
   `;
 }
@@ -172,11 +191,48 @@ export function isHomeUiHost() {
  * @param {() => import('./site-nav-config.js').NavRole} [handlers.getRole]
  * @param {() => boolean} [handlers.guardNavigation] false면 로그아웃 외 이동을 막는다
  */
+function openDrawer(header) {
+  const drawer = header.querySelector('[data-drawer]');
+  const btn = header.querySelector('[data-action="hamburger-toggle"]');
+  if (!drawer) return;
+  drawer.hidden = false;
+  document.body.classList.add('is-drawer-open');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+}
+
+function closeDrawer(header) {
+  const drawer = header.querySelector('[data-drawer]');
+  const btn = header.querySelector('[data-action="hamburger-toggle"]');
+  if (!drawer) return;
+  drawer.hidden = true;
+  document.body.classList.remove('is-drawer-open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+
 export function bindSiteChrome(root, handlers = {}) {
   const getRole = handlers.getRole || (() => 'guest');
   const navigateHome = handlers.navigateHome;
   const logout = handlers.logout;
   const guardNavigation = handlers.guardNavigation;
+
+  const header = root.closest?.('.home-header') || root.querySelector?.('.home-header') || root;
+  header.querySelector?.('[data-action="hamburger-toggle"]')?.addEventListener('click', () => {
+    const drawer = header.querySelector('[data-drawer]');
+    if (drawer?.hidden) openDrawer(header); else closeDrawer(header);
+  });
+  header.querySelectorAll?.('[data-action="drawer-close"]')?.forEach((el) => {
+    el.addEventListener('click', () => closeDrawer(header));
+  });
+  header.querySelector?.('[data-drawer]')?.addEventListener('click', (e) => {
+    if (e.target.closest('.home-drawer__panel')) return;
+    closeDrawer(header);
+  });
+  header.querySelector?.('.home-drawer__gnb')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-action]')) closeDrawer(header);
+  });
+  header.querySelector?.('.home-drawer__util')?.addEventListener('click', (e) => {
+    if (e.target.closest('[data-action]') || e.target.closest('[data-util-href]')) closeDrawer(header);
+  });
 
   root.querySelectorAll('[data-util-href]').forEach((el) => {
     el.addEventListener('click', (e) => {
