@@ -18,7 +18,7 @@ export const TUTOR_PROMO = {
         '과외지역·과목·수업료·주 몇 회·몇 분 같은 기본정보만 넣으면 베이직카드가 바로 노출돼요.',
         '베이직카드 노출은 무료, 첫 문의는 쪽지로 받아요.',
       ],
-      primaryCta: '과외쌤 등록 시작하기',
+      primaryCta: '과외쌤 등록은 회원가입 부터~',
       secondaryCta: '등록 방법 보기',
       preview: {
         badge: '베이직카드 미리보기',
@@ -42,7 +42,7 @@ export const TUTOR_PROMO = {
     cardTypes: {
       eyebrow: '카드 종류',
       title: '기본은 무료, 노출은 고를 때만',
-      lead: '프라임·픽은 홈·찾기 화면에서 프로필을 더 잘 발견하도록 돕는 선택 노출상품입니다. 결제는 지금 준비 중이에요.',
+      lead: '프라임·픽은 홈·찾기 화면에서 프로필을 더 잘 발견하도록 돕는 선택 노출상품입니다.',
       cards: [
         { badge: '베이직카드 · 무료', badgeBg: '#0F766E', badgeFg: '#fff', title: '기본 프로필', body: '과외지역·과목·수업료·주 몇 회·몇 분 같은 기본정보만 넣으면 바로 공개돼요.', foot: '→ 오늘 바로' },
         { badge: '마이프로필', badgeBg: '#5BA394', badgeFg: '#fff', title: '소개·사진 다듬기', body: '등록 뒤 마이프로필에서 소개와 사진을 이어서 채워요.', foot: '→ 등록 뒤 천천히' },
@@ -82,7 +82,7 @@ export const TUTOR_PROMO = {
     finalCta: {
       title: '기본정보만 넣으면 카드가 바로 섭니다',
       sub: '과외지역 · 과목 · 수업료 · 주 몇 회 · 몇 분',
-      cta: '과외쌤 등록 시작하기',
+      cta: '과외쌤 등록은 회원가입 부터~',
     },
   },
   railCard: {

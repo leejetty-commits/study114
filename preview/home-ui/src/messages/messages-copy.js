@@ -83,7 +83,7 @@ export function buildMemoGateCopy(state = getMemoGateState()) {
       title: '쪽지권이 없습니다',
       body: '학생에게 먼저 쪽지를 보내려면 쪽지권이 필요합니다. 기본 학생 정보는 열람할 수 있습니다.',
       replyNote: GATE_COPY.replyNote,
-      hint: '쪽지권은 구매 후 6개월 내 사용 · 먼저 산 이용권부터 차감',
+      hint: '쪽지권은 구매 후 120일 내 사용 · 먼저 산 이용권부터 차감',
       cta: GATE_COPY.cta,
       remainingLine: '잔여 쪽지권: 0회',
       expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel} (이미 소진)` : null,
@@ -99,7 +99,7 @@ export function buildMemoGateCopy(state = getMemoGateState()) {
       hint: GATE_COPY.hint,
       cta: '쪽지권 더 구매하기',
       remainingLine: `잔여 쪽지권: ${remaining}회`,
-      expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel}` : '유효기간: 구매 후 6개월',
+      expiryLine: expiryLabel ? `가장 가까운 만료: ${expiryLabel}` : '유효기간: 구매 후 120일',
       showPlansCta: true,
     };
   }
