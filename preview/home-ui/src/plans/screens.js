@@ -2045,7 +2045,6 @@ export function renderPlansCheckout() {
         </li>
         <li>
           <strong>6. 결제 진행</strong>
-          <p class="mypage-muted">현재는 결제 테스트 모드이며 실제 결제 연동은 준비 중입니다.</p>
           <div class="mypage-actions-row">
             <button type="button" class="btn btn--primary" data-plans-pay ${tierBlocked ? 'disabled' : ''}>결제하기</button>
             <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
@@ -2076,7 +2075,7 @@ export function renderPlansResult() {
       <section class="mypage-panel">
         <p class="mypage-lead">결제 안내</p>
         <div class="mypage-info-box">
-          <p>결제 기능을 준비하고 있어요. 곧 열릴 예정이에요</p>
+          <p>결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.</p>
         </div>
         <div class="mypage-actions-row">
           <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">유료상품으로 돌아가기</a>
@@ -2748,7 +2747,7 @@ export function bindPlansScreenEvents(root, rerender) {
         if (err instanceof Error && err.code === 'payment_not_available') {
           setCheckoutResult({
             status: 'unavailable',
-            message: '결제 기능을 준비하고 있어요. 곧 열릴 예정이에요',
+            message: '결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.',
           });
           window.location.hash = '#/plans/result';
           return;
