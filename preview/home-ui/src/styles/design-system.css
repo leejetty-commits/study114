@@ -994,17 +994,24 @@ body {
 }
 
 /* 모바일(≤719px): 배너가 position:relative(flow)로 전환되므로
-   +110px 불필요. height 명시로 height:100% 체인 복원 → 맵이 컨테이너를 채움.
-   breakpoint는 search-visily.css banner 전환 기준(≤719px)과 일치시킴. */
+   +110px 불필요. canvas·surface에만 height 명시 → height:100% 체인 복원.
+   섹션 wrapper(.hero-map)는 min-height만 — height 고정 시 overflow:hidden이
+   배너(대치동 박스)를 클리핑하여 가림. */
 @media (max-width: 719px) {
+  /* wrapper: min-height만 (height 고정 금지) */
   .home-shell .hero-map,
+  .search-chrome-shell .hero-map,
+  .home-app .hero-map,
+  .hero-map--search {
+    min-height: 9rem !important;
+  }
+
+  /* canvas·surface: height 명시 → 맵이 canvas를 채움 */
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface,
-  .search-chrome-shell .hero-map,
   .search-chrome-shell .hero-map__canvas,
   .search-chrome-shell .hero-map__surface,
-  .home-app .hero-map,
-  .hero-map--search,
+  .home-app .hero-map__canvas,
   .hero-map--search .hero-map__canvas,
   .hero-map--search .hero-map__surface {
     min-height: 9rem !important;
