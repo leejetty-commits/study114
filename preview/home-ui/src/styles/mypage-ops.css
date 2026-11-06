@@ -678,6 +678,20 @@
   }
 }
 
+/* C-11: 모바일 마이 메뉴 라벨 줄바꿈 방지 — 그리드 최소폭 축소 + 글씨 축소 */
+@media (max-width: 480px) {
+  .mypage-nav {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2px !important;
+  }
+
+  .mypage-nav__link {
+    font-size: 0.75rem;
+    padding: var(--space-1) 0.35rem;
+    min-height: 2.25rem;
+  }
+}
+
 @media (max-width: 640px) {
   .home-app--mypage,
   .mypage-layout,
