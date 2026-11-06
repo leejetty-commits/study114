@@ -1006,7 +1006,9 @@ body {
     min-height: 9rem !important;
   }
 
-  /* canvas·surface: height 명시 → 맵이 canvas를 채움 */
+  /* canvas·surface: height 명시 → 맵이 canvas를 채움.
+     모바일에서 banner가 flow(relative)로 전환되어 +110px 불필요하지만
+     height는 원래 의도된 모바일 높이 calc(9rem + 110px)=254px 유지. */
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface,
   .search-chrome-shell .hero-map__canvas,
@@ -1014,8 +1016,8 @@ body {
   .home-app .hero-map__canvas,
   .hero-map--search .hero-map__canvas,
   .hero-map--search .hero-map__surface {
-    min-height: 9rem !important;
-    height: 9rem !important;
+    min-height: calc(9rem + 110px) !important;
+    height: calc(9rem + 110px) !important;
   }
 }
 
