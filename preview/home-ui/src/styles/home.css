@@ -1553,17 +1553,22 @@ body.is-drawer-open {
     transform: rotate(180deg);
   }
 
-  /* 지도 접기: 기본 숨김 */
+  /* 지도 접기: 기본 숨김 — 모든 내부 요소 높이 완전 제거 */
   .hero-map__canvas {
     order: 2;
     overflow: hidden;
     max-height: 0;
     min-height: 0 !important;
+    padding: 0 !important;
+    border: none !important;
     transition: max-height 0.3s ease;
   }
 
-  .hero-map__canvas .hero-map__surface {
+  .hero-map__canvas .hero-map__surface,
+  .hero-map__canvas .naver-map-mount-host,
+  .hero-map__canvas .naver-map-mount {
     min-height: 0 !important;
+    height: 0 !important;
   }
 
   /* 지도 펼침 */
@@ -1572,8 +1577,11 @@ body.is-drawer-open {
     min-height: 0 !important;
   }
 
-  .hero-map.is-map-expanded .hero-map__surface {
+  .hero-map.is-map-expanded .hero-map__canvas .hero-map__surface,
+  .hero-map.is-map-expanded .hero-map__canvas .naver-map-mount-host,
+  .hero-map.is-map-expanded .hero-map__canvas .naver-map-mount {
     min-height: 0 !important;
+    height: 100% !important;
     aspect-ratio: 4 / 3;
   }
 }

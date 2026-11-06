@@ -513,15 +513,24 @@ export function bindLayoutEvents(root, rerender) {
     });
   });
 
-  root.querySelector?.('[data-action="hero-map-toggle"]')?.addEventListener('click', (e) => {
-    const btn = e.currentTarget;
-    const heroMap = btn.closest('.hero-map');
-    if (!heroMap) return;
-    const expanded = heroMap.classList.toggle('is-map-expanded');
-    btn.setAttribute('aria-expanded', String(expanded));
-    const textEl = btn.querySelector('.hero-map__toggle-text');
-    if (textEl) textEl.textContent = expanded ? '지도 접기' : '지도 보기';
-  });
+  const heroMapEl = root.querySelector?.('.hero-map[data-study-room-map]');
+  const heroToggleBtn = root.querySelector?.('[data-action="hero-map-toggle"]');
+  if (heroMapEl && heroToggleBtn) {
+    const saved = localStorage.getItem('hero-map-collapsed');
+    if (saved === '1') {
+      heroMapEl.classList.remove('is-map-expanded');
+      heroToggleBtn.setAttribute('aria-expanded', 'false');
+      const t = heroToggleBtn.querySelector('.hero-map__toggle-text');
+      if (t) t.textContent = '지도 보기';
+    }
+    heroToggleBtn.addEventListener('click', () => {
+      const expanded = heroMapEl.classList.toggle('is-map-expanded');
+      heroToggleBtn.setAttribute('aria-expanded', String(expanded));
+      const textEl = heroToggleBtn.querySelector('.hero-map__toggle-text');
+      if (textEl) textEl.textContent = expanded ? '지도 접기' : '지도 보기';
+      localStorage.setItem('hero-map-collapsed', expanded ? '0' : '1');
+    });
+  }
 
   root.querySelectorAll('[data-action]').forEach((el) => {
     el.addEventListener('click', (e) => {
