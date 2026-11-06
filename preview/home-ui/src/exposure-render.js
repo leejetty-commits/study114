@@ -670,12 +670,15 @@ function pickEmptyMedia(opts = {}) {
  * @param {{ withMedia?: boolean }} [opts]
  */
 function renderEmptyPromoCard(kind, tier, opts = {}) {
-  const copy = getPrimeEmptyCopy(kind);
+  const copy = getPrimeEmptyCopy(kind, opts);
   const tone = kind === 'tutor' ? 'tutor' : 'study_room';
   const tierName = tier === 'pick' ? 'pick' : 'prime';
   const flag = tier === 'pick' ? 'data-pick-empty="1"' : 'data-prime-empty="1"';
   const media = opts.withMedia
     ? `<div class="expo-media-wrap"><div class="expo-media expo-media--${tierName} expo-media--placeholder" aria-hidden="true"></div></div>`
+    : '';
+  const ctaHtml = copy.cta
+    ? `<a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>`
     : '';
   return `
     <article class="expo-card expo-card--${tierName} expo-card--empty expo-card--${tone}" ${flag}>
@@ -683,7 +686,7 @@ function renderEmptyPromoCard(kind, tier, opts = {}) {
       <div class="expo-empty-prime">
         <p class="expo-empty-prime__title">${esc(copy.title)}</p>
         <p class="expo-empty-prime__body">${esc(copy.body)}</p>
-        <a href="#/plans/positions" class="btn btn--primary btn--sm" data-nav="/plans/positions">${esc(copy.cta)}</a>
+        ${ctaHtml}
       </div>
     </article>`;
 }
@@ -734,7 +737,7 @@ export function renderEmptyPickPromo(kind, opts = {}) {
  * @param {{ guest?: boolean, viewerRole?: string, surfaceMode?: string, withMedia?: boolean }} [opts]
  */
 export function renderPickVacantMarkup(kind, opts = {}) {
-  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind, { withMedia: pickEmptyMedia(opts) });
+  if (homePickZeroPromoCount(opts) > 0) return renderEmptyPickPromo(kind, { withMedia: pickEmptyMedia(opts), viewerRole: opts.viewerRole });
   return `<p class="mypage-muted" data-pick-vacant-note="1">${esc(pickZeroNote(kind))}</p>`;
 }
 
@@ -759,11 +762,11 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
     const padCount = shouldPadTutorPrimeSlots(opts) ? Math.max(0, primeSlots - pageItems.length) : 0;
     let cards;
     if (!pageItems.length) {
-      cards = renderEmptyPrimePromoRow(kind, primeSlots, { withMedia: homeEmptyMedia(opts) });
+      cards = renderEmptyPrimePromoRow(kind, primeSlots, { withMedia: homeEmptyMedia(opts), viewerRole: opts.viewerRole });
     } else {
       cards = [
         ...pageItems.map((item) => renderExposureBox(kind, 'prime', item, '', opts)),
-        padCount ? renderEmptyPrimePromoRow(kind, padCount) : '',
+        padCount ? renderEmptyPrimePromoRow(kind, padCount, { viewerRole: opts.viewerRole }) : '',
       ].join('');
     }
     return `
@@ -777,7 +780,7 @@ export function renderPrimeSlotGrid(kind, occupiedItems, opts = {}) {
   const withMedia = homeEmptyMedia(opts) && slots.every((item) => !item);
   const cards = slots
     .map((item) => {
-      if (!item) return renderEmptyPrimePromo(kind, { withMedia });
+      if (!item) return renderEmptyPrimePromo(kind, { withMedia, viewerRole: opts.viewerRole });
       return renderExposureBox(kind, 'prime', item, '', opts);
     })
     .join('');

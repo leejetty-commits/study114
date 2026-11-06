@@ -9,6 +9,7 @@ import {
   OPERATIONAL_CTA,
   SUPPORT_HOME_CARDS,
   TICKET_CATEGORIES,
+  getTicketCategoriesForRole,
 } from './support-copy.js';
 import { listNoticesForCenter, noticeTargetLabel } from './notice-store.js';
 import { listFaqPostsByTab, listGuidePosts, getRelatedGuidePosts, isOperationalBoardApiActive } from '../operational-board-store.js';
@@ -331,7 +332,8 @@ function renderContactSection() {
     : '';
 
   const presetCategory = contactCategoryFromHash();
-  const categoryOptions = TICKET_CATEGORIES.map(
+  const userRole = getAuthUser()?.role || 'guest';
+  const categoryOptions = getTicketCategoriesForRole(userRole).map(
     (c) =>
       `<option value="${esc(c.value)}"${c.value === presetCategory ? ' selected' : ''}>${esc(c.label)}</option>`,
   ).join('');
