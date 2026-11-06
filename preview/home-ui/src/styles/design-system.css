@@ -993,7 +993,10 @@ body {
   height: 100% !important;
 }
 
-@media (max-width: 640px) {
+/* 모바일(≤719px): 배너가 position:relative(flow)로 전환되므로
+   +110px 불필요. height 명시로 height:100% 체인 복원 → 맵이 컨테이너를 채움.
+   breakpoint는 search-visily.css banner 전환 기준(≤719px)과 일치시킴. */
+@media (max-width: 719px) {
   .home-shell .hero-map,
   .home-shell .hero-map__canvas,
   .home-shell .hero-map__surface,
@@ -1004,7 +1007,8 @@ body {
   .hero-map--search,
   .hero-map--search .hero-map__canvas,
   .hero-map--search .hero-map__surface {
-    min-height: calc(9rem + 110px) !important;
+    min-height: 9rem !important;
+    height: 9rem !important;
   }
 }
 

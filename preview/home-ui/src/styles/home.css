@@ -1502,33 +1502,6 @@ body.is-drawer-open {
   border-top: 1px solid var(--gray-200);
 }
 
-/* ── 모바일 히어로 맵: 회색 여백 제거 (≤719px) ──
-   design-system.css가 .home-shell .hero-map__canvas 등에
-   min-height: calc(9rem + 110px) !important 를 설정하여
-   실제 맵보다 큰 컨테이너가 회색 배경을 노출.
-   같은 특이도 + !important 로 모바일에서만 override. */
-@media (max-width: 719px) {
-  .home-shell .hero-map__canvas,
-  .search-chrome-shell .hero-map__canvas,
-  .home-app .hero-map__canvas,
-  .hero-map--search .hero-map__canvas {
-    min-height: 9rem !important;
-  }
-
-  .home-shell .hero-map__surface,
-  .search-chrome-shell .hero-map__surface,
-  .home-app .hero-map__surface,
-  .hero-map--search .hero-map__surface {
-    min-height: 9rem !important;
-  }
-
-  .home-shell .hero-map,
-  .search-chrome-shell .hero-map,
-  .home-app .hero-map,
-  .hero-map--search {
-    min-height: 9rem !important;
-  }
-}
 
 /* ?? Content section (no outer panel) ?? */
 .content-section {
