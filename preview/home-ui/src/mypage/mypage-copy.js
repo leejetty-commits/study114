@@ -20,6 +20,12 @@ export const ONBOARDING_GUARD_COPY = {
     '공부방은 이 제출 기능을 쓰지 않습니다. 교육청 등록은 상세정보 2단계에서 체크합니다. 과외쌤 신뢰·증빙자료 제출은 과외쌤 마이페이지에서 다룹니다.',
 };
 
+/** 2026-11-07 — 제출함 제품 미사용(숨김). 옛 URL 직접 진입 시 안내 */
+export const SUBMISSION_RETIRED_COPY = {
+  title: '제출함',
+  body: '제출함은 현재 서비스하지 않습니다. 등록 사진은 과외쌤·공부방 상세등록에서 올려 주세요.',
+};
+
 /** @deprecated ONBOARDING_GUARD_COPY 사용 */
 export const EMPTY_ONBOARDING = ONBOARDING_GUARD_COPY;
 

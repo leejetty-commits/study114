@@ -11,6 +11,9 @@ use Study114\Board\BoardChannelAcl;
 BoardApi::bootstrap();
 
 BoardApi::run(static function (): void {
+    // 제출함 제품 미사용 — 다운로드 토큰 발급 닫음 (2026-11-07)
+    \Study114\Board\BoardSubmissionGate::rejectIfSubmission();
+
     if (BoardApi::method() !== 'POST') {
         BoardApi::fail(405, 'method_not_allowed', 'POST만 허용됩니다.');
     }

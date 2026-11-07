@@ -70,7 +70,6 @@ import {
   resolveAccountDisplayName,
 } from '../auth/display-identity.js';
 import { renderTutorRegScreen } from '../tutor-reg/screens.js';
-import { renderSubmissionBoardScreen } from '../submission-board/index.js';
 import { getPaidOperationalStatus, hydratePaidCaches } from '../paid-backend.js';
 import { isMessagesApiMode, hydrateMessagesCache } from '../messages-backend.js';
 import { isSupportApiMode, hydrateMyTickets, getTicketLoadError } from '../support/support-backend.js';
@@ -89,6 +88,7 @@ import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-p
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import {
   EMPTY_ONBOARDING,
+  SUBMISSION_RETIRED_COPY,
   GUARDIAN_PLANS_COPY,
   WISHLIST_NOTE,
   WISHLIST_CARD_UNAVAILABLE,
@@ -210,10 +210,13 @@ export function renderMypageScreen(path) {
     }
     return renderPlansV3(r);
   }
-  if (path === '/mypage/submission-docs' || path === '/mypage/verification') return renderSubmissionDocs(r);
-  if (path === '/mypage/submission-board' || path.startsWith('/mypage/submission-board/')) {
-    if (r === 'study_room' || r === 'parent') return renderSubmissionDocs(r);
-    return renderSubmissionBoardScreen(path);
+  if (
+    path === '/mypage/submission-docs'
+    || path === '/mypage/verification'
+    || path === '/mypage/submission-board'
+    || path.startsWith('/mypage/submission-board/')
+  ) {
+    return renderSubmissionRetired();
   }
   if (path === '/mypage/account') return renderAccount(r, profile);
   const dest = getDefaultMypagePath(r);
@@ -278,8 +281,7 @@ function renderRegistrationsIndex(role) {
   }
   if (role === 'tutor') {
     links.push({ path: '/mypage/registrations/tutors', label: '내 과외 프로필', id: 'P15-05' });
-    links.push({ path: '/mypage/submission-docs', label: '제출자료 상태', id: 'P15-10' });
-    links.push({ path: '/mypage/submission-board', label: '신뢰·증빙자료 제출', id: 'P23-04' });
+    // 제출함(P15-10·P23-04) — 2026-11-07 제품 미사용 · 메뉴 숨김
   }
 
   const unique = [...new Map(links.map((l) => [l.path, l])).values()];
@@ -1009,47 +1011,13 @@ function renderPlansMyInventory(role) {
     </section>`;
 }
 
-function renderSubmissionDocs(role) {
-  if (role === 'parent') {
-    return `<section class="mypage-panel"><p class="mypage-muted">${EMPTY_ONBOARDING.submissionParent}</p></section>`;
-  }
-
-  if (role === 'study_room') {
-    return `<section class="mypage-panel"><p class="mypage-muted">${EMPTY_ONBOARDING.submissionStudyRoom}</p></section>`;
-  }
-
-  const docs = getSubmissionDocs(role);
+/** 제출함 숨김 — 옛 북마크·직접 URL만 여기로 옴 */
+function renderSubmissionRetired() {
   return `
-    <section class="mypage-panel p15-submission">
-      <p class="mypage-lead">${esc(SUBMISSION_DOCS_LEAD)}</p>
-      <div class="p15-submission__summary">
-        ${docs.length ? `<span class="mypage-badge">${esc(formatSubmissionDocSummary(docs))}</span>` : ''}
-        <a href="#/mypage/submission-board" class="btn btn--primary btn--sm" data-mypage-nav="/mypage/submission-board">신뢰·증빙자료 제출</a>
-        <a href="${TUTOR_REGISTER_URL}" class="btn btn--secondary btn--sm" data-same-tab-href="${TUTOR_REGISTER_URL}">과외쌤 등록 화면에서 자료 등록</a>
-      </div>
-      ${docs.length ? `<table class="p15-submission__table" aria-label="제출자료 상태">
-        <thead>
-          <tr>
-            <th scope="col">항목</th>
-            <th scope="col">제출 상태</th>
-            <th scope="col">공개 범위</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${docs
-            .map(
-              (d) => `
-            <tr>
-              <td>${esc(d.label)}</td>
-              <td><span class="p15-submission__status p15-submission__status--${esc(d.status)}">${esc(submissionDocStatusLabel(d.status))}</span></td>
-              <td>${esc(submissionDocVisibilityLabel(d.visibility))}</td>
-            </tr>`,
-            )
-            .join('')}
-        </tbody>
-      </table>` : ''}
-      <p class="mypage-note">${esc(LIFECYCLE_FOOTNOTE_SUBMISSION)}</p>
-      <p class="mypage-note p22-trust-disclaimer">${esc(TRUST_PLATFORM_DISCLAIMER)}</p>
+    <section class="mypage-panel">
+      <h2 class="mypage-subhead">${esc(SUBMISSION_RETIRED_COPY.title)}</h2>
+      <p class="mypage-muted">${esc(SUBMISSION_RETIRED_COPY.body)}</p>
+      <p class="mypage-note"><a href="#/mypage/registrations" data-mypage-nav="/mypage/registrations">내 등록으로</a></p>
     </section>`;
 }
 
