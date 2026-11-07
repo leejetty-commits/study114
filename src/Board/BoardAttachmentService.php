@@ -112,7 +112,7 @@ final class BoardAttachmentService
         }
 
         $ttl = (int) ($this->config['download_token_ttl'] ?? 300);
-        $secret = (string) ($this->config['download_token_secret'] ?? '');
+        $secret = $this->requireDownloadTokenSecret();
         $token = AttachmentToken::issue([
             'board_key' => self::BOARD_KEY,
             'post_key' => $postKey,
@@ -133,7 +133,7 @@ final class BoardAttachmentService
 
     public function streamDownload(string $token): never
     {
-        $secret = (string) ($this->config['download_token_secret'] ?? '');
+        $secret = $this->requireDownloadTokenSecret();
         $payload = AttachmentToken::verify($token, $secret);
 
         $boardKey = (string) ($payload['board_key'] ?? '');
@@ -142,7 +142,7 @@ final class BoardAttachmentService
             throw new InvalidArgumentException('토큰 대상이 올바르지 않습니다.');
         }
 
-        // 토큰만으로 우회 금지 — 세션 + 이메일 확인 + board ACL 재검증
+        // 토큰만으로 우회 금지 — 세션 + 이메일 확인 + board ACL · 작성자 재검증
         $auth = \Study114\Auth\AuthSession::user();
         if ($auth === null) {
             throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
@@ -156,6 +156,12 @@ final class BoardAttachmentService
             }
         } elseif (!BoardChannelAcl::canDownload($boardKey, $boardRole)) {
             throw new BoardAccessException(403, 'forbidden', '첨부 다운로드 권한이 없습니다.');
+        } else {
+            $authorRole = (string) ($payload['author_role'] ?? '');
+            if ($authorRole === '') {
+                throw new BoardAccessException(403, 'forbidden', '토큰 작성자 역할이 없습니다.');
+            }
+            $this->assertOwnedPost($postKey, $authorRole, (int) $auth['user_id']);
         }
 
         $row = $this->attachments->findPrimary($boardKey, $postKey);
@@ -188,6 +194,21 @@ final class BoardAttachmentService
                 // ignore
             }
         }
+    }
+
+    private function requireDownloadTokenSecret(): string
+    {
+        $secret = (string) ($this->config['download_token_secret'] ?? '');
+        if (
+            $secret === ''
+            || str_starts_with($secret, '__')
+            || strlen($secret) < 32
+            || $secret === 'study114-dev-attachment-secret'
+        ) {
+            throw new \RuntimeException('첨부 다운로드 비밀값이 준비되지 않았습니다.');
+        }
+
+        return $secret;
     }
 
     /** @param array<string, mixed> $row @return array<string, mixed> */

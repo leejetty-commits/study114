@@ -5,8 +5,8 @@ declare(strict_types=1);
 return [
     /** @var string 로컬 첨부 루트 (board submission 1차) */
     'attachments_root' => dirname(__DIR__) . '/storage/attachments',
-    /** HMAC 서명 비밀 (운영 환경에서는 env로 교체) */
-    'download_token_secret' => getenv('STUDY114_STORAGE_SECRET') ?: 'study114-dev-attachment-secret',
+    // 운영은 SetEnv + 토큰 발급/검증 fail-closed. 공개 기본값으로 열지 않음.
+    'download_token_secret' => study114_env('STUDY114_STORAGE_SECRET', ''),
     /** 다운로드 토큰 TTL(초) — 직접 URL 노출 방지 */
     'download_token_ttl' => 300,
     'submission' => [
