@@ -31,6 +31,13 @@
 
 **완료 판정:** `curl`/브라우저로 `http://study114.net/` → HTTPS로 301/302.
 
+### ✅ 완료 (2026-11-08)
+
+- Cloudflare **Always Use HTTPS = on** (존 `study114.net`)
+- 검증: `http://` · `http://www.` → `301` → `https://study114.net/`
+- 기록: `docs/worklog/2026/11/2026-11-08-82-fix1-https-force.md`
+- 오리진 `.htaccess` HTTP 리다이렉트는 **넣지 않음** (CF 루프 주의)
+
 ---
 
 ## 2순위 — 바로 이어서 (재현됨 · 강력 권장)
