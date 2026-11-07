@@ -39,6 +39,6 @@
 
 ## Git
 
-- 커밋: (기입)
-- PR / main: (기입)
-- Deploy: (기입)
+- 브랜치 커밋: `e9aa7e01`
+- PR: [#107](https://github.com/leejetty-commits/study114/pull/107) squash → main `cf0fdf80`
+- Deploy to dothome: run `42364070096` success (2026-11-07)
