@@ -180,3 +180,4 @@
 - `326-mobile-responsive-proposal.md` — 이상적인 반응형 웹(모바일) 구현 방안. 4파트: A 햄버거 GNB · B 히어로맵 아코디언 · C 레일 아코디언 · D 카드 보완. 정본 `docs/internal/80-mobile-responsive-proposal.md`.
 - `327-hero-map-mobile-grey-fix.md` — 모바일 히어로 맵 회색 여백 제거. 근본원인 3가지(CSS cascade·height체인·overflow:hidden) + PR #91~#99 실패·해결 이력. 정본 `docs/internal/80b-hero-map-mobile-grey-fix.md`.
 - `328-youtube-pre-security-2026-11-08.md` — 유튜브 홍보 전 보안 필수 1~5 완료 (cron·storage·return_to·rate limit·OAuth 3사 재발급). 정본 `docs/internal/81-youtube-pre-security-lock.md`.
+- `329-external-ai-security-remediation-2026-11-08.md` — 외부 AI(ChatGPT·Gemini·Genspark) 점검 + 대안 FIX-1~4 완료(HTTPS·헤더·스모크). 5·6은 새 채팅. 정본 `docs/internal/82`~`82e`.
