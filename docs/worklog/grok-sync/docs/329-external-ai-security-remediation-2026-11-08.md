@@ -2,12 +2,13 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~4)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~4순위 완료 · ⏸ 5~6순위는 **새 채팅**에서 진행  
+**상태:** ✅ 1~4순위 완료 · ⏸ 5~6순위는 **새 채팅**에서 진행 · 재점검 지시문 `82f` **미리 작성됨**  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)
 
-정본(내부): `docs/internal/82`~`82e` · `docs/internal/81-youtube-pre-security-lock.md`  
+정본(내부): `docs/internal/82`~`82e` · **재점검 `82f`** · `docs/internal/81-youtube-pre-security-lock.md`  
 인수인계: `docs/worklog/2026/11/2026-11-08-handoff.md`  
-작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md`
+작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md`  
+PR(문서): https://github.com/leejetty-commits/study114/pull/116
 
 ---
 
@@ -29,6 +30,7 @@ Cloudflare에서 HTTPS 강제·최소 보안 헤더를 켰고, admin/쿠키/소�
 | `82c` Genspark raw/summary | **HTTPS 미강제 High 재현** · 번들 시크릿 없음 |
 | `82d` consolidation | 3곳 취합 |
 | `82e` remediation briefing | 대안 1~6순위 |
+| `82f` **재점검 지시문** | 5·6 완료 **후** ChatGPT·Gemini·Genspark 복붙용 (미리 작성) |
 
 ---
 
@@ -78,9 +80,18 @@ Cloudflare에서 HTTPS 강제·최소 보안 헤더를 켰고, admin/쿠키/소�
 
 ---
 
+## 5·6 완료 후 — 외부 재점검
+
+1. `docs/internal/82f-external-ai-retest-after-remediation-prompt.md` 의 승인자 칸·추가 조치 요약 채움  
+2. 3사 AI에 1회씩 복붙 → 원본+요약 저장 → 취합 브리핑  
+3. 5·6 끝나기 전 `82f`를 외부에 보내지 말 것
+
+---
+
 ## 새 채팅 첫 메시지 권장
 
 ```
 docs/worklog/2026/11/2026-11-08-handoff.md
 이어서 보안 대안 5순위부터. 329·82e 읽고 복명복창 후 진행.
+5·6 끝나면 82f로 외부 재점검.
 ```

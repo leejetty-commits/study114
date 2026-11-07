@@ -6,7 +6,7 @@ alwaysApply: true
 # 작업 루틴 (정본 70)
 
 정본 초안: `D:\work\study114-routine\docs\internal\70-work-routine-review-approval.md` — 저장소에 커밋되지 않은 초안. 이 규칙 파일이 현재 유효한 요약이다.
-인수인계: **새 채팅은 먼저 `docs/worklog/YYYY/MM/` 아래 가장 최근 날짜의 `*-handoff*.md`를 읽는다.** 현재 최신 = `docs/worklog/2026/11/2026-11-08-handoff.md` (문서 브랜치 `docs/82-external-ai-security-audit-prompt` tip `7a2dcdce` · main 미병합 시 PR 후 읽기). 공동폴더 동시: `docs/worklog/grok-sync/docs/329-external-ai-security-remediation-2026-11-08.md`. 새 인수인계를 쓰면 이 줄도 같이 고친다.
+인수인계: **새 채팅은 먼저 `docs/worklog/YYYY/MM/` 아래 가장 최근 날짜의 `*-handoff*.md`를 읽는다.** 현재 최신 = `docs/worklog/2026/11/2026-11-08-handoff.md` (브랜치 `docs/82-external-ai-security-audit-prompt` · PR #116). 공동폴더: `docs/worklog/grok-sync/docs/329-external-ai-security-remediation-2026-11-08.md`. 5·6 후 재점검 지시문: `docs/internal/82f-external-ai-retest-after-remediation-prompt.md`. 새 인수인계를 쓰면 이 줄도 같이 고친다.
 
 ## 역할
 
