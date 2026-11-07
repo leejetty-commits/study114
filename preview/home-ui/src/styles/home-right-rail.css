@@ -552,13 +552,8 @@ button.live-rail-card {
   }
 }
 
-/* C-11: 모바일 480px 이하 우측 레일 숨김 — 카드 목록 아래 밀림 방지 */
-@media (max-width: 480px) {
-  .home-sidebar.home-sidebar--live-rail,
-  .home-sidebar.right-rail {
-    display: none;
-  }
-}
+/* C-11 대체: 480px 이하 완전 숨김 → Part C 아코디언으로 대체 (접힌 상태로 표시) */
+/* display:none 제거 — 아래 아코디언 CSS가 모바일 접힘 담당 */
 
 body.is-rail-media-open {
   overflow: hidden;
@@ -941,4 +936,97 @@ button.live-rail-empty.live-rail-best__open {
 .live-rail-best__open:focus-visible {
   outline: 2px solid var(--uds-ink, #1c1917);
   outline-offset: 2px;
+}
+
+/* =====================================================
+   Part C — 우측 레일 모바일 아코디언
+   원칙: ≥1024px 는 CSS 단독으로 패널 항상 표시 (JS·is-open 무관)
+         ≤1023px 는 JS가 is-open 클래스 토글 → CSS로 패널 접힘/펼침
+   <details> 미사용 — content-visibility:hidden 우회 불가 문제 방지
+   ===================================================== */
+
+/* 패널: 데스크톱에서 항상 flex 컨테이너 (is-open 여부·JS 불필요) */
+.rail-accordion__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* 토글 버튼: 데스크톱에서 항상 숨김 */
+.rail-accordion__toggle {
+  display: none;
+}
+
+/* 모바일(≤1023px): 아코디언 동작 */
+@media (max-width: 1023px) {
+  /* 토글 버튼 표시 */
+  .rail-accordion__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid var(--uds-line);
+    border-radius: var(--radius-surface);
+    background: var(--uds-surface);
+    font-family: inherit;
+    font-size: var(--fs-14);
+    font-weight: var(--fw-regular);
+    text-align: left;
+    color: var(--uds-ink);
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .rail-accordion__toggle:hover,
+  .rail-accordion__toggle:focus-visible {
+    border-color: var(--uds-primary);
+  }
+
+  .rail-accordion__toggle:focus-visible {
+    outline: 2px solid var(--uds-primary);
+    outline-offset: 2px;
+  }
+
+  .rail-accordion__label {
+    font-weight: var(--fw-semibold);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* 화살표 아이콘 (CSS border로 그림, 이미지·폰트 의존 없음) */
+  .rail-accordion__chevron {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg) translateY(-2px);
+    transition: transform 0.18s ease;
+  }
+
+  .rail-accordion.is-open > .rail-accordion__toggle .rail-accordion__chevron {
+    transform: rotate(-135deg) translateY(-2px);
+  }
+
+  /* 패널: 모바일에서 기본 숨김 (접힌 상태) */
+  .rail-accordion__panel {
+    display: none;
+  }
+
+  /* 패널: is-open 클래스 추가 시 표시 */
+  .rail-accordion.is-open > .rail-accordion__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+  }
 }

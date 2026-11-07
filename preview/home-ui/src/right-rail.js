@@ -29,6 +29,8 @@ import { bindInfoRailEvents, renderInfoRailBanners } from './library/info-rail.j
 import { bestPostsForBoard, bindConcernRailEvents } from './concern/rail-concern-popup.js';
 
 let railOwnerResolverSet = false;
+/** renderPromoWithRightRail 호출마다 고유한 패널 id를 만들기 위한 카운터 */
+let railAccordionSeq = 0;
 
 /** 레일·베스트 캐시를 세션 주인별로 나누도록 store에 알려 준다. 모듈 순환을 피하려고 그릴 때 건다. */
 function ensureRailOwnerResolver() {
@@ -201,33 +203,35 @@ function railSlotAnchor(hrefOrPath, className, ctx, inner, slotKey) {
 export function renderPromoWithRightRail(slotKey = 'home_right_rail', opts = {}) {
   const ctx = createRailCtx(slotKey, opts);
   const slot = getRightRailSlot(slotKey);
-  const collapse = String(slot?.mobileBehavior || '') === 'collapse';
   const visible = Boolean(slot && isRailSlotVisible(slot, ctx.navRole));
   const tone = opts.tone || defaultRailTone(slotKey);
   const variant = opts.variant || 'sidebar';
   const inner = renderRailLayers(slotKey, { ...ctx, tone, visible });
   const title = esc(slot?.sectionTitle || '안내');
-  const body =
-    collapse && variant !== 'inline'
-      ? `<details class="plans-rail-fold">
-        <summary class="plans-rail-fold__summary">
-          <strong>${title}</strong>
-        </summary>
-        <div class="plans-rail-fold__panel">${inner}</div>
-      </details>`
-      : inner;
   const tag = variant === 'inline' ? 'section' : 'aside';
-  const shellClass =
-    variant === 'inline'
-      ? 'right-rail right-rail--inline right-rail--live-inline'
-      : `home-sidebar home-sidebar--guest home-sidebar--live-rail right-rail${
-          collapse ? ' right-rail--mobile-collapse' : ' right-rail--mobile-stack'
-        }`;
+
+  // 인라인 변형: 아코디언 없음, 기존 구조 유지
+  if (variant === 'inline') {
+    return `
+    <${tag} class="right-rail right-rail--inline right-rail--live-inline live-rail--${esc(tone)}" data-right-rail-slot="${esc(slotKey)}" data-rail-tone="${esc(tone)}" aria-label="${visible ? '현장 고민과 안내' : '안내'}">
+      ${inner}
+    </${tag}>`;
+  }
+
+  // 사이드바 변형: 항상 div+button 아코디언 구조.
+  // ≥1024px: CSS로 토글 버튼 숨김 → 패널 항상 표시 (JS·is-open 무관)
+  // ≤1023px: 토글 버튼 표시 → JS가 is-open 클래스 토글 → CSS로 패널 접힘/펼침
+  // <details> 미사용 — content-visibility:hidden 우회 불가 문제 방지
+  const panelId = `rr-panel-${++railAccordionSeq}`;
   return `
-    <${tag} class="${shellClass} live-rail--${esc(tone)}" data-right-rail-slot="${esc(slotKey)}" data-rail-tone="${esc(
-      tone,
-    )}" aria-label="${visible ? '현장 고민과 안내' : '안내'}">
-      ${body}
+    <${tag} class="home-sidebar home-sidebar--guest home-sidebar--live-rail right-rail rail-accordion live-rail--${esc(tone)}" data-right-rail-slot="${esc(slotKey)}" data-rail-tone="${esc(tone)}" aria-label="${visible ? '현장 고민과 안내' : '안내'}">
+      <button type="button" class="rail-accordion__toggle" aria-expanded="false" aria-controls="${panelId}">
+        <strong class="rail-accordion__label">${title}</strong>
+        <span class="rail-accordion__chevron" aria-hidden="true"></span>
+      </button>
+      <div class="rail-accordion__panel" id="${panelId}">
+        ${inner}
+      </div>
     </${tag}>`;
 }
 
@@ -821,8 +825,64 @@ function bindRailGuidePeekEvents(root) {
   });
 }
 
+/**
+ * 우측 레일 모바일 아코디언 초기화.
+ * - 모바일(≤1023px): 접힌 상태로 시작, 버튼 클릭으로 토글
+ * - 데스크톱(≥1024px): 항상 열린 상태 (CSS도 패널 항상 표시)
+ * - matchMedia로 뷰포트 변경 감지
+ * @param {Element} root
+ */
+function bindRailAccordion(root) {
+  if (typeof window === 'undefined' || !root) return;
+
+  // root 자체가 아코디언이거나, 그 하위에 아코디언이 있을 경우 모두 처리
+  const accordions =
+    typeof root.matches === 'function' && root.matches('.rail-accordion')
+      ? [root]
+      : [...root.querySelectorAll('.rail-accordion')];
+
+  accordions.forEach((accordion) => {
+    if (accordion.dataset.railAccordionBound) return; // 중복 바인딩 방지
+    accordion.dataset.railAccordionBound = '1';
+
+    const toggle = accordion.querySelector('.rail-accordion__toggle');
+    const panel = accordion.querySelector('.rail-accordion__panel');
+    if (!toggle || !panel) return;
+
+    const mq = window.matchMedia('(max-width: 1023px)');
+
+    /**
+     * @param {boolean} isMobile  true = 모바일(≤1023px)
+     */
+    function applyState(isMobile) {
+      if (isMobile) {
+        // 모바일: 접힌 상태로 초기화 (resize 시에도 항상 접음)
+        accordion.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      } else {
+        // 데스크톱: 항상 열림 (CSS도 패널을 항상 표시하므로 is-open 클래스는 의미 없지만 aria 정합성을 위해 설정)
+        accordion.classList.add('is-open');
+        toggle.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    // 버튼 클릭: 모바일에서만 의미 있음 (데스크톱에서 버튼 자체가 CSS로 숨겨짐)
+    toggle.addEventListener('click', () => {
+      const isOpen = accordion.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // 뷰포트 변경 감지 (resize)
+    mq.addEventListener('change', (e) => applyState(e.matches));
+
+    // 초기 상태 적용
+    applyState(mq.matches);
+  });
+}
+
 export function bindRightRailEvents(root) {
   if (!root) return;
+  bindRailAccordion(root); // 아코디언 초기화 (모바일 접힘/펼침)
   bindInfoRailEvents();
   bindConcernRailEvents();
   bindRailGuidePeekEvents(root);
