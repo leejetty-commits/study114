@@ -125,6 +125,67 @@ function study114_is_local_origin(string $origin): bool
 }
 
 /**
+ * OAuth return_to 개방 리다이렉트 방지.
+ * - 앱 상대 경로(`/...`)만 허용 (`//evil`·`\\`·`://` 거부)
+ * - 절대 URL은 허용/로컬 origin의 scheme+host(+non-default port)만
+ * - `str_starts_with($homeUi)` 접두 비교 금지 (study114.net.evil.com 우회)
+ */
+function study114_sanitize_oauth_return_to(string $returnTo): string
+{
+    $returnTo = trim($returnTo);
+    if ($returnTo === '') {
+        return '';
+    }
+
+    // protocol-relative //evil.example
+    if (str_starts_with($returnTo, '//')) {
+        return '';
+    }
+
+    if (str_starts_with($returnTo, '/')) {
+        if (str_contains($returnTo, '\\') || str_contains($returnTo, '://')) {
+            return '';
+        }
+
+        return $returnTo;
+    }
+
+    if (!preg_match('#^https?://#i', $returnTo)) {
+        return '';
+    }
+
+    $parts = parse_url($returnTo);
+    if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+        return '';
+    }
+    if (isset($parts['user']) || isset($parts['pass'])) {
+        return '';
+    }
+
+    $scheme = strtolower((string) $parts['scheme']);
+    if ($scheme !== 'http' && $scheme !== 'https') {
+        return '';
+    }
+
+    $host = strtolower((string) $parts['host']);
+    $port = isset($parts['port']) ? (int) $parts['port'] : null;
+    $origin = $scheme . '://' . $host;
+    if ($port !== null && !(($scheme === 'https' && $port === 443) || ($scheme === 'http' && $port === 80))) {
+        $origin .= ':' . $port;
+    }
+
+    if (!study114_is_allowed_public_origin($origin) && !study114_is_local_origin($origin)) {
+        return '';
+    }
+
+    $path = $parts['path'] ?? '';
+    $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+    $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+    return $origin . $path . $query . $fragment;
+}
+
+/**
  * 공개 origin: 허용된 요청 origin(또는 로컬)을 유지하고, 그 외는 정본.
  * OAuth redirect_uri·세션 쿠키 호스트는 시작 요청과 같아야 한다.
  */
