@@ -677,48 +677,13 @@
 }
 
 @media (max-width: 600px) {
-  /* Part D — 모바일 세로형 카드 (이미지 위·본문·사이드 아래)
-     ≥601px에는 완전 무관 (데스크톱·태블릿 안전) */
-
-  /* 1. 카드: 1열 그리드, 패딩·행간격 제거 (child에서 개별 복원)
-     .expo-basic.expo-hcard 병기: home-listings.css 의 (0,2,0) 패딩 선언을 같은 특이도로 덮어쓰기 위함 */
-  .expo-hcard,
-  .expo-basic.expo-hcard {
-    grid-template-columns: 1fr;
-    row-gap: 0;
-    padding: 0;
-    overflow: hidden; /* 이미지가 카드 border-radius에서 클리핑 */
-  }
-
-  /* 2. 이미지: 1행·풀폭·4:3 비율, 모서리 제거 (카드 overflow:hidden 처리) */
-  .expo-hcard__media-wrap,
-  .expo-basic--study_room .expo-hcard__media-wrap,
-  .expo-basic--tutor .expo-hcard__media-wrap,
-  .expo-basic--student .expo-hcard__media-wrap {
-    grid-column: 1;
+  .expo-hcard__media-wrap {
     grid-row: 1;
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4 / 3;
-    border-radius: 0;
+    align-self: start;
   }
-
-  /* 3. 본문: 2행, 카드 패딩 제거분 복원 */
-  .expo-hcard__body {
-    grid-column: 1;
-    grid-row: 2;
-    padding: 0.55rem 0.65rem 0.15rem;
-  }
-
-  /* 4. 사이드(신뢰뱃지+버튼): 3행, 패딩 복원·왼쪽 정렬 */
   .expo-hcard__side {
-    grid-column: 1;
-    grid-row: 3;
-    justify-content: flex-start;
-    padding: 0.2rem 0.65rem 0.5rem;
+    grid-column: 1 / -1;
   }
-
-  /* 5. 신뢰 뱃지 간격 (기존 유지) */
   .card-visual__trust--rail {
     gap: 0.2rem;
     margin-right: 0.35rem;
@@ -727,7 +692,22 @@
     padding: 0.1rem 0.25rem;
     letter-spacing: -0.02em;
   }
-  /* ※ 과외쌤 절대위치 뱃지 규칙 삭제 — 세로형에서 사이드(3행)에 자연 배치 */
+
+  .expo-basic--tutor.expo-hcard {
+    position: relative;
+  }
+  .expo-basic--tutor .expo-hcard__side .card-visual__trust--rail {
+    position: absolute;
+    left: 0.6rem;
+    top: calc(0.55rem + 5.75rem + 0.2rem);
+    width: 5.75rem;
+    margin: 0;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: flex-start;
+    overflow: visible;
+    z-index: 1;
+  }
 }
 
 @media (max-width: 420px) {
