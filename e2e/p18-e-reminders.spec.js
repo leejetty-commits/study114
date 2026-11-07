@@ -10,7 +10,9 @@ import {
   ensureReminderSchemaE2e,
 } from './helpers/admin-api.js';
 
-const CRON_KEY = 'dev-cron-key';
+// 로컬/CI PHP에 STUDY114_CRON_KEY 와 동일 값을 넣어야 함(32자+, dev-cron-key 금지).
+const CRON_KEY =
+  process.env.STUDY114_CRON_KEY || 'e2e_paid_reminders_cron_key_32chars_ok';
 
 function prepPositionExpiry7d() {
   devSql(
@@ -29,7 +31,9 @@ test.describe('P18e 만료·소진 알림', () => {
       "DELETE FROM provider_system_notices WHERE user_id=4 AND notice_kind LIKE 'position_expiry%'",
     );
 
-    const cron = await request.post(`/api/cron/paid-reminders.php?key=${CRON_KEY}`);
+    const cron = await request.post('/api/cron/paid-reminders.php', {
+      headers: { 'X-Cron-Key': CRON_KEY },
+    });
     const cronBody = await cron.json();
     expect(cron.ok()).toBeTruthy();
     expect(cronBody.ok).toBeTruthy();
