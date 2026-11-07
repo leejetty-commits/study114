@@ -207,7 +207,7 @@
 }
 
 .section-heading--basic {
-  margin-bottom: 0;
+  margin-bottom: var(--home-basic-title-gap, var(--space-2));
   gap: 0;
 }
 
@@ -219,12 +219,13 @@
   align-items: center;
   justify-content: flex-start;
   gap: 0.35rem var(--space-3);
-  margin: 0 0 var(--space-1);
+  margin: 0 0 var(--home-basic-title-gap, var(--space-2));
   width: 100%;
 }
 
 .section-title-bar--basic .section-heading {
   margin: 0;
+  margin-bottom: 0; /* C 간격은 title-bar mb만 — heading과 이중 금지 */
   padding-top: 0;
   width: auto;
   flex: 0 0 auto;
@@ -306,6 +307,27 @@
   padding-top: var(--space-3);
 }
 
+/* content-section 안 티어(픽 등) 블록 경계 = ① 전체 (프라임 카드 아래 바로 pt) */
+.home-shell--guest .home-main .content-section .list-subsection > .section-heading,
+.home-shell--study_room .home-main .content-section .list-subsection > .section-heading,
+.home-shell--tutor .home-main .content-section .list-subsection > .section-heading,
+.home-shell--parent .home-main .content-section .list-subsection > .section-heading,
+.home-shell--guest .home-main .content-section .list-subsection > .section-title-bar--basic,
+.home-shell--study_room .home-main .content-section .list-subsection > .section-title-bar--basic,
+.home-shell--tutor .home-main .content-section .list-subsection > .section-title-bar--basic,
+.home-shell--parent .home-main .content-section .list-subsection > .section-title-bar--basic {
+  margin-top: 0;
+  padding-top: var(--home-block-gap, 3.5rem);
+}
+
+/* 베이직 연속 블록 경계 = ① (title-bar pt + prev mb) */
+.home-shell--guest .guest-browse-lists .list-subsection + .list-subsection > .section-title-bar--basic,
+.home-shell--study_room .home-main .guest-browse-lists .list-subsection + .list-subsection > .section-title-bar--basic,
+.home-shell--tutor .home-main .guest-browse-lists .list-subsection + .list-subsection > .section-title-bar--basic,
+.home-shell--parent .home-main .guest-browse-lists .list-subsection + .list-subsection > .section-title-bar--basic {
+  padding-top: var(--space-8);
+}
+
 /* 학생 홈 「우리동네 과외쌤」만.
    희망 지역 아래 선이 두 줄인 이유:
    .parent-home-region border-bottom (home.css) 과
@@ -318,7 +340,7 @@
 /* 학생 홈 「우리동네 과외쌤」 픽·베이직 여백.
    310 게스트와 동일 리듬, 선 없음 — 311 */
 .home-shell--parent .content-section--blue {
-  --tier-section-gap: var(--space-8);
+  --tier-section-gap: var(--home-block-gap, var(--space-8));
 }
 
 .home-shell--parent .content-section--blue .list-subsection .section-heading--pick,
@@ -373,15 +395,15 @@
   margin-top: 0.15rem;
 }
 
-/* ??(Prime/Pick) ?? ? ???? ??? ?? */
+/* 게스트 베이직·학생 목록 블록 — 이전 섹션과의 경계는 ①(--home-block-gap) */
 .guest-browse-lists {
-  margin-top: var(--space-2);
-  padding-top: var(--space-3);
+  margin-top: 0;
+  padding-top: 0;
   border-top: none;
 }
 
 .guest-browse-lists .list-subsection {
-  margin-bottom: var(--space-4);
+  margin-bottom: calc(var(--home-block-gap, 3.5rem) - var(--space-8, 2rem));
 }
 
 .guest-browse-lists .browse-list {
@@ -392,8 +414,21 @@
   padding-top: 0;
 }
 
+/* 첫 베이직 제목바: 섹션 진입을 C와 분리해 --home-block-gap 체감 */
+.home-shell--guest .guest-browse-lists > .list-subsection:first-child > .section-title-bar--basic {
+  padding-top: var(--space-8);
+}
+
 .guest-browse-lists .list-subsection--students {
-  margin-top: var(--space-2);
+  margin-top: 0;
+}
+
+.home-shell--guest .guest-browse-lists + .guest-browse-lists {
+  margin-top: calc(var(--home-block-gap, 3.5rem) - var(--space-8, 2rem));
+}
+
+.home-shell--guest .guest-browse-lists + .guest-browse-lists > .list-subsection:first-child > .section-title-bar--basic {
+  padding-top: var(--space-8);
 }
 
 /* 학생 티저(게스트) — 컴팩트 카드 톤 (마스킹 로직 불변) */

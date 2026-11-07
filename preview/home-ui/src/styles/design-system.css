@@ -1095,14 +1095,29 @@ body {
   gap: 0.625rem;
 }
 
-/* 게스트 홈 섹션 여백 통일·키움 + 구분선 제거 — 310 */
+/* 게스트·역할 홈 섹션 진입 여백 + 구분선 제거 — 310 / home-block-gap-v1
+   padding-top(--space-8) = 섹션 진입(위). 제목~카드(C)는 --home-basic-title-gap 만. */
 .home-shell--guest .content-section .section-heading,
-.home-shell--guest .guest-browse-lists .section-heading {
+.home-shell--guest .guest-browse-lists .section-heading,
+.home-shell--study_room .home-main .content-section .section-heading,
+.home-shell--tutor .home-main .content-section .section-heading,
+.home-shell--parent .home-main .content-section .section-heading {
   padding-top: var(--space-8);
 }
 
-.home-shell--guest .content-section {
+.home-shell--guest .content-section,
+.home-shell--study_room .home-main .content-section,
+.home-shell--tutor .home-main .content-section,
+.home-shell--parent .home-main .content-section {
   border-bottom: none;
+}
+
+/* 베이직 제목바 안 heading 은 진입 pt를 제목바에 맡김 — C와 이중 금지 */
+.home-shell--guest .section-title-bar--basic .section-heading,
+.home-shell--study_room .home-main .section-title-bar--basic .section-heading,
+.home-shell--tutor .home-main .section-title-bar--basic .section-heading,
+.home-shell--parent .home-main .section-title-bar--basic .section-heading {
+  padding-top: 0;
 }
 
 /* 기본 공부방·과외쌤 목록은 학생 목록과 같은 평면·균등 표 구조 */

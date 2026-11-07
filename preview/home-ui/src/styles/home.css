@@ -1510,9 +1510,27 @@ body.is-drawer-open {
   border-bottom: 1px solid var(--gray-100);
 }
 
+/* home-block-gap-v1: 다음 섹션 heading pt(--space-8)와 합쳐 ①(56px)이 되도록
+   mb = --home-block-gap - --space-8 = 24px.
+   로그인 역할 홈은 content-section 이 .parent-home-body 안이라 자손 선택자 사용. */
+.home-shell--guest .home-main .content-section,
+.home-shell--study_room .home-main .content-section,
+.home-shell--tutor .home-main .content-section,
+.home-shell--parent .home-main .content-section {
+  margin-bottom: calc(var(--home-block-gap) - var(--space-8));
+  padding-bottom: var(--space-4);
+}
+
 .content-section:last-of-type {
   border-bottom: none;
   margin-bottom: var(--space-4);
+}
+
+.home-shell--guest .home-main .content-section:last-of-type,
+.home-shell--study_room .home-main .content-section:last-of-type,
+.home-shell--tutor .home-main .content-section:last-of-type,
+.home-shell--parent .home-main .content-section:last-of-type {
+  margin-bottom: calc(var(--home-block-gap) - var(--space-8));
 }
 
 .content-section__head {

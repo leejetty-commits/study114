@@ -127,6 +127,13 @@
 
   /* Layout — UDX-20 Shell */
   --home-max: 80rem; /* 1280px */
+  /*
+   * Home block rhythm (home-block-gap-v1, 2026-11-07)
+   * ① guest visual = .hero-map mb(--space-6=24) + first .section-heading pt(--space-8=32) = 56px
+   * Measured equal at 1280 / 768 / 390. Do not change ① composition; use token for other block edges.
+   */
+  --home-block-gap: 3.5rem; /* 56px — major block boundary */
+  --home-basic-title-gap: var(--space-2); /* 8px — basic/student title → first card */
   --page-gutter: 2rem; /* 32px desktop */
   --page-gutter-tablet: 1.5rem; /* 24px */
   --page-gutter-mobile: 1rem; /* 16px */
