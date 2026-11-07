@@ -51,6 +51,6 @@
 
 ## Git
 
-- 커밋: (push 후 기입)
-- PR / main merge: (기입)
-- Deploy to dothome: (기입)
+- 브랜치 커밋: `648ff079`
+- PR: [#105](https://github.com/leejetty-commits/study114/pull/105) squash merge → main `864644c0`
+- Deploy to dothome: run `42362511964` success (2026-11-07)
