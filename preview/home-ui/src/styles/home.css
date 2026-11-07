@@ -352,7 +352,8 @@ img {
   max-width: var(--home-max);
   margin: 0 auto;
   width: 100%;
-  padding: var(--space-3) var(--page-gutter) var(--space-8);
+  /* 상단 = --home-stack-gap (①). 좌우·하단 패딩 유지 */
+  padding: var(--home-stack-gap, var(--space-3)) var(--page-gutter) var(--space-8);
   display: grid;
   grid-template-columns: 1fr;
   gap: var(--space-4);

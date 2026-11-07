@@ -118,7 +118,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin: 0 0 var(--home-block-gap, 3.5rem);
+  /* ②: 3칸 → 뉴스 = --home-stack-gap (①과 동일) */
+  margin: 0 0 var(--home-stack-gap, var(--space-3));
 }
 
 .home-promo-trio__card {
@@ -218,7 +219,8 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  margin: 0 0 var(--home-block-gap, 3.5rem);
+  /* ③: 뉴스 → 지도 = --home-stack-gap (한 축: mb만, map mt=0) */
+  margin: 0 0 var(--home-stack-gap, var(--space-3));
 }
 
 .home-mkt-wrap .home-news-row {
@@ -363,15 +365,16 @@
 /* 홈 3칸·뉴스 행을 한 덩어리로 둔다. 내 박스는 탭 아래 분할에 있다. */
 .home-mkt-wrap {
   position: relative;
-  margin-bottom: var(--home-block-gap, 3.5rem);
+  /* wrap 직후 ~ 탭/다음 블록 = stack-gap. wrap 안 news mb=0 과 이중 금지 */
+  margin-bottom: var(--home-stack-gap, var(--space-3));
 }
 
 .home-news-row:has(+ .provider-home-tabs) {
-  margin-bottom: var(--home-block-gap, 3.5rem);
+  margin-bottom: var(--home-stack-gap, var(--space-3));
 }
 
 .home-mkt-wrap .home-promo-trio {
-  margin-bottom: var(--home-block-gap, 3.5rem);
+  margin-bottom: var(--home-stack-gap, var(--space-3));
 }
 
 .home-mkt-wrap > .home-mkt {
