@@ -76,6 +76,26 @@ function study114_request_is_https(): bool
     return str_contains($cfVisitor, '"scheme":"https"');
 }
 
+/**
+ * 클라이언트 IP. Cloudflare면 CF-Connecting-IP, 아니면 REMOTE_ADDR.
+ * X-Forwarded-For 단독 신뢰는 스푸핑 위험이 있어 쓰지 않는다.
+ */
+function study114_client_ip(): string
+{
+    if (study114_trust_forwarded_proto()) {
+        $cf = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+        if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP)) {
+            return $cf;
+        }
+    }
+    $remote = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+    if ($remote !== '' && filter_var($remote, FILTER_VALIDATE_IP)) {
+        return $remote;
+    }
+
+    return 'unknown';
+}
+
 /** 현재 요청의 공개 origin (http/https + host). CLI·비웹이면 null. */
 function study114_request_origin(): ?string
 {
