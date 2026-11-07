@@ -1,7 +1,7 @@
 # 31 — OAuth 비밀값 유출 대응 (2026-07)
 
-**상태:** 대응 진행 · 키 재발급 필요  
-**관련:** `public/.htaccess` · `.github/workflows/deploy.yml` · `config/oauth.php` · `src/bootstrap.php`
+**상태:** ✅ 구조 대응 완료 · **시크릿 재발급·로그인 확인 완료 (2026-11-08)**  
+**관련:** `public/.htaccess` · `.github/workflows/deploy.yml` · `config/oauth.php` · `src/bootstrap.php` · `docs/internal/81-youtube-pre-security-lock.md` · grok-sync `328`
 
 ---
 
@@ -45,35 +45,33 @@
 
 ---
 
-## 3. 지금 사람이 해야 하는 작업 (필수)
+## 3. 사람 작업 — 재발급·확인 (2026-11-08 완료)
 
-### 3-1. provider 콘솔에서 키 재발급
+> 아래는 **완료 기록**이다. 이후 유출 의심 시 같은 절차를 반복한다.
 
-| provider | 콘솔 | 조치 |
+### 3-1. provider 콘솔에서 키 재발급 — ✅ 2026-11-08
+
+| provider | 조치 | 확인 |
 |----------|------|------|
-| Google | console.cloud.google.com → API·서비스 → 사용자 인증 정보 | 해당 OAuth 클라이언트 **client secret 재설정** (또는 새 클라이언트 발급) |
-| Kakao | developers.kakao.com → 내 앱 → 앱 키/보안 | **REST API 키 확인 + client secret(보안) 재발급** |
-| Naver | developers.naver.com → 내 애플리케이션 | **client secret 재발급** |
+| Naver | Client ID 유지 · Client Secret 재발급 | 로그인 OK |
+| Kakao | REST API 키 유지 · **카카오 로그인** Client Secret 재발급 (비즈니스 인증 시크릿 ✕) | 로그인 OK |
+| Google | Add secret → Secrets 반영 → 옛 secret 삭제 | 로그인 OK |
 
-- redirect URI 는 시작 호스트와 같아야 한다. 정본:
+- redirect URI 정본:
   `https://study114.net/api/auth/oauth/callback.php?provider=<naver|kakao|google>`
+- 호환(필요 시): `www` · `study114.dothome.co.kr` (https). `http`/`https`는 다른 등록이다.
 
-### 3-2. GitHub Actions Secrets 등록
+### 3-2. GitHub Actions Secrets — ✅ 갱신됨
 
-저장소 → Settings → Secrets and variables → Actions → **Secrets** 에 아래 6개 등록:
+- `OAUTH_NAVER_CLIENT_ID` / `OAUTH_NAVER_CLIENT_SECRET`
+- `OAUTH_KAKAO_REST_API_KEY` / `OAUTH_KAKAO_CLIENT_SECRET`
+- `OAUTH_GOOGLE_CLIENT_ID` / `OAUTH_GOOGLE_CLIENT_SECRET`
+- (선택) `STUDY114_MAIL_PROBE_KEY`
 
-- `OAUTH_NAVER_CLIENT_ID`
-- `OAUTH_NAVER_CLIENT_SECRET`
-- `OAUTH_KAKAO_REST_API_KEY`
-- `OAUTH_KAKAO_CLIENT_SECRET`
-- `OAUTH_GOOGLE_CLIENT_ID`
-- `OAUTH_GOOGLE_CLIENT_SECRET`
-- (선택) `STUDY114_MAIL_PROBE_KEY` — 미설정 시 배포마다 랜덤 생성
+### 3-3. 배포 → 복구 확인 — ✅
 
-### 3-3. 배포 → 복구 확인
-
-- `main` 에 커밋이 올라가면 Actions 가 secret 을 주입해 배포.
-- 3종 소셜 로그인으로 실제 로그인 확인.
+- Secrets만 바꾼 날: Actions **Deploy to dothome** 수동 Run (`main`) 후 주입.
+- 정본 `https://study114.net` 에서 네이버·카카오·구글 로그인 확인 완료 (2026-11-08).
 
 ---
 
@@ -112,3 +110,13 @@ force push 는 파괴적이므로 사용자 명시 승인 후 진행한다.
 2. `public/.htaccess` 로컬 파일에 실값이 들어가지 않았는지 `git diff`로 확인.
 3. 키 유출 의심 시 provider 콘솔에서 **즉시 재발급** 후 Secrets 갱신 → 재배포.
 4. (선택) 과거 커밋 히스토리 정리는 force push 승인 후 별도 진행.
+
+---
+
+## 7. 변경 이력
+
+| 날짜 | 내용 |
+|------|------|
+| 2026-07 | 유출 감지 · placeholder·Deploy 주입·CI 가드 |
+| 2026-07-22 | 재발 방지 장치 문서화 |
+| 2026-11-08 | 3사 Client Secret 재발급·Deploy·로그인 OK · 상태 ✅ · 유튜브 전 보안 5번 닫음 (`81`) |

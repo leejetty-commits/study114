@@ -1,7 +1,7 @@
 # sec-login-rate-limit-v1 — 로그인·소셜 시작 시도 제한 (2026-11-08)
 
 **브랜치:** `cursor/sec-login-rate-limit-v1-20261108`  
-**상태:** 코드 준비 · Secret/SQL 없음 (`storage/rate-limits/` 파일)  
+**상태:** ✅ 머지·배포 (`af986354`, PR #113) · 정본 잠금 `81` · SSOT C-6b · grok-sync 328  
 **범위:** 유튜브 홍보 전 보안 필수 4번
 
 ## 승인된 숫자
