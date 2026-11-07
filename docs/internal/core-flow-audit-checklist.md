@@ -4,6 +4,11 @@
 **라운드:** 8 (BLOCKER — src FTP 자동화 · OAuth 키 사람 작업)  
 **운영 URL:** http://study114.dothome.co.kr
 
+> **후속 갱신 (2026-11-08):** 아래 본문의 OAuth「키 미설정 / BLOCKER」는 **당시(2026-07) 스냅샷**이다.  
+> 현재는 Secrets 주입 + **2026-11-08 3사 Client Secret 재발급·로그인 확인 완료**.  
+> 최신 정본: `docs/internal/31-oauth-secret-incident.md` · `81-youtube-pre-security-lock.md` · grok-sync `328`.  
+> 정본 운영 URL: `https://study114.net`.
+
 ---
 
 ## A. 오늘 점검 범위
