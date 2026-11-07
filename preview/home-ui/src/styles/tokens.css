@@ -128,11 +128,13 @@
   /* Layout — UDX-20 Shell */
   --home-max: 80rem; /* 1280px */
   /*
-   * Home block rhythm (home-block-gap-v1, 2026-11-07)
-   * ① guest visual = .hero-map mb(--space-6=24) + first .section-heading pt(--space-8=32) = 56px
-   * Measured equal at 1280 / 768 / 390. Do not change ① composition; use token for other block edges.
+   * Home block rhythm
+   * home-block-gap-v1: map→노출 섹션 등 (지도 아래) — 이번 과제에서 변경하지 않음
+   * home-stack-gap-v1: 상단 스택 ①=본문시작~3칸 = .home-body padding-top(--space-3=12)
+   *   측정 1280/768/390 ≈ 12px. ②(3칸~뉴스)·③(뉴스~지도)도 동일.
    */
-  --home-block-gap: 3.5rem; /* 56px — major block boundary */
+  --home-block-gap: 3.5rem; /* 56px — below-map major blocks (unchanged) */
+  --home-stack-gap: var(--space-3); /* 12px — top stack ①=②=③ */
   --home-basic-title-gap: var(--space-2); /* 8px — basic/student title → first card */
   --page-gutter: 2rem; /* 32px desktop */
   --page-gutter-tablet: 1.5rem; /* 24px */
