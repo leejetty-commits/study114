@@ -54,6 +54,13 @@
 
 **완료 판정:** `https://study114.net/` 응답에 최소 헤더 3종 존재. (HSTS는 HTTPS 강제 이후가 자연스러움)
 
+### ✅ 완료 (2026-11-08)
+
+- CF `security_header`: HSTS 6개월 + `includeSubDomains` + `nosniff` (preload 끔)
+- CF Transform: `X-Frame-Options: SAMEORIGIN`
+- 검증: `curl -sI https://study114.net/` 3종 확인
+- 기록: `docs/worklog/2026/11/2026-11-08-82-fix2-security-headers.md`
+
 ---
 
 ## 3순위 — 사람 10분 스모크 (추정 High를 우리 눈으로 닫기)

@@ -37,7 +37,7 @@
 | ID | 내용 | 출처 | 내부 재확인 | 권고 | 홍보 전 |
 |----|------|------|-------------|------|---------|
 | FIX-1 | `http://study114.net/` → **200**, HTTPS 리다이렉트 없음 | Genspark R-1 | **2026-11-08 curl 확인 → CF Always Use HTTPS on 후 301 재확인** | Cloudflare「Always Use HTTPS」✅ 적용 | **필수 → 완료** |
-| FIX-2 | HSTS / CSP / X-Frame-Options / X-Content-Type-Options 부재 | Genspark R-2 · Gemini SEC-06 | **https 응답에도 없음 확인** | 최소: HSTS + X-Content-Type-Options + X-Frame-Options(또는 CSP frame-ancestors). CSP 전체는 후순위 가능 | **권장** (Genspark는 즉시 조치에 포함) |
+| FIX-2 | HSTS / CSP / X-Frame-Options / X-Content-Type-Options 부재 | Genspark R-2 · Gemini SEC-06 | **최소 3종 CF 적용·curl 확인** (CSP는 후순위) | HSTS+nosniff+X-Frame ✅ · CSP 미적용 | **권장 → 최소세트 완료** |
 
 ### 양호로 확정에 가까운 관찰
 
