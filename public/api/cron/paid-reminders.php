@@ -14,9 +14,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     exit;
 }
 
-$config = study114_config('paid');
-$key = (string) ($_SERVER['HTTP_X_CRON_KEY'] ?? $_GET['key'] ?? '');
-if ($key === '' || !hash_equals((string) $config['cron_key'], $key)) {
+// 정산·회원메일 cron과 동일: 전용 키 · 헤더만 · 약한/기본값이면 실행 안 함 (GET ?key= 금지)
+$expected = study114_env('STUDY114_CRON_KEY', '');
+if ($expected === '' || str_starts_with($expected, '__') || strlen($expected) < 32 || $expected === 'dev-cron-key') {
+    http_response_code(503);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'cron_key_unconfigured',
+        'message' => '리마인더 cron 키가 준비되지 않았습니다.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$given = (string) ($_SERVER['HTTP_X_CRON_KEY'] ?? '');
+if ($given === '' || !hash_equals($expected, $given)) {
     http_response_code(403);
     echo json_encode(['ok' => false, 'message' => 'cron key가 올바르지 않습니다.'], JSON_UNESCAPED_UNICODE);
     exit;

@@ -113,6 +113,7 @@ jobs:
           STUDY114_PHONE_OTP_PEPPER: ${{ secrets.STUDY114_PHONE_OTP_PEPPER }}
           STUDY114_RESEND_API_KEY: ${{ secrets.STUDY114_RESEND_API_KEY }}
           STUDY114_REPORT_CRON_KEY: ${{ secrets.STUDY114_REPORT_CRON_KEY }}
+          STUDY114_CRON_KEY: ${{ secrets.STUDY114_CRON_KEY }}
         shell: bash
         run: |
           set -euo pipefail
@@ -136,6 +137,11 @@ jobs:
               exit 1
               ;;
           esac
+          # paid-reminders: 공개 기본값(dev-cron-key) 금지 · 32자 이상 필수
+          if [ -z "${STUDY114_CRON_KEY:-}" ] || [ "${#STUDY114_CRON_KEY}" -lt 32 ] || [ "${STUDY114_CRON_KEY}" = "dev-cron-key" ]; then
+            echo "::error::STUDY114_CRON_KEY Secret이 없거나 약합니다(32자 이상, dev-cron-key 금지) — 배포 중단"
+            exit 1
+          fi
           # mail probe key 미설정 시 랜덤 (저장소·로그에 남기지 않음)
           if [ -z "${STUDY114_MAIL_PROBE_KEY:-}" ]; then
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
@@ -156,12 +162,18 @@ jobs:
             *) echo "::error::placeholder $report_token not found"; exit 1 ;;
           esac
           data="${data//"$report_token"/"${STUDY114_REPORT_CRON_KEY:-}"}"
+          cron_token="__STUDY114_CRON_KEY__"
+          case "$data" in
+            *"$cron_token"*) ;;
+            *) echo "::error::placeholder $cron_token not found"; exit 1 ;;
+          esac
+          data="${data//"$cron_token"/"${STUDY114_CRON_KEY}"}"
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
-          echo "OAuth/Resend SetEnv 주입 완료 (값은 출력하지 않음)."
+          echo "OAuth/Resend/Cron SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh
