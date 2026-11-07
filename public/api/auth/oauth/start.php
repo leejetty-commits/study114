@@ -17,7 +17,7 @@ use Study114\Auth\AuthSession;
 use Study114\Auth\OAuthService;
 
 $provider = (string) ($_GET['provider'] ?? '');
-$returnTo = (string) ($_GET['return_to'] ?? '');
+$returnTo = study114_sanitize_oauth_return_to((string) ($_GET['return_to'] ?? ''));
 
 $failToLogin = static function (string $message) use ($provider): void {
     $origin = study114_request_origin() ?? '-';

@@ -36,7 +36,7 @@ try {
         throw new InvalidArgumentException('인증 코드가 없습니다.');
     }
 
-    $returnTo = (string) ($session['return_to'] ?? '');
+    $returnTo = study114_sanitize_oauth_return_to((string) ($session['return_to'] ?? ''));
     $redirectUri = (string) ($session['redirect_uri'] ?? $oauth->redirectUri($provider));
     unset($_SESSION['oauth']);
 
@@ -46,7 +46,7 @@ try {
     $contact = (new \Study114\Auth\AccountContactService())->status((int) $user['user_id']);
     if ($contact['needs_account_contact']) {
         $params = ['from' => 'oauth'];
-        if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
+        if ($returnTo !== '') {
             $params['return_to'] = $returnTo;
         }
         header('Location: ' . $authUi . '/#/signup/account-contact?' . http_build_query($params), true, 302);
@@ -69,7 +69,7 @@ try {
     $isAdmin = $user['role_type'] === 'admin';
     if (!$isAdmin && ($user['is_new'] || (new OAuthRoleService())->isRolePendingForUser($user['user_id']))) {
         $params = ['from' => 'oauth'];
-        if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
+        if ($returnTo !== '') {
             $params['return_to'] = $returnTo;
         }
         $target = $authUi . '/#/signup/role?' . http_build_query($params);
@@ -77,7 +77,7 @@ try {
         exit;
     }
 
-    if ($returnTo !== '' && (str_starts_with($returnTo, '/') || str_starts_with($returnTo, $homeUi))) {
+    if ($returnTo !== '') {
         $target = str_starts_with($returnTo, 'http')
             ? $returnTo
             : $homeUi . '/#/' . ltrim($returnTo, '/#');
