@@ -114,6 +114,7 @@ jobs:
           STUDY114_RESEND_API_KEY: ${{ secrets.STUDY114_RESEND_API_KEY }}
           STUDY114_REPORT_CRON_KEY: ${{ secrets.STUDY114_REPORT_CRON_KEY }}
           STUDY114_CRON_KEY: ${{ secrets.STUDY114_CRON_KEY }}
+          STUDY114_STORAGE_SECRET: ${{ secrets.STUDY114_STORAGE_SECRET }}
         shell: bash
         run: |
           set -euo pipefail
@@ -142,6 +143,11 @@ jobs:
             echo "::error::STUDY114_CRON_KEY Secret이 없거나 약합니다(32자 이상, dev-cron-key 금지) — 배포 중단"
             exit 1
           fi
+          # 제출함 첨부 다운로드 토큰 HMAC — 공개 기본값 금지 · 32자 이상 필수
+          if [ -z "${STUDY114_STORAGE_SECRET:-}" ] || [ "${#STUDY114_STORAGE_SECRET}" -lt 32 ] || [ "${STUDY114_STORAGE_SECRET}" = "study114-dev-attachment-secret" ]; then
+            echo "::error::STUDY114_STORAGE_SECRET Secret이 없거나 약합니다(32자 이상, study114-dev-attachment-secret 금지) — 배포 중단"
+            exit 1
+          fi
           # mail probe key 미설정 시 랜덤 (저장소·로그에 남기지 않음)
           if [ -z "${STUDY114_MAIL_PROBE_KEY:-}" ]; then
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
@@ -168,12 +174,18 @@ jobs:
             *) echo "::error::placeholder $cron_token not found"; exit 1 ;;
           esac
           data="${data//"$cron_token"/"${STUDY114_CRON_KEY}"}"
+          storage_token="__STUDY114_STORAGE_SECRET__"
+          case "$data" in
+            *"$storage_token"*) ;;
+            *) echo "::error::placeholder $storage_token not found"; exit 1 ;;
+          esac
+          data="${data//"$storage_token"/"${STUDY114_STORAGE_SECRET}"}"
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
-          echo "OAuth/Resend/Cron SetEnv 주입 완료 (값은 출력하지 않음)."
+          echo "OAuth/Resend/Cron/Storage SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh
