@@ -14,6 +14,8 @@ if (!is_file($bootstrap)) {
 require_once $bootstrap;
 
 use Study114\Auth\AuthSession;
+use Study114\Auth\LoginRateLimitException;
+use Study114\Auth\LoginRateLimiter;
 use Study114\Auth\OAuthService;
 
 $provider = (string) ($_GET['provider'] ?? '');
@@ -34,6 +36,10 @@ $failToLogin = static function (string $message) use ($provider): void {
 };
 
 try {
+    $clientIp = study114_client_ip();
+    $rate = new LoginRateLimiter();
+    $rate->assertOAuthStartAllowed($clientIp);
+
     $oauth = new OAuthService();
     if (!in_array($provider, OAuthService::providers(), true)) {
         throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.');
@@ -41,6 +47,8 @@ try {
     if (!$oauth->isConfigured($provider)) {
         throw new RuntimeException('소셜 로그인 설정이 완료되지 않았습니다. 운영 환경 변수를 확인해 주세요.');
     }
+
+    $rate->recordOAuthStart($clientIp);
 
     AuthSession::start();
     $state = bin2hex(random_bytes(16));
@@ -61,6 +69,8 @@ try {
 
     header('Location: ' . $oauth->authorizeUrl($provider, $state, $redirectUri), true, 302);
     exit;
+} catch (LoginRateLimitException $e) {
+    $failToLogin($e->getMessage());
 } catch (Throwable $e) {
     error_log('[oauth/start] ' . $e::class . ' ' . $e->getMessage()
         . ' provider=' . $provider

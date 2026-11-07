@@ -6,6 +6,8 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\Auth\EmailVerificationGate;
+use Study114\Auth\LoginRateLimitException;
+use Study114\Auth\LoginRateLimiter;
 use Study114\Auth\LoginService;
 use Study114\Admin\AdminRoleService;
 
@@ -36,9 +38,13 @@ if (!is_array($input)) {
 
 $email = (string) ($input['email'] ?? '');
 $password = (string) ($input['password'] ?? '');
+$clientIp = study114_client_ip();
+$rate = new LoginRateLimiter();
 
 try {
+    $rate->assertPasswordAllowed($clientIp, $email);
     $user = (new LoginService())->attempt($email, $password);
+    $rate->clearPasswordEmail($email);
     $roles = new AdminRoleService();
     AuthSession::login(
         $user['user_id'],
@@ -75,7 +81,29 @@ try {
         'email_verified' => $emailVerified,
         'email_verify_required' => !$emailVerified,
     ], JSON_UNESCAPED_UNICODE);
+} catch (LoginRateLimitException $e) {
+    // dothome/Apache는 4xx 시 PHP JSON 본문을 HTML 에러 페이지로 덮어쓸 수 있다.
+    http_response_code(200);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'rate_limited',
+        'message' => $e->getMessage(),
+        'retry_after_seconds' => $e->retryAfterSeconds(),
+    ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
+    $rate->recordPasswordFailure($clientIp, $email);
+    try {
+        $rate->assertPasswordAllowed($clientIp, $email);
+    } catch (LoginRateLimitException $limited) {
+        http_response_code(200);
+        echo json_encode([
+            'ok' => false,
+            'error' => 'rate_limited',
+            'message' => $limited->getMessage(),
+            'retry_after_seconds' => $limited->retryAfterSeconds(),
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
     // dothome/Apache는 4xx 시 PHP JSON 본문을 HTML 에러 페이지로 덮어쓴다.
     // FE가 message를 읽도록 200 + ok:false 로 반환한다.
     http_response_code(200);

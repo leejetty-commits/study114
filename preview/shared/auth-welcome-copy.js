@@ -84,6 +84,8 @@ export function loginWelcomeText(name) {
 export function loginFailureMessage(raw) {
   const msg = String(raw || '').trim();
   if (msg.includes('이메일 또는 비밀번호')) return AUTH_WELCOME_COPY.login.credential;
+  // 서버 rate limit 안내(보안상 · 약 N분 후)는 남은 시각을 유지한다.
+  if (msg.includes('보안상') && msg.includes('다시 시도')) return msg;
   return AUTH_WELCOME_COPY.login.fail;
 }
 
