@@ -94,5 +94,6 @@ function applyState(isMobile) {
 
 ## 승인 대기
 
-- 커밋: (push 후 기록)
-- 승인자: 사용자
+- 커밋: `625a0045` (브랜치 `feat/part-c-rail-accordion-v2`)
+- push: 완료
+- 승인자: 사용자 (대기 중)
