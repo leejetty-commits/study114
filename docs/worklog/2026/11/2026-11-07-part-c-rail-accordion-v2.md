@@ -92,8 +92,12 @@ function applyState(isMobile) {
 
 ---
 
-## 승인 대기
+## 승인 · 배포 · 사용자 확인
 
-- 커밋: `625a0045` (브랜치 `feat/part-c-rail-accordion-v2`)
-- push: 완료
-- 승인자: 사용자 (대기 중)
+| 항목 | 내용 |
+|---|---|
+| PR | [#102](https://github.com/leejetty-commits/study114/pull/102) squash merge |
+| main 커밋 | `2e750488` |
+| Deploy to dothome | ✅ Actions 성공 (2026-11-07) |
+| Verify bundle | ✅ Actions 성공 |
+| **사용자 확인** | **✅ "현재까지는 이상없어" (2026-11-07 15:23)** |
