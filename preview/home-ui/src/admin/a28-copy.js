@@ -360,14 +360,7 @@ export const A28_MENU = [
         help: '이용·정책·오류 문의를 답변합니다. (영카트 상품문의 대응)',
         screenId: 'A28-04b',
       },
-      {
-        id: 'submission',
-        menuId: 'submission',
-        label: '제출자료 확인',
-        path: '/admin/submission-docs',
-        help: '제출된 자료를 내부에서만 확인하고 공개/숨김을 반영합니다.',
-        screenId: 'A28-06',
-      },
+      // 2026-11-07 제출함 제품 미사용 — 관리자 「제출자료 확인」 메뉴 숨김 (A28-06 라우트·API는 잔존)
     ],
   },
   {

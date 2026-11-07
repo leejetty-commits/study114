@@ -78,6 +78,9 @@ final class BoardPostService
     ): array {
         $boardKey = BoardChannelAcl::normalizeBoardKey($boardKey);
         $this->assertBoardKey($boardKey);
+        if ($boardKey === 'submission') {
+            throw new BoardAccessException(404, 'not_found', BoardSubmissionGate::RETIRED_MESSAGE);
+        }
         if (BoardChannelAcl::isInfoBoard($boardKey)) {
             return $this->infoService()->list($boardKey, $auth, $postKey, $infoQuery);
         }
@@ -244,23 +247,7 @@ final class BoardPostService
         }
 
         if ($boardKey === 'submission') {
-            if ($auth === null) {
-                throw new BoardAccessException(401, 'unauthorized', '로그인이 필요합니다.');
-            }
-            if (!BoardChannelAcl::canCompose($boardKey, $boardRole)) {
-                throw new BoardAccessException(403, 'forbidden', '제출함은 과외쌤만 이용할 수 있습니다.');
-            }
-            $sessionNav = $this->navRoleFromAuth($auth);
-            if ($existing !== null) {
-                $this->assertExistingPostOwnership($existing, $auth, $sessionNav);
-            }
-            $input['author_role'] = $sessionNav;
-            $input['board_key'] = $boardKey;
-            if ($existing !== null) {
-                $input['post_key'] = (string) $existing['post_key'];
-            }
-
-            return $this->saveSubmission($input, $boardKey, $auth);
+            throw new BoardAccessException(404, 'not_found', BoardSubmissionGate::RETIRED_MESSAGE);
         }
 
         if ($auth === null) {
@@ -320,19 +307,11 @@ final class BoardPostService
             return;
         }
 
-        if ($actualKey !== 'submission') {
-            throw new InvalidArgumentException('현재 삭제는 submission·운영형·고민방 채널만 지원합니다.');
-        }
-        $authorRole = $sessionNav;
-        $this->assertAuthorRole($authorRole);
-        $this->assertExistingPostOwnership($existing, $auth, $authorRole);
-        $status = (string) $existing['status'];
-        if ($status !== 'draft' && $status !== 'submitted') {
-            throw new InvalidArgumentException('삭제할 수 없는 상태입니다.');
+        if ($actualKey === 'submission') {
+            throw new BoardAccessException(404, 'not_found', BoardSubmissionGate::RETIRED_MESSAGE);
         }
 
-        $this->attachments->deleteForPost($actualKey, $actualPostKey);
-        $this->repo->delete($actualKey, $actualPostKey);
+        throw new InvalidArgumentException('현재 삭제는 운영형·고민방 채널만 지원합니다.');
     }
 
     /**

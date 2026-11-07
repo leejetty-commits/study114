@@ -11,6 +11,9 @@ use Study114\Board\BoardApi;
 BoardApi::bootstrap();
 
 BoardApi::run(static function (): void {
+    // 제출함 제품 미사용 — 첨부 다운로드 닫음 (2026-11-07)
+    \Study114\Board\BoardSubmissionGate::rejectIfSubmission();
+
     if (BoardApi::method() !== 'GET') {
         BoardApi::fail(405, 'method_not_allowed', 'GET만 허용됩니다.');
     }
