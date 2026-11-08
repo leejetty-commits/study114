@@ -20,8 +20,17 @@
 
 파일: `src/Messages/MessageAttachmentService.php`, `config/storage.php` 주석.
 
-## 배포 후 확인 (승인자)
+## 배포·실측
 
-- 쪽지에 JPG/PNG/PDF 첨부·다운로드  
-- `.php`·가짜 확장자 거절  
-- 제출함 메뉴 없음(기존)
+| 항목 | 값 |
+|------|-----|
+| merge | `f842ef49` (PR #123) |
+| Deploy | Actions `42494247444` success |
+| 실측 | 2026-11-09 — PNG 첨부·다운로드 → PNG 유지(정상). 승인자 OK |
+
+## 확인 체크
+
+- [x] 쪽지 PNG 첨부·다운로드  
+- [ ] JPG/PDF (선택)  
+- [ ] `.php` 위장 거절 (서버 MIME 기준)  
+- [x] 제출함 메뉴 없음(기존)
