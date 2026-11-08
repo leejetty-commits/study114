@@ -29,7 +29,15 @@ if ($error !== '') {
 try {
     AuthSession::start();
     $session = $_SESSION['oauth'] ?? null;
-    if (!is_array($session) || ($session['state'] ?? '') !== $state || ($session['provider'] ?? '') !== $provider) {
+    $sessionState = (string) ($session['state'] ?? '');
+    $sessionProvider = (string) ($session['provider'] ?? '');
+    if (
+        !is_array($session)
+        || $sessionState === ''
+        || $state === ''
+        || !hash_equals($sessionState, $state)
+        || $sessionProvider !== $provider
+    ) {
         throw new InvalidArgumentException('소셜 로그인 상태가 올바르지 않습니다. 다시 시도해 주세요.');
     }
     if ($code === '') {
@@ -38,9 +46,10 @@ try {
 
     $returnTo = study114_sanitize_oauth_return_to((string) ($session['return_to'] ?? ''));
     $redirectUri = (string) ($session['redirect_uri'] ?? $oauth->redirectUri($provider));
+    // CSRF용 세션은 즉시 폐기. 네이버 토큰 교환용 state는 인자로 넘긴다.
     unset($_SESSION['oauth']);
 
-    $user = $oauth->authenticate($provider, $code, $redirectUri);
+    $user = $oauth->authenticate($provider, $code, $redirectUri, $sessionState);
     AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
 
     $contact = (new \Study114\Auth\AccountContactService())->status((int) $user['user_id']);
