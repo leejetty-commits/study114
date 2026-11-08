@@ -61,9 +61,14 @@
 ## 다음 — 6순위
 
 - CSP 본격 (맵·소셜·PG 깨짐 주의)  
-- 업로드 MIME/경로  
+- ~~업로드 MIME/경로 (쪽지)~~ → **진행/PR** `fix/message-attachment-mime-harden`  
+  - 서버 MIME(finfo) · 저장 확장자=MIME · PDF `%PDF-` · 이미지 getimagesize+GD 재인코딩  
+  - **제출함 제외** · 홍보/프로필은 285에서 이미 보강됨  
 - git secret blob (**force-push · 별도 승인 없이 금지**)  
-- 제출함 완전 삭제 등 후순위 조율  
+
+**제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
+사이트 메뉴·API 404. **보안 6순위·업로드 보강 대상이 아니다.** 거론·재오픈 금지.  
+코드 잔재 **완전 삭제**는 별도 청소 과제(승인자 지시 시에만) — 보안 체크리스트에 넣지 말 것.
 
 **금지:** 시크릿 출력·키 브루트·rate limit 한도 채우기·main 직접 push.
 
