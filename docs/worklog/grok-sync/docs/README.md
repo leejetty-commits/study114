@@ -180,4 +180,4 @@
 - `326-mobile-responsive-proposal.md` — 이상적인 반응형 웹(모바일) 구현 방안. 4파트: A 햄버거 GNB · B 히어로맵 아코디언 · C 레일 아코디언 · D 카드 보완. 정본 `docs/internal/80-mobile-responsive-proposal.md`.
 - `327-hero-map-mobile-grey-fix.md` — 모바일 히어로 맵 회색 여백 제거. 근본원인 3가지(CSS cascade·height체인·overflow:hidden) + PR #91~#99 실패·해결 이력. 정본 `docs/internal/80b-hero-map-mobile-grey-fix.md`.
 - `328-youtube-pre-security-2026-11-08.md` — 유튜브 홍보 전 보안 필수 1~5 완료 (cron·storage·return_to·rate limit·OAuth 3사 재발급). 정본 `docs/internal/81-youtube-pre-security-lock.md`.
-- `330-search-memo-cross-region-nav-role-2026-11-08.md` — 찾기에서 다른 지역 공부방·과외쌤 쪽지. guest 역할 착각 수정. 정책: 지역 제한 없음·차단으로 악용 대응.
+- `330-search-memo-cross-region-nav-role-2026-11-08.md` — **정책 확정** · 쪽지 지역 제한 없음(찾기에서 다른 동네·과외쌤 OK) · guest 버그 수정·실측 통과 · PR #117.
