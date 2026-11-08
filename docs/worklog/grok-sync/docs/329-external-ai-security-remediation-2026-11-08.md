@@ -90,12 +90,11 @@
 | HEAD | OAuth·관련 키 **placeholder** · 시크릿 재발급 완료 |
 | 히스토리 | `a990122`/`fce2c28`/`1d56525` 등 `.htaccess`에 **옛 실값 blob 잔존** |
 | 조치 | **조사만** · 기록 `…-git-secret-blob-investigate-only.md` · 정본 `31` |
-| force-push | **보류**(승인·계획 전 금지). 재발급으로 실사용 위험은 낮음 |
+| force-push | **안 함·그대로 둠** (승인자 2026-11-09 · 키 전부 재발급) |
 
 ### 남음
 
 - (선택) 유튜브 배너 후 스모크  
-- (선택·승인) 히스토리 삭제 force-push  
 - **`82f` 외부 재점검**
 
 **제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
