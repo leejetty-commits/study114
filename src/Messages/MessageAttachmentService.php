@@ -135,7 +135,7 @@ final class MessageAttachmentService
                 $row = $repo->insertAttachment(
                     $messageId,
                     $threadId,
-                    $this->safeOriginalName($originalName),
+                    $this->safeOriginalName($originalName, $ext),
                     $relativePath,
                     $storeMime,
                     $storeSize,
@@ -396,15 +396,33 @@ final class MessageAttachmentService
         return ['path' => $out, 'bytes' => $bytes, 'mime' => $storeMime];
     }
 
-    private function safeOriginalName(string $name): string
+    /**
+     * 다운로드 제안 파일명. 확장자는 서버가 정한 MIME 확장자만 붙인다.
+     * (예: shell.php 가 실제 JPG면 shell.jpg)
+     */
+    private function safeOriginalName(string $name, string $serverExt): string
     {
         $base = basename(str_replace('\\', '/', $name));
         $base = trim($base);
         if ($base === '') {
-            $base = 'attachment.bin';
+            $base = 'attachment';
         }
 
-        return mb_substr($base, 0, 180);
+        $dot = strrpos($base, '.');
+        if ($dot !== false && $dot > 0) {
+            $base = substr($base, 0, $dot);
+        }
+        $base = trim($base);
+        if ($base === '') {
+            $base = 'attachment';
+        }
+
+        $serverExt = strtolower(preg_replace('/[^a-z0-9]/i', '', $serverExt) ?? '');
+        if ($serverExt === '') {
+            $serverExt = 'bin';
+        }
+
+        return mb_substr($base . '.' . $serverExt, 0, 180);
     }
 
     /**

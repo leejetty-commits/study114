@@ -16,7 +16,7 @@
 | 저장 이름 | `bin2hex` + **서버 MIME→확장자** (사용자 파일명 확장자 무시) |
 | PDF | 선두 `%PDF-` |
 | 이미지 | `getimagesize` + 픽셀 폭탄 가드 + GD 재인코딩 |
-| 표시명 | `original_name`만 사용자 basename 유지(다운로드 표시용) |
+| 표시명 | 사용자 basename 유지 + **확장자는 서버 MIME만** (`shell.php`→실JPG면 `shell.jpg`) |
 
 파일: `src/Messages/MessageAttachmentService.php`, `config/storage.php` 주석.
 
