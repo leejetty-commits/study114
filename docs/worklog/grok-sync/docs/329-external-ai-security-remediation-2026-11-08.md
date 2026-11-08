@@ -2,7 +2,7 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~5)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~5 · 업로드(쪽지) ✅ · **CSP Report-Only ✅**(Enforce 전) · 남은 것 **CSP Enforce · git blob** · `82f`는 6 전부 후  
+**상태:** ✅ 1~5 · 업로드 ✅ · **CSP Report-Only ✅** · 스모크: 페이지 OK · **유튜브 보류(오늘 저녁)** · 남은 것 **CSP Enforce · git blob** · `82f`는 6 전부 후  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)  
 **곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)
 
@@ -81,13 +81,15 @@
 | 기록 | `docs/worklog/2026/11/2026-11-09-82-fix6-csp-report-only.md` |
 | 닷홈 | 정본 301 · 이번 단계 비대상 |
 | 문자·결제 | 연동 시 허용 목록에 **추가** |
+| 스모크(새벽) | 전 페이지 잘 보임 · F12 `csp` 주황 없음 · Issues 숫자는 페이지마다 다름(참고) |
+| 유튜브 | **보류** — 우측 레일 배너 아직 없음 → **오늘 저녁** 테스트 후 Enforce |
 
 ### 남음
 
-- CSP **Enforce** (지도·로그인·주소검색·유튜브 스모크 후)  
+- **오늘 저녁** 유튜브 스모크 → CSP **Enforce**  
 - git secret blob (**force-push · 별도 승인 없이 금지**)  
 
-제안 순서: **스모크 → CSP Enforce → git(조사/보류)**
+제안 순서: **저녁 유튜브 → Enforce → git(조사/보류)**
 
 **제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
 사이트 메뉴·API 404. **보안 6순위·업로드 보강 대상이 아니다.** 거론·재오픈 금지.  
@@ -109,6 +111,5 @@
 
 ```
 docs/worklog/2026/11/2026-11-08-handoff.md
-보안 6순위 남음=CSP·git. grok-sync 329 읽고 복명복창.
-쪽지 업로드는 끝( f842ef49 ). 6 전부면 82f.
+CSP Report-Only 적용됨. 유튜브 스모크 보류→오늘 저녁. Enforce 전 복명복창.
 ```
