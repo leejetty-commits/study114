@@ -2,13 +2,14 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~5)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~6 조치 · ✅ `82f`~`82j` · ✅ admin UI·지도 스모크(2026-11-09) · Critical/High 재현 0 · **다음=배너 후 B · unsafe-inline 후순위**  
+**상태:** ✅ 1~6 조치 · ✅ `82f`~`82j` · ✅ admin UI·지도 스모크 · ✅ **2차 상세=`331`** · Critical/High 재현 0 · **다음=배너 후 B · unsafe-inline 후순위**  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)  
-**곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)
+**곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)  
+**2차 상세 정본:** `331-82f-external-retest-full-record-2026-11-09.md`
 
 정본(내부): `docs/internal/82`~`82j` · `docs/internal/81-youtube-pre-security-lock.md`  
 인수인계: `docs/worklog/2026/11/2026-11-08-handoff.md`  
-작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md` · `…-82f-external-ai-security-retest.md`
+작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md` · `…-82f-external-ai-security-retest.md` · `…-82j-admin-map-browser-smoke.md`
 
 ---
 
@@ -16,7 +17,7 @@
 
 외부 AI 3곳 Critical 재현 0. 재현 High는 HTTP→HTTPS 미강제 → CF로 해소.  
 헤더·admin·81잠금·5순위·**6-업로드(쪽지 MIME)**까지 **끝냄.**  
-**2차 재점검 취합 완료** (`82j`). High 재현 0 · `'unsafe-inline'` Medium 후순위. 유튜브 직전 admin UI·지도 스모크 권장 · **후속 B**는 배너 후.
+**2차 재점검 취합·스모크 완료.** 상세는 **`331`**. High 재현 0 · `'unsafe-inline'` 후순위 · **후속 B**는 배너 후.
 
 ---
 
@@ -30,6 +31,7 @@
 | `82h` | Gemini 재점검 ✅ (재현0·다수「해소」·과장 주의) |
 | `82i` | Genspark 재점검 ✅ (재현0·실측 최심·`unsafe-inline` Medium) |
 | `82j` | 2차 최종 취합 ✅ |
+| **`331`** | **2차 재점검 전 과정 상세 기록(공동폴더 정본)** ✅ |
 | `330` | 찾기 쪽지 정책·guest 버그 수정·실측 |
 
 ---
