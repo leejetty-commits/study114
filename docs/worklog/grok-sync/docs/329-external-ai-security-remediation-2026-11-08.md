@@ -2,7 +2,7 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~5)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~5순위 완료 · 6순위 중 **업로드(쪽지) ✅** · 남은 것 **CSP · git blob** · 재점검 `82f`는 **6 전부 끝난 뒤**  
+**상태:** ✅ 1~5 · 업로드(쪽지) ✅ · **CSP Report-Only ✅**(Enforce 전) · 남은 것 **CSP Enforce · git blob** · `82f`는 6 전부 후  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)  
 **곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)
 
@@ -16,7 +16,7 @@
 
 외부 AI 3곳 Critical 재현 0. 재현 High는 HTTP→HTTPS 미강제 → CF로 해소.  
 헤더·admin·81잠금·5순위·**6-업로드(쪽지 MIME)**까지 **끝냄.**  
-**다음 = CSP → git blob(조사/보류).** 6 전부 끝나면 `82f` 외부 재점검.
+**다음 = CSP Enforce(스모크 후) → git blob(조사/보류).** 6 전부 끝나면 `82f`.
 
 ---
 
@@ -72,12 +72,22 @@
 | 실측 | 승인자 PNG 첨부·다운로드 → **그대로 PNG**(정상: 포맷 유지·재인코딩). 위장 확장자 거절은 서버 MIME 기준 |
 | worklog | `docs/worklog/2026/11/2026-11-08-fix-message-attachment-mime-harden.md` · `…-docs-retire-submission-from-security-lists.md` |
 
+### CSP Report-Only ✅ (2026-11-09)
+
+| 항목 | 내용 |
+|------|------|
+| 수단 | CF Transform ruleset `132970d7…` · ref `study114_csp_report_only` |
+| 헤더 | `Content-Security-Policy-Report-Only` (차단 아님) |
+| 기록 | `docs/worklog/2026/11/2026-11-09-82-fix6-csp-report-only.md` |
+| 닷홈 | 정본 301 · 이번 단계 비대상 |
+| 문자·결제 | 연동 시 허용 목록에 **추가** |
+
 ### 남음
 
-- CSP 본격 (맵·소셜·PG 깨짐 주의)  
+- CSP **Enforce** (지도·로그인·주소검색·유튜브 스모크 후)  
 - git secret blob (**force-push · 별도 승인 없이 금지**)  
 
-제안 순서: **CSP → git(조사/보류)**
+제안 순서: **스모크 → CSP Enforce → git(조사/보류)**
 
 **제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
 사이트 메뉴·API 404. **보안 6순위·업로드 보강 대상이 아니다.** 거론·재오픈 금지.  
