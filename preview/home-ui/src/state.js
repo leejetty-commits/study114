@@ -170,6 +170,18 @@ export function getNavRole() {
     const live = sessionNavRole();
     return live || 'guest';
   }
+  // 찾기(`/search/`)는 별도 SPA·hash라 SCREEN_META에 없음 → guest로 떨어지면 쪽지 등 권한이 깨진다.
+  // 로그인 세션 역할 우선(search-ui syncRoleFromHash와 동일 축).
+  if (isSearchRoute()) {
+    const live = sessionNavRole();
+    if (live && live !== 'guest') {
+      if (live === 'parent' || live === 'study_room' || live === 'tutor') setActiveRole(live);
+      return live;
+    }
+    const stored = sessionStorage.getItem(ACTIVE_ROLE_KEY);
+    if (stored === 'parent' || stored === 'study_room' || stored === 'tutor') return stored;
+    return 'guest';
+  }
   // 자료실·마이샵은 역할 홈이 아님 — SCREEN_META에 없어 guest로 떨어지면
   // 셸/레일 맥락이 깨지고 GNB·동선이 흔들린다. 저장된 활성 역할만 쓰고, 없으면 guest.
   if (isMyshopRoute() || isLibraryRoute()) {
@@ -270,6 +282,15 @@ export function isMyshopRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
   return Boolean(normalizeMyshopPath(path));
+}
+
+/** 찾기 SPA(`/search/`) 또는 홈에 심은 `#/search/…` */
+export function isSearchRoute() {
+  const pathname = (window.location.pathname || '').replace(/\/+$/, '') || '/';
+  if (pathname === '/search' || pathname.startsWith('/search/')) return true;
+  const hash = window.location.hash.slice(1) || '';
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0].replace(/\/+$/, '') || '/';
+  return path === '/search' || path.startsWith('/search/');
 }
 
 export function isMypageRoute() {
