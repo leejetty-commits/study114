@@ -2,13 +2,13 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~5)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~6 조치 완료(업로드·CSP·git 조사·히스토리 유지) · **다음=`82f` 재점검** (다음 채팅 · 승인자 2026-11-09)  
+**상태:** ✅ 1~6 조치 · ✅ `82f`~`82j` 2차 재점검 취합 완료(2026-11-09) · Critical/High 재현 0 · **다음=유튜브 직전 스모크·배너 후 B**  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)  
 **곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)
 
-정본(내부): `docs/internal/82`~`82f` · `docs/internal/81-youtube-pre-security-lock.md`  
+정본(내부): `docs/internal/82`~`82j` · `docs/internal/81-youtube-pre-security-lock.md`  
 인수인계: `docs/worklog/2026/11/2026-11-08-handoff.md`  
-작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md`
+작업기록: `docs/worklog/2026/11/2026-11-08-82-*.md` · `…-82f-external-ai-security-retest.md`
 
 ---
 
@@ -16,7 +16,7 @@
 
 외부 AI 3곳 Critical 재현 0. 재현 High는 HTTP→HTTPS 미강제 → CF로 해소.  
 헤더·admin·81잠금·5순위·**6-업로드(쪽지 MIME)**까지 **끝냄.**  
-**다음 = `82f` 외부 AI 재점검** (다음 채팅). 유튜브 배너 스모크는 보류·병행 가능.
+**2차 재점검 취합 완료** (`82j`). High 재현 0 · `'unsafe-inline'` Medium 후순위. 유튜브 직전 admin UI·지도 스모크 권장 · **후속 B**는 배너 후.
 
 ---
 
@@ -24,8 +24,12 @@
 
 | 문서 | 내용 |
 |------|------|
-| `docs/internal/82` ~ `82e` | 지시문·3사 raw/요약·취합·대안 1~6 |
-| `82f` **재점검 지시문** | 5·6 완료 **후** 복붙 (미리 작성) |
+| `docs/internal/82` ~ `82e` | 1차 지시문·3사 raw/요약·취합·대안 1~6 |
+| `82f` | 2차 재점검 지시문 |
+| `82g` | ChatGPT 재점검 ✅ (재현0·전부 미확인) |
+| `82h` | Gemini 재점검 ✅ (재현0·다수「해소」·과장 주의) |
+| `82i` | Genspark 재점검 ✅ (재현0·실측 최심·`unsafe-inline` Medium) |
+| `82j` | 2차 최종 취합 ✅ |
 | `330` | 찾기 쪽지 정책·guest 버그 수정·실측 |
 
 ---
@@ -94,7 +98,10 @@
 
 ### 남음
 
-- **`82f` 외부 재점검** ← **다음 채팅에서 진행** (지시문 `docs/internal/82f-…`)  
+- ✅ **`82f`~`82j` 2차 재점검** (A=계정 없음 · 취합 완료)  
+- 유튜브 직전 권장: `/#/admin` 게스트 UI · 지도 브라우저 스모크  
+- CSP `'unsafe-inline'` 제거 — **후순위**  
+- **후속 B:** 유튜브 배너 후 → 테스트 계정 → IDOR 교차  
 - (선택) 유튜브 배너 후 CSP 스모크
 
 **제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
@@ -107,15 +114,6 @@
 
 ## 5·6 완료 후 — 외부 재점검
 
-1. `82f` 승인자 칸·추가 조치 요약 채움  
-2. ChatGPT·Gemini·Genspark 1회씩  
-3. 5·6 끝나기 전 `82f` 보내지 말 것  
-
----
-
-## 새 채팅 첫 메시지 권장
-
-```
-docs/worklog/2026/11/2026-11-08-handoff.md
-다음=82f 외부 보안 재점검. 329·82f 읽고 복명복창 후 진행.
-```
+1. ✅ `82f` 지시문 채움  
+2. ✅ ChatGPT·Gemini·Genspark (`82g`~`82i`)  
+3. ✅ 취합 `82j` · worklog `…-82f-external-ai-security-retest.md`
