@@ -81,11 +81,16 @@ final class OAuthService
     }
 
     /**
+     * @param string $oauthState 콜백에서 검증한 state. 네이버 토큰 교환에 필요(세션 unset 이후에도).
      * @return array{user_id: int, email: string, role_type: string, name: string, is_new: bool}
      */
-    public function authenticate(string $provider, string $code, ?string $redirectUri = null): array
-    {
-        $profile = $this->fetchProfile($provider, $code, $redirectUri);
+    public function authenticate(
+        string $provider,
+        string $code,
+        ?string $redirectUri = null,
+        string $oauthState = '',
+    ): array {
+        $profile = $this->fetchProfile($provider, $code, $redirectUri, $oauthState);
         $pdo = Connection::get();
 
         $existing = $this->findByProvider($pdo, $provider, $profile['provider_user_id']);
@@ -171,10 +176,14 @@ final class OAuthService
     /**
      * @return array{provider_user_id: string, email: string, name: string, raw: array<string, mixed>}
      */
-    private function fetchProfile(string $provider, string $code, ?string $redirectUri = null): array
-    {
+    private function fetchProfile(
+        string $provider,
+        string $code,
+        ?string $redirectUri = null,
+        string $oauthState = '',
+    ): array {
         return match ($provider) {
-            'naver'  => $this->fetchNaverProfile($code),
+            'naver'  => $this->fetchNaverProfile($code, $oauthState),
             'kakao'  => $this->fetchKakaoProfile($code, $redirectUri),
             'google' => $this->fetchGoogleProfile($code, $redirectUri),
             default  => throw new InvalidArgumentException('지원하지 않는 소셜 로그인입니다.'),
@@ -182,7 +191,7 @@ final class OAuthService
     }
 
     /** @return array{provider_user_id: string, email: string, name: string, raw: array<string, mixed>} */
-    private function fetchNaverProfile(string $code): array
+    private function fetchNaverProfile(string $code, string $oauthState = ''): array
     {
         $p = $this->providerConfig('naver');
         $token = $this->httpForm('https://nid.naver.com/oauth2.0/token', [
@@ -190,7 +199,7 @@ final class OAuthService
             'client_id'     => $p['client_id'],
             'client_secret' => $p['client_secret'],
             'code'          => $code,
-            'state'         => $_SESSION['oauth']['state'] ?? '',
+            'state'         => $oauthState,
         ]);
         $accessToken = (string) ($token['access_token'] ?? '');
         if ($accessToken === '') {
