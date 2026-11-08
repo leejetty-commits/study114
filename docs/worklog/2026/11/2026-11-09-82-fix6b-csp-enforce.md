@@ -32,4 +32,4 @@ curl -sI https://study114.net/
 **원인:** `connect-src`가 지오코딩 API `https://maps.apigw.ntruss.com` 을 차단 (CSP violation enforce).  
 **조치:** CF CSP에 `maps.apigw.ntruss.com` · `*.apigw.ntruss.com` 추가, `nrbe.pstatic.net` 을 script-src에 추가.  
 **재실측:** 브라우저에서 대치동 geocode status 200 · violation 0.  
-**사용자:** 강력 새로고침(Ctrl+F5) 후 로그인 홈 지도 재확인.
+**승인자:** Ctrl+F5 후 로그인 홈 지도 **잘 나옴** 확인 (2026-11-09).

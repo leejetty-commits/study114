@@ -78,7 +78,7 @@
 |------|------|
 | Report-Only | CF 적용 → 전 페이지 OK · F12 csp 주황 없음 · `…-fix6-csp-report-only.md` |
 | **Enforce** | `Content-Security-Policy` 전환 · Report-Only 제거 · `…-fix6b-csp-enforce.md` |
-| 핫픽스 | 로그인 지도 notFound → `maps.apigw.ntruss.com` connect-src 누락. 허용 추가 후 geocode 200 |
+| 핫픽스 | 로그인 지도 notFound → `maps.apigw.ntruss.com` 누락 → 허용 추가 → **승인자 지도 OK** |
 | 수단 | CF Transform `132970d7…` · rule `857266f3…` |
 | 유튜브 | 허용 목록에 포함 · **배너 실측은 보류** |
 | 문자·결제 | 연동 시 허용 목록 **추가** |
