@@ -2,7 +2,7 @@
 
 **작성일:** 2026-11-08 (KST)  
 **목적:** ChatGPT·Gemini·Genspark 점검 결과와 후속 조치(FIX-1~5)를 공동폴더 정본으로 남김  
-**상태:** ✅ 1~5순위 완료 · ⏸ **6순위** 진행 · 재점검 지시문 `82f`는 **6 끝난 뒤**  
+**상태:** ✅ 1~5순위 완료 · 6순위 중 **업로드(쪽지) ✅** · 남은 것 **CSP · git blob** · 재점검 `82f`는 **6 전부 끝난 뒤**  
 **선행:** `328-youtube-pre-security-2026-11-08.md` (유튜브 전 보안 필수 1~5)  
 **곁가지:** `330-search-memo-cross-region-nav-role-2026-11-08.md` (찾기 쪽지·지역 제한 없음 정책)
 
@@ -15,8 +15,8 @@
 ## 한 줄 요약
 
 외부 AI 3곳 Critical 재현 0. 재현 High는 HTTP→HTTPS 미강제 → CF로 해소.  
-헤더·admin·81잠금·5순위(인가·IDOR·OAuth state·XSS·`.env` 폴백)까지 **끝냄.**  
-**다음 = 6순위**(CSP·업로드 등). 끝나면 `82f` 외부 재점검.
+헤더·admin·81잠금·5순위·**6-업로드(쪽지 MIME)**까지 **끝냄.**  
+**다음 = CSP → git blob(조사/보류).** 6 전부 끝나면 `82f` 외부 재점검.
 
 ---
 
@@ -58,13 +58,26 @@
 
 ---
 
-## 다음 — 6순위
+## 6순위
+
+### 업로드(쪽지) ✅ (2026-11-09 새벽)
+
+| 항목 | 내용 |
+|------|------|
+| PR | #123 (`fix/message-attachment-mime-harden`) · merge `f842ef49` |
+| Deploy | Actions [42494247444](https://github.com/leejetty-commits/study114/actions/runs/42494247444) success · `public/`+`src/` FTP |
+| 코드 | `MessageAttachmentService` — 서버 MIME(finfo) · 저장 확장자=MIME · PDF `%PDF-` · 이미지 getimagesize+GD 재인코딩 · **다운로드 제안명 확장자도 서버 MIME** |
+| 범위 | **쪽지 첨부만.** 제출함 제외. 홍보/프로필은 285 보강 유지 |
+| 문서정리 | 제출함 = 숨김 → 보안 목록 거론 금지 (`49`·handoff·본 문서). #122는 #123에 흡수 후 닫음 |
+| 실측 | 승인자 PNG 첨부·다운로드 → **그대로 PNG**(정상: 포맷 유지·재인코딩). 위장 확장자 거절은 서버 MIME 기준 |
+| worklog | `docs/worklog/2026/11/2026-11-08-fix-message-attachment-mime-harden.md` · `…-docs-retire-submission-from-security-lists.md` |
+
+### 남음
 
 - CSP 본격 (맵·소셜·PG 깨짐 주의)  
-- ~~업로드 MIME/경로 (쪽지)~~ → **진행/PR** `fix/message-attachment-mime-harden`  
-  - 서버 MIME(finfo) · 저장 확장자=MIME · PDF `%PDF-` · 이미지 getimagesize+GD 재인코딩  
-  - **제출함 제외** · 홍보/프로필은 285에서 이미 보강됨  
 - git secret blob (**force-push · 별도 승인 없이 금지**)  
+
+제안 순서: **CSP → git(조사/보류)**
 
 **제출함(submission):** 2026-11-07 **숨김·제품 미사용** 확정(`49` · `hide-submission-board-v1` · `328`).  
 사이트 메뉴·API 404. **보안 6순위·업로드 보강 대상이 아니다.** 거론·재오픈 금지.  
@@ -86,6 +99,6 @@
 
 ```
 docs/worklog/2026/11/2026-11-08-handoff.md
-보안 6순위부터. grok-sync 329·82e 읽고 복명복창.
-6 끝나면 82f로 외부 재점검.
+보안 6순위 남음=CSP·git. grok-sync 329 읽고 복명복창.
+쪽지 업로드는 끝( f842ef49 ). 6 전부면 82f.
 ```
