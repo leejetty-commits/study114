@@ -7,6 +7,7 @@ namespace Study114\Messages;
 use InvalidArgumentException;
 use Study114\Board\AttachmentStorage;
 use Study114\Database\Connection;
+use Study114\Media\PromoImageProcessor;
 
 final class MessageAttachmentService
 {
@@ -92,16 +93,43 @@ final class MessageAttachmentService
         $repo = new MessagesRepository(Connection::get());
         $stored = [];
         $paths = [];
+        $scratchFiles = [];
         try {
             foreach ($files as $file) {
-                [$originalName, $mimeType, $sizeBytes, $stream] = $this->parseUploadedFile($file);
-                $this->validateFile($originalName, $mimeType, $sizeBytes);
+                [$originalName, $tmp, $sizeBytes] = $this->readUploadedTmp($file);
+                $mimeType = $this->detectServerMime($tmp);
+                $this->assertAllowedMime($mimeType, $sizeBytes, $tmp);
 
-                $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-                $storageFileName = bin2hex(random_bytes(16)) . ($ext !== '' ? '.' . $ext : '');
-                $relativePath = $this->storage->buildRelativePath('messages', (string) $threadId, $storageFileName);
-                $this->storage->store($relativePath, $stream);
-                fclose($stream);
+                $ext = $this->extensionForMime($mimeType);
+                $storePath = $tmp;
+                $storeMime = $mimeType;
+                $storeSize = $sizeBytes;
+
+                if ($mimeType === 'application/pdf') {
+                    $this->assertPdfMagic($tmp);
+                } else {
+                    // 이미지는 픽셀 검사 후 GD로 다시 저장해 폴리글롯·숨은 페이로드를 줄인다.
+                    (new PromoImageProcessor())->inspect($tmp);
+                    $this->assertImageBounds($tmp);
+                    $reencoded = $this->reencodeImage($tmp, $mimeType);
+                    $scratchFiles[] = $reencoded['path'];
+                    $storePath = $reencoded['path'];
+                    $storeMime = $reencoded['mime'];
+                    $storeSize = $reencoded['bytes'];
+                    $ext = $this->extensionForMime($storeMime);
+                }
+
+                $stream = fopen($storePath, 'rb');
+                if ($stream === false) {
+                    throw new InvalidArgumentException('업로드 파일을 읽을 수 없습니다.');
+                }
+                try {
+                    $storageFileName = bin2hex(random_bytes(16)) . '.' . $ext;
+                    $relativePath = $this->storage->buildRelativePath('messages', (string) $threadId, $storageFileName);
+                    $this->storage->store($relativePath, $stream);
+                } finally {
+                    fclose($stream);
+                }
                 $paths[] = $relativePath;
 
                 $row = $repo->insertAttachment(
@@ -109,14 +137,20 @@ final class MessageAttachmentService
                     $threadId,
                     $this->safeOriginalName($originalName),
                     $relativePath,
-                    $mimeType,
-                    $sizeBytes,
+                    $storeMime,
+                    $storeSize,
                 );
                 $stored[] = $this->mapAttachment($row);
             }
         } catch (\Throwable $e) {
             $this->deleteStoredFiles($paths);
             throw $e;
+        } finally {
+            foreach ($scratchFiles as $scratch) {
+                if (is_string($scratch) && is_file($scratch)) {
+                    @unlink($scratch);
+                }
+            }
         }
         $this->lastStoredPaths = $paths;
 
@@ -174,9 +208,9 @@ final class MessageAttachmentService
 
     /**
      * @param array<string, mixed> $file
-     * @return array{0: string, 1: string, 2: int, 3: resource}
+     * @return array{0: string, 1: string, 2: int}
      */
-    private function parseUploadedFile(array $file): array
+    private function readUploadedTmp(array $file): array
     {
         $error = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
@@ -192,39 +226,66 @@ final class MessageAttachmentService
             throw new InvalidArgumentException('업로드 파일이 올바르지 않습니다.');
         }
 
-        $stream = fopen($tmp, 'rb');
-        if ($stream === false) {
-            throw new InvalidArgumentException('업로드 파일을 읽을 수 없습니다.');
+        $sizeBytes = (int) ($file['size'] ?? 0);
+        $onDisk = @filesize($tmp);
+        if (is_int($onDisk) && $onDisk > 0) {
+            $sizeBytes = $onDisk;
         }
 
-        $detected = mime_content_type($tmp);
-        $mime = is_string($detected) && $detected !== ''
-            ? $detected
-            : (string) ($file['type'] ?? 'application/octet-stream');
-
-        return [$originalName, $mime, (int) ($file['size'] ?? 0), $stream];
+        return [$originalName, $tmp, $sizeBytes];
     }
 
-    private function validateFile(string $originalName, string $mimeType, int $sizeBytes): void
+    private function detectServerMime(string $tmp): string
     {
-        $maxSize = $this->maxBytes();
-        if ($sizeBytes <= 0 || $sizeBytes > $maxSize) {
-            throw new InvalidArgumentException('파일은 개당 5MB까지 첨부할 수 있습니다.');
+        if (function_exists('finfo_open')) {
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo !== false) {
+                $detected = finfo_file($finfo, $tmp);
+                finfo_close($finfo);
+                if (is_string($detected) && $detected !== '') {
+                    return $this->normalizeMime($detected);
+                }
+            }
         }
 
-        $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        /** @var list<string> $allowedExt */
-        $allowedExt = $this->rules['allowed_extensions'] ?? ['pdf', 'jpg', 'jpeg', 'png', 'webp'];
-        if ($ext === '' || !in_array($ext, $allowedExt, true)) {
-            throw new InvalidArgumentException('PDF, JPG, PNG, WebP만 첨부할 수 있습니다.');
+        $detected = @mime_content_type($tmp);
+        if (is_string($detected) && $detected !== '') {
+            return $this->normalizeMime($detected);
         }
 
-        $mimeType = strtolower($mimeType);
+        throw new InvalidArgumentException('파일 형식을 확인할 수 없습니다.');
+    }
+
+    private function normalizeMime(string $mimeType): string
+    {
+        $mimeType = strtolower(trim($mimeType));
         if ($mimeType === 'image/jpg' || $mimeType === 'image/pjpeg') {
-            $mimeType = 'image/jpeg';
+            return 'image/jpeg';
         }
         if ($mimeType === 'application/x-pdf') {
-            $mimeType = 'application/pdf';
+            return 'application/pdf';
+        }
+
+        return $mimeType;
+    }
+
+    private function extensionForMime(string $mimeType): string
+    {
+        return match ($mimeType) {
+            'application/pdf' => 'pdf',
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => '',
+        };
+    }
+
+    private function assertAllowedMime(string $mimeType, int $sizeBytes, string $tmp): void
+    {
+        $maxSize = $this->maxBytes();
+        $onDisk = @filesize($tmp);
+        if ($sizeBytes <= 0 || $sizeBytes > $maxSize || (is_int($onDisk) && $onDisk > $maxSize)) {
+            throw new InvalidArgumentException('파일은 개당 5MB까지 첨부할 수 있습니다.');
         }
 
         /** @var list<string> $allowedMimes */
@@ -234,21 +295,105 @@ final class MessageAttachmentService
             'image/png',
             'image/webp',
         ];
-        $normalizedAllowed = array_map(static function (string $m): string {
-            $m = strtolower($m);
-            if ($m === 'image/jpg' || $m === 'image/pjpeg') {
-                return 'image/jpeg';
+        $normalizedAllowed = [];
+        foreach ($allowedMimes as $m) {
+            if (!is_string($m) || $m === '') {
+                continue;
             }
-            if ($m === 'application/x-pdf') {
-                return 'application/pdf';
-            }
-
-            return $m;
-        }, $allowedMimes);
-
-        if (!in_array($mimeType, $normalizedAllowed, true)) {
-            throw new InvalidArgumentException('허용되지 않는 파일 형식입니다.');
+            $normalizedAllowed[] = $this->normalizeMime($m);
         }
+        $normalizedAllowed = array_values(array_unique($normalizedAllowed));
+
+        if (!in_array($mimeType, $normalizedAllowed, true) || $this->extensionForMime($mimeType) === '') {
+            throw new InvalidArgumentException('PDF, JPG, PNG, WebP만 첨부할 수 있습니다.');
+        }
+    }
+
+    private function assertPdfMagic(string $tmp): void
+    {
+        $fh = fopen($tmp, 'rb');
+        if ($fh === false) {
+            throw new InvalidArgumentException('PDF 파일을 읽을 수 없습니다.');
+        }
+        $head = fread($fh, 5);
+        fclose($fh);
+        if (!is_string($head) || !str_starts_with($head, '%PDF-')) {
+            throw new InvalidArgumentException('올바른 PDF 파일이 아닙니다.');
+        }
+    }
+
+    private function assertImageBounds(string $tmp): void
+    {
+        $info = @getimagesize($tmp);
+        if ($info === false) {
+            throw new InvalidArgumentException('이미지 파일을 읽을 수 없습니다.');
+        }
+        $width = (int) ($info[0] ?? 0);
+        $height = (int) ($info[1] ?? 0);
+        if ($width < 1 || $height < 1) {
+            throw new InvalidArgumentException('이미지 크기를 확인할 수 없습니다.');
+        }
+        if (
+            max($width, $height) > 12000
+            || ($width > 0 && $height > intdiv(40_000_000, $width))
+        ) {
+            throw new InvalidArgumentException('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
+        }
+    }
+
+    /**
+     * @return array{path: string, bytes: int, mime: string}
+     */
+    private function reencodeImage(string $tmp, string $mimeType): array
+    {
+        $raw = @file_get_contents($tmp);
+        if ($raw === false || $raw === '') {
+            throw new InvalidArgumentException('이미지 파일을 읽을 수 없습니다.');
+        }
+        $img = @imagecreatefromstring($raw);
+        if ($img === false) {
+            throw new InvalidArgumentException('지원하지 않는 이미지 형식입니다.');
+        }
+
+        $out = tempnam(sys_get_temp_dir(), 'msgatt');
+        if ($out === false) {
+            imagedestroy($img);
+            throw new InvalidArgumentException('임시 파일을 만들 수 없습니다.');
+        }
+
+        $ok = false;
+        $storeMime = $mimeType;
+        try {
+            if ($mimeType === 'image/png') {
+                imagesavealpha($img, true);
+                $ok = imagepng($img, $out, 6);
+            } elseif ($mimeType === 'image/webp' && function_exists('imagewebp')) {
+                $ok = imagewebp($img, $out, 85);
+            } else {
+                // jpeg 기본 · webp 미지원 시 jpeg로 저장
+                $storeMime = 'image/jpeg';
+                $ok = imagejpeg($img, $out, 88);
+            }
+        } finally {
+            imagedestroy($img);
+        }
+
+        if (!$ok || !is_file($out)) {
+            @unlink($out);
+            throw new InvalidArgumentException('이미지를 저장하지 못했습니다.');
+        }
+
+        $bytes = (int) filesize($out);
+        if ($bytes < 1) {
+            @unlink($out);
+            throw new InvalidArgumentException('이미지를 저장하지 못했습니다.');
+        }
+        if ($bytes > $this->maxBytes()) {
+            @unlink($out);
+            throw new InvalidArgumentException('파일은 개당 5MB까지 첨부할 수 있습니다.');
+        }
+
+        return ['path' => $out, 'bytes' => $bytes, 'mime' => $storeMime];
     }
 
     private function safeOriginalName(string $name): string
