@@ -10,6 +10,8 @@ import { ADMIN_STUDENT_MEMO_BLOCKED_COPY, MEMO_TARGET_BLOCKED_COPY, resolveMemoR
 import { showPaidGateOverlay, showComposeModal } from './overlays.js';
 import { getStudentProtectedVisibility } from '../student-visibility.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { getAuthUser } from '../auth-session.js';
+import { navRoleFromAuthUser } from '../../../shared/site-nav-config.js';
 
 /**
  * 첫 쪽지 불가 안내
@@ -18,6 +20,17 @@ import { s114Alert } from '../../../shared/confirm-dialog.js';
  */
 export function memoBlockedMessage(kind, role) {
   return role === 'admin' && kind === 'student' ? ADMIN_STUDENT_MEMO_BLOCKED_COPY : MEMO_TARGET_BLOCKED_COPY;
+}
+
+/**
+ * 검색 SPA(`/search/#/search/…`)는 home SCREEN_META 밖이라 getNavRole()이 guest로 떨어진다.
+ * layout과 같이 로그인 세션 역할을 우선·보정한다.
+ * @returns {string}
+ */
+function resolveComposeViewerRole() {
+  const fromNav = resolveMemoRole(getNavRole());
+  if (fromNav !== 'guest') return fromNav;
+  return resolveMemoRole(navRoleFromAuthUser(getAuthUser()));
 }
 
 /**
@@ -30,7 +43,7 @@ export function memoBlockedMessage(kind, role) {
  * @param {(threadId: number) => void} [opts.onSent] 전송 성공 직후(쪽지함 이동 전)
  */
 export function startFirstMemoFlow(opts) {
-  const role = resolveMemoRole(getNavRole());
+  const role = resolveComposeViewerRole();
   const check = checkFirstMemoPermission({ kind: opts.kind, role });
   if (!check.ok) {
     if (check.reason === 'paid_gate') {
