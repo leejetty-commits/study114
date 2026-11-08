@@ -158,8 +158,17 @@ export function renderStepIndicator(currentStep, totalSteps = 6) {
   `;
 }
 
+/** HTML 속성값용 이스케이프 (URL·return_to 등) */
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 export function renderSocialLogin(returnTo = '') {
-  const attr = returnTo ? ` data-return-to="${String(returnTo).replace(/"/g, '&quot;')}"` : '';
+  const attr = returnTo ? ` data-return-to="${escAttr(returnTo)}"` : '';
   return `
     <div class="social-login" aria-label="소셜 로그인">
       <button type="button" class="social-btn social-btn--naver" data-action="social-naver"${attr}>
