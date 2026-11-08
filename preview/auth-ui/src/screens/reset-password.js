@@ -15,8 +15,22 @@ function renderLoadingCard() {
     <p class="recovery-stage__loading" aria-live="polite">링크를 확인하는 중입니다…</p>`;
 }
 
+function escAttr(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+/** 해시 token — 예상 문자만 허용(그 외는 폼에 넣지 않음) */
+function sanitizeResetToken(token) {
+  const raw = String(token ?? '');
+  return /^[A-Za-z0-9._~-]{8,512}$/.test(raw) ? raw : '';
+}
+
 function renderFormCard(token) {
-  const safeToken = String(token).replace(/"/g, '&quot;');
+  const safeToken = escAttr(sanitizeResetToken(token));
   return `
     <h1 class="auth-heading">새 비밀번호 설정</h1>
     <p class="auth-subheading recovery-stage__desc">새로 사용할 비밀번호를 입력해 주세요.</p>
@@ -96,7 +110,7 @@ export function bindResetPasswordEvents(root) {
 
   const panel = root.querySelector('[data-reset-panel]');
   if (panel?.dataset.ready !== '1' && panel?.querySelector('.recovery-stage__loading')) {
-    const token = parseHashQuery().token || '';
+    const token = sanitizeResetToken(parseHashQuery().token || '');
     if (!token) {
       setPanelHtml(root, renderTokenErrorCard('invalid'));
       if (panel) panel.dataset.ready = '1';
