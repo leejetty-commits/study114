@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><?= study114_e($title ?? '우동공과 — 인증') ?></title>
-  <link rel="icon" type="image/png" href="/assets/brand/logo-wordmark.png">
+  <link rel="icon" type="image/png" href="/assets/brand/logo-wordmark-2026.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,7 +16,7 @@
   <div class="auth-shell">
     <header class="auth-shell__header">
       <a href="/auth/login" class="auth-shell__logo" aria-label="우동공과 홈">
-        <img class="auth-shell__logo-img" src="/assets/brand/logo-wordmark.png" alt="우동공과">
+        <img class="auth-shell__logo-img" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과">
       </a>
     </header>
     <main class="auth-shell__card<?= !empty($wide) ? ' auth-shell__card--wide' : '' ?>">

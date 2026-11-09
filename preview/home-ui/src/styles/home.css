@@ -234,6 +234,7 @@ img {
   gap: 4px;
 }
 
+/* 334: 헤더 크기는 현행 유지(336에서 변수·비율 조정) */
 .home-header__symbol {
   height: 22.5px;
   width: auto;

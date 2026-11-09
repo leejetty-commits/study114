@@ -1,7 +1,7 @@
 /** set-a 카드 카피. 미리보기와 서버 문구의 빈 칸 대체. */
 
 export const LOCKUP_SRC = '/assets/brand/logo-lockup-pencil-wordmark.png';
-export const WORDMARK_SRC = '/assets/brand/logo-wordmark.png';
+export const WORDMARK_SRC = '/assets/brand/logo-wordmark-2026.png';
 
 export const POPUP_TYPES = [
   { id: 'notice', label: '공지' },

@@ -378,7 +378,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
     const pinHit = { w: 44, h: 52 };
     const makePinIcon = (focused = false) => ({
-      content: `<button type="button" class="naver-map-pin${focused ? ' is-focused' : ''}" aria-hidden="true"><img src="/assets/brand/src/udong-pin.png" alt="" /></button>`,
+      content: `<button type="button" class="naver-map-pin${focused ? ' is-focused' : ''}" aria-hidden="true"><img src="/assets/brand/udong-symbol-2026.png" alt="" /></button>`,
       size: new naver.maps.Size(pinHit.w, pinHit.h),
       anchor: new naver.maps.Point(pinHit.w / 2, pinHit.h),
     });
