@@ -269,11 +269,11 @@ body {
 /* ── Brand lockup: 심벌 + 워드마크 (334 확정 비율) ── */
 :root {
   --brand-wordmark-h: 28px;
-  --brand-symbol-h: calc(var(--brand-wordmark-h) * 1.05);
-  --brand-lockup-gap: calc(var(--brand-wordmark-h) * 0.17);
 }
 
 .brand-lockup {
+  --brand-symbol-h: calc(var(--brand-wordmark-h) * 1.05);
+  --brand-lockup-gap: calc(var(--brand-wordmark-h) * 0.17);
   display: inline-flex;
   align-items: flex-start;
   gap: var(--brand-lockup-gap);
