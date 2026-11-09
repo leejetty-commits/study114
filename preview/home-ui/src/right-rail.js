@@ -29,7 +29,12 @@ import { bindInfoRailEvents, renderInfoRailBanners } from './library/info-rail.j
 import { bestPostsForBoard, bindConcernRailEvents } from './concern/rail-concern-popup.js';
 import { extractYoutubeVideoId } from '../../shared/promo-links.js';
 import { bindDraggableDialog } from '../../shared/draggable-dialog.js';
-import { PROMO_VIDEOS, isValidYoutubeId } from './promo-video-config.js';
+import {
+  PROMO_VIDEOS,
+  PROMO_WORDMARK_SRC,
+  isValidYoutubeId,
+  renderPromoTitleHtml,
+} from './promo-video-config.js';
 
 let railOwnerResolverSet = false;
 /** renderPromoWithRightRail 호출마다 고유한 패널 id를 만들기 위한 카운터 */
@@ -270,13 +275,14 @@ function renderPromoVideoSlot(slotKey, ctx) {
     .map((key) => {
       const video = PROMO_VIDEOS[key];
       if (!video || !isValidYoutubeId(video.id)) return '';
-      const title = esc(video.title);
-      return `<button type="button" class="live-rail-promo-video__open" data-rail-media-open data-rail-media-key="${esc(key)}">
+      const title = String(video.title || '');
+      const titleEsc = esc(title);
+      return `<button type="button" class="live-rail-promo-video__open" data-rail-media-open data-rail-media-key="${esc(key)}" aria-label="${titleEsc}">
       <span class="live-rail-promo-video__thumb">
-        <img src="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="${title}" loading="lazy" decoding="async">
+        <img src="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="${titleEsc}" loading="lazy" decoding="async">
         <span class="live-rail-promo-video__play" aria-hidden="true"></span>
       </span>
-      <span class="live-rail-promo-video__title">${title}</span>
+      <span class="live-rail-promo-video__title">${renderPromoTitleHtml(title, esc)}</span>
     </button>`;
     })
     .join('');
@@ -948,6 +954,23 @@ function createPromoFrame(id, title) {
   return frame;
 }
 
+/** @param {HTMLElement} heading @param {string} title */
+function fillPromoTitleHeading(heading, title) {
+  const raw = String(title ?? '');
+  const brand = '우동공과';
+  heading.replaceChildren();
+  if (!raw.startsWith(brand)) {
+    heading.textContent = raw;
+    return;
+  }
+  const img = document.createElement('img');
+  img.className = 'live-rail-media-dialog__heading-wordmark';
+  img.src = PROMO_WORDMARK_SRC;
+  img.alt = '우동공과';
+  img.decoding = 'async';
+  heading.append(img, document.createTextNode(raw.slice(brand.length)));
+}
+
 function centerPromoPanel(panel) {
   const column = document.querySelector('.home-main');
   const col = column ? column.getBoundingClientRect() : null;
@@ -1002,7 +1025,7 @@ function openRailMediaDialog(opener, media) {
   const heading = document.createElement('h2');
   heading.id = 'live-rail-media-title';
   heading.className = 'live-rail-media-dialog__heading';
-  heading.textContent = media.title;
+  fillPromoTitleHeading(heading, media.title);
 
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
