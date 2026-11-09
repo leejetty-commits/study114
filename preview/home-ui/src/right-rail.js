@@ -958,9 +958,9 @@ function createPromoFrame(id, title) {
 /** @param {HTMLElement} heading @param {string} title */
 function fillPromoTitleHeading(heading, title) {
   const raw = String(title ?? '');
-  const m = raw.match(/^'우동공과'\s*(.*)$/u);
+  const brand = '우동공과';
   heading.replaceChildren();
-  if (!m) {
+  if (!raw.startsWith(brand)) {
     heading.textContent = raw;
     return;
   }
@@ -977,8 +977,8 @@ function fillPromoTitleHeading(heading, title) {
   wordmark.alt = '우동공과';
   wordmark.decoding = 'async';
   brandWrap.append(symbol, wordmark);
-  heading.append("'", brandWrap, "'\u00a0");
-  const rest = m[1] || '';
+  heading.append(brandWrap, '\u00a0');
+  const rest = raw.slice(brand.length).replace(/^\s+/, '');
   if (rest.startsWith('공부방')) {
     const em = document.createElement('strong');
     em.className = 'live-rail-media-dialog__heading-em';
