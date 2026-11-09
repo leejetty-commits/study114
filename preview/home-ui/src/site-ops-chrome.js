@@ -101,7 +101,7 @@ function renderGuestBanner(b) {
   return `
     <div class="ops-chrome__guest-banner" role="status" data-ops-guest-banner>
       <span class="ops-chrome__guest-banner-sr">${text}</span>
-      <div class="ops-chrome__guest-banner-viewport">
+      <div class="ops-chrome__guest-banner-viewport" tabindex="0">
         <div class="ops-chrome__guest-banner-track">
           <span class="ops-chrome__guest-banner-item" aria-hidden="true">${text}</span>
           <span class="ops-chrome__guest-banner-item" aria-hidden="true">${text}</span>
@@ -110,22 +110,50 @@ function renderGuestBanner(b) {
     </div>`;
 }
 
-/** 초당 ~60px. 트랙 절반 너비 / 60 = duration(s). 흐름 높이는 fixed 띠에 맞춤. */
+/**
+ * 초당 60px: duration = (track.scrollWidth/2)/60.
+ * 반폭이 viewport보다 짧으면 item을 늘려 채운 뒤(복제 aria-hidden), 같은 세그먼트를 한 번 더 붙여 -50% 루프.
+ */
 function bindGuestTicker(el) {
   const track = el.querySelector('.ops-chrome__guest-banner-track');
   const viewport = el.querySelector('.ops-chrome__guest-banner-viewport');
   if (!track || !viewport) return;
+  const seed = track.querySelector('.ops-chrome__guest-banner-item');
+  if (!seed) return;
+  const itemHtml = seed.innerHTML;
+
+  const makeItem = () => {
+    const span = document.createElement('span');
+    span.className = 'ops-chrome__guest-banner-item';
+    span.setAttribute('aria-hidden', 'true');
+    span.innerHTML = itemHtml;
+    return span;
+  };
+
   const apply = () => {
-    const dist = Math.max(track.scrollWidth / 2, viewport.clientWidth, 1);
-    el.style.setProperty('--ops-guest-ticker-duration', `${(dist / 60).toFixed(2)}s`);
+    const vw = Math.max(viewport.clientWidth, 1);
+    track.replaceChildren(makeItem());
+    const itemW = Math.max(track.firstElementChild.getBoundingClientRect().width, 1);
+    const perSegment = Math.max(1, Math.ceil(vw / itemW));
+    track.replaceChildren();
+    for (let i = 0; i < perSegment * 2; i += 1) {
+      track.appendChild(makeItem());
+    }
+    const half = track.scrollWidth / 2;
+    el.style.setProperty('--ops-guest-ticker-duration', `${half / 60}s`);
     const h = Math.ceil(viewport.getBoundingClientRect().height);
     if (h > 0) el.style.setProperty('--ops-guest-banner-h', `${h}px`);
   };
+
   apply();
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      if (el.isConnected) apply();
+    });
+  }
   if (typeof ResizeObserver !== 'undefined') {
     const ro = new ResizeObserver(apply);
     ro.observe(viewport);
-    ro.observe(track);
   }
 }
 

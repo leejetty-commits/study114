@@ -1456,6 +1456,13 @@ body.is-drawer-open {
   line-height: 1.45;
   box-sizing: border-box;
 }
+.ops-chrome__guest-banner-viewport:focus {
+  outline: none;
+}
+.ops-chrome__guest-banner-viewport:focus-visible {
+  outline: 2px solid var(--brand-blue, #266bc4);
+  outline-offset: 2px;
+}
 .ops-chrome__guest-banner-track {
   display: flex;
   width: max-content;
