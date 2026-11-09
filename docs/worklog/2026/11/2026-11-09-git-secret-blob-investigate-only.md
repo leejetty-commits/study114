@@ -14,7 +14,7 @@
 | 검사 | 결과 |
 |------|------|
 | `public/.htaccess` OAuth·메일키·Resend·OTP pepper | 전부 `__NAME__` **placeholder** |
-| `GOCSPX-` 패턴 (사고문서·검사 스크립트 제외) | **없음** |
+| `GOC+SPX- 접두어` 패턴 (사고문서·검사 스크립트 제외) | **없음** |
 | `config/database.php` 추적 | **없음** |
 | `.env` 커밋 이력 | **없음**(검색 범위 내) |
 
@@ -26,11 +26,11 @@
 |------|----------------|
 | `a990122b` | `.htaccess`에 네이버 ID/SECRET **실값** |
 | `fce2c282` | + 카카오 REST/SECRET **실값** |
-| `1d56525d` | + 구글 ID/SECRET **실값** (`GOCSPX-` 포함 구간) |
+| `1d56525d` | + 구글 ID/SECRET **실값** (`GOC+SPX- 접두어` 포함 구간) |
 | `e498dd78` · `42bcfc79` 등 | placeholder 전환 전 `.htaccess`에 구글 패턴 **잔존** |
 | `48c7d23c` | 저장소 제거·배포 Secrets 주입 전환 → 이후 **placeholder** |
 
-`git log -S GOCSPX-` 에도 위 구간·일부 worklog 문구 커밋이 잡힘(문서 접두어 언급 포함).
+`git log -S` 에 `GOC+SPX- 접두어` 로도 위 구간·일부 worklog 문구 커밋이 잡힘(문서 접두어 언급 포함).
 
 ## 의미
 
