@@ -157,7 +157,7 @@ function renderFloatMap(parts, items, ctx) {
     ? ''
     : `
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h2 class="hero-map__dong">${esc(heading)}</h2>
+        <h2 class="hero-map__dong"><span class="hero-map__chip"><img class="hero-map__chip-img" src="/assets/brand/udong-symbol.svg" alt="" />우리동네</span>${esc(heading)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
         ${hint ? `<p class="hero-map__hint">${esc(hint)}</p>` : ''}

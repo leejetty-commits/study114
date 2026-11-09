@@ -1185,6 +1185,70 @@ body.is-drawer-open {
   margin: 0 1ch 0 auto;
 }
 
+/* 333 지도 지역 요약 박스 — 홈·찾기 공통 (float-rail) */
+.hero-map--float-rail .hero-map__banner {
+  overflow: hidden;
+  padding: 28px 1.1rem 1rem;
+  background: #fffbf6;
+  box-shadow:
+    0 16px 40px rgba(40, 25, 10, 0.38),
+    0 4px 10px rgba(0, 0, 0, 0.16);
+}
+
+.hero-map--float-rail .hero-map__banner::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(
+    to right,
+    #f45a5f 0 25%,
+    #ff813d 25% 50%,
+    #0764b5 50% 75%,
+    #61257e 75% 100%
+  );
+  pointer-events: none;
+}
+
+.hero-map--float-rail .hero-map__dong {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 16px;
+}
+
+.hero-map--float-rail .hero-map__chip {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.2rem;
+  margin: 0 8px 0 0;
+  padding: 0.12em 0.55em;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #c2541a;
+  background: #fff1e8;
+  border: 1px solid #ffd2b8;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.hero-map--float-rail .hero-map__chip-img {
+  display: block;
+  height: 15px;
+  width: auto;
+}
+
+.hero-map--float-rail .hero-map__cta {
+  margin: 0 0 6px;
+}
+
+.hero-map--float-rail .hero-map__stats > div {
+  padding: 3.5px 0;
+}
+
 .hero-map__canvas {
   position: relative;
   z-index: 1;

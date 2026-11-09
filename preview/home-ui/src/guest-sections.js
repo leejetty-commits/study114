@@ -83,7 +83,7 @@ export function renderGuestHero() {
         </div>
       </div>
       <aside class="hero-map__banner" aria-label="지역 요약">
-        <h1 class="hero-map__dong">${dong}</h1>
+        <h1 class="hero-map__dong"><span class="hero-map__chip"><img class="hero-map__chip-img" src="/assets/brand/udong-symbol.svg" alt="" />우리동네</span>${dong}</h1>
         <p class="hero-map__sub">${sub}</p>
         <a href="${SEARCH_UI_URL}" class="btn btn--primary hero-map__cta" data-util-href="${SEARCH_UI_URL}">
           ${cta}
