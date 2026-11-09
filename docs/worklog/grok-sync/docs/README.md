@@ -182,3 +182,5 @@
 - `328-youtube-pre-security-2026-11-08.md` — 유튜브 홍보 전 보안 필수 1~5 완료 (cron·storage·return_to·rate limit·OAuth 3사 재발급). 정본 `docs/internal/81-youtube-pre-security-lock.md`.
 - `329-external-ai-security-remediation-2026-11-08.md` — 1~6 조치 ✅ · **다음=`82f` 재점검**(다음 채팅) · 유튜브 배너 스모크 보류.
 - `330-search-memo-cross-region-nav-role-2026-11-08.md` — **정책 확정** · 쪽지 지역 제한 없음(찾기에서 다른 동네·과외쌤 OK) · guest 버그 수정·실측 통과 · PR #117.
+- `331-82f-external-retest-full-record-2026-11-09.md` — 외부 AI 2차 재점검 전체 기록 · Critical/High 재현 0 · 남은 것: unsafe-inline 후순위 · 유튜브 배너 후 CSP(§9-2) · 후속 B(§9-3).
+- `332-youtube-rail-promo-banner-ticket-2026-11-09.md` — 우측 레일 상단 유튜브 홍보 2슬롯(공부방·과외쌤) Cursor 지시서 · 보안 S1~S8 · 범위 3파일 · 시안 `332-assets/`.
