@@ -517,10 +517,11 @@ button.live-rail-card {
 
 .live-rail-promo-video__title-lockup {
   display: inline-block;
-  height: 1.35em;
+  /* 잠금 PNG(1024×576) 여백 포함 → 예전 워드마크 1.125em 체감에 맞춤 */
+  height: 2.6em;
   width: auto;
   flex-shrink: 0;
-  vertical-align: -0.2em;
+  vertical-align: -0.35em;
 }
 
 .live-rail-promo-video__title-em {
@@ -588,10 +589,11 @@ button.live-rail-card {
 
 .live-rail-media-dialog__heading-lockup {
   display: inline-block;
-  height: 1.35em;
+  /* 잠금 PNG 여백 포함 → 예전 워드마크 1.125em 체감에 맞춤 */
+  height: 2.75em;
   width: auto;
   flex-shrink: 0;
-  vertical-align: -0.2em;
+  vertical-align: -0.4em;
 }
 
 .live-rail-media-dialog__heading-em {
