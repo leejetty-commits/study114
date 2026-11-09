@@ -31,8 +31,7 @@ import { extractYoutubeVideoId } from '../../shared/promo-links.js';
 import { bindDraggableDialog } from '../../shared/draggable-dialog.js';
 import {
   PROMO_VIDEOS,
-  PROMO_SYMBOL_SRC,
-  PROMO_WORDMARK_SRC,
+  PROMO_LOCKUP_SRC,
   isValidYoutubeId,
   renderPromoTitleHtml,
 } from './promo-video-config.js';
@@ -958,26 +957,27 @@ function createPromoFrame(id, title) {
 /** @param {HTMLElement} heading @param {string} title */
 function fillPromoTitleHeading(heading, title) {
   const raw = String(title ?? '');
-  const brand = '우동공과';
+  const m = raw.match(/^'우동공과'\s*(.*)$/u);
   heading.replaceChildren();
-  if (!raw.startsWith(brand)) {
+  if (!m) {
     heading.textContent = raw;
     return;
   }
-  const brandWrap = document.createElement('span');
-  brandWrap.className = 'live-rail-media-dialog__heading-brand';
-  const symbol = document.createElement('img');
-  symbol.className = 'live-rail-media-dialog__heading-symbol';
-  symbol.src = PROMO_SYMBOL_SRC;
-  symbol.alt = '';
-  symbol.decoding = 'async';
-  const wordmark = document.createElement('img');
-  wordmark.className = 'live-rail-media-dialog__heading-wordmark';
-  wordmark.src = PROMO_WORDMARK_SRC;
-  wordmark.alt = '우동공과';
-  wordmark.decoding = 'async';
-  brandWrap.append(symbol, wordmark);
-  heading.append(brandWrap, document.createTextNode(raw.slice(brand.length)));
+  const lockup = document.createElement('img');
+  lockup.className = 'live-rail-media-dialog__heading-lockup';
+  lockup.src = PROMO_LOCKUP_SRC;
+  lockup.alt = '우동공과';
+  lockup.decoding = 'async';
+  heading.append("'", lockup, "'\u00a0");
+  const rest = m[1] || '';
+  if (rest.startsWith('공부방')) {
+    const em = document.createElement('strong');
+    em.className = 'live-rail-media-dialog__heading-em';
+    em.textContent = '공부방';
+    heading.append(em, document.createTextNode(rest.slice('공부방'.length)));
+    return;
+  }
+  if (rest) heading.append(document.createTextNode(rest));
 }
 
 function centerPromoPanel(panel) {
