@@ -31,7 +31,8 @@ import { extractYoutubeVideoId } from '../../shared/promo-links.js';
 import { bindDraggableDialog } from '../../shared/draggable-dialog.js';
 import {
   PROMO_VIDEOS,
-  PROMO_LOCKUP_SRC,
+  PROMO_SYMBOL_SRC,
+  PROMO_WORDMARK_SRC,
   isValidYoutubeId,
   renderPromoTitleHtml,
 } from './promo-video-config.js';
@@ -963,12 +964,20 @@ function fillPromoTitleHeading(heading, title) {
     heading.textContent = raw;
     return;
   }
-  const lockup = document.createElement('img');
-  lockup.className = 'live-rail-media-dialog__heading-lockup';
-  lockup.src = PROMO_LOCKUP_SRC;
-  lockup.alt = '우동공과';
-  lockup.decoding = 'async';
-  heading.append("'", lockup, "'\u00a0");
+  const brandWrap = document.createElement('span');
+  brandWrap.className = 'live-rail-media-dialog__heading-brand';
+  const symbol = document.createElement('img');
+  symbol.className = 'live-rail-media-dialog__heading-symbol';
+  symbol.src = PROMO_SYMBOL_SRC;
+  symbol.alt = '';
+  symbol.decoding = 'async';
+  const wordmark = document.createElement('img');
+  wordmark.className = 'live-rail-media-dialog__heading-wordmark';
+  wordmark.src = PROMO_WORDMARK_SRC;
+  wordmark.alt = '우동공과';
+  wordmark.decoding = 'async';
+  brandWrap.append(symbol, wordmark);
+  heading.append("'", brandWrap, "'\u00a0");
   const rest = m[1] || '';
   if (rest.startsWith('공부방')) {
     const em = document.createElement('strong');

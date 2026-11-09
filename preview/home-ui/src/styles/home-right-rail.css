@@ -515,13 +515,26 @@ button.live-rail-card {
   color: var(--uds-ink);
 }
 
-.live-rail-promo-video__title-lockup {
+.live-rail-promo-video__title-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.live-rail-promo-video__title-symbol {
   display: inline-block;
-  /* 잠금 PNG(1024×576) 여백 포함 → 예전 워드마크 1.125em 체감에 맞춤 */
-  height: 2.6em;
+  height: 0.95em;
   width: auto;
   flex-shrink: 0;
-  vertical-align: -0.35em;
+}
+
+.live-rail-promo-video__title-wordmark {
+  display: inline-block;
+  height: 1.125em;
+  width: auto;
+  flex-shrink: 0;
+  vertical-align: baseline;
 }
 
 .live-rail-promo-video__title-em {
@@ -587,13 +600,26 @@ button.live-rail-card {
   color: var(--uds-ink);
 }
 
-.live-rail-media-dialog__heading-lockup {
+.live-rail-media-dialog__heading-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.live-rail-media-dialog__heading-symbol {
   display: inline-block;
-  /* 잠금 PNG 여백 포함 → 예전 워드마크 1.125em 체감에 맞춤 */
-  height: 2.75em;
+  height: 0.95em;
   width: auto;
   flex-shrink: 0;
-  vertical-align: -0.4em;
+}
+
+.live-rail-media-dialog__heading-wordmark {
+  display: inline-block;
+  height: 1.125em;
+  width: auto;
+  flex-shrink: 0;
+  vertical-align: baseline;
 }
 
 .live-rail-media-dialog__heading-em {
