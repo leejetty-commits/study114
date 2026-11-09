@@ -14,7 +14,7 @@ namespace Study114\Mail;
 final class MemberMailTemplate
 {
     public const SITE_URL = 'https://study114.net';
-    public const LOGO_URL = self::SITE_URL . '/assets/brand/logo-wordmark.png';
+    public const LOGO_URL = self::SITE_URL . '/assets/brand/logo-wordmark-2026.png';
     public const SUPPORT_PATH = '/support/contact';
     public const HELP_EMAIL = 'help@study114.net';
     public const SIGNATURE = '— 우동공과 드림';

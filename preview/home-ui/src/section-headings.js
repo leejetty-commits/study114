@@ -7,8 +7,8 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-const SYMBOL_SRC = '/assets/brand/src/udong-pin.png';
-const WORDMARK_SRC = '/assets/brand/logo-wordmark.png';
+const SYMBOL_SRC = '/assets/brand/udong-symbol-2026.png';
+const WORDMARK_SRC = '/assets/brand/logo-wordmark-2026.png';
 
 /**
  * tier: prime(금·중앙·장식) | pick(은·중앙·장식) | basic(블루·좌측) | plain

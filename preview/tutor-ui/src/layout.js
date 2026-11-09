@@ -97,8 +97,8 @@ export function renderRegisterShell(content, options = {}) {
               ${showSteps ? renderStepIndicator(stepKey) : ''}
               <div class="brand-hero">
                 <span class="brand-lockup brand-lockup--hero">
-                  <img class="brand-lockup__symbol" src="/assets/brand/src/udong-pin.png" alt="" />
-                  <img class="brand-lockup__wordmark" src="/assets/brand/logo-wordmark.png" alt="우동공과" />
+                  <img class="brand-lockup__symbol" src="/assets/brand/udong-symbol-2026.png" alt="" />
+                  <img class="brand-lockup__wordmark" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" />
                 </span>
               </div>
               <h1 class="auth-heading">${title}</h1>
