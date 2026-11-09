@@ -27,6 +27,9 @@ import {
 } from './board-channel-acl.js';
 import { bindInfoRailEvents, renderInfoRailBanners } from './library/info-rail.js';
 import { bestPostsForBoard, bindConcernRailEvents } from './concern/rail-concern-popup.js';
+import { extractYoutubeVideoId } from '../../shared/promo-links.js';
+import { bindDraggableDialog } from '../../shared/draggable-dialog.js';
+import { PROMO_VIDEOS, isValidYoutubeId } from './promo-video-config.js';
 
 let railOwnerResolverSet = false;
 /** renderPromoWithRightRail 호출마다 고유한 패널 id를 만들기 위한 카운터 */
@@ -206,7 +209,7 @@ export function renderPromoWithRightRail(slotKey = 'home_right_rail', opts = {})
   const visible = Boolean(slot && isRailSlotVisible(slot, ctx.navRole));
   const tone = opts.tone || defaultRailTone(slotKey);
   const variant = opts.variant || 'sidebar';
-  const inner = renderRailLayers(slotKey, { ...ctx, tone, visible });
+  const inner = renderRailLayers(slotKey, { ...ctx, tone, variant, visible });
   const title = esc(slot?.sectionTitle || '안내');
   const tag = variant === 'inline' ? 'section' : 'aside';
 
@@ -250,7 +253,35 @@ function renderRailLayers(slotKey, ctx) {
     return `${renderActionGuideSlot(slotKey, { ...ctx, featuredOnly: true })}`;
   }
   const field = visible ? renderLiveFieldSlot(slotKey, ctx) : '';
-  return `${field}${renderActionGuideSlot(slotKey, ctx)}${renderMediaTeaserSlot(slotKey, ctx)}`;
+  return `${renderPromoVideoSlot(slotKey, ctx)}${field}${renderActionGuideSlot(slotKey, ctx)}${renderMediaTeaserSlot(slotKey, ctx)}`;
+}
+
+function promoKeysForRole(navRole) {
+  if (navRole === 'study_room') return ['study_room'];
+  if (navRole === 'tutor') return ['tutor'];
+  return ['study_room', 'tutor'];
+}
+
+/** full 사이드바 홈·찾기 레일 맨 위. ID가 비거나 형식이 아니면 그 슬롯은 없다. */
+function renderPromoVideoSlot(slotKey, ctx) {
+  if (slotKey !== 'home_right_rail' && slotKey !== 'search_right_rail') return '';
+  if (ctx.tone !== 'full' || ctx.variant !== 'sidebar') return '';
+  const buttons = promoKeysForRole(ctx.navRole)
+    .map((key) => {
+      const video = PROMO_VIDEOS[key];
+      if (!video || !isValidYoutubeId(video.id)) return '';
+      const title = esc(video.title);
+      return `<button type="button" class="live-rail-promo-video__open" data-rail-media-open data-rail-media-key="${esc(key)}">
+      <span class="live-rail-promo-video__thumb">
+        <img src="https://i.ytimg.com/vi/${video.id}/hqdefault.jpg" alt="${title}" loading="lazy" decoding="async">
+        <span class="live-rail-promo-video__play" aria-hidden="true"></span>
+      </span>
+      <span class="live-rail-promo-video__title">${title}</span>
+    </button>`;
+    })
+    .join('');
+  if (!buttons.trim()) return '';
+  return `<section class="live-rail-slot live-rail-promo-video" data-rail-promo-video>${buttons}</section>`;
 }
 
 function esc(s) {
@@ -880,42 +911,148 @@ function bindRailAccordion(root) {
   });
 }
 
+const RAIL_MEDIA_DIALOG_ID = 'live-rail-media-dialog';
+
+/** @type {{ onKey: (e: KeyboardEvent) => void, drag: { destroy: () => void }, opener: HTMLElement } | null} */
+let railMediaSession = null;
+
+function rejectPromoVideo() {
+  console.warn('[rail-promo] youtube id rejected');
+  return null;
+}
+
+/** @param {Element} btn */
+function mediaFromOpener(btn) {
+  const key = btn.getAttribute('data-rail-media-key');
+  if (key != null && key !== '') {
+    const video = PROMO_VIDEOS[key];
+    if (!video || !isValidYoutubeId(video.id)) return rejectPromoVideo();
+    return { id: video.id, title: String(video.title || '홍보 영상') };
+  }
+  const src = String(btn.getAttribute('data-rail-media-src') || '').trim();
+  if (!src) return null;
+  const id = extractYoutubeVideoId(src);
+  if (!isValidYoutubeId(id)) return rejectPromoVideo();
+  return { id, title: String(btn.getAttribute('data-rail-media-title') || '소개 영상') };
+}
+
+function createPromoFrame(id, title) {
+  const frame = document.createElement('iframe');
+  frame.src = `https://www.youtube-nocookie.com/embed/${id}?rel=0&modestbranding=1`;
+  frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-presentation allow-popups');
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
+  frame.setAttribute('allow', 'encrypted-media; picture-in-picture; fullscreen');
+  frame.allowFullscreen = true;
+  frame.loading = 'lazy';
+  frame.title = title;
+  return frame;
+}
+
+function centerPromoPanel(panel) {
+  const column = document.querySelector('.home-main');
+  const col = column ? column.getBoundingClientRect() : null;
+  panel.style.position = 'fixed';
+  panel.style.margin = '0';
+  panel.style.transform = 'none';
+  const width = panel.offsetWidth;
+  const height = panel.offsetHeight;
+  const centerX = col && col.width > 0 ? col.left + col.width / 2 : window.innerWidth / 2;
+  const minLeft = 16;
+  const maxLeft = Math.max(minLeft, window.innerWidth - width - 16);
+  const left = Math.min(Math.max(minLeft, centerX - width / 2), maxLeft);
+  const top = Math.max(16, (window.innerHeight - height) / 2);
+  panel.style.left = `${left}px`;
+  panel.style.top = `${top}px`;
+}
+
+function teardownRailMediaDialog(restoreFocus) {
+  const dialog = document.getElementById(RAIL_MEDIA_DIALOG_ID);
+  const session = railMediaSession;
+  railMediaSession = null;
+  if (session) {
+    document.removeEventListener('keydown', session.onKey, true);
+    session.drag.destroy();
+  }
+  dialog?.querySelector('[data-rail-media-frame]')?.replaceChildren();
+  dialog?.remove();
+  document.body.classList.remove('is-rail-media-open');
+  if (restoreFocus) session?.opener?.focus?.();
+}
+
+/** @param {HTMLElement} opener @param {{ id: string, title: string }} media */
+function openRailMediaDialog(opener, media) {
+  teardownRailMediaDialog(false);
+  const dialog = document.createElement('div');
+  dialog.id = RAIL_MEDIA_DIALOG_ID;
+  dialog.className = 'live-rail-media-dialog';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.setAttribute('aria-labelledby', 'live-rail-media-title');
+
+  const backdrop = document.createElement('div');
+  backdrop.className = 'live-rail-media-dialog__backdrop';
+  backdrop.setAttribute('data-rail-media-close', '');
+
+  const panel = document.createElement('div');
+  panel.className = 'live-rail-media-dialog__panel';
+
+  const titleBar = document.createElement('div');
+  titleBar.className = 'live-rail-media-dialog__titlebar';
+
+  const heading = document.createElement('h2');
+  heading.id = 'live-rail-media-title';
+  heading.className = 'live-rail-media-dialog__heading';
+  heading.textContent = media.title;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.type = 'button';
+  closeBtn.className = 'live-rail-media-dialog__close';
+  closeBtn.setAttribute('data-rail-media-close', '');
+  closeBtn.textContent = '닫기';
+
+  const frameHost = document.createElement('div');
+  frameHost.className = 'live-rail-media-dialog__frame';
+  frameHost.setAttribute('data-rail-media-frame', '');
+  frameHost.appendChild(createPromoFrame(media.id, media.title));
+
+  titleBar.append(heading, closeBtn);
+  panel.append(titleBar, frameHost);
+  dialog.append(backdrop, panel);
+  document.body.appendChild(dialog);
+  document.body.classList.add('is-rail-media-open');
+  centerPromoPanel(panel);
+
+  const onKey = (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    e.stopPropagation();
+    teardownRailMediaDialog(true);
+  };
+  document.addEventListener('keydown', onKey, true);
+  dialog.addEventListener('click', (e) => {
+    const target = e.target;
+    if (!(target instanceof Element) || !target.closest('[data-rail-media-close]')) return;
+    e.preventDefault();
+    teardownRailMediaDialog(true);
+  });
+  railMediaSession = { onKey, drag: bindDraggableDialog(panel, titleBar), opener };
+  closeBtn.focus();
+}
+
 export function bindRightRailEvents(root) {
   if (!root) return;
   bindRailAccordion(root); // 아코디언 초기화 (모바일 접힘/펼침)
   bindInfoRailEvents();
   bindConcernRailEvents();
   bindRailGuidePeekEvents(root);
-  const dialog = root.querySelector('.live-rail-media-dialog');
-  const openers = root.querySelectorAll('[data-rail-media-open]');
-  if (!dialog || !openers.length) return;
-
-  const close = () => {
-    dialog.hidden = true;
-    const frame = dialog.querySelector('[data-rail-media-frame]');
-    if (frame) frame.innerHTML = '';
-    document.body.classList.remove('is-rail-media-open');
-  };
-
-  openers.forEach((btn) => {
+  root.querySelectorAll('[data-rail-media-open]').forEach((btn) => {
+    if (!(btn instanceof HTMLElement) || btn.dataset.railMediaBound) return;
+    btn.dataset.railMediaBound = '1';
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const src = String(btn.getAttribute('data-rail-media-src') || '').trim();
-      const frame = dialog.querySelector('[data-rail-media-frame]');
-      if (!src || !frame) return;
-      const id = src.match(/[?&]v=([^&]+)/)?.[1] || src.split('/').pop();
-      frame.innerHTML = `<iframe src="https://www.youtube.com/embed/${esc(id)}?rel=0" title="${esc(
-        btn.getAttribute('data-rail-media-title') || '소개 영상',
-      )}" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-      dialog.hidden = false;
-      document.body.classList.add('is-rail-media-open');
-    });
-  });
-
-  dialog.querySelectorAll('[data-rail-media-close]').forEach((el) => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      close();
+      const media = mediaFromOpener(btn);
+      if (!media) return;
+      openRailMediaDialog(btn, media);
     });
   });
 }
