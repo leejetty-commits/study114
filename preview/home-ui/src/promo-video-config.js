@@ -1,6 +1,6 @@
 /** 우측 레일 홍보영상. id는 11자 유튜브 ID만. 비어 있으면 슬롯을 그리지 않는다. */
 export const PROMO_VIDEOS = {
-  study_room: { id: 'op-Cudsweew', title: '공부방 홍보영상' },
+  study_room: { id: 'op-Cudsweew', title: '우동공과가 뭐에요?' },
   tutor: { id: '', title: '과외쌤 홍보영상' },
 };
 
