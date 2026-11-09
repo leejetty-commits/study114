@@ -31,6 +31,7 @@ import { extractYoutubeVideoId } from '../../shared/promo-links.js';
 import { bindDraggableDialog } from '../../shared/draggable-dialog.js';
 import {
   PROMO_VIDEOS,
+  PROMO_SYMBOL_SRC,
   PROMO_WORDMARK_SRC,
   isValidYoutubeId,
   renderPromoTitleHtml,
@@ -963,12 +964,20 @@ function fillPromoTitleHeading(heading, title) {
     heading.textContent = raw;
     return;
   }
-  const img = document.createElement('img');
-  img.className = 'live-rail-media-dialog__heading-wordmark';
-  img.src = PROMO_WORDMARK_SRC;
-  img.alt = '우동공과';
-  img.decoding = 'async';
-  heading.append(img, document.createTextNode(raw.slice(brand.length)));
+  const brandWrap = document.createElement('span');
+  brandWrap.className = 'live-rail-media-dialog__heading-brand';
+  const symbol = document.createElement('img');
+  symbol.className = 'live-rail-media-dialog__heading-symbol';
+  symbol.src = PROMO_SYMBOL_SRC;
+  symbol.alt = '';
+  symbol.decoding = 'async';
+  const wordmark = document.createElement('img');
+  wordmark.className = 'live-rail-media-dialog__heading-wordmark';
+  wordmark.src = PROMO_WORDMARK_SRC;
+  wordmark.alt = '우동공과';
+  wordmark.decoding = 'async';
+  brandWrap.append(symbol, wordmark);
+  heading.append(brandWrap, document.createTextNode(raw.slice(brand.length)));
 }
 
 function centerPromoPanel(panel) {
