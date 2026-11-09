@@ -4,7 +4,7 @@ export const PROMO_WORDMARK_SRC = '/assets/brand/logo-wordmark.png';
 
 export const PROMO_VIDEOS = {
   study_room: { id: 'op-Cudsweew', title: '우동공과 공부방이 뭐에요?' },
-  tutor: { id: '', title: '과외쌤 홍보영상' },
+  tutor: { id: 'x2Aa25gfawU', title: '우동공과 과외쌤은 누구에요?' },
 };
 
 /** @param {unknown} id */
