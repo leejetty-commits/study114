@@ -97,10 +97,36 @@ function renderMaintenanceBanner(m) {
 }
 
 function renderGuestBanner(b) {
+  const text = esc(b.text);
   return `
     <div class="ops-chrome__guest-banner" role="status" data-ops-guest-banner>
-      ${esc(b.text)}
+      <span class="ops-chrome__guest-banner-sr">${text}</span>
+      <div class="ops-chrome__guest-banner-viewport">
+        <div class="ops-chrome__guest-banner-track">
+          <span class="ops-chrome__guest-banner-item" aria-hidden="true">${text}</span>
+          <span class="ops-chrome__guest-banner-item" aria-hidden="true">${text}</span>
+        </div>
+      </div>
     </div>`;
+}
+
+/** 초당 ~60px. 트랙 절반 너비 / 60 = duration(s). 흐름 높이는 fixed 띠에 맞춤. */
+function bindGuestTicker(el) {
+  const track = el.querySelector('.ops-chrome__guest-banner-track');
+  const viewport = el.querySelector('.ops-chrome__guest-banner-viewport');
+  if (!track || !viewport) return;
+  const apply = () => {
+    const dist = Math.max(track.scrollWidth / 2, viewport.clientWidth, 1);
+    el.style.setProperty('--ops-guest-ticker-duration', `${(dist / 60).toFixed(2)}s`);
+    const h = Math.ceil(viewport.getBoundingClientRect().height);
+    if (h > 0) el.style.setProperty('--ops-guest-banner-h', `${h}px`);
+  };
+  apply();
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(apply);
+    ro.observe(viewport);
+    ro.observe(track);
+  }
 }
 
 function renderPopupLayer(popup) {
@@ -137,8 +163,9 @@ export function mountOpsChrome(appRoot) {
  */
 function paintOpsChrome(appRoot) {
 
-  // 이전 마운트 제거
+  // 이전 마운트 제거 (게스트 띠는 헤더 아래로 분리)
   appRoot.querySelectorAll('[data-ops-chrome]').forEach((el) => el.remove());
+  appRoot.querySelectorAll('[data-ops-guest-banner]').forEach((el) => el.remove());
 
   const surface = resolveOpsSurface();
   if (surface === null) {
@@ -154,7 +181,6 @@ function paintOpsChrome(appRoot) {
 
   const bannerParts = [];
   if (maintenance) bannerParts.push(renderMaintenanceBanner(maintenance));
-  if (guestBanner) bannerParts.push(renderGuestBanner(guestBanner));
 
   const wrap = document.createElement('div');
   wrap.setAttribute('data-ops-chrome', '1');
@@ -172,6 +198,19 @@ function paintOpsChrome(appRoot) {
     toolbar.after(wrap);
   } else {
     appRoot.prepend(wrap);
+  }
+
+  // 게스트 안내 띠 → 메인메뉴(헤더) 바로 아래 (점검 띠는 위 위치 유지)
+  if (guestBanner) {
+    const header = appRoot.querySelector('.home-header');
+    const guestHtml = renderGuestBanner(guestBanner);
+    if (header) {
+      header.insertAdjacentHTML('afterend', guestHtml);
+    } else {
+      wrap.insertAdjacentHTML('beforeend', guestHtml);
+    }
+    const guestEl = appRoot.querySelector('[data-ops-guest-banner]');
+    if (guestEl) bindGuestTicker(guestEl);
   }
 
   bindOpsChromeOffset(wrap);
