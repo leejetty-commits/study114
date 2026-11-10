@@ -36,6 +36,9 @@ final class RefundService
     /** @var list<array{payment_id: string, cancel_id: string, amount: int, order_ref?: string}> */
     private array $portOneCancelsSucceeded = [];
 
+    /** @var array<string, true> 요청 내 payment_id+cancel_id 중복 ops 기록 방지 */
+    private array $portOneCancelOpsLogged = [];
+
     public function __construct(
         ?PDO $pdo = null,
         ?RefundRepository $refunds = null,
@@ -248,7 +251,7 @@ final class RefundService
             }
 
             $this->updateOrderStatus($orderRef, 'refund_requested');
-            $this->portOneCancelsSucceeded = [];
+            $this->resetPortOneCancelTracking();
             $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
             $finalStatus = $this->finalizeRefundAfterPg($orderRef, $order);
             $this->pdo->commit();
@@ -266,9 +269,7 @@ final class RefundService
                 ),
             ];
         } catch (\Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackPreservingPortOneOrphans();
             throw $e;
         }
     }
@@ -315,7 +316,7 @@ final class RefundService
             if ($amountWon > $pgRemaining) {
                 throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
             }
-            $this->portOneCancelsSucceeded = [];
+            $this->resetPortOneCancelTracking();
             $this->cancelPortOneBeforeApprove($order, $amountWon, 'partial_remaining', $pgRemaining);
             $this->pdo->commit();
             $after = $this->refunds->findByOrderRef($orderRef);
@@ -331,9 +332,7 @@ final class RefundService
                 ),
             ];
         } catch (\Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackPreservingPortOneOrphans();
             throw $e;
         }
     }
@@ -400,9 +399,7 @@ final class RefundService
                 'message' => '환불 신청이 철회되었습니다. 쪽지권이 복원됩니다.',
             ];
         } catch (\Throwable $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->rollBack();
-            }
+            $this->rollbackPreservingPortOneOrphans();
             throw $e;
         }
     }
@@ -596,7 +593,7 @@ final class RefundService
         $this->updateOrderStatus($orderRef, 'refund_requested');
 
         /* 본 주문 취소 → 배지 추가주문 취소. 실패 시 이후 호출 안 함·전체 롤백 */
-        $this->portOneCancelsSucceeded = [];
+        $this->resetPortOneCancelTracking();
         $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
         foreach ($badgeCancelTargets as $target) {
             $this->cancelPortOneBeforeApprove(
@@ -1088,8 +1085,8 @@ final class RefundService
                     (int) $result['remaining_won'],
                 );
             } catch (\Throwable $metaErr) {
-                // 포트원 취소는 이미 성공 — 롤백돼도 남도록 별도 연결에 기록
-                PortOneCancelOpsLog::record(
+                // 포트원 취소는 이미 성공 — 롤백돼도 남도록 별도 연결에 1회만 기록
+                $this->recordOrphanPortOneCancel(
                     $paymentId,
                     $cancelId,
                     $cancelAmount,
@@ -1099,7 +1096,8 @@ final class RefundService
                 error_log('[portone] savePgCancelMeta failed paymentId=' . $paymentId
                     . ' cancel_id=' . $cancelId . ' amount=' . $cancelAmount
                     . ' err=' . $metaErr->getMessage());
-                $this->logOrphanPortOneCancels();
+                // 이전 성공 취소만 추가 기록(현재 건은 dedup으로 스킵)
+                $this->logOrphanPortOneCancels('orphan_after_later_fail');
                 throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
             }
         } catch (InvalidArgumentException $e) {
@@ -1109,11 +1107,11 @@ final class RefundService
                 throw $e;
             }
             error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
-            $this->logOrphanPortOneCancels();
+            $this->logOrphanPortOneCancels('orphan_after_later_fail');
             throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
         } catch (\Throwable $e) {
             error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
-            $this->logOrphanPortOneCancels();
+            $this->logOrphanPortOneCancels('orphan_after_later_fail');
             throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
         }
     }
@@ -1132,21 +1130,54 @@ final class RefundService
         return 'approved';
     }
 
-    private function logOrphanPortOneCancels(): void
+    private function resetPortOneCancelTracking(): void
+    {
+        $this->portOneCancelsSucceeded = [];
+        $this->portOneCancelOpsLogged = [];
+    }
+
+    /** rollBack 전에 미기록 orphan을 남긴다. */
+    private function rollbackPreservingPortOneOrphans(): void
+    {
+        if ($this->portOneCancelsSucceeded !== []) {
+            $this->logOrphanPortOneCancels('orphan_after_commit_fail');
+        }
+        if ($this->pdo->inTransaction()) {
+            $this->pdo->rollBack();
+        }
+    }
+
+    private function recordOrphanPortOneCancel(
+        string $paymentId,
+        string $cancelId,
+        int $amountWon,
+        ?string $orderRef,
+        string $note,
+    ): void {
+        $key = trim($paymentId) . "\0" . trim($cancelId);
+        if ($key === "\0" || isset($this->portOneCancelOpsLogged[$key])) {
+            return;
+        }
+        $this->portOneCancelOpsLogged[$key] = true;
+        PortOneCancelOpsLog::record($paymentId, $cancelId, $amountWon, $orderRef, $note);
+    }
+
+    private function logOrphanPortOneCancels(string $note = 'orphan_after_later_fail'): void
     {
         foreach ($this->portOneCancelsSucceeded as $row) {
-            PortOneCancelOpsLog::record(
+            $this->recordOrphanPortOneCancel(
                 $row['payment_id'],
                 $row['cancel_id'],
                 $row['amount'],
                 isset($row['order_ref']) ? (string) $row['order_ref'] : null,
-                'orphan_after_later_fail',
+                $note,
             );
             error_log(sprintf(
-                '[portone] ORPHAN_CANCEL_NEEDS_OPS paymentId=%s cancel_id=%s amount=%d',
+                '[portone] ORPHAN_CANCEL_NEEDS_OPS paymentId=%s cancel_id=%s amount=%d note=%s',
                 $row['payment_id'],
                 $row['cancel_id'],
                 $row['amount'],
+                $note,
             ));
         }
     }

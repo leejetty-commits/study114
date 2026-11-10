@@ -392,10 +392,54 @@ if ($userId > 0 && $hasPay) {
             check('meta fail aborts submit', str_contains($e->getMessage(), '고객센터'));
         }
         $opsAfterMeta = (int) $pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn();
-        check('meta fail still writes ops log', $opsAfterMeta > $opsBeforeMeta);
+        check('meta fail still writes ops log once', $opsAfterMeta === $opsBeforeMeta + 1);
         $refundMeta = $pdo->prepare('SELECT COUNT(*) FROM provider_refund_requests WHERE order_ref=?');
         $refundMeta->execute([$metaRef]);
         check('meta fail rolls back refund row', (int) $refundMeta->fetchColumn() === 0);
+
+        /* 취소 전부 성공 후 finalize 실패 → ops 1줄 · 환불 행 0 · 주문 paid */
+        $finRef = 'dev-339f-' . bin2hex(random_bytes(4));
+        $finPay = PortOneCheckout::makePaymentId($finRef);
+        $mockFin = new MockPortOneApi();
+        $mockFin->payments[$finPay] = [
+            'status' => 'PAID',
+            'amount' => ['total' => 3000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 3000],
+        ];
+        $orders->insertPending($userId, $finRef, 'memo_ticket', '5회권', 'count', 3000, 'tutor', 1, 't', 3000, 0, null, 'portone_test', $finPay);
+        $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref=?")->execute([$finRef]);
+        $pdo->prepare(
+            "INSERT INTO provider_ticket_packs
+             (user_id, provider_type, provider_id, ticket_type, pack_size, remaining, expires_at, source, source_order_ref)
+             VALUES (?,?,?,?,?,?, DATE_ADD(NOW(), INTERVAL 180 DAY), 'payment', ?)"
+        )->execute([$userId, 'tutor', 1, 'memo', 5, 5, $finRef]);
+
+        $failFinalize = new class ($pdo) extends RefundRepository {
+            public function markRefunded(string $orderRef): bool
+            {
+                throw new RuntimeException('mock finalize fail');
+            }
+        };
+        $opsBeforeFin = (int) $pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn();
+        $svcFin = new RefundService($pdo, $failFinalize, $orders, null, null, null, new PortOneCheckout($mockFin));
+        try {
+            $svcFin->submit($userId, $finRef, ['reason_choice' => 'test']);
+            check('finalize fail aborts submit', false);
+        } catch (RuntimeException $e) {
+            check('finalize fail aborts submit', str_contains($e->getMessage(), 'mock finalize fail'));
+        }
+        $opsAfterFin = (int) $pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn();
+        check('finalize fail ops log once', $opsAfterFin === $opsBeforeFin + 1);
+        $noteFin = $pdo->prepare(
+            'SELECT note FROM provider_pg_cancel_ops_log WHERE payment_id=? ORDER BY id DESC LIMIT 1'
+        );
+        $noteFin->execute([$finPay]);
+        check('finalize fail note orphan_after_commit_fail', (string) $noteFin->fetchColumn() === 'orphan_after_commit_fail');
+        $refundFin = $pdo->prepare('SELECT COUNT(*) FROM provider_refund_requests WHERE order_ref=?');
+        $refundFin->execute([$finRef]);
+        check('finalize fail rolls back refund row', (int) $refundFin->fetchColumn() === 0);
+        $stFin = $pdo->prepare('SELECT status FROM provider_payment_orders WHERE order_ref=?');
+        $stFin->execute([$finRef]);
+        check('finalize fail order stays paid', (string) $stFin->fetchColumn() === 'paid');
     } else {
         echo "SKIP ops log table\n";
     }

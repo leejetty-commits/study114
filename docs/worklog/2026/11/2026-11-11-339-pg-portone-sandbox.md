@@ -75,6 +75,12 @@
 - 로컬 Docker만 056·061·066·086 적용(운영 금지). `verify-339` **34/34**
 - `RefundRepository` `final` 해제(메타 실패 목용)
 
+## orphan 바깥 롤백·중복 제거 (2026-11-11)
+
+- submit/CLI/withdraw 바깥 catch: rollBack 전 `logOrphanPortOneCancels(orphan_after_commit_fail)`
+- `payment_id+cancel_id` 요청 내 dedup — meta 실패 경로 이중 INSERT 제거
+- verify: finalize 실패 → ops 1 · 환불 0 · paid. **39/39**
+
 ## 남은 위험
 
 - 웹훅 시크릿 비어 있으면 수신 불가(의도). 로컬은 complete 수동 재조회.
