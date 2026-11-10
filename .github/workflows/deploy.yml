@@ -195,8 +195,11 @@ jobs:
           NAVER_MAP_CLIENT_ID: ${{ vars.VITE_NAVER_MAP_CLIENT_ID }}
         run: |
           test -f public/index.html
-          js_file=$(ls public/assets/index-*.js | head -n 1)
-          test -n "$js_file"
+          # 341 이후 index-*.js 가 여러 청크라 알파벳 첫 파일이 entry가 아닐 수 있다.
+          js_name=$(grep -oE '/assets/index-[A-Za-z0-9_-]+\.js' public/index.html | head -n 1 | sed 's#^/assets/##')
+          test -n "$js_name"
+          js_file="public/assets/$js_name"
+          test -f "$js_file"
           grep -q "$NAVER_MAP_CLIENT_ID" "$js_file"
 
       - name: Deploy public/ via FTP
