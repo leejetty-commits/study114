@@ -102,9 +102,9 @@ disposition: enforce
 | 항목 | 값 |
 |------|-----|
 | 저장소 변경 | worklog만 (CSP는 CF, 앱 코드 0) |
-| 커밋 | _(작성 후 기입)_ |
-| PR | _(작성 후 기입)_ |
-| 머지 커밋 | _(작성 후 기입)_ |
+| 커밋 | `157d6340` |
+| PR | https://github.com/leejetty-commits/study114/pull/158 |
+| 머지 커밋 | `d8c37dcf` |
 | 배포 | CF Transform 규칙 PATCH 즉시 반영 (닷홈 FTP/Actions 불필요) |
 
 ---
