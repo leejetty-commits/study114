@@ -155,6 +155,7 @@ const intentionalNoGate = [
   /\/auth\/email\//,
   /\/auth\/password\//,
   /\/auth\/profile\.php$/,
+  /\/auth\/profile-address\.php$/,
   /\/auth\/withdraw\.php$/,
   /\/auth\/account-contact\.php$/,
   /\/auth\/phone\//,
@@ -220,6 +221,7 @@ for (const needle of [
   'phone/send-otp.php',
   'phone/verify-otp.php',
   'profile.php',
+  'profile-address.php',
 ]) {
   assert(openDocText.includes(needle), `OPEN 문서에 ${needle}`);
 }
