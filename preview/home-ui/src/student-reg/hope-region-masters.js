@@ -3,6 +3,8 @@
  * API 가능 시 /api/auth/regions.php · complexes.address 포함
  */
 
+import { REGIONS_CATALOG_VERSION } from '../../../shared/regions-catalog.js';
+
 /** @type {Array<{id:string,label:string}>} */
 const FALLBACK_REGIONS = [];
 
@@ -29,12 +31,14 @@ export function ensureHopeRegionMasters() {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
     try {
-      const res = await fetch('/api/auth/regions.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'list' }),
-        credentials: 'omit',
-      });
+      const res = await fetch(
+        `/api/auth/regions.php?action=list&v=${encodeURIComponent(REGIONS_CATALOG_VERSION)}`,
+        {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          credentials: 'omit',
+        },
+      );
       if (res.ok) {
         const data = await res.json();
         const list =

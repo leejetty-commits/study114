@@ -36,11 +36,28 @@ if ($action === '') {
 }
 
 /**
+ * list / cities / tutor_units 는 사용자·세션과 무관한 마스터.
+ * GET 성공(ok:true)만 public 캐시. 실패·ensure·complex-by-name·POST 는 캐시하지 않는다.
+ */
+function study114_regions_send_cache_headers(string $method, string $action, bool $ok): void
+{
+    $publicActions = ['list', 'cities', 'tutor_units'];
+    if ($method === 'GET' && in_array($action, $publicActions, true)) {
+        header('Cache-Control: ' . ($ok ? 'public, max-age=86400' : 'no-store'));
+        return;
+    }
+    if ($action === 'ensure' || $action === 'complex-by-name') {
+        header('Cache-Control: private, no-store');
+    }
+}
+
+/**
  * 닷홈 Apache가 4xx/5xx 본문을 HTML 에러 페이지로 바꿔, JSON을 숨긴다.
  * 클라이언트는 HTTP 200 + ok 필드로 성공/실패를 본다.
  */
-function study114_regions_json(array $payload): void
+function study114_regions_json(string $method, string $action, array $payload): void
 {
+    study114_regions_send_cache_headers($method, $action, ($payload['ok'] ?? false) === true);
     echo json_encode($payload, JSON_UNESCAPED_UNICODE);
 }
 
@@ -48,7 +65,7 @@ try {
     $service = new BasicRegisterService();
 
     if ($action === 'cities') {
-        study114_regions_json([
+        study114_regions_json($method, $action, [
             'ok' => true,
             'cities' => $service->listCities(),
         ]);
@@ -56,7 +73,7 @@ try {
     }
 
     if ($action === 'tutor_units') {
-        study114_regions_json([
+        study114_regions_json($method, $action, [
             'ok' => true,
             'tutor_units' => $service->listTutorUnits(),
         ]);
@@ -65,7 +82,7 @@ try {
 
     if ($action === 'ensure') {
         $region = RegionEnsure::fromKakao(Connection::get(), $input);
-        study114_regions_json([
+        study114_regions_json($method, $action, [
             'ok' => true,
             'region' => $region,
         ]);
@@ -86,7 +103,7 @@ try {
                 $complex = ['id' => (int) $id];
             }
         }
-        study114_regions_json([
+        study114_regions_json($method, $action, [
             'ok' => true,
             'complex' => $complex,
         ]);
@@ -94,7 +111,7 @@ try {
     }
 
     if ($method !== 'POST' && $method !== 'GET') {
-        study114_regions_json([
+        study114_regions_json($method, $action, [
             'ok' => false,
             'error' => 'method_not_allowed',
             'message' => 'GET 또는 POST만 허용됩니다.',
@@ -143,16 +160,16 @@ try {
     if ($warnings) {
         $payload['warnings'] = $warnings;
     }
-    study114_regions_json($payload);
+    study114_regions_json($method, $action, $payload);
 } catch (InvalidArgumentException $e) {
-    study114_regions_json([
+    study114_regions_json($method, $action, [
         'ok' => false,
         'error' => 'validation',
         'message' => $e->getMessage(),
     ]);
 } catch (Throwable $e) {
     error_log('[regions] error: ' . $e->getMessage());
-    study114_regions_json([
+    study114_regions_json($method, $action, [
         'ok' => false,
         'error' => 'server_error',
         'message' => $e->getMessage(),

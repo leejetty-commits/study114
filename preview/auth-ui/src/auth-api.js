@@ -2,6 +2,8 @@
  * 2·14장 — auth API 클라이언트 (study114_dev @ :8080 via Vite proxy)
  */
 
+import { fetchRegionsCatalog } from '../../shared/regions-catalog.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 /** PHP notice가 JSON 앞에 붙어도 본문을 살린다. */
@@ -95,12 +97,7 @@ export async function signupApi(payload) {
 
 /** @returns {Promise<{regions: Array, complexes: Array, tutorUnits: Array}>} */
 export async function fetchRegions() {
-  const data = await postJson('/api/auth/regions.php', { action: 'list' }, { credentials: 'omit' });
-  return {
-    regions: data.regions ?? [],
-    complexes: data.complexes ?? [],
-    tutorUnits: data.tutor_units ?? [],
-  };
+  return fetchRegionsCatalog();
 }
 
 /**
