@@ -39,13 +39,14 @@ DirectoryIndex index.html index.php
 # Cache headers (게스트 등록 SPA 접속장애 완화 1차 — 캐시 축만)
 # - 해시 Vite 번들: 장기 immutable (배포 시 파일명 변경으로 구버전 충돌 없음)
 # - HTML: 아래 운영 정책 유지. 완화 초안은 주석 블록 (미적용)
-# 대상 의도 경로: /assets/index-*.{js,css}, /register/*/assets/index-*.{js,css}
+# 대상 의도 경로: /assets/*-<hash>.{js,css}, /register/*/assets/*-<hash>.{js,css}
+#   (엔트리 index-* 뿐 아니라 동적 청크 admin-*·guide-* 등 Vite 해시 파일 전체)
 #   (+ 동일 파일명 패턴의 /auth|/search 번들도 FilesMatch로 동일 적용)
 # 비대상: 이미지·HTML·PHP·API·비해시 *.js/*.css
 # ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
-  # A. 해시 자산 — Vite 엔트리/청크 관례 `index-<hash>.js|css` 파일명만
-  <FilesMatch "^index-[A-Za-z0-9_-]+\.(js|css)$">
+  # A. 해시 자산 — Vite 엔트리/동적 청크 관례 `<name>-<hash>.js|css`
+  <FilesMatch "^[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\.(js|css)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
 

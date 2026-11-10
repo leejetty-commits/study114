@@ -76,19 +76,7 @@ import {
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { renderMypage, bindMypageEvents } from './mypage/index.js';
 import { renderPublicMyshop, bindPublicMyshopEvents } from './myshop/index.js';
-import { renderGuide, bindGuideEvents } from './guide/index.js';
-import { renderConcern, bindConcernEvents, getDefaultCommunityPath } from './concern/index.js';
-import { renderPromo, bindPromoEvents } from './promo/index.js';
-import { renderSupport, bindSupportEvents } from './support/index.js';
-import { renderPolicy, bindPolicyEvents } from './policy-index.js';
-import { renderLibrary, bindLibraryEvents } from './library/index.js';
-import { renderAdmin, bindAdminEvents, renderAdminDenied } from './admin/index.js';
 import { renderPlans, bindPlansEvents } from './plans/index.js';
-import {
-  renderRegisterIntro,
-  bindRegisterIntroEvents,
-  redirectLoggedInFromRegisterIntro,
-} from './register-intro/index.js';
 import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
@@ -99,6 +87,28 @@ import { AUTH_WELCOME_COPY } from '../../shared/auth-welcome-copy.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
 import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
+import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
+import { resetConcernData } from './concern/store.js';
+import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
+import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
+import { mountOpsChrome } from './site-ops-chrome.js';
+import { mountHomePopup } from './home-popup/mount.js';
+import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
+import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
+import { closeDetailModal } from './detail-decision/detail-shell.js';
+import { closeCompareModal } from './compare-modal.js';
+import '../../shared/dialog-drag-auto.js';
+
+/* 관리자·드문 화면만 동적 청크. plans·역할홈·마이페이지·쪽지·공개마이샵은 정적 유지. */
+const loadAdminScreen = () => import('./admin/index.js');
+const loadGuideScreen = () => import('./guide/index.js');
+const loadConcernScreen = () => import('./concern/index.js');
+const loadPromoScreen = () => import('./promo/index.js');
+const loadSupportScreen = () => import('./support/index.js');
+const loadPolicyScreen = () => import('./policy-index.js');
+const loadLibraryScreen = () => import('./library/index.js');
+const loadRegisterIntroScreen = () => import('./register-intro/index.js');
 
 function hydrateNotices() {
   hydrateNoticeCenter().catch(() => {});
@@ -117,18 +127,6 @@ function hydrateNotices() {
     })
     .catch(() => {});
 }
-import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
-import { resetConcernData } from './concern/store.js';
-import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
-import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
-import { mountOpsChrome } from './site-ops-chrome.js';
-import { mountHomePopup } from './home-popup/mount.js';
-import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
-import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
-import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
-import { closeDetailModal } from './detail-decision/detail-shell.js';
-import { closeCompareModal } from './compare-modal.js';
-import '../../shared/dialog-drag-auto.js';
 
 /** 해시 이동 시 body에 남은 상세·비교 모달·비교 토스트 제거 */
 function dismissRouteOverlays() {
@@ -160,14 +158,18 @@ function applyPlansRedirects() {
 let paintedHash = null;
 /** me.php 확인 전에는 역할 홈을 그리지도, 가드로 판정하지도 않는다. */
 let sessionChecked = false;
+/** 빠른 해시 전환 시 늦게 도착한 비동기 그리기를 버린다. */
+let renderGeneration = 0;
 
-function render() {
+async function render() {
+  const generation = ++renderGeneration;
   // 첫 진입 init()과 같이 #/messages 를 #/mypage/messages 로 바꾼다.
   // 주소를 바꾼 경우에는 여기서 그리지 않고, 바뀐 주소의 hashchange에 맡긴다.
   if (bootstrapMessagesRoute()) return;
   if (isMypageRoute()) bootstrapMypageRoute();
   const hashBefore = window.location.hash;
-  renderScreen();
+  await renderScreen(generation);
+  if (generation !== renderGeneration) return;
   if (window.location.hash === hashBefore) paintedHash = hashBefore;
 }
 
@@ -182,7 +184,7 @@ function shouldPaintBeforeSession() {
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
-function renderScreen() {
+async function renderScreen(generation) {
   // 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
   if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute()) {
     redirectToEmailVerifyWait();
@@ -191,6 +193,8 @@ function renderScreen() {
   if (applyPlansRedirects()) return;
   const app = document.getElementById('app');
   if (isAdminRoute()) {
+    const { renderAdmin, bindAdminEvents, renderAdminDenied } = await loadAdminScreen();
+    if (generation !== renderGeneration) return;
     if (!isAdminUser()) {
       app.innerHTML = renderAdminDenied();
       bindAdminEvents(app, render);
@@ -205,6 +209,12 @@ function renderScreen() {
     return;
   }
   if (isRegisterIntroRoute()) {
+    const {
+      renderRegisterIntro,
+      bindRegisterIntroEvents,
+      redirectLoggedInFromRegisterIntro,
+    } = await loadRegisterIntroScreen();
+    if (generation !== renderGeneration) return;
     if (redirectLoggedInFromRegisterIntro()) return;
     app.innerHTML = renderRegisterIntro();
     bindRegisterIntroEvents(app, render);
@@ -220,6 +230,8 @@ function renderScreen() {
     return;
   }
   if (isLibraryRoute()) {
+    const { renderLibrary, bindLibraryEvents } = await loadLibraryScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderLibrary();
     bindLibraryEvents(app, render);
     mountOpsChrome(app);
@@ -232,6 +244,8 @@ function renderScreen() {
       app.innerHTML = '';
       return;
     }
+    const { renderSupport, bindSupportEvents } = await loadSupportScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderSupport();
     bindSupportEvents(app, render);
     mountOpsChrome(app);
@@ -239,6 +253,8 @@ function renderScreen() {
     return;
   }
   if (isGuideRoute()) {
+    const { renderGuide, bindGuideEvents } = await loadGuideScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderGuide();
     bindGuideEvents(app, render);
     mountOpsChrome(app);
@@ -251,6 +267,8 @@ function renderScreen() {
       app.innerHTML = '';
       return;
     }
+    const { renderConcern, bindConcernEvents } = await loadConcernScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderConcern();
     bindConcernEvents(app, render);
     mountOpsChrome(app);
@@ -258,6 +276,8 @@ function renderScreen() {
     return;
   }
   if (isPromoRoute()) {
+    const { renderPromo, bindPromoEvents } = await loadPromoScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPromo();
     bindPromoEvents(app, render);
     mountOpsChrome(app);
@@ -265,6 +285,8 @@ function renderScreen() {
     return;
   }
   if (isPolicyRoute()) {
+    const { renderPolicy, bindPolicyEvents } = await loadPolicyScreen();
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPolicy();
     bindPolicyEvents(app, render);
     mountOpsChrome(app);
@@ -427,11 +449,7 @@ function init() {
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
       dismissRouteOverlays();
-      try {
-        render();
-      } catch (e) {
-        showBootError(e);
-      }
+      render().catch(showBootError);
     });
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
@@ -478,20 +496,12 @@ function init() {
       render();
     });
     if (shouldPaintBeforeSession()) {
-      try {
-        render();
-      } catch (e) {
-        showBootError(e);
-      }
+      render().catch(showBootError);
     }
     setTimeout(() => {
       bootReady = true;
       if (paintedHash !== null && window.location.hash !== paintedHash) {
-        try {
-          render();
-        } catch (e) {
-          showBootError(e);
-        }
+        render().catch(showBootError);
       }
     }, 0);
     const supportBoot = activateSupportApi().catch((err) => {
