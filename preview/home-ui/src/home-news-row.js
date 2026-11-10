@@ -60,21 +60,43 @@ function fmtDate(value) {
 
 /* ── 공지 칸 ── */
 
+/** ≤720 한 줄 롤링용 마크업. 탭하면 목록 팝업(data-home-notice-more). */
+function noticeTickerHtml(state, titles) {
+  const rollable = state === 'posts' && titles.length > 1;
+  const lines = rollable ? [...titles, titles[0]] : titles.length ? titles : [''];
+  const track = lines.map((title) => `<span class="home-notice-ticker__line">${esc(title)}</span>`).join('');
+  const reduced = !rollable ? ' is-static' : '';
+  return `<button type="button" class="home-notice-ticker${reduced}" data-home-notice-more data-home-notice-ticker aria-label="${esc(COPY.noticeMoreLabel)}">
+      <span class="home-notice-ticker__badge">${esc(COPY.noticeTitle)}</span>
+      <span class="home-notice-ticker__viewport">
+        <span class="home-notice-ticker__track" data-notice-count="${lines.length}">${track}</span>
+      </span>
+    </button>`;
+}
+
 /** @returns {{ state: 'loading'|'failed'|'empty'|'posts', html: string }} */
 function noticeCellBody() {
   const who = sessionOwner();
   const status = noticeLoader.status(who);
   if (status === 'loading') {
-    return { state: 'loading', html: `<p class="home-news-row__state" role="status">${esc(COPY.loading)}</p>` };
+    return {
+      state: 'loading',
+      html: `<p class="home-news-row__state" role="status">${esc(COPY.loading)}</p>${noticeTickerHtml('loading', [COPY.loading])}`,
+    };
   }
   if (status === 'failed') {
     return {
       state: 'failed',
-      html: `<p class="home-news-row__state home-news-row__state--failed" role="status">${esc(COPY.loadFailed)}</p>`,
+      html: `<p class="home-news-row__state home-news-row__state--failed" role="status">${esc(COPY.loadFailed)}</p>${noticeTickerHtml('failed', [COPY.loadFailed])}`,
     };
   }
   const notices = (noticeLoader.peek(who) || []).slice(0, NOTICE_HOME_LINES);
-  if (!notices.length) return { state: 'empty', html: `<p class="home-news-row__state">${esc(COPY.noticeEmpty)}</p>` };
+  if (!notices.length) {
+    return {
+      state: 'empty',
+      html: `<p class="home-news-row__state">${esc(COPY.noticeEmpty)}</p>${noticeTickerHtml('empty', [COPY.noticeEmpty])}`,
+    };
+  }
   const rows = notices
     .map(
       (n) => `<li>
@@ -86,7 +108,11 @@ function noticeCellBody() {
       </li>`,
     )
     .join('');
-  return { state: 'posts', html: `<ul class="home-news-row__list">${rows}</ul>` };
+  const titles = notices.map((n) => String(n.title || '').trim() || '공지');
+  return {
+    state: 'posts',
+    html: `<ul class="home-news-row__list">${rows}</ul>${noticeTickerHtml('posts', titles)}`,
+  };
 }
 
 function renderNoticeCell() {

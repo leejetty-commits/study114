@@ -258,8 +258,50 @@ function renderRailLayers(slotKey, ctx) {
   if (tone === 'quiet') {
     return `${renderActionGuideSlot(slotKey, { ...ctx, featuredOnly: true })}`;
   }
+  const video = renderPromoVideoSlot(slotKey, ctx);
   const field = visible ? renderLiveFieldSlot(slotKey, ctx) : '';
-  return `${renderPromoVideoSlot(slotKey, ctx)}${field}${renderActionGuideSlot(slotKey, ctx)}${renderMediaTeaserSlot(slotKey, ctx)}`;
+  const guide = renderActionGuideSlot(slotKey, ctx);
+  const info = renderMediaTeaserSlot(slotKey, ctx);
+  // 사이드바 full: ≤1023 탭(현장·안내·정보·영상), ≥1024는 탭 없이 영상→현장→안내→정보 순서 유지
+  if (ctx.variant === 'sidebar') {
+    return renderRailMobileTabs({ video, field, guide, info });
+  }
+  return `${video}${field}${guide}${info}`;
+}
+
+/** 데스크톱 문서 순서(영상→현장→안내·정보)와 모바일 탭 라벨 순서(현장·안내·정보·영상)를 같이 맞춘다. */
+function renderRailMobileTabs({ video, field, guide, info }) {
+  const panes = [
+    { id: 'video', label: '영상', html: video },
+    { id: 'field', label: '현장', html: field },
+    { id: 'guide', label: '안내', html: guide },
+    { id: 'info', label: '정보', html: info },
+  ].filter((pane) => String(pane.html || '').trim());
+  if (!panes.length) return '';
+  const tabOrder = ['field', 'guide', 'info', 'video'];
+  const defaultId = tabOrder.find((id) => panes.some((p) => p.id === id)) || panes[0].id;
+  const nav = tabOrder
+    .map((id) => panes.find((p) => p.id === id))
+    .filter(Boolean)
+    .map((pane) => {
+      const on = pane.id === defaultId;
+      return `<button type="button" class="rail-m-tabs__tab${on ? ' is-active' : ''}" role="tab" data-rail-tab="${esc(
+        pane.id,
+      )}" aria-selected="${on ? 'true' : 'false'}">${esc(pane.label)}</button>`;
+    })
+    .join('');
+  const bodies = panes
+    .map((pane) => {
+      const on = pane.id === defaultId;
+      return `<div class="rail-m-tabs__pane${on ? ' is-active' : ''}" role="tabpanel" data-rail-tab-pane="${esc(pane.id)}"${
+        on ? '' : ' hidden'
+      }>${pane.html}</div>`;
+    })
+    .join('');
+  return `<div class="rail-m-tabs" data-rail-m-tabs>
+      <div class="rail-m-tabs__nav" role="tablist" aria-label="오늘의 안내">${nav}</div>
+      <div class="rail-m-tabs__panes">${bodies}</div>
+    </div>`;
 }
 
 function promoKeysForRole(navRole) {
@@ -288,7 +330,7 @@ function renderPromoVideoSlot(slotKey, ctx) {
     })
     .join('');
   if (!buttons.trim()) return '';
-  return `<section class="live-rail-slot live-rail-promo-video" data-rail-promo-video>${buttons}</section>`;
+  return `<section class="live-rail-slot live-rail-promo-video" data-rail-promo-video><div class="rail-video-snap">${buttons}</div></section>`;
 }
 
 function esc(s) {
@@ -434,7 +476,8 @@ function renderLiveFieldSlot(slotKey, ctx) {
     .map((boardKey) => renderLiveTracked('latest', (liveId) => renderRoomBlock(boardKey, attrs, liveId), hold))
     .join('');
   const hot = renderLiveTracked('hot', (liveId) => renderHotSection(slotKey, ctx, boardKeys, liveId), hold);
-  return `${best}${rooms}${hot}`;
+  const roomSnap = rooms ? `<div class="rail-room-snap">${rooms}</div>` : '';
+  return `${best}${roomSnap}${hot}`;
 }
 
 /** @param {LiveMode} mode */
@@ -918,6 +961,60 @@ function bindRailAccordion(root) {
   });
 }
 
+/** ≤1023: 탭 전환. ≥1024: 모든 pane 표시(hidden 해제). */
+function bindRailMobileTabs(root) {
+  if (typeof window === 'undefined' || !root) return;
+  const blocks =
+    typeof root.matches === 'function' && root.matches('[data-rail-m-tabs]')
+      ? [root]
+      : [...root.querySelectorAll('[data-rail-m-tabs]')];
+
+  blocks.forEach((tabs) => {
+    if (!(tabs instanceof HTMLElement) || tabs.dataset.railTabsBound) return;
+    tabs.dataset.railTabsBound = '1';
+    const mq = window.matchMedia('(max-width: 1023px)');
+
+    const setTab = (id) => {
+      tabs.querySelectorAll('[data-rail-tab]').forEach((btn) => {
+        const on = btn.getAttribute('data-rail-tab') === id;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+      tabs.querySelectorAll('[data-rail-tab-pane]').forEach((pane) => {
+        const on = pane.getAttribute('data-rail-tab-pane') === id;
+        pane.classList.toggle('is-active', on);
+        if (mq.matches) pane.hidden = !on;
+        else pane.hidden = false;
+      });
+    };
+
+    const applyViewport = (isMobile) => {
+      if (isMobile) {
+        const active =
+          tabs.querySelector('.rail-m-tabs__tab.is-active')?.getAttribute('data-rail-tab') ||
+          tabs.querySelector('[data-rail-tab]')?.getAttribute('data-rail-tab') ||
+          'field';
+        setTab(active);
+      } else {
+        tabs.querySelectorAll('[data-rail-tab-pane]').forEach((pane) => {
+          pane.hidden = false;
+          pane.classList.add('is-active');
+        });
+      }
+    };
+
+    tabs.querySelector('.rail-m-tabs__nav')?.addEventListener('click', (e) => {
+      const btn = e.target instanceof Element ? e.target.closest('[data-rail-tab]') : null;
+      if (!btn || !tabs.contains(btn) || !mq.matches) return;
+      const id = btn.getAttribute('data-rail-tab');
+      if (id) setTab(id);
+    });
+
+    mq.addEventListener('change', (e) => applyViewport(e.matches));
+    applyViewport(mq.matches);
+  });
+}
+
 const RAIL_MEDIA_DIALOG_ID = 'live-rail-media-dialog';
 
 /** @type {{ onKey: (e: KeyboardEvent) => void, drag: { destroy: () => void }, opener: HTMLElement } | null} */
@@ -1087,9 +1184,21 @@ function openRailMediaDialog(opener, media) {
   closeBtn.focus();
 }
 
+/**
+ * 잠금 예외(종현 승인 2026-11-10): 드로어 등에서 기존 레일 영상 팝업만 연다.
+ * @param {string} key
+ * @param {HTMLElement} [opener]
+ */
+export function openRailPromoVideo(key, opener = document.body) {
+  const video = PROMO_VIDEOS[key];
+  if (!video || !isValidYoutubeId(video.id)) return rejectPromoVideo();
+  openRailMediaDialog(opener, { id: video.id, title: String(video.title || '홍보 영상') });
+}
+
 export function bindRightRailEvents(root) {
   if (!root) return;
   bindRailAccordion(root); // 아코디언 초기화 (모바일 접힘/펼침)
+  bindRailMobileTabs(root);
   bindInfoRailEvents();
   bindConcernRailEvents();
   bindRailGuidePeekEvents(root);
