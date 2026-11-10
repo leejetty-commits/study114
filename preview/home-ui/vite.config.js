@@ -5,6 +5,10 @@ import { resolveViteBase } from '../shared/vite-base.mjs';
 export default defineConfig({
   base: resolveViteBase('/'),
   root: '.',
+  build: {
+    // 341: 관리자·드문 화면 JS만 나눈다. CSS는 엔트리 하나로 유지.
+    cssCodeSplit: false,
+  },
   resolve: {
     alias: {
       '@search-ui': resolve(__dirname, '../search-ui/src'),

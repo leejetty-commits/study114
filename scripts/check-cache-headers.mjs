@@ -33,10 +33,13 @@ function assertHtaccess(text) {
     ok('hashed asset immutable directive present');
   }
 
-  if (!/\^index-\[A-Za-z0-9_-\]\+\\\.\(js\|css\)\$/.test(text) && !text.includes('^index-[A-Za-z0-9_-]+\\.(js|css)$')) {
-    fail('FilesMatch pattern for index-<hash>.(js|css) not found');
+  if (
+    !/\^\[A-Za-z0-9_-\]\+-\[A-Za-z0-9_-\]\+\\\.\(js\|css\)\$/.test(text) &&
+    !text.includes('^[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\\.(js|css)$')
+  ) {
+    fail('FilesMatch pattern for Vite hashed <name>-<hash>.(js|css) not found');
   } else {
-    ok('FilesMatch limited to index-<hash>.js|css (not blanket *.(js|css))');
+    ok('FilesMatch covers Vite hashed chunks <name>-<hash>.js|css (not blanket *.(js|css))');
   }
 
   if (!text.includes('no-cache, no-store, must-revalidate')) {
@@ -95,7 +98,7 @@ async function probeLive() {
       r.text(),
     );
     const mJs = html.match(/\/register\/room\/assets\/(index-[A-Za-z0-9_-]+\.js)/);
-    const mCss = html.match(/\/register\/room\/assets\/(index-[A-Za-z0-9_-]+\.css)/);
+    const mCss = html.match(/\/register\/room\/assets\/((?:index|style)-[A-Za-z0-9_-]+\.css)/);
     if (mJs) roomJs = `${origin}/register/room/assets/${mJs[1]}`;
     if (mCss) cssUrl = `${origin}/register/room/assets/${mCss[1]}`;
   } catch {
@@ -104,7 +107,7 @@ async function probeLive() {
   try {
     const home = await fetch(`${origin}/`, { signal: AbortSignal.timeout(25000) }).then((r) => r.text());
     const m = home.match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/);
-    const c = home.match(/\/assets\/(index-[A-Za-z0-9_-]+\.css)/);
+    const c = home.match(/\/assets\/((?:index|style)-[A-Za-z0-9_-]+\.css)/);
     if (m) jsUrl = `${origin}/assets/${m[1]}`;
     if (c) cssUrl = cssUrl || `${origin}/assets/${c[1]}`;
   } catch {
