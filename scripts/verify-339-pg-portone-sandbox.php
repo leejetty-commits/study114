@@ -562,6 +562,15 @@ if ($userId > 0 && $hasPay) {
     echo "SKIP DB-backed behavior tests\n";
 }
 
+/* ── checkout.php complete 경로: ProviderCheckoutRepository(PDO) 생성자 회귀 ──
+ * checkout.php 의 action=complete 분기는 new ProviderCheckoutRepository(Connection::get()) 를 쓴다.
+ * 이 경로는 이전에 인자 없이 호출돼 Fatal Error 가 발생했고(166b9edf), 단위 테스트가 HTTP 엔드포인트를
+ * 직접 요청하지 않아 잡히지 않았다. 아래 테스트로 생성자+getByRef 경로를 직접 검증한다.
+ */
+$repoFromPdo = new ProviderCheckoutRepository($pdo);
+$ghostRef = 'verify-ghost-' . bin2hex(random_bytes(4));
+check('checkout_complete: ProviderCheckoutRepository(PDO) 생성자+getByRef', $repoFromPdo->getByRef($ghostRef) === null);
+
 if (is_string($prevPg) && $prevPg !== '') {
     putenv('PG_PROVIDER=' . $prevPg);
 } else {

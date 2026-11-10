@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Database\Connection;
 use Study114\Paid\PaidApi;
 use Study114\Paid\PaidCheckoutGate;
 use Study114\Paid\Pg\PgProvider;
@@ -31,7 +32,7 @@ PaidApi::run(static function (): void {
             PaidApi::fail(422, 'validation', 'order_ref가 필요합니다.');
         }
 
-        $orders = new ProviderCheckoutRepository();
+        $orders = new ProviderCheckoutRepository(Connection::get());
         $existing = $orders->getByRef($orderRef);
         if ($existing === null || (int) ($existing['user_id'] ?? 0) !== $userId) {
             PaidApi::fail(404, 'not_found', '주문을 찾을 수 없습니다.');
