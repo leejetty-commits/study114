@@ -236,9 +236,55 @@ function renderHomePromoTrio(beforeActions = '') {
         <span class="home-promo-trio__sub">${esc(card.sub)}</span>
       </a>`,
   ).join('');
+  const dots = HOME_PROMO_TRIO.map(
+    (_, i) =>
+      `<button type="button" class="home-promo-trio__dot${i === 0 ? ' is-active' : ''}" data-promo-trio-dot="${i}" aria-label="${i + 1}번째 안내"></button>`,
+  ).join('');
   return `
     ${beforeActions || ''}
-    <nav class="home-promo-trio" aria-label="홈 안내">${cards}</nav>`;
+    <div class="home-promo-trio-shell">
+      <nav class="home-promo-trio" aria-label="홈 안내" data-promo-trio-track>${cards}</nav>
+      <div class="home-promo-trio__dots" data-promo-trio-dots aria-hidden="true">${dots}</div>
+    </div>`;
+}
+
+/** ≤720 캐러셀 점·스냅 동기. ≥721에서는 CSS로 점 숨김. */
+export function bindHomePromoTrio(root) {
+  if (!root || typeof root.querySelectorAll !== 'function') return;
+  root.querySelectorAll('[data-promo-trio-track]').forEach((track) => {
+    if (!(track instanceof HTMLElement) || track.dataset.promoTrioBound) return;
+    track.dataset.promoTrioBound = '1';
+    const shell = track.closest('.home-promo-trio-shell');
+    const dots = shell?.querySelectorAll('[data-promo-trio-dot]');
+    const cards = [...track.querySelectorAll('.home-promo-trio__card')];
+    if (!dots?.length || !cards.length) return;
+
+    const syncDots = () => {
+      const mid = track.scrollLeft + track.clientWidth / 2;
+      let best = 0;
+      let bestDist = Infinity;
+      cards.forEach((card, i) => {
+        const center = card.offsetLeft + card.offsetWidth / 2;
+        const dist = Math.abs(center - mid);
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = i;
+        }
+      });
+      dots.forEach((dot, i) => dot.classList.toggle('is-active', i === best));
+    };
+
+    track.addEventListener('scroll', () => syncDots(), { passive: true });
+    shell?.querySelector('[data-promo-trio-dots]')?.addEventListener('click', (e) => {
+      const btn = e.target instanceof Element ? e.target.closest('[data-promo-trio-dot]') : null;
+      if (!btn) return;
+      const index = Number(btn.getAttribute('data-promo-trio-dot') || 0);
+      const card = cards[index];
+      if (!card) return;
+      track.scrollTo({ left: card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2, behavior: 'smooth' });
+    });
+    syncDots();
+  });
 }
 
 /**

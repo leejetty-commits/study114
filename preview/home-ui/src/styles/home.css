@@ -1029,6 +1029,40 @@ a.sup-term-chip:hover {
   background: var(--brand-blue-light);
 }
 
+.home-drawer__promo {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--gray-100);
+}
+
+.home-drawer__promo-item {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+  text-align: left;
+  cursor: pointer;
+}
+
+.home-drawer__promo-item:hover,
+.home-drawer__promo-item:focus-visible {
+  background: var(--gray-50);
+  color: var(--brand-blue);
+}
+
+@media (min-width: 900px) {
+  .home-drawer__promo {
+    display: none;
+  }
+}
+
 .home-drawer__util {
   display: flex;
   flex-direction: column;

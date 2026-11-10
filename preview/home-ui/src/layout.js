@@ -14,6 +14,8 @@ import { syncSiteHeaderOffset, ensureSiteHeaderOffsetListeners } from '../../sha
 import { renderSiteFooter } from '../../shared/site-footer.js';
 import { setPendingRoute } from '../../shared/pending-route.js';
 import { redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
+import { PROMO_VIDEOS, isValidYoutubeId } from './promo-video-config.js';
+import { bindHomePromoTrio } from './home-marketing-banner.js';
 
 /** 상단 홍보. 로그인 세션 우선. 게스트·등록 중은 공부방 소개. */
 function promoToolbarPath() {
@@ -213,6 +215,32 @@ function goSameTab(url) {
   window.location.assign(url);
 }
 
+/** promoKeysForRole과 동일. ID 무효면 숨김. */
+function drawerPromoKeysForRole(navRole) {
+  if (navRole === 'study_room') return ['study_room'];
+  if (navRole === 'tutor') return ['tutor'];
+  return ['study_room', 'tutor'];
+}
+
+const DRAWER_PROMO_LABELS = {
+  study_room: '우동공과 공부방 소개영상',
+  tutor: '우동공과 과외쌤 소개영상',
+};
+
+function renderDrawerPromoVideos(navRole) {
+  const items = drawerPromoKeysForRole(navRole)
+    .map((key) => {
+      const video = PROMO_VIDEOS[key];
+      if (!video || !isValidYoutubeId(video.id)) return '';
+      const label = DRAWER_PROMO_LABELS[key] || String(video.title || '소개영상');
+      return `<button type="button" class="home-drawer__promo-item" data-action="drawer-promo-video" data-rail-media-key="${key}">${label}</button>`;
+    })
+    .filter(Boolean)
+    .join('');
+  if (!items) return '';
+  return `<div class="home-drawer__promo" data-drawer-promo>${items}</div>`;
+}
+
 /**
  * @param {'guest' | 'parent' | 'study_room' | 'tutor'} role
  * @param {{ showAuth?: boolean, showRoleSwitch?: boolean }} opts
@@ -230,6 +258,7 @@ export function renderHeader(role, opts = {}) {
   const mobileGnb = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole, { mobile: true })).join('');
   const utilHtml = renderUtilBar(role, showAuth);
   const drawerGnb = GNB_MAIN.map((item) => renderGnbLink(item, gnbRole)).join('');
+  const drawerPromo = renderDrawerPromoVideos(gnbRole);
 
   return `
     <header class="home-header">
@@ -265,6 +294,7 @@ export function renderHeader(role, opts = {}) {
             <button type="button" class="home-drawer__close" data-action="drawer-close" aria-label="메뉴 닫기">✕</button>
           </div>
           <div class="home-drawer__gnb">${drawerGnb}</div>
+          ${drawerPromo}
           <div class="home-drawer__util">${utilHtml}</div>
         </nav>
       </div>
@@ -454,6 +484,7 @@ function closeDrawer(header) {
 
 export function bindLayoutEvents(root, rerender) {
   bindRightRailEvents(root);
+  bindHomePromoTrio(root);
 
   const header = root.querySelector?.('.home-header') || root;
   header.querySelector?.('[data-action="hamburger-toggle"]')?.addEventListener('click', () => {
@@ -471,6 +502,16 @@ export function bindLayoutEvents(root, rerender) {
     if (e.target.closest('[data-action]') || e.target.closest('[data-nav]')) {
       closeDrawer(header);
     }
+  });
+  header.querySelector?.('[data-drawer-promo]')?.addEventListener('click', (e) => {
+    const btn = e.target instanceof Element ? e.target.closest('[data-action="drawer-promo-video"]') : null;
+    if (!(btn instanceof HTMLElement)) return;
+    e.preventDefault();
+    const key = btn.getAttribute('data-rail-media-key') || '';
+    closeDrawer(header);
+    import('./right-rail.js').then((mod) => {
+      mod.openRailPromoVideo(key, btn);
+    });
   });
   header.querySelector?.('.home-drawer__util')?.addEventListener('click', (e) => {
     if (e.target.closest('[data-action]') || e.target.closest('[data-util-href]')) {

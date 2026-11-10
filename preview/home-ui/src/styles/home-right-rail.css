@@ -1201,3 +1201,133 @@ button.live-rail-empty.live-rail-best__open {
     min-width: 0;
   }
 }
+
+/* ── 342 모바일 탭·가로 스냅 (기존 .live-rail-promo-video* 규칙은 수정하지 않음) ── */
+.rail-m-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  width: 100%;
+}
+
+.rail-m-tabs__nav {
+  display: none;
+}
+
+.rail-m-tabs__panes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.rail-m-tabs__pane {
+  display: contents;
+}
+
+.rail-video-snap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+}
+
+.rail-room-snap {
+  display: contents;
+}
+
+@media (max-width: 1023px) {
+  .rail-m-tabs__nav {
+    display: flex;
+    gap: 6px;
+    width: 100%;
+    padding: 0 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .rail-m-tabs__nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail-m-tabs__tab {
+    flex: 1 1 0;
+    min-width: 3.5rem;
+    margin: 0;
+    padding: 0.45rem 0.35rem;
+    border: 1px solid var(--uds-line);
+    border-radius: var(--radius-control, 0.5rem);
+    background: var(--uds-surface, #fff);
+    font-family: inherit;
+    font-size: var(--fs-13, 0.8125rem);
+    font-weight: var(--fw-semibold, 600);
+    color: var(--uds-ink-muted, #6b7280);
+    cursor: pointer;
+  }
+
+  .rail-m-tabs__tab.is-active {
+    border-color: var(--uds-primary, #266bc4);
+    color: var(--uds-primary, #266bc4);
+    background: #eef4fb;
+  }
+
+  .rail-m-tabs__panes {
+    gap: var(--space-3);
+  }
+
+  .rail-m-tabs__pane {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+  }
+
+  .rail-m-tabs__pane.is-active,
+  .rail-m-tabs__pane:not([hidden]) {
+    display: flex;
+  }
+
+  .rail-m-tabs__pane[hidden] {
+    display: none !important;
+  }
+
+  .rail-m-tabs .rail-room-snap {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .rail-m-tabs .rail-room-snap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail-m-tabs .rail-room-snap > .live-rail-slot--room {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+  }
+
+  .rail-m-tabs .rail-video-snap {
+    flex-direction: row;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .rail-m-tabs .rail-video-snap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rail-m-tabs .rail-video-snap > .live-rail-promo-video__open {
+    flex: 0 0 86%;
+    scroll-snap-align: start;
+  }
+}
