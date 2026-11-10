@@ -40,6 +40,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
 import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
+import { showP24Toast } from '../detail-decision/detail-utils.js';
 import {
   MESSAGE_ATTACHMENT,
   formatFileBytes,
@@ -356,6 +357,7 @@ export function bindMessagesScreenEvents(root, rerender) {
     form.addEventListener('submit', async (e) => {
 
       e.preventDefault();
+      if (form.dataset.sending === '1') return;
 
       const id = Number(form.dataset.msgReply);
 
@@ -371,6 +373,7 @@ export function bindMessagesScreenEvents(root, rerender) {
 
       const input = form.querySelector('.msg-reply__input');
       const fileInput = form.querySelector('.msg-reply__file');
+      const submitBtn = form.querySelector('button[type="submit"]');
       const body = input?.value?.trim() || '';
       const files = Array.from(fileInput?.files || []);
       const fileErr = validateMessageFiles(files);
@@ -380,10 +383,24 @@ export function bindMessagesScreenEvents(root, rerender) {
       }
       if (!body && files.length === 0) return;
 
+      const prevLabel = submitBtn?.textContent || '전송';
+      form.dataset.sending = '1';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '보내는 중…';
+      }
+
       try {
 
         await appendMessageToThread(id, body, files);
-
+        if (input) input.value = '';
+        if (fileInput) fileInput.value = '';
+        const list = form.querySelector('[data-msg-file-list]');
+        if (list) {
+          list.textContent = '';
+          list.classList.add('is-hidden');
+        }
+        showP24Toast('쪽지를 보냈어요');
         rerender();
 
       } catch (err) {
@@ -392,8 +409,13 @@ export function bindMessagesScreenEvents(root, rerender) {
 
         if (err?.code === 'paid_gate') showPaidGateOverlay();
         else if (err?.code === 'email_verify_required') showEmailVerifyOverlay();
+        else showP24Toast('보내지 못했어요. 다시 시도해 주세요');
 
-        else void s114Alert(err?.message || '답장 전송에 실패했습니다.');
+        form.dataset.sending = '0';
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = prevLabel;
+        }
 
       }
 
