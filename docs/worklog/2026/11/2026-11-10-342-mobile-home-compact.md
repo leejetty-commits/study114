@@ -57,7 +57,11 @@
 - 게스트 티커·관리자·API·CSP 미변경
 - main 직접/force push 없음
 
+## 추가 확인
+
+- 고객센터(`#/support`) ☰ → 공부방 소개영상: `#live-rail-media-dialog` 열림 · `is-rail-media-open`
+
 ## 승인
 
-- (검수 후) 커밋 hash:
-- PR·머지: 검수 후
+- 커밋 hash: `cbf880a8662793644b940a06508dfbeee94180f5`
+- push / PR·머지: 검수 후
