@@ -90,10 +90,10 @@ tutor signup seed gate FAILED (1)
 
 | 항목 | 값 |
 |------|-----|
-| 커밋 | _(작성 후 기입)_ |
-| PR | _(작성 후 기입)_ |
-| CI 「PHP 8.2 Resend gate」 | _(작성 후 기입)_ |
-| 머지 커밋 | _(작성 후 기입)_ |
+| 커밋 | `d8f7d789` |
+| PR | https://github.com/leejetty-commits/study114/pull/156 |
+| CI 「PHP 8.2 Resend gate」 | ✅ success (Tutor signup seed regions 포함 전 단계 success) |
+| 머지 커밋 | _(merge 후 기입)_ |
 
 ---
 
