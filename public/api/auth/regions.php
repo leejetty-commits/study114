@@ -36,6 +36,24 @@ if ($action === '') {
 }
 
 /**
+ * list / cities / tutor_units 는 사용자·세션과 무관한 마스터.
+ * GET 만 공유 캐시. ensure·complex-by-name·POST 는 캐시하지 않는다.
+ */
+function study114_regions_send_cache_headers(string $method, string $action): void
+{
+    $publicActions = ['list', 'cities', 'tutor_units'];
+    if ($method === 'GET' && in_array($action, $publicActions, true)) {
+        header('Cache-Control: public, max-age=86400');
+        return;
+    }
+    if ($action === 'ensure' || $action === 'complex-by-name') {
+        header('Cache-Control: private, no-store');
+    }
+}
+
+study114_regions_send_cache_headers($method, $action);
+
+/**
  * 닷홈 Apache가 4xx/5xx 본문을 HTML 에러 페이지로 바꿔, JSON을 숨긴다.
  * 클라이언트는 HTTP 200 + ok 필드로 성공/실패를 본다.
  */
