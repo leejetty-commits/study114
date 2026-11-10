@@ -59,87 +59,177 @@ final class ProviderCheckoutRepository
         ?int $listPriceWon = null,
         ?int $discountWon = null,
         ?array $priceSnapshot = null,
+        string $pgProvider = 'dev_mock',
+        ?string $pgPaymentId = null,
     ): void {
         $hasProvider = $this->hasProviderColumns();
         $hasCatalog = $this->hasCatalogColumns();
+        $hasPgPaymentId = $this->hasColumn('pg_payment_id');
         $snapshotJson = $priceSnapshot !== null
             ? json_encode($priceSnapshot, JSON_UNESCAPED_UNICODE)
             : null;
+        $pgProvider = $pgProvider !== '' ? $pgProvider : 'dev_mock';
 
         if ($hasProvider && $hasCatalog) {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO provider_payment_orders
-                 (user_id, order_ref, product_id, variant_label, product_kind,
-                  provider_type, provider_id, amount_won,
-                  catalog_version, list_price_won, discount_won, price_snapshot_json,
-                  status, pg_provider)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $orderRef,
-                $productId,
-                $variant,
-                $kind,
-                $providerType,
-                $providerId,
-                $amountWon,
-                $catalogVersion,
-                $listPriceWon,
-                $discountWon,
-                $snapshotJson,
-                'pending',
-                'dev_mock',
-            ]);
+            if ($hasPgPaymentId) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind,
+                      provider_type, provider_id, amount_won,
+                      catalog_version, list_price_won, discount_won, price_snapshot_json,
+                      status, pg_provider, pg_payment_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $providerType,
+                    $providerId,
+                    $amountWon,
+                    $catalogVersion,
+                    $listPriceWon,
+                    $discountWon,
+                    $snapshotJson,
+                    'pending',
+                    $pgProvider,
+                    $pgPaymentId,
+                ]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind,
+                      provider_type, provider_id, amount_won,
+                      catalog_version, list_price_won, discount_won, price_snapshot_json,
+                      status, pg_provider)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $providerType,
+                    $providerId,
+                    $amountWon,
+                    $catalogVersion,
+                    $listPriceWon,
+                    $discountWon,
+                    $snapshotJson,
+                    'pending',
+                    $pgProvider,
+                ]);
+            }
 
             return;
         }
 
         if ($hasProvider) {
-            $stmt = $this->pdo->prepare(
-                'INSERT INTO provider_payment_orders
-                 (user_id, order_ref, product_id, variant_label, product_kind,
-                  provider_type, provider_id, amount_won, status, pg_provider)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            );
-            $stmt->execute([
-                $userId,
-                $orderRef,
-                $productId,
-                $variant,
-                $kind,
-                $providerType,
-                $providerId,
-                $amountWon,
-                'pending',
-                'dev_mock',
-            ]);
+            if ($hasPgPaymentId) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind,
+                      provider_type, provider_id, amount_won, status, pg_provider, pg_payment_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $providerType,
+                    $providerId,
+                    $amountWon,
+                    'pending',
+                    $pgProvider,
+                    $pgPaymentId,
+                ]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind,
+                      provider_type, provider_id, amount_won, status, pg_provider)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $providerType,
+                    $providerId,
+                    $amountWon,
+                    'pending',
+                    $pgProvider,
+                ]);
+            }
 
             return;
         }
 
         if ($hasCatalog) {
+            if ($hasPgPaymentId) {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind, amount_won,
+                      catalog_version, list_price_won, discount_won, price_snapshot_json,
+                      status, pg_provider, pg_payment_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $amountWon,
+                    $catalogVersion,
+                    $listPriceWon,
+                    $discountWon,
+                    $snapshotJson,
+                    'pending',
+                    $pgProvider,
+                    $pgPaymentId,
+                ]);
+            } else {
+                $stmt = $this->pdo->prepare(
+                    'INSERT INTO provider_payment_orders
+                     (user_id, order_ref, product_id, variant_label, product_kind, amount_won,
+                      catalog_version, list_price_won, discount_won, price_snapshot_json,
+                      status, pg_provider)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                );
+                $stmt->execute([
+                    $userId,
+                    $orderRef,
+                    $productId,
+                    $variant,
+                    $kind,
+                    $amountWon,
+                    $catalogVersion,
+                    $listPriceWon,
+                    $discountWon,
+                    $snapshotJson,
+                    'pending',
+                    $pgProvider,
+                ]);
+            }
+
+            return;
+        }
+
+        if ($hasPgPaymentId) {
             $stmt = $this->pdo->prepare(
                 'INSERT INTO provider_payment_orders
-                 (user_id, order_ref, product_id, variant_label, product_kind, amount_won,
-                  catalog_version, list_price_won, discount_won, price_snapshot_json,
-                  status, pg_provider)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                 (user_id, order_ref, product_id, variant_label, product_kind, amount_won, status, pg_provider, pg_payment_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
-            $stmt->execute([
-                $userId,
-                $orderRef,
-                $productId,
-                $variant,
-                $kind,
-                $amountWon,
-                $catalogVersion,
-                $listPriceWon,
-                $discountWon,
-                $snapshotJson,
-                'pending',
-                'dev_mock',
-            ]);
+            $stmt->execute([$userId, $orderRef, $productId, $variant, $kind, $amountWon, 'pending', $pgProvider, $pgPaymentId]);
 
             return;
         }
@@ -149,7 +239,22 @@ final class ProviderCheckoutRepository
              (user_id, order_ref, product_id, variant_label, product_kind, amount_won, status, pg_provider)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
-        $stmt->execute([$userId, $orderRef, $productId, $variant, $kind, $amountWon, 'pending', 'dev_mock']);
+        $stmt->execute([$userId, $orderRef, $productId, $variant, $kind, $amountWon, 'pending', $pgProvider]);
+    }
+
+    /** @return array<string, mixed>|null */
+    public function getByPaymentId(string $paymentId): ?array
+    {
+        if (!$this->hasColumn('pg_payment_id')) {
+            return null;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT * FROM provider_payment_orders WHERE pg_payment_id = ? LIMIT 1'
+        );
+        $stmt->execute([$paymentId]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return is_array($row) ? $row : null;
     }
 
     /** @return array<string, mixed>|null */

@@ -146,13 +146,17 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
   return parseJson(res);
 }
 
-/** @param {string} orderRef */
-export async function completePaidCheckout(orderRef) {
+/** @param {string} orderRef @param {{ paymentId?: string }} [opts] */
+export async function completePaidCheckout(orderRef, opts = {}) {
+  const body = { action: 'complete', order_ref: orderRef };
+  if (opts.paymentId) {
+    body.payment_id = String(opts.paymentId);
+  }
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
-    body: JSON.stringify({ action: 'complete', order_ref: orderRef }),
+    body: JSON.stringify(body),
   });
   try {
     return await parseJson(res);

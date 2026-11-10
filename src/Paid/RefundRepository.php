@@ -201,6 +201,77 @@ final class RefundRepository
         return $stmt->execute([$identityMethod, $orderRef]) && $stmt->rowCount() > 0;
     }
 
+    /**
+     * 339 — 포트원 취소 메타 저장 (누적 취소액·남은 금액).
+     */
+    public function savePgCancelMeta(
+        string $orderRef,
+        string $cancelId,
+        ?string $cancelledAt,
+        int $cancelAmountWon,
+        int $remainingWon,
+    ): bool {
+        if (!$this->hasColumn('pg_cancel_id')) {
+            return false;
+        }
+        $prev = $this->findByOrderRef($orderRef);
+        $prevCancel = is_array($prev) ? (int) ($prev['pg_cancel_amount_won'] ?? 0) : 0;
+        $totalCancel = $prevCancel + $cancelAmountWon;
+        $stmt = $this->pdo->prepare(
+            'UPDATE provider_refund_requests
+             SET pg_cancel_id = ?,
+                 pg_cancelled_at = COALESCE(?, NOW()),
+                 pg_cancel_amount_won = ?,
+                 pg_remaining_won = ?,
+                 updated_at = NOW()
+             WHERE order_ref = ?
+             LIMIT 1'
+        );
+        $at = $cancelledAt;
+        if (is_string($at) && $at !== '') {
+            // ISO8601 → MySQL DATETIME 근사
+            $ts = strtotime($at);
+            $at = $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
+        } else {
+            $at = null;
+        }
+
+        return $stmt->execute([$cancelId, $at, $totalCancel, max(0, $remainingWon), $orderRef])
+            && $stmt->rowCount() > 0;
+    }
+
+    public function pgRemainingWon(string $orderRef, int $orderAmountWon): int
+    {
+        $row = $this->findByOrderRef($orderRef);
+        if (is_array($row) && array_key_exists('pg_remaining_won', $row) && $row['pg_remaining_won'] !== null) {
+            return max(0, (int) $row['pg_remaining_won']);
+        }
+        if (is_array($row) && isset($row['pg_cancel_amount_won'])) {
+            return max(0, $orderAmountWon - (int) $row['pg_cancel_amount_won']);
+        }
+
+        return max(0, $orderAmountWon);
+    }
+
+    private function hasColumn(string $column): bool
+    {
+        static $cache = [];
+        if (array_key_exists($column, $cache)) {
+            return $cache[$column];
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['provider_refund_requests', $column]);
+        $cache[$column] = (bool) $stmt->fetchColumn();
+
+        return $cache[$column];
+    }
+
     /* ── 테이블 존재 확인 ─────────────────────────────── */
 
     public function tableExists(): bool

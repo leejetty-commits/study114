@@ -65,6 +65,7 @@ export const PAYMENT_METHOD_LABELS = {
   transfer: '계좌이체',
   vbank: '무통장 입금',
   dev_mock: '카드',
+  portone_test: '카드(테스트)',
 };
 
 export const PROVIDER_TYPE_LABELS = {

@@ -9,6 +9,8 @@ use InvalidArgumentException;
 use PDO;
 use RuntimeException;
 use Study114\Database\Connection;
+use Study114\Paid\Pg\PgProvider;
+use Study114\Paid\Pg\PortOneCheckout;
 
 /**
  * 326+326b+327 — 쪽지권·노출상품 환불 신청 · 자동승인(PG HOLD) · 철회(본인확인) · 관리자 차단
@@ -221,6 +223,15 @@ final class RefundService
             }
 
             $this->updateOrderStatus($orderRef, 'refund_requested');
+            try {
+                $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
+            } catch (RuntimeException $e) {
+                // 포트원 취소 실패: 승인은 하지 않고 requested로 커밋
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->commit();
+                }
+                throw $e;
+            }
             $this->refunds->markApproved($orderRef);
             $this->pdo->commit();
 
@@ -230,6 +241,53 @@ final class RefundService
                 'refund_won' => $calc['refund_won'],
                 'status' => 'approved',
                 'message' => sprintf('환불 신청 완료 (자동승인). 환불 예정액 %s원', number_format($calc['refund_won'])),
+            ];
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    /**
+     * 339 — 환불 승인 후 남은 PG 금액 추가 부분취소 (같은 환불 행에 메타 누적).
+     * 주문당 환불 행 UNIQUE이므로 2차 부분취소는 이 경로로 처리.
+     *
+     * @return array{ok: bool, cancel_amount_won: int, remaining_won: int, message: string}
+     */
+    public function cancelPortOneRemaining(int $userId, string $orderRef, int $amountWon): array
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $order = $this->orders->getByRefForUpdate($orderRef);
+            if ($order === null || (int) ($order['user_id'] ?? 0) !== $userId) {
+                throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
+            }
+            if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+                throw new InvalidArgumentException('포트원 결제가 아닙니다.');
+            }
+            $refund = $this->refunds->findByOrderRefForUpdate($orderRef);
+            if ($refund === null || !in_array((string) ($refund['status'] ?? ''), ['requested', 'approved'], true)) {
+                throw new InvalidArgumentException('환불 신청이 없습니다.');
+            }
+            $orderAmount = (int) ($order['amount_won'] ?? 0);
+            $remaining = $this->refunds->pgRemainingWon($orderRef, $orderAmount);
+            if ($amountWon <= 0) {
+                throw new InvalidArgumentException('취소 금액이 올바르지 않습니다.');
+            }
+            if ($amountWon > $remaining) {
+                throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
+            }
+            $this->cancelPortOneBeforeApprove($order, $amountWon, 'partial_remaining', $remaining);
+            $this->pdo->commit();
+            $after = $this->refunds->findByOrderRef($orderRef);
+
+            return [
+                'ok' => true,
+                'cancel_amount_won' => $amountWon,
+                'remaining_won' => (int) ($after['pg_remaining_won'] ?? max(0, $remaining - $amountWon)),
+                'message' => sprintf('부분취소 %s원 완료. 남은 금액 %s원', number_format($amountWon), number_format((int) ($after['pg_remaining_won'] ?? 0))),
             ];
         } catch (\Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -486,6 +544,14 @@ final class RefundService
         }
 
         $this->updateOrderStatus($orderRef, 'refund_requested');
+        try {
+            $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
+        } catch (RuntimeException $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->commit();
+            }
+            throw $e;
+        }
         $this->refunds->markApproved($orderRef);
         $this->pdo->commit();
 
@@ -939,6 +1005,56 @@ final class RefundService
             'UPDATE provider_ticket_packs SET remaining = ? WHERE id = ? LIMIT 1'
         );
         $stmt->execute([$remaining, $packId]);
+    }
+
+    /**
+     * 339 — portone_test 결제건만 취소 API 호출. 실패 시 예외 → 승인하지 않음(requested 유지).
+     *
+     * @param array<string, mixed> $order
+     */
+    private function cancelPortOneBeforeApprove(
+        array $order,
+        int $cancelAmountWon,
+        string $reason,
+        ?int $remainingOverride = null,
+    ): void {
+        $pg = (string) ($order['pg_provider'] ?? '');
+        if (!PgProvider::usesPortOne($pg)) {
+            return;
+        }
+        $paymentId = trim((string) ($order['pg_payment_id'] ?? ''));
+        if ($paymentId === '') {
+            throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
+        }
+        $orderAmount = (int) ($order['amount_won'] ?? 0);
+        $orderRef = (string) ($order['order_ref'] ?? '');
+        $remaining = $remainingOverride ?? $this->refunds->pgRemainingWon($orderRef, $orderAmount);
+        if ($cancelAmountWon <= 0) {
+            return;
+        }
+        if ($cancelAmountWon > $remaining) {
+            throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
+        }
+        try {
+            $result = (new PortOneCheckout())->cancel(
+                $paymentId,
+                $cancelAmountWon,
+                $remaining,
+                $reason !== '' ? $reason : '환불',
+            );
+            $this->refunds->savePgCancelMeta(
+                $orderRef,
+                (string) $result['cancel_id'],
+                is_string($result['cancelled_at'] ?? null) ? (string) $result['cancelled_at'] : null,
+                (int) $result['cancel_amount_won'],
+                (int) $result['remaining_won'],
+            );
+        } catch (InvalidArgumentException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
+            throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
+        }
     }
 
     private function updateOrderStatus(string $orderRef, string $status): void

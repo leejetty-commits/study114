@@ -9,12 +9,14 @@ use PDO;
 use Study114\Database\Connection;
 use Study114\Mail\MemberLifecycleMailer;
 use Study114\Messages\MessagesRepository;
+use Study114\Paid\Pg\PgProvider;
+use Study114\Paid\Pg\PortOneCheckout;
 
 /**
- * 18d — dev mock PG · 주문 → 티켓/포지션/유료배지 지급
+ * 18d — 주문 → 티켓/포지션/유료배지 지급
  *
  * PR-A: 금액·SKU·기간은 PaidCatalog 서버 재계산. 클라이언트 금액 무시.
- * PG는 계속 dev_mock.
+ * PG: PgProvider 선택(기본 dev_mock). portone_test는 어댑터로만 추가.
  *
  * @see docs/internal/59-account-context-separation-lock.md
  */
@@ -212,6 +214,10 @@ final class ProviderCheckoutService
         $this->assertTierFieldsForOrder($kind, $productId, $providerType, $providerId);
 
         $orderRef = 'dev-' . bin2hex(random_bytes(8));
+        $pgProvider = PgProvider::id();
+        $pgPaymentId = PgProvider::usesPortOne($pgProvider)
+            ? PortOneCheckout::makePaymentId($orderRef)
+            : null;
         $this->orders->insertPending(
             $userId,
             $orderRef,
@@ -225,6 +231,8 @@ final class ProviderCheckoutService
             $listPriceWon,
             $discountWon,
             $snapshot,
+            $pgProvider,
+            $pgPaymentId,
         );
 
         if ($kind === 'count' && MemoTicketPolicy::isImmediateVariant($variant) && $providerType !== null && $providerId !== null) {
@@ -240,7 +248,7 @@ final class ProviderCheckoutService
             ]);
         }
 
-        return [
+        $payload = [
             'order_ref' => $orderRef,
             'amount_won' => $amountWon,
             'list_price_krw' => $listPriceWon,
@@ -256,7 +264,7 @@ final class ProviderCheckoutService
             'product_kind' => $kind,
             'provider_type' => $providerType,
             'provider_id' => $providerId,
-            'pg_provider' => 'dev_mock',
+            'pg_provider' => $pgProvider,
             'price_snapshot' => $snapshot,
             'badge_codes' => $normalizedBadges,
             'badge_sale_krw' => $badgeSale,
@@ -268,6 +276,18 @@ final class ProviderCheckoutService
             'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
             'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
         ];
+
+        if ($pgPaymentId !== null) {
+            $cfg = PortOneCheckout::publicConfig();
+            $payload['payment_id'] = $pgPaymentId;
+            $payload['store_id'] = $cfg['store_id'];
+            $payload['channel_key'] = $cfg['channel_key'];
+            $payload['order_name'] = PortOneCheckout::orderName($productId, $variant);
+            $payload['currency'] = 'CURRENCY_KRW';
+            $payload['pay_method'] = 'CARD';
+        }
+
+        return $payload;
     }
 
     /**
@@ -373,10 +393,57 @@ final class ProviderCheckoutService
         return ['orders' => $orders];
     }
 
-    /** @return array<string, mixed> */
-    public function completeOrder(int $userId, string $orderRef): array
+    /**
+     * 339 — 포트원 결제 확정: 단건 조회(PAID·금액·통화) 후 기존 complete/fulfill.
+     * 같은 paymentId/order_ref 중복 호출은 completeOrder 멱등으로 1회만 지급.
+     *
+     * @return array<string, mixed>
+     */
+    public function completePortOneOrder(int $userId, string $orderRef, ?string $claimedPaymentId = null): array
     {
-        if (!PaidCheckoutGate::mockCompleteAllowed()) {
+        $order = $this->orders->getByRef($orderRef);
+        if ($order === null || (int) $order['user_id'] !== $userId) {
+            throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
+        }
+        if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+            throw new InvalidArgumentException('포트원 주문이 아닙니다.');
+        }
+        (new PortOneCheckout())->assertPaidMatchesOrder($order, $claimedPaymentId);
+
+        return $this->completeOrder($userId, $orderRef, true);
+    }
+
+    /**
+     * 웹훅용: paymentId로 주문 찾아 동일 검증·완료 경로.
+     *
+     * @return array<string, mixed>|null 주문 없으면 null
+     */
+    public function completePortOneByPaymentId(string $paymentId): ?array
+    {
+        $order = $this->orders->getByPaymentId($paymentId);
+        if ($order === null) {
+            return null;
+        }
+        if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+            return null;
+        }
+        $userId = (int) ($order['user_id'] ?? 0);
+        $orderRef = (string) ($order['order_ref'] ?? '');
+        if ($userId <= 0 || $orderRef === '') {
+            return null;
+        }
+        (new PortOneCheckout())->assertPaidMatchesOrder($order, $paymentId);
+
+        return $this->completeOrder($userId, $orderRef, true);
+    }
+
+    /**
+     * @param bool $pgVerified 포트원 등 실PG 단건 조회 검증을 이미 통과한 경우 true (mock 게이트 생략)
+     * @return array<string, mixed>
+     */
+    public function completeOrder(int $userId, string $orderRef, bool $pgVerified = false): array
+    {
+        if (!$pgVerified && !PaidCheckoutGate::mockCompleteAllowed()) {
             throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
         }
 

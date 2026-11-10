@@ -169,6 +169,8 @@ const intentionalNoGate = [
   // 공개 읽기. AuthSession으로 회원/손님만 가름. 메일 인증 게이트와 무관(301-1-1b).
   /\/neighborhood-greeting-card\.php$/,
   /\/study-room\/public\.php$/,
+  // 339: 포트원 웹훅 — 세션 없음·서명 검증. 시크릿 없으면 거절.
+  /\/paid\/portone-webhook\.php$/,
 ];
 
 console.log('\n=== 세션 기반 엔드포인트 게이트 분류 ===');

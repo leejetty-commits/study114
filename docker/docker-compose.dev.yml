@@ -46,6 +46,12 @@ services:
       STUDY114_PAID_MOCK_COMPLETE: "1"
       STUDY114_HOME_UI: http://127.0.0.1:5174
       STUDY114_AUTH_UI: http://127.0.0.1:5173
+      # 339 — 포트원 샌드박스 (값는 호스트 .env / 셸에서 주입. 이미지·커밋에 넣지 않음)
+      PG_PROVIDER: ${PG_PROVIDER:-}
+      PORTONE_STORE_ID: ${PORTONE_STORE_ID:-}
+      PORTONE_CHANNEL_KEY: ${PORTONE_CHANNEL_KEY:-}
+      PORTONE_API_SECRET: ${PORTONE_API_SECRET:-}
+      PORTONE_WEBHOOK_SECRET: ${PORTONE_WEBHOOK_SECRET:-}
       # 소셜 로그인 — config/oauth.env.example 참고 후 값 설정
       OAUTH_NAVER_CLIENT_ID: ${OAUTH_NAVER_CLIENT_ID:-}
       OAUTH_NAVER_CLIENT_SECRET: ${OAUTH_NAVER_CLIENT_SECRET:-}
@@ -53,6 +59,9 @@ services:
       OAUTH_KAKAO_CLIENT_SECRET: ${OAUTH_KAKAO_CLIENT_SECRET:-}
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
       OAUTH_GOOGLE_CLIENT_SECRET: ${OAUTH_GOOGLE_CLIENT_SECRET:-}
+    env_file:
+      - path: ../.env
+        required: false
     depends_on:
       mysql:
         condition: service_healthy

@@ -47,7 +47,13 @@ PaidApi::run(static function (): void {
             PaidApi::ok($service->withdraw($userId, $orderRef, $confirmText));
         }
 
-        PaidApi::fail(400, 'invalid_action', "action은 'submit' 또는 'withdraw'입니다.");
+        /* 339: 1차 환불 승인 후 남은 PG 금액 추가 부분취소 */
+        if ($action === 'pg_partial_cancel') {
+            $amountWon = (int) ($body['amount_won'] ?? 0);
+            PaidApi::ok($service->cancelPortOneRemaining($userId, $orderRef, $amountWon));
+        }
+
+        PaidApi::fail(400, 'invalid_action', "action은 'submit', 'withdraw' 또는 'pg_partial_cancel'입니다.");
     }
 
     PaidApi::fail(405, 'method_not_allowed', 'GET 또는 POST만 허용됩니다.');
