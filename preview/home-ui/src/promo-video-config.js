@@ -25,6 +25,8 @@ export function renderPromoTitleHtml(title, escHtml) {
   const rest = raw.slice(brand.length).replace(/^\s+/, '');
   const restHtml = rest.startsWith('공부방')
     ? `<strong class="live-rail-promo-video__title-em">공부방</strong>${escHtml(rest.slice('공부방'.length))}`
-    : escHtml(rest);
+    : rest.startsWith('과외쌤')
+      ? `<strong class="live-rail-promo-video__title-em">과외쌤</strong>${escHtml(rest.slice('과외쌤'.length))}`
+      : escHtml(rest);
   return `<span class="live-rail-promo-video__title-brand"><img class="live-rail-promo-video__title-symbol" src="${PROMO_SYMBOL_SRC}" alt="" decoding="async"><img class="live-rail-promo-video__title-wordmark" src="${PROMO_WORDMARK_SRC}" alt="우동공과" decoding="async"></span>\u00a0${restHtml}`;
 }

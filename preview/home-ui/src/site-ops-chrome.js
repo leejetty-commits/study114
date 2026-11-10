@@ -111,7 +111,7 @@ function renderGuestBanner(b) {
 }
 
 /**
- * 초당 60px: duration = (track.scrollWidth/2)/60.
+ * 초당 30px: duration = (track.scrollWidth/2)/30.
  * 반폭이 viewport보다 짧으면 item을 늘려 채운 뒤(복제 aria-hidden), 같은 세그먼트를 한 번 더 붙여 -50% 루프.
  */
 function bindGuestTicker(el) {
@@ -140,7 +140,7 @@ function bindGuestTicker(el) {
       track.appendChild(makeItem());
     }
     const half = track.scrollWidth / 2;
-    el.style.setProperty('--ops-guest-ticker-duration', `${half / 60}s`);
+    el.style.setProperty('--ops-guest-ticker-duration', `${half / 30}s`);
     const h = Math.ceil(viewport.getBoundingClientRect().height);
     if (h > 0) el.style.setProperty('--ops-guest-banner-h', `${h}px`);
   };
