@@ -39,4 +39,6 @@
 
 ## Git / PR
 
-별도 PR. 후기 API·정책 수치 변경 없음.
+- 커밋: `6cf3fcb0`
+- PR: https://github.com/leejetty-commits/study114/pull/163
+- 후기 API·정책 수치 변경 없음.
