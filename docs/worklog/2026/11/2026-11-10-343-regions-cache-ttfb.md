@@ -118,6 +118,6 @@ cf-cache-status: DYNAMIC
 
 ## 커밋 / PR
 
-- 커밋 SHA: `dbbfb1e45fa012e5893447388d5806eed6752bfb`
-- 줄 수: +273 / −12 (5 files)
+- 커밋 SHA: `4d9518c485dc1f6385e35731233ebee61e41d939`
+- 줄 수: +274 / −12 (5 files)
 - PR·머지: 검수 후
