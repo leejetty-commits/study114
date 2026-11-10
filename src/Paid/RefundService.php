@@ -29,6 +29,11 @@ final class RefundService
     private ProviderCheckoutRepository $orders;
     private ProviderTicketRepository $tickets;
     private PaidBadgeRepository $badges;
+    private ImmediateMemoRepository $immediate;
+    private PortOneCheckout $portOne;
+
+    /** @var list<array{payment_id: string, cancel_id: string, amount: int}> */
+    private array $portOneCancelsSucceeded = [];
 
     public function __construct(
         ?PDO $pdo = null,
@@ -36,10 +41,14 @@ final class RefundService
         ?ProviderCheckoutRepository $orders = null,
         ?ProviderTicketRepository $tickets = null,
         ?PaidBadgeRepository $badges = null,
+        ?ImmediateMemoRepository $immediate = null,
+        ?PortOneCheckout $portOne = null,
     ) {
         $this->pdo = $pdo ?? Connection::get();
         $this->refunds = $refunds ?? new RefundRepository($this->pdo);
         $this->orders = $orders ?? new ProviderCheckoutRepository($this->pdo);
+        $this->immediate = $immediate ?? new ImmediateMemoRepository($this->pdo);
+        $this->portOne = $portOne ?? new PortOneCheckout();
         $this->tickets = $tickets ?? new ProviderTicketRepository($this->pdo);
         $this->badges = $badges ?? new PaidBadgeRepository($this->pdo);
     }
@@ -107,6 +116,17 @@ final class RefundService
 
         /* count (쪽지권) — 기존 326 경로 */
         $pack = $this->findPackForOrder($order);
+        if (MemoTicketPolicy::isPaidPackVariant($variant) && $pack === null) {
+            error_log('[refund] pack_not_found order_ref=' . $orderRef);
+            return self::eligResult(
+                $orderRef,
+                $variant,
+                $amountWon,
+                false,
+                'pack_not_found',
+                self::denyMessage('pack_not_found'),
+            );
+        }
         $calc = MemoTicketRefundCalculator::calculate(
             $this->buildCalcInput($order, $pack),
             $this->now(),
@@ -177,6 +197,11 @@ final class RefundService
 
             /* count (쪽지권) — 기존 326 경로 */
             $pack = $this->findPackForOrder($order);
+            $variant = (string) ($order['variant_label'] ?? '');
+            if (MemoTicketPolicy::isPaidPackVariant($variant) && $pack === null) {
+                error_log('[refund] pack_not_found order_ref=' . $orderRef);
+                throw new InvalidArgumentException(self::denyMessage('pack_not_found'));
+            }
             $calc = MemoTicketRefundCalculator::calculate(
                 $this->buildCalcInput($order, $pack),
                 $this->now(),
@@ -199,7 +224,6 @@ final class RefundService
                 'detail' => trim($reason['detail'] ?? ''),
             ], JSON_UNESCAPED_UNICODE);
 
-            $variant = (string) ($order['variant_label'] ?? '');
             $amountWon = (int) ($order['amount_won'] ?? 0);
 
             try {
@@ -223,24 +247,22 @@ final class RefundService
             }
 
             $this->updateOrderStatus($orderRef, 'refund_requested');
-            try {
-                $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
-            } catch (RuntimeException $e) {
-                // 포트원 취소 실패: 승인은 하지 않고 requested로 커밋
-                if ($this->pdo->inTransaction()) {
-                    $this->pdo->commit();
-                }
-                throw $e;
-            }
-            $this->refunds->markApproved($orderRef);
+            $this->portOneCancelsSucceeded = [];
+            $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
+            $finalStatus = $this->finalizeRefundAfterPg($orderRef, $order);
             $this->pdo->commit();
 
             return [
                 'ok' => true,
                 'refund_id' => $refundId,
                 'refund_won' => $calc['refund_won'],
-                'status' => 'approved',
-                'message' => sprintf('환불 신청 완료 (자동승인). 환불 예정액 %s원', number_format($calc['refund_won'])),
+                'status' => $finalStatus,
+                'message' => sprintf(
+                    $finalStatus === 'refunded'
+                        ? '환불 완료. 환불액 %s원'
+                        : '환불 신청 완료 (자동승인). 환불 예정액 %s원',
+                    number_format($calc['refund_won']),
+                ),
             ];
         } catch (\Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -251,43 +273,61 @@ final class RefundService
     }
 
     /**
-     * 339 — 환불 승인 후 남은 PG 금액 추가 부분취소 (같은 환불 행에 메타 누적).
-     * 주문당 환불 행 UNIQUE이므로 2차 부분취소는 이 경로로 처리.
+     * 339 — 로컬 CLI 전용 2차 부분취소. 상한 = 환불 행 refund_won.
+     * HTTP API에서는 노출하지 않는다.
      *
      * @return array{ok: bool, cancel_amount_won: int, remaining_won: int, message: string}
      */
-    public function cancelPortOneRemaining(int $userId, string $orderRef, int $amountWon): array
+    public function cancelPortOneRemainingForCli(string $orderRef, int $amountWon): array
     {
+        if (PgProvider::id() !== PgProvider::PORTONE_TEST) {
+            throw new RuntimeException('PG_PROVIDER=portone_test 일 때만 실행할 수 있습니다.');
+        }
+        if (strtolower(study114_env('STUDY114_APP_ENV', 'local')) === 'production') {
+            throw new RuntimeException('production 환경에서는 실행할 수 없습니다.');
+        }
+
         $this->pdo->beginTransaction();
         try {
             $order = $this->orders->getByRefForUpdate($orderRef);
-            if ($order === null || (int) ($order['user_id'] ?? 0) !== $userId) {
+            if ($order === null) {
                 throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
             }
             if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
                 throw new InvalidArgumentException('포트원 결제가 아닙니다.');
             }
             $refund = $this->refunds->findByOrderRefForUpdate($orderRef);
-            if ($refund === null || !in_array((string) ($refund['status'] ?? ''), ['requested', 'approved'], true)) {
+            if ($refund === null) {
                 throw new InvalidArgumentException('환불 신청이 없습니다.');
             }
-            $orderAmount = (int) ($order['amount_won'] ?? 0);
-            $remaining = $this->refunds->pgRemainingWon($orderRef, $orderAmount);
+            $refundWon = (int) ($refund['refund_won'] ?? 0);
+            $alreadyCancelled = (int) ($refund['pg_cancel_amount_won'] ?? 0);
+            $refundRemaining = max(0, $refundWon - $alreadyCancelled);
             if ($amountWon <= 0) {
                 throw new InvalidArgumentException('취소 금액이 올바르지 않습니다.');
             }
-            if ($amountWon > $remaining) {
+            if ($amountWon > $refundRemaining) {
                 throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
             }
-            $this->cancelPortOneBeforeApprove($order, $amountWon, 'partial_remaining', $remaining);
+            $orderAmount = (int) ($order['amount_won'] ?? 0);
+            $pgRemaining = $this->refunds->pgRemainingWon($orderRef, $orderAmount);
+            if ($amountWon > $pgRemaining) {
+                throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
+            }
+            $this->portOneCancelsSucceeded = [];
+            $this->cancelPortOneBeforeApprove($order, $amountWon, 'partial_remaining', $pgRemaining);
             $this->pdo->commit();
             $after = $this->refunds->findByOrderRef($orderRef);
 
             return [
                 'ok' => true,
                 'cancel_amount_won' => $amountWon,
-                'remaining_won' => (int) ($after['pg_remaining_won'] ?? max(0, $remaining - $amountWon)),
-                'message' => sprintf('부분취소 %s원 완료. 남은 금액 %s원', number_format($amountWon), number_format((int) ($after['pg_remaining_won'] ?? 0))),
+                'remaining_won' => (int) ($after['pg_remaining_won'] ?? max(0, $pgRemaining - $amountWon)),
+                'message' => sprintf(
+                    '부분취소 %s원 완료. 남은 금액 %s원',
+                    number_format($amountWon),
+                    number_format((int) ($after['pg_remaining_won'] ?? 0)),
+                ),
             ];
         } catch (\Throwable $e) {
             if ($this->pdo->inTransaction()) {
@@ -329,6 +369,9 @@ final class RefundService
             }
 
             $refundStatus = (string) ($refund['status'] ?? '');
+            if ($refundStatus === 'refunded' || trim((string) ($refund['pg_cancel_id'] ?? '')) !== '') {
+                throw new InvalidArgumentException('이미 환불이 완료되어 철회할 수 없습니다');
+            }
             if (!in_array($refundStatus, ['requested', 'approved'], true)) {
                 throw new InvalidArgumentException('철회할 수 없는 상태입니다 (' . $refundStatus . ').');
             }
@@ -471,39 +514,45 @@ final class RefundService
         /* 배지 회수: orderRef:code 패턴 */
         $revokedBadgeIds = $this->revokeBadgesForPositionOrder($orderRef, $providerType, $providerId);
 
-        /* badge_addon 주문들 같이 처리 */
+        /* badge_addon 주문들 — 환불행만 먼저 생성(requested). 취소·마감은 본 주문 이후 */
         $badgeAddonOrderRefs = $this->findBadgeAddonOrderRefs($orderRef);
+        /** @var list<array{order: array<string, mixed>, refund_won: int}> $badgeCancelTargets */
+        $badgeCancelTargets = [];
         foreach ($badgeAddonOrderRefs as $addonRef) {
-            $addonCalcInput = $this->buildPositionCalcInput($this->orders->getByRefForUpdate($addonRef) ?? []);
+            $addonOrder = $this->orders->getByRefForUpdate($addonRef);
+            if ($addonOrder === null) {
+                continue;
+            }
+            $addonCalcInput = $this->buildPositionCalcInput($addonOrder);
             $addonCalc = PositionRefundCalculator::calculate($addonCalcInput, $this->now());
             $addonReasonText = json_encode([
                 'parent_order_ref' => $orderRef,
                 'seg_start' => $addonCalcInput['segment_started_on'] ?? '',
                 'seg_end_exclusive' => $addonCalcInput['segment_end_exclusive_on'] ?? '',
             ], JSON_UNESCAPED_UNICODE);
-            $addonOrder = $this->orders->getByRefForUpdate($addonRef);
-            if ($addonOrder !== null) {
-                try {
-                    $this->refunds->insert([
-                        'order_ref' => $addonRef,
-                        'user_id' => $userId,
-                        'product_kind' => 'badge_addon',
-                        'variant' => (string) ($addonOrder['variant_label'] ?? ''),
-                        'amount_won' => (int) ($addonOrder['amount_won'] ?? 0),
-                        'table_won' => $addonCalc['table_won'],
-                        'refund_won' => $addonCalc['refund_won'],
-                        'reason_code' => 'badge_follows_position',
-                        'reason_text' => $addonReasonText,
-                        'status' => 'requested',
-                    ]);
-                } catch (\PDOException $e) {
-                    if (!str_contains($e->getMessage(), 'Duplicate entry')) {
-                        throw $e;
-                    }
+            try {
+                $this->refunds->insert([
+                    'order_ref' => $addonRef,
+                    'user_id' => $userId,
+                    'product_kind' => 'badge_addon',
+                    'variant' => (string) ($addonOrder['variant_label'] ?? ''),
+                    'amount_won' => (int) ($addonOrder['amount_won'] ?? 0),
+                    'table_won' => $addonCalc['table_won'],
+                    'refund_won' => $addonCalc['refund_won'],
+                    'reason_code' => 'badge_follows_position',
+                    'reason_text' => $addonReasonText,
+                    'status' => 'requested',
+                ]);
+            } catch (\PDOException $e) {
+                if (!str_contains($e->getMessage(), 'Duplicate entry')) {
+                    throw $e;
                 }
-                $this->updateOrderStatus($addonRef, 'refund_requested');
-                $this->refunds->markApproved($addonRef);
             }
+            $this->updateOrderStatus($addonRef, 'refund_requested');
+            $badgeCancelTargets[] = [
+                'order' => $addonOrder,
+                'refund_won' => (int) $addonCalc['refund_won'],
+            ];
         }
 
         /* 번들 회수: source=position_bundle, source_order_ref=orderRef → remaining=0 */
@@ -544,23 +593,38 @@ final class RefundService
         }
 
         $this->updateOrderStatus($orderRef, 'refund_requested');
-        try {
-            $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
-        } catch (RuntimeException $e) {
-            if ($this->pdo->inTransaction()) {
-                $this->pdo->commit();
-            }
-            throw $e;
+
+        /* 본 주문 취소 → 배지 추가주문 취소. 실패 시 이후 호출 안 함·전체 롤백 */
+        $this->portOneCancelsSucceeded = [];
+        $this->cancelPortOneBeforeApprove($order, (int) $calc['refund_won'], (string) ($calc['reason_code'] ?? 'refund'));
+        foreach ($badgeCancelTargets as $target) {
+            $this->cancelPortOneBeforeApprove(
+                $target['order'],
+                (int) $target['refund_won'],
+                'badge_follows_position',
+            );
         }
-        $this->refunds->markApproved($orderRef);
+
+        $finalStatus = $this->finalizeRefundAfterPg($orderRef, $order);
+        foreach ($badgeCancelTargets as $target) {
+            $addonRef = (string) ($target['order']['order_ref'] ?? '');
+            if ($addonRef !== '') {
+                $this->finalizeRefundAfterPg($addonRef, $target['order']);
+            }
+        }
         $this->pdo->commit();
 
         return [
             'ok' => true,
             'refund_id' => $refundId,
             'refund_won' => $calc['refund_won'],
-            'status' => 'approved',
-            'message' => sprintf('환불 신청 완료 (자동승인). 환불 예정액 %s원', number_format($calc['refund_won'])),
+            'status' => $finalStatus,
+            'message' => sprintf(
+                $finalStatus === 'refunded'
+                    ? '환불 완료. 환불액 %s원'
+                    : '환불 신청 완료 (자동승인). 환불 예정액 %s원',
+                number_format($calc['refund_won']),
+            ),
         ];
     }
 
@@ -884,89 +948,43 @@ final class RefundService
      * ================================================================ */
 
     /**
-     * pack ID → order_ref 찾기 (source_order_ref 우선, 없으면 user_id+variant fallback)
+     * pack ID → order_ref (source_order_ref만. 대체 매칭 없음)
      */
     private function resolveOrderRefForPack(int $packId): ?string
     {
-        if ($this->columnExists('provider_ticket_packs', 'source_order_ref')) {
-            $stmt = $this->pdo->prepare(
-                "SELECT source_order_ref FROM provider_ticket_packs WHERE id = ? AND source_order_ref IS NOT NULL AND source_order_ref != '' LIMIT 1"
-            );
-            $stmt->execute([$packId]);
-            $ref = $stmt->fetchColumn();
-            if ($ref !== false && $ref !== '' && $ref !== null) {
-                return (string) $ref;
-            }
-        }
-
-        /* fallback: pack → (user_id, pack_size) → variant → 주문 매칭 */
-        $stmt = $this->pdo->prepare(
-            'SELECT user_id, pack_size FROM provider_ticket_packs WHERE id = ? LIMIT 1'
-        );
-        $stmt->execute([$packId]);
-        $pack = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($pack)) {
+        if (!$this->columnExists('provider_ticket_packs', 'source_order_ref')) {
             return null;
         }
-
-        $userId = (int) ($pack['user_id'] ?? 0);
-        $packSize = (int) ($pack['pack_size'] ?? 0);
-        $variant = self::packSizeToVariant($packSize);
-        if ($variant === '' || $userId <= 0) {
-            return null;
-        }
-
         $stmt = $this->pdo->prepare(
-            "SELECT order_ref FROM provider_payment_orders
-             WHERE user_id = ? AND variant_label = ? AND product_kind = 'count' AND status IN ('paid', 'refund_requested')
-             ORDER BY paid_at DESC, id DESC
+            "SELECT source_order_ref FROM provider_ticket_packs
+             WHERE id = ? AND source_order_ref IS NOT NULL AND source_order_ref != ''
              LIMIT 1"
         );
-        $stmt->execute([$userId, $variant]);
+        $stmt->execute([$packId]);
         $ref = $stmt->fetchColumn();
 
-        return ($ref !== false && $ref !== null) ? (string) $ref : null;
+        return ($ref !== false && $ref !== null && $ref !== '') ? (string) $ref : null;
     }
 
     /**
-     * 주문에 연결된 팩 찾기 (source_order_ref 또는 user_id + variant 매칭)
+     * 주문에 연결된 팩 (source_order_ref만. 없으면 null → pack_not_found)
      * @return array<string, mixed>|null
      */
     private function findPackForOrder(array $order): ?array
     {
         $orderRef = (string) ($order['order_ref'] ?? '');
-        $userId = (int) ($order['user_id'] ?? 0);
-        $variant = (string) ($order['variant_label'] ?? '');
-
-        if ($this->columnExists('provider_ticket_packs', 'source_order_ref')) {
-            $stmt = $this->pdo->prepare(
-                "SELECT id, remaining, pack_size, expires_at FROM provider_ticket_packs
-                 WHERE source_order_ref = ? AND ticket_type = 'memo'
-                 LIMIT 1 FOR UPDATE"
-            );
-            $stmt->execute([$orderRef]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (is_array($row)) {
-                return $row;
-            }
+        if ($orderRef === '' || !$this->columnExists('provider_ticket_packs', 'source_order_ref')) {
+            return null;
         }
+        $stmt = $this->pdo->prepare(
+            "SELECT id, remaining, pack_size, expires_at FROM provider_ticket_packs
+             WHERE source_order_ref = ? AND ticket_type = 'memo'
+             LIMIT 1 FOR UPDATE"
+        );
+        $stmt->execute([$orderRef]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        $packSize = self::variantToPackSize($variant);
-        if ($packSize > 0) {
-            $stmt = $this->pdo->prepare(
-                "SELECT id, remaining, pack_size, expires_at FROM provider_ticket_packs
-                 WHERE user_id = ? AND ticket_type = 'memo' AND pack_size = ?
-                 ORDER BY expires_at ASC, id ASC
-                 LIMIT 1 FOR UPDATE"
-            );
-            $stmt->execute([$userId, $packSize]);
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (is_array($row)) {
-                return $row;
-            }
-        }
-
-        return null;
+        return is_array($row) ? $row : null;
     }
 
     /* ================================================================
@@ -976,8 +994,9 @@ final class RefundService
     /** @return array<string, mixed> */
     private function buildCalcInput(array $order, ?array $pack): array
     {
+        $variant = (string) ($order['variant_label'] ?? '');
         $input = [
-            'variant' => (string) ($order['variant_label'] ?? ''),
+            'variant' => $variant,
             'order_status' => (string) ($order['status'] ?? ''),
             'amount_won' => (int) ($order['amount_won'] ?? 0),
             'paid_at' => (string) ($order['paid_at'] ?? ''),
@@ -986,6 +1005,13 @@ final class RefundService
             $input['pack_size'] = (int) ($pack['pack_size'] ?? 0);
             $input['remaining'] = (int) ($pack['remaining'] ?? 0);
             $input['expires_at'] = (string) ($pack['expires_at'] ?? '');
+        }
+        if (MemoTicketPolicy::isImmediateVariant($variant)) {
+            $orderRef = (string) ($order['order_ref'] ?? '');
+            $intent = $orderRef !== '' ? $this->immediate->getByOrderRef($orderRef) : null;
+            $input['dispatch_status'] = is_array($intent)
+                ? (string) ($intent['dispatch_status'] ?? '')
+                : '';
         }
 
         return $input;
@@ -1008,7 +1034,8 @@ final class RefundService
     }
 
     /**
-     * 339 — portone_test 결제건만 취소 API 호출. 실패 시 예외 → 승인하지 않음(requested 유지).
+     * 339 — portone_test 결제건만 취소. 실패 시 이미 성공한 취소는 ops 로그 후
+     * 「환불 처리 중 오류…」로 던져 호출측이 전체 롤백한다.
      *
      * @param array<string, mixed> $order
      */
@@ -1024,6 +1051,7 @@ final class RefundService
         }
         $paymentId = trim((string) ($order['pg_payment_id'] ?? ''));
         if ($paymentId === '') {
+            $this->logOrphanPortOneCancels();
             throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
         }
         $orderAmount = (int) ($order['amount_won'] ?? 0);
@@ -1036,12 +1064,17 @@ final class RefundService
             throw new InvalidArgumentException('남은 금액을 넘는 취소는 할 수 없습니다.');
         }
         try {
-            $result = (new PortOneCheckout())->cancel(
+            $result = $this->portOne->cancel(
                 $paymentId,
                 $cancelAmountWon,
                 $remaining,
                 $reason !== '' ? $reason : '환불',
             );
+            $this->portOneCancelsSucceeded[] = [
+                'payment_id' => $paymentId,
+                'cancel_id' => (string) $result['cancel_id'],
+                'amount' => (int) $result['cancel_amount_won'],
+            ];
             $this->refunds->savePgCancelMeta(
                 $orderRef,
                 (string) $result['cancel_id'],
@@ -1053,7 +1086,34 @@ final class RefundService
             throw $e;
         } catch (\Throwable $e) {
             error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
+            $this->logOrphanPortOneCancels();
             throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
+        }
+    }
+
+    /** @return 'refunded'|'approved' */
+    private function finalizeRefundAfterPg(string $orderRef, array $order): string
+    {
+        if (PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+            $this->refunds->markRefunded($orderRef);
+            $this->updateOrderStatus($orderRef, 'refunded');
+
+            return 'refunded';
+        }
+        $this->refunds->markApproved($orderRef);
+
+        return 'approved';
+    }
+
+    private function logOrphanPortOneCancels(): void
+    {
+        foreach ($this->portOneCancelsSucceeded as $row) {
+            error_log(sprintf(
+                '[portone] ORPHAN_CANCEL_NEEDS_OPS paymentId=%s cancel_id=%s amount=%d',
+                $row['payment_id'],
+                $row['cancel_id'],
+                $row['amount'],
+            ));
         }
     }
 
@@ -1124,6 +1184,7 @@ final class RefundService
             'last_day' => '마지막 이용일이므로 환불할 수 없습니다.',
             'period_ended' => '이용 기간이 종료되어 환불할 수 없습니다.',
             'badge_follows_position' => '배지는 노출상품 환불 시 함께 처리됩니다. 단독 환불은 불가합니다.',
+            'pack_not_found' => '이 주문에 연결된 쪽지권 팩을 찾을 수 없어 환불할 수 없습니다.',
             default => '환불 조건에 해당하지 않습니다.',
         };
     }

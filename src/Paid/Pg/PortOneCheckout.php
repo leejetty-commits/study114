@@ -13,11 +13,11 @@ use RuntimeException;
 final class PortOneCheckout
 {
     public function __construct(
-        private readonly ?PortOneClient $client = null,
+        private readonly ?PortOneApi $client = null,
     ) {
     }
 
-    private function client(): PortOneClient
+    private function client(): PortOneApi
     {
         return $this->client ?? PortOneClient::fromEnv();
     }
@@ -50,7 +50,8 @@ final class PortOneCheckout
         }
 
         $currency = $this->client()->extractCurrency($payment);
-        if ($currency !== '' && $currency !== 'KRW' && $currency !== 'CURRENCY_KRW') {
+        // 빈 값·비KRW 거절
+        if ($currency !== 'KRW' && $currency !== 'CURRENCY_KRW') {
             throw new InvalidArgumentException('결제 통화가 주문과 일치하지 않습니다.');
         }
     }

@@ -271,13 +271,12 @@ function study114_session_save_path(): ?string
 }
 
 /**
- * 로컬·개발에서만 루트 .env를 읽어 putenv (이미 있는 값은 덮지 않음).
- * 값 자체는 로그하지 않는다. 운영(APP_ENV=production)에서는 건너뛴다.
+ * 로컬·개발에서만 루트 .env의 PG_·PORTONE_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
+ * study114_env('STUDY114_APP_ENV')===production 이면 실행하지 않는다. 값은 로그하지 않는다.
  */
 function study114_load_dotenv_local(): void
 {
-    $appEnv = getenv('STUDY114_APP_ENV');
-    if (is_string($appEnv) && strtolower($appEnv) === 'production') {
+    if (strtolower(study114_env('STUDY114_APP_ENV', 'local')) === 'production') {
         return;
     }
     $path = dirname(__DIR__) . '/.env';
@@ -298,7 +297,10 @@ function study114_load_dotenv_local(): void
         }
         [$key, $value] = explode('=', $line, 2);
         $key = trim($key);
-        if ($key === '' || !preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+        if ($key === '' || (!str_starts_with($key, 'PG_') && !str_starts_with($key, 'PORTONE_'))) {
+            continue;
+        }
+        if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
             continue;
         }
         $existing = getenv($key);

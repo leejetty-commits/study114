@@ -57,8 +57,20 @@
 - 운영 `.env` / CSP / `STUDY114_PAID_MOCK_COMPLETE` 변경 금지.
 - 로컬 Docker에만 `085`(+필요 시 `083`) 적용.
 
+## 리뷰 수정 (2026-11-11)
+
+- `pg_partial_cancel` API 제거 → `scripts/339-portone-partial-cancel-cli.php` (상한=`refund_won`)
+- 본주문→배지 순 취소, 실패 시 전체 롤백 + orphan cancel ops 로그
+- portone_test만 `refunded` 마감, dev_mock은 `approved`
+- 철회: `refunded`/`pg_cancel_id` 거절 · UI 환불 완료·철회 숨김
+- immediate `dispatch_status` → 계산기 `sent`
+- pack `source_order_ref`만 · `pack_not_found`
+- 통화 KRW만 · dotenv는 `PG_`/`PORTONE_`만 · cancel ID JSON 누적
+- `verify-339` 모의 클라이언트 25/25
+
 ## 남은 위험
 
 - 웹훅 시크릿 비어 있으면 수신 불가(의도). 로컬은 complete 수동 재조회.
 - 토스/포트원 CSP 도메인은 콘솔 차단 로그로 추가 조정 가능.
-- 주문당 환불 행 UNIQUE → 2차 부분취소는 `pg_partial_cancel` 액션.
+- 취소 성공 후 이후 배지 취소 실패 시 PortOne orphan cancel은 운영 확인 필요(로그에 paymentId·cancel_id·금액만).
+- 테스트카드·포트원 콘솔 캡처는 수동 확인.

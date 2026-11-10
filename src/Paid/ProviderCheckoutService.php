@@ -26,6 +26,7 @@ final class ProviderCheckoutService
     private ProviderTicketRepository $tickets;
     private PaidBadgeRepository $badges;
     private ImmediateMemoRepository $immediate;
+    private PortOneCheckout $portOne;
     private PDO $pdo;
 
     public function __construct(
@@ -35,12 +36,14 @@ final class ProviderCheckoutService
         ?PDO $pdo = null,
         ?ImmediateMemoRepository $immediate = null,
         private ?MemberLifecycleMailer $lifecycleMail = null,
+        ?PortOneCheckout $portOne = null,
     ) {
         $this->pdo = $pdo ?? Connection::get();
         $this->orders = $orders ?? new ProviderCheckoutRepository($this->pdo);
         $this->tickets = $tickets ?? new ProviderTicketRepository($this->pdo);
         $this->badges = $badges ?? new PaidBadgeRepository($this->pdo);
         $this->immediate = $immediate ?? new ImmediateMemoRepository($this->pdo);
+        $this->portOne = $portOne ?? new PortOneCheckout();
     }
 
     /**
@@ -408,7 +411,7 @@ final class ProviderCheckoutService
         if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
             throw new InvalidArgumentException('포트원 주문이 아닙니다.');
         }
-        (new PortOneCheckout())->assertPaidMatchesOrder($order, $claimedPaymentId);
+        $this->portOne->assertPaidMatchesOrder($order, $claimedPaymentId);
 
         return $this->completeOrder($userId, $orderRef, true);
     }
@@ -432,7 +435,7 @@ final class ProviderCheckoutService
         if ($userId <= 0 || $orderRef === '') {
             return null;
         }
-        (new PortOneCheckout())->assertPaidMatchesOrder($order, $paymentId);
+        $this->portOne->assertPaidMatchesOrder($order, $paymentId);
 
         return $this->completeOrder($userId, $orderRef, true);
     }

@@ -1680,21 +1680,26 @@ function resolveV3Cells(r) {
   const isFromApi = r.source === 'api';
   const remaining = typeof r.remaining === 'number' ? r.remaining : null;
   const refundStatus = r.refundStatus || r.refund_status || '';
-  const hasRefundRequest = status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved';
-  /* PG HOLD(301): refunded 상태는 아직 UI에 노출하지 않는다 */
+  const isRefunded = status === 'refunded' || refundStatus === 'refunded';
+  const hasRefundRequest = !isRefunded
+    && (status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved');
   const isRefundRejected = refundStatus === 'rejected';
   const isWithdrawn = refundStatus === 'cancelled';
   const isPaid = status === 'paid';
   const isExpired = status === 'expired' || !!r.expired;
-  const isEnded = remaining === 0 && !isExpired && !hasRefundRequest;
+  const isEnded = remaining === 0 && !isExpired && !hasRefundRequest && !isRefunded;
 
   const canRefund = isFromApi && kind !== 'badge_addon'
     && (isPaid || status === 'refund_requested')
-    && !isWithdrawn;
+    && !isWithdrawn
+    && !isRefunded;
 
   let statusBadge = '';
   let statusClass = '';
-  if (hasRefundRequest) {
+  if (isRefunded) {
+    statusBadge = '환불 완료';
+    statusClass = 'plans-hist-row__st--ok';
+  } else if (hasRefundRequest) {
     statusBadge = '환불 검토 중';
     statusClass = 'plans-hist-row__st--ing';
   } else if (isRefundRejected) {
@@ -1705,7 +1710,7 @@ function resolveV3Cells(r) {
   return {
     detail: isFromApi,
     refund: canRefund && !hasRefundRequest,
-    progress: hasRefundRequest || isRefundRejected,
+    progress: hasRefundRequest || isRefundRejected || isRefunded,
     ended: isEnded,
     expired: isExpired,
     statusBadge,
@@ -1833,6 +1838,13 @@ function renderV3ProgressPanel(r) {
   const kind = r.productKind || r.product_kind || '';
   const status = r.status || '';
 
+  if (status === 'refunded' || refundStatus === 'refunded') {
+    return `<div class="plans-hist-row__panel-inner">
+      ${renderProgressSteps('refunded')}
+      <p>환불 완료</p>
+    </div>`;
+  }
+
   if (status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved') {
     const frozenMsg = kind === 'position' ? REFUND_COPY.positionFrozenNote : REFUND_COPY.frozenNote;
     const withdrawNote = kind === 'position' ? REFUND_COPY.positionWithdrawNote : '';
@@ -1848,8 +1860,6 @@ function renderV3ProgressPanel(r) {
     </div>`;
   }
 
-  /* PG HOLD(301): refunded 패널은 PG 실환불 해제 전까지 표시하지 않는다 */
-
   if (refundStatus === 'rejected') {
     return `<div class="plans-hist-row__panel-inner">
       ${renderProgressSteps('rejected')}
@@ -1861,19 +1871,23 @@ function renderV3ProgressPanel(r) {
 }
 
 function renderProgressSteps(refundStatus) {
-  /* PG HOLD(301): 승인 단계까지만 표시 (실환불 UI는 이후 tip) */
   const steps = [
     { label: '신청', key: 'requested' },
     { label: '검토 중', key: 'reviewing' },
     { label: '승인', key: 'approved' },
+    { label: '환불 완료', key: 'refunded' },
   ];
   const isRejected = refundStatus === 'rejected';
   const doneKeys = isRejected
     ? ['requested', 'reviewing']
-    : refundStatus === 'approved'
-      ? ['requested', 'reviewing', 'approved']
-      : ['requested'];
-  const curKey = isRejected ? null : (refundStatus === 'requested' ? 'reviewing' : null);
+    : refundStatus === 'refunded'
+      ? ['requested', 'reviewing', 'approved', 'refunded']
+      : refundStatus === 'approved'
+        ? ['requested', 'reviewing', 'approved']
+        : ['requested'];
+  const curKey = isRejected
+    ? null
+    : (refundStatus === 'requested' ? 'reviewing' : null);
 
   let html = '<div class="plans-hist-steps">';
   for (const s of steps) {

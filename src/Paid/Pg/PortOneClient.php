@@ -10,7 +10,7 @@ use RuntimeException;
  * 339 — 포트원 REST V2 클라이언트 (로컬·테스트 채널용).
  * 로그에는 paymentId·상태·금액만 남긴다. 키·헤더·카드정보는 남기지 않는다.
  */
-final class PortOneClient
+final class PortOneClient implements PortOneApi
 {
     private const API_BASE = 'https://api.portone.io';
 
