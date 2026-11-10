@@ -88,3 +88,80 @@
 - 취소 성공 후 이후 배지 취소 실패 시 PortOne orphan cancel은 운영 확인 필요(로그·`provider_pg_cancel_ops_log`).
 - 테스트카드·포트원 콘솔 캡처는 수동 확인.
 - 운영에 `086` 미적용 — 로컬 전용.
+
+---
+
+## 로컬 결제창 디버그 — CSP 3단계 + PDO 버그 (2026-11-11)
+
+커밋 3건(`077f46b2` · `5208a78b` · `08137136`), PR [#164](https://github.com/leejetty-commits/study114/pull/164) CI 전부 통과.
+
+### 증상
+
+로컬 `http://127.0.0.1:5174` 에서 10회권 결제하기 클릭 시 두 가지 오류 발생:
+
+1. `Failed to fetch` — 결제창이 전혀 열리지 않음
+2. 브라우저 콘솔 `ERR_BLOCKED_BY_RESPONSE.NotSameOriginAfterDefaultedToSameOriginByCoep` (CSP 프레임 차단)
+
+### 원인1 — connect-src 누락 → 커밋 `077f46b2`
+
+포트원 V2 SDK가 결제 준비 시 `https://checkout-service.prod.iamport.co/api/prepare/v2` 에 POST 요청을 보내는데, 로컬 Vite dev server의 `Content-Security-Policy` `connect-src`에 이 호스트가 없어 브라우저가 차단.
+
+**수정:** `preview/home-ui/vite.config.js` — server·preview 양쪽의 `connect-src` 에 `https://checkout-service.prod.iamport.co` 추가.
+
+```
+connect-src … https://checkout-service.prod.iamport.co …
+```
+
+### 원인2 — frame-src 차단 → 커밋 `5208a78b`
+
+SDK 자체(`cdn.portone.io/v2/browser-sdk.js`) 로드는 정상이었으나, SDK가 결제 화면을 표시할 때 내부적으로 `https://checkout-service.prod.iamport.co/driver-host?…` iframe을 삽입함.  
+기존 `frame-src` 에 `*.portone.io`, `*.tosspayments.com`, `cdn.portone.io` 는 있었지만 `checkout-service.prod.iamport.co` 는 없어 CSP가 iframe을 차단.
+
+**수정:** `preview/home-ui/vite.config.js` — server·preview 양쪽의 `frame-src` 에 `https://checkout-service.prod.iamport.co` 추가.
+
+> **주의:** `vite.config.js` CSP 변경은 **Vite dev server 재시작 후에만 반영**된다.  
+> 브라우저(크롬) 탭을 새로고침해도 이전 CSP 헤더가 유지되므로, 수정 후에는 반드시 `vite dev` 재기동 후 테스트할 것.
+
+### 원인3 — ProviderCheckoutRepository 생성자 PDO 인자 누락 → 커밋 `08137136`
+
+커밋 `166b9edf`에서 `ProviderCheckoutRepository::__construct(PDO $pdo)` 로 변경됐으나 `public/api/paid/checkout.php` 의 `action=complete` 분기는 `new ProviderCheckoutRepository()` (인자 없음)으로 남아 있었음.  
+결과: `Too few arguments to function … __construct(), 0 passed … exactly 1 expected` Fatal Error.
+
+`ProviderCheckoutService`, `RefundService` 등 다른 호출부는 이미 PDO를 주입하고 있었고, `verify-339` 는 서비스 클래스를 직접 호출하여 `checkout.php` HTTP 엔드포인트를 거치지 않아 잡히지 않았음.
+
+**수정:**
+- `use Study114\Database\Connection;` import 추가
+- `new ProviderCheckoutRepository(Connection::get())` 로 PDO 주입
+- `verify-339` 에 `checkout_complete: ProviderCheckoutRepository(PDO) 생성자+getByRef` 회귀 테스트 1건 추가
+
+### 결과
+
+| 항목 | 내용 |
+|---|---|
+| 결제창 | 토스 테스트 결제창(`checkout-service.prod.iamport.co/driver-host?…`) 정상 표시 |
+| 결제 | 4,000원 dev_mock 완료, status=`paid` |
+| 결제 완료 화면 | `#/plans/result` — "결제 완료 · 쪽지권 · 10회권 · 4,000원" |
+| 쪽지권 | `pack_size=10, remaining=10` (DB 직접 확인) |
+| 테스트 | **40/40** 통과 (회귀 테스트 포함) |
+| CI | PR #164 — 9/9 체크 모두 SUCCESS |
+| CSP 위반 | 없음 |
+
+### 운영 반영 전 필수 (아직 로컬 전용)
+
+지금 수정한 CSP는 **Vite dev server(`vite.config.js`) 한정**이다. 운영 배포 시 아래를 추가해야 한다.
+
+| CSP 지시어 | 추가 호스트 |
+|---|---|
+| `connect-src` | `https://checkout-service.prod.iamport.co` |
+| `frame-src` | `https://checkout-service.prod.iamport.co` |
+| `script-src` | (SDK 로드 도메인이 바뀌면 재검토) |
+
+적용 위치: 운영 `.htaccess` / CF 헤더 변환 규칙 (운영 CSP 담당자 확인 후 진행).
+
+### 남은 수동 테스트 (머지 전 필수)
+
+아래 3가지를 수동으로 통과해야 PR #164 머지 가능:
+
+1. **쪽지 1~3회 사용 후 환불** — 사용 구간별 환불 금액 서버 계산 정확 여부
+2. **노출상품 + 배지 시작 전 환불** — 전액 환불 정상 처리 여부
+3. **결제창 닫기 시 미결제 유지** — 창 닫기 후 주문 `pending` 유지, 재결제 가능 여부
