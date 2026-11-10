@@ -1,8 +1,9 @@
 /**
  * 공부방 기본정보 입력 — 가입 기본등록과 현황 수정 팝업이 같은 레이아웃을 쓴다.
  *
- * 필수: 교습형태 · 이름 · 대상 학교급 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1곳
+ * 필수: 교습형태 · 이름 · 대상 학교급 1개 이상 · 주력과목 · 원장성별 · 슬로건 · 사업장주소 · 홍보지역 1곳
  * 선택: 홍보 2·3
+ * 집주소는 가입·계정(user_profiles)에서만 관리. 이 폼에서 받거나 덮어쓰지 않는다.
  * 주소칸은 카카오 우편번호(더미 단지 목록 없이 호출).
  * 개설주소(사업장) 확정 시 홍보지역 1만 채운다. 홍보1을 직접 고치면 다시 덮지 않는다.
  */
@@ -318,18 +319,10 @@ export function renderStudyRoomBasicFields(opts = {}) {
         <input class="form-input" id="slogan" name="slogan" maxlength="80" value="${esc(v.slogan || '')}" placeholder="한 줄로 소개해 주세요" required />
       </div>
 
-      ${renderAddressBlock({
-        key: 'home',
-        label: '집주소',
-        required: true,
-        zipName: 'home_address_zip',
-        addressName: 'home_address',
-        detailName: 'home_address_line2',
-        zip: v.home_address_zip || '',
-        address: v.home_address || '',
-        detail: v.home_address_line2 || '',
-        hint: '계정·연락용입니다. 검색·지도·홍보에는 쓰지 않습니다.',
-      })}
+      <p class="form-note mb-4" data-home-address-note>
+        집주소는 가입 때 등록한 계정 주소를 씁니다. 비어 있거나 바꾸려면 마이페이지 · 계정설정에서 입력해 주세요.
+        (검색·지도·홍보에는 쓰지 않습니다.)
+      </p>
 
       ${renderAddressBlock({
         key: 'business',
@@ -459,20 +452,6 @@ function applyBusinessResult(root, result, region) {
   if (complexName) complexName.value = place;
   if (complexAddress) complexAddress.value = place ? road : '';
   if (complexId && !place) complexId.value = '';
-  if (result.jibunAddress) {
-    const prefix = result.convertedFromJibun ? '지번 → 도로명 변환됨' : '지번 참고';
-    setHint(jibun, `${prefix}: ${result.jibunAddress}`);
-  } else {
-    setHint(jibun, '');
-  }
-}
-
-function applyHomeResult(root, result) {
-  const zip = root.querySelector('[name="home_address_zip"]');
-  const addr = root.querySelector('[name="home_address"]');
-  const jibun = root.querySelector('[data-address-pick="home"] [data-jibun-hint]');
-  if (zip) zip.value = result.zonecode;
-  if (addr) addr.value = displayRoad(result);
   if (result.jibunAddress) {
     const prefix = result.convertedFromJibun ? '지번 → 도로명 변환됨' : '지번 참고';
     setHint(jibun, `${prefix}: ${result.jibunAddress}`);
@@ -688,11 +667,6 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
 
   async function search(kind) {
     await openKakaoPostcode(async (result) => {
-      if (kind === 'home') {
-        applyHomeResult(form, result);
-        refreshInputFill(form);
-        return;
-      }
       if (kind === 'business') {
         const seq = ++businessEnsureSeq;
         applyBusinessResult(form, result, null);
@@ -826,9 +800,6 @@ export function collectStudyRoomBasicFields(root) {
     main_subject_note: get('main_subject_note'),
     gender: get('gender'),
     slogan: get('slogan'),
-    home_address: get('home_address'),
-    home_address_zip: get('home_address_zip'),
-    home_address_line2: get('home_address_line2'),
     address_text: get('address_text'),
     address_zip: get('address_zip'),
     address_line2: get('address_line2'),
@@ -868,7 +839,6 @@ export function validateStudyRoomBasicFields(data) {
   if (!blank(data.main_subject_note)) return '주력과목을 선택해 주세요.';
   if (!['male', 'female'].includes(blank(data.gender))) return '원장성별을 선택해 주세요.';
   if (!blank(data.slogan)) return '슬로건을 입력해 주세요.';
-  if (!blank(data.home_address)) return '집주소를 검색해 주세요.';
   if (!blank(data.address_text)) return '사업장주소를 검색해 주세요.';
   if (
     !blank(data.region_id) &&
@@ -984,9 +954,6 @@ export function applyStudyRoomBasicToState(state, data) {
     main_subject_note: data.main_subject_note,
     gender: data.gender,
     slogan: data.slogan,
-    home_address: data.home_address,
-    home_address_zip: data.home_address_zip,
-    home_address_line2: data.home_address_line2,
     address_text: data.address_text,
     address_zip: data.address_zip,
     address_line2: data.address_line2,

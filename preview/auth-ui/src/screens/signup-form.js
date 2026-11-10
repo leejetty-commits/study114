@@ -110,7 +110,7 @@ export function renderSignupForm() {
         </div>
 
         <div class="form-group form-address" data-address-block>
-          <span class="form-label form-label--required">주소</span>
+          <span class="form-label form-label--required">집주소</span>
           <p class="form-hint">동·건물명·지번을 일부만 입력해도 목록이 나타납니다. 지번을 골라도 <strong>도로명 주소로 자동 변환</strong>됩니다.</p>
           <div class="form-address__zip-row">
             <input

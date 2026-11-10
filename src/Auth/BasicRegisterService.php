@@ -408,8 +408,9 @@ final class BasicRegisterService
     }
 
     /**
-     * 기본등록: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보 1곳 (필수).
+     * 기본등록: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 사업장주소 · 홍보 1곳 (필수).
      * 홍보 2·3은 선택. 주소는 검색 결과이며 단지 시드가 없어도 저장한다.
+     * 집주소(user_profiles)는 가입 단계에서만 받으며 여기서 덮어쓰지 않는다.
      *
      * @param array<string, mixed> $input
      */
@@ -421,10 +422,6 @@ final class BasicRegisterService
         $slogan = $this->requireString($input, 'slogan');
         ProfileGenderSync::sync($userId, $input);
 
-        $home = trim((string) ($input['home_address'] ?? ''));
-        if ($home === '') {
-            throw new InvalidArgumentException('집주소를 검색해 주세요.');
-        }
         $addressText = trim((string) ($input['address_text'] ?? ''));
         if ($addressText === '') {
             throw new InvalidArgumentException('사업장주소를 검색해 주세요.');
@@ -445,17 +442,6 @@ final class BasicRegisterService
         }
 
         $slots = $this->normalizeSignupPromoSlots($pdo, $input, $regionId, $complexId, $basis);
-        $homeZip = $this->optionalString($input, 'home_address_zip');
-        $homeLine2 = $this->optionalString($input, 'home_address_line2');
-        try {
-            $pdo->prepare(
-                'UPDATE user_profiles SET address_line1 = ?, address_zip = ?, address_line2 = ? WHERE user_id = ?'
-            )->execute([$home, $homeZip, $homeLine2, $userId]);
-        } catch (PDOException $e) {
-            $pdo->prepare(
-                'UPDATE user_profiles SET address_line1 = ?, address_zip = ? WHERE user_id = ?'
-            )->execute([$home, $homeZip, $userId]);
-        }
 
         $this->ensurePrimaryAudienceTable($pdo);
         $pdo->beginTransaction();

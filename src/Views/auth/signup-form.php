@@ -38,7 +38,7 @@ require __DIR__ . '/../partials/errors.php';
     <p class="form-hint">계정 복구 보조와 운영 안내 기준입니다. 다른 회원에게는 보여 주지 않습니다.</p>
   </div>
   <div class="form-group form-address">
-    <span class="form-label form-label--required">주소</span>
+    <span class="form-label form-label--required">집주소</span>
     <p class="form-hint">주소 검색으로 입력하세요. 지번을 골라도 도로명 주소로 저장됩니다.</p>
     <div class="form-address__zip-row">
       <input class="form-input" type="text" id="signup-address-zip" name="address_zip" value="<?= study114_e($old['address_zip'] ?? '') ?>" placeholder="우편번호" readonly required>

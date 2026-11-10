@@ -147,7 +147,7 @@ export function buildRoomInputSummary(room) {
         { label: '주력과목', value: str(s.main_subject_note) },
         { label: '원장성별', value: labelOf(PERSONAL_GENDER_OPTIONS, s.gender) },
         { label: '슬로건', value: str(s.slogan) },
-        { label: '집주소', value: str(s.home_address) },
+        { label: '집주소(계정)', value: str(s.home_address) },
         { label: '사업장주소', value: str(s.address_text) },
         { label: '홍보지역 1', value: slotValues[0] },
         { label: '홍보지역 2', value: slotValues[1] },

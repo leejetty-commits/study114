@@ -6,7 +6,7 @@ $profileGender = (string) ($profileGender ?? study114_old($old, 'gender', ''));
 <form method="post" action="/auth/signup/basic" class="basic-register">
   <input type="hidden" name="role_ui" value="study_room">
   <p class="auth-section-title">기본등록</p>
-  <p class="form-note">필수: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 집주소 · 사업장주소 · 홍보지역 1번. 홍보 2·3번은 선택입니다. (정본 입력은 가입 SPA 폼)</p>
+  <p class="form-note">필수: 교습형태 · 이름 · 주대상 · 주력과목 · 원장성별 · 슬로건 · 사업장주소 · 홍보지역 1번. 홍보 2·3번은 선택입니다. 집주소는 가입 단계 계정 주소를 쓰며 여기서 받지 않습니다. (정본 입력은 가입 SPA 폼)</p>
 
   <div class="form-group">
     <label class="form-label form-label--required" for="study_room_name">공부방명</label>
@@ -30,15 +30,6 @@ $profileGender = (string) ($profileGender ?? study114_old($old, 'gender', ''));
         <span class="form-radio__label">여</span>
       </label>
     </div>
-  </div>
-
-  <div class="form-group form-address">
-    <label class="form-label">집주소 (선택)</label>
-    <div class="form-address__zip-row">
-      <input class="form-input" type="text" id="home_address_zip" name="home_address_zip" value="<?= study114_e(study114_old($old, 'home_address_zip', '')) ?>" placeholder="우편번호" readonly>
-      <button type="button" class="btn btn--secondary" data-php-address="home">주소 검색</button>
-    </div>
-    <input class="form-input" type="text" id="home_address" name="home_address" value="<?= study114_e(study114_old($old, 'home_address', '')) ?>" placeholder="도로명 주소 (검색으로 입력)" readonly>
   </div>
 
   <div class="form-group form-address">
@@ -78,14 +69,8 @@ $profileGender = (string) ($profileGender ?? study114_old($old, 'gender', ''));
   }
   document.querySelectorAll('[data-php-address]').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      var kind = btn.getAttribute('data-php-address');
       openPost(function (data) {
         var road = roadOf(data);
-        if (kind === 'home') {
-          document.getElementById('home_address_zip').value = data.zonecode || '';
-          document.getElementById('home_address').value = road;
-          return;
-        }
         document.getElementById('address_zip').value = data.zonecode || '';
         document.getElementById('address_text').value = road;
         document.getElementById('address_sido').value = data.sido || '';

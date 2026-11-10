@@ -254,7 +254,6 @@ export function isRoomBasicComplete(room) {
   const hasAudience = Array.isArray(src.primary_school_levels) && src.primary_school_levels.length > 0;
   const hasSubject = String(src.main_subject_note || '').trim() !== '';
   const hasSlogan = String(src.slogan || '').trim() !== '';
-  const hasHome = String(src.home_address || '').trim() !== '';
   const hasAddress = String(src.address_text || '').trim() !== '';
   const firstPromo = Array.isArray(src.saved_regions) ? src.saved_regions[0] || {} : {};
   const hasRegion =
@@ -262,7 +261,8 @@ export function isRoomBasicComplete(room) {
     String(firstPromo.complex_id || '').trim() !== '' ||
     String(firstPromo.complex_name || '').trim() !== '' ||
     String(firstPromo.region_label || '').trim() !== '';
-  return hasName && hasPlace && hasAudience && hasSubject && hasSlogan && hasHome && hasAddress && hasRegion;
+  // 집주소(user_profiles)는 기본등록 완료 조건이 아님 — 가입·계정에서 관리
+  return hasName && hasPlace && hasAudience && hasSubject && hasSlogan && hasAddress && hasRegion;
 }
 
 export function emptySubject() {
