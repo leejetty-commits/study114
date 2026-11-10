@@ -5,6 +5,12 @@
  */
 
 export const AUTH_WELCOME_COPY = {
+  /**
+   * 로그인·회원가입 첫 화면 공통 상단 (346 1안).
+   * 후보: docs/worklog/2026/11/2026-11-11-346-auth-welcome-pw-tutor-form.md
+   */
+  gateTitle: '우동공과에 오신 걸 환영해요',
+  gateSub: '우리 동네 공부방·과외쌤을 쪽지로 이어 보세요.',
   login: {
     sub: '우리 동네 공부방과 과외쌤을 이어서 만나 보세요.',
     signupHint: '학생·공부방·과외쌤으로 시작할 수 있어요.',
@@ -14,7 +20,8 @@ export const AUTH_WELCOME_COPY = {
     credential: '이메일 또는 비밀번호를 확인해 주세요.',
     welcome: '다시 만나서 반가워요.',
   },
-  termsSub: '서비스를 쓰려면 약관에 동의해 주세요.',
+  termsSub: '시작하려면 약관에 동의해 주세요.',
+  termsSection: '약관 동의',
   roleTitle: '어떤 회원으로 시작할까요?',
   roleSub: '하나만 골라 주세요. 계정을 만들고 이메일을 확인하면 기본정보로 이어져요.',
   roleSubOAuth: '하나만 골라 주세요. 이메일을 확인하면 기본정보로 이어져요.',

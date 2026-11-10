@@ -514,15 +514,15 @@ function renderTutorBasic() {
               ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
               <p class="form-note form-note--error" data-field-error="main_subject" hidden></p>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="preferred_fee_amount">월 과외비 (천원)</label>
               <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(wonToCheonwonInput(d.preferred_fee_amount))}" required />
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="lessons_per_week">주 회수</label>
               <select class="form-input" id="lessons_per_week" name="lessons_per_week" required>${optionsHtml(lessonWeeklyOptions(d.lessons_per_week), lessonWeeklySelectValue(d.lessons_per_week))}</select>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="minutes_per_lesson">1회 수업시간</label>
               <select class="form-input" id="minutes_per_lesson" name="minutes_per_lesson" required>${optionsHtml(lessonDurationOptions(d.minutes_per_lesson), lessonDurationSelectValue(d.minutes_per_lesson))}</select>
             </div>

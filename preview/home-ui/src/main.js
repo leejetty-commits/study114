@@ -28,6 +28,7 @@ import './styles/myshop-public.css';
 /* auth base.css 전체 import 금지(전역 reset). 폼 프리미티브만 공유 */
 import '../../shared/register-form-primitives.css';
 import '../../shared/register-flow.css';
+import '../../shared/password-field.css';
 import '../../study-room-ui/src/styles/register.css';
 import '@search-ui/styles/search-visily.css';
 /* UDX-STD-001 오버레이는 공통 CSS 이후 */

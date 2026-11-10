@@ -85,6 +85,7 @@ import { parsePlansQuery } from '../plans/router.js';
 import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
 import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
+import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import {
   EMPTY_ONBOARDING,
@@ -1147,15 +1148,30 @@ function renderAccount(role, profile) {
           <form data-form="change-password" class="account-form" autocomplete="off">
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-current">현재 비밀번호</label>
-              <input class="form-input" type="password" id="mypage-pw-current" name="current_password" autocomplete="current-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-current',
+                name: 'current_password',
+                autocomplete: 'current-password',
+                placeholder: '현재 비밀번호',
+              })}
             </div>
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-new">새 비밀번호</label>
-              <input class="form-input" type="password" id="mypage-pw-new" name="password" autocomplete="new-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-new',
+                name: 'password',
+                autocomplete: 'new-password',
+                placeholder: '새 비밀번호',
+              })}
             </div>
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-confirm">새 비밀번호 확인</label>
-              <input class="form-input" type="password" id="mypage-pw-confirm" name="password_confirm" autocomplete="new-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-confirm',
+                name: 'password_confirm',
+                autocomplete: 'new-password',
+                placeholder: '새 비밀번호 확인',
+              })}
             </div>
             <p class="form-hint">${esc(PASSWORD_RULE_HINT)}</p>
             <p class="form-error" data-pw-change-error hidden role="alert"></p>
@@ -1224,6 +1240,7 @@ function escAttr(s) {
  * @param {HTMLElement} root
  */
 function bindPasswordChangeEvents(root) {
+  bindPasswordToggles(root);
   const panel = root.querySelector('[data-password-change]');
   const form = root.querySelector('[data-form="change-password"]');
   const errorEl = root.querySelector('[data-pw-change-error]');
