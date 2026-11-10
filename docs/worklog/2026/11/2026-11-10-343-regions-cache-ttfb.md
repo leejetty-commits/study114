@@ -31,7 +31,8 @@ POST `{action:list}` 와 GET `?action=list` 본문 스키마는 동일(공유 �
 ## A-2 ~ A-3. 구현
 
 1. **서버** `public/api/auth/regions.php`  
-   - GET + `list`/`cities`/`tutor_units` → `Cache-Control: public, max-age=86400`  
+   - GET + `list`/`cities`/`tutor_units` **성공(`ok:true`)일 때만** → `Cache-Control: public, max-age=86400`  
+   - 같은 GET이 실패(`ok:false`·예외·DB 오류)면 → `Cache-Control: no-store` (요청 초기에 public을 붙이면 실패 JSON도 캐시될 수 있어 응답 직전에만 설정)  
    - `ensure` / `complex-by-name` → `Cache-Control: private, no-store`  
    - **POST 동작·경로 유지** (하위 호환). POST에는 public 캐시를 붙이지 않음.
 2. **화면** `preview/shared/regions-catalog.js`  
@@ -116,8 +117,29 @@ cf-cache-status: DYNAMIC
 - `preview/home-ui/src/student-reg/hope-region-masters.js`
 - `docs/worklog/2026/11/2026-11-10-343-regions-cache-ttfb.md`
 
+## 캐시 헤더 위치 수정 확인 (2026-11-10)
+
+**방법**
+1. 성공: Docker `php:8.2-cli` + `php -S` 로 regions.php 헬퍼에 `ok:true` payload 방출 → curl 헤더 확인.  
+2. 실패: 임시 `config/database.php` 를 `host=203.0.113.1`(도달 불가)로 두고 `GET /api/auth/regions.php?action=cities` → 예외 → `ok:false` 후 파일 삭제.
+
+**성공 헤더 원문**
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Cache-Control: public, max-age=86400
+```
+
+**실패(DB) 헤더 원문**
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Cache-Control: no-store
+```
+본문: `{"ok":false,"error":"server_error",...}`
+
 ## 커밋 / PR
 
-- 커밋 SHA: `4d9518c485dc1f6385e35731233ebee61e41d939`
-- 줄 수: +274 / −12 (5 files)
+- 구현 커밋: `4d9518c485dc1f6385e35731233ebee61e41d939`
+- 헤더 위치 수정 커밋: (커밋 후 기입)
 - PR·머지: 검수 후
