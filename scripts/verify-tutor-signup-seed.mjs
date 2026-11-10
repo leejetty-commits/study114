@@ -21,7 +21,18 @@ function assert(cond, msg) {
 }
 
 const api = readFileSync(resolve(root, 'preview/auth-ui/src/auth-api.js'), 'utf8');
-assert(api.includes('tutorUnits: data.tutor_units'), 'fetchRegions returns tutor units');
+const regionsCatalog = readFileSync(resolve(root, 'preview/shared/regions-catalog.js'), 'utf8');
+/** 343 이전: auth-api.js `tutorUnits: data.tutor_units` · 이후: regions-catalog.js Array.isArray(body.tutor_units) */
+function hasTutorUnitsMapping(src) {
+  return (
+    src.includes('tutorUnits: data.tutor_units') ||
+    src.includes('tutorUnits: Array.isArray(body.tutor_units)')
+  );
+}
+assert(
+  hasTutorUnitsMapping(api) || hasTutorUnitsMapping(regionsCatalog),
+  'fetchRegions returns tutor units (auth-api.js or regions-catalog.js)',
+);
 assert(!api.includes('cities: data.cities'), 'fetchRegions no longer hands 구 cities to tutor signup');
 assert(api.includes('import.meta.env'), 'auth-api DEV failure logging');
 
