@@ -986,6 +986,13 @@ function fillPromoTitleHeading(heading, title) {
     heading.append(em, document.createTextNode(rest.slice('공부방'.length)));
     return;
   }
+  if (rest.startsWith('과외쌤')) {
+    const em = document.createElement('strong');
+    em.className = 'live-rail-media-dialog__heading-em';
+    em.textContent = '과외쌤';
+    heading.append(em, document.createTextNode(rest.slice('과외쌤'.length)));
+    return;
+  }
   if (rest) heading.append(document.createTextNode(rest));
 }
 
