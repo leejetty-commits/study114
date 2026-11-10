@@ -26,6 +26,7 @@ import { hydrateProviderNotices } from '../provider-notices.js';
 
 import { isMessagesApiMode } from '../messages-backend.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { showP24Toast } from '../detail-decision/detail-utils.js';
 
 
 
@@ -255,8 +256,14 @@ export function showComposeModal(opts) {
     if (!body && files.length === 0) return;
 
     const btn = el.querySelector('[data-action="compose-send"]');
+    if (btn?.dataset.sending === '1') return;
 
-    if (btn) btn.disabled = true;
+    const prevLabel = btn?.textContent || '전송';
+    if (btn) {
+      btn.dataset.sending = '1';
+      btn.disabled = true;
+      btn.textContent = '보내는 중…';
+    }
 
     try {
 
@@ -292,6 +299,7 @@ export function showComposeModal(opts) {
 
       }
 
+      showP24Toast('쪽지를 보냈어요');
       close();
 
       if (opts.onSent) opts.onSent(thread.id);
@@ -314,11 +322,15 @@ export function showComposeModal(opts) {
 
       } else {
 
-        void s114Alert(err?.message || '쪽지 전송에 실패했습니다. 로그인·API 연결을 확인해 주세요.');
+        showP24Toast('보내지 못했어요. 다시 시도해 주세요');
 
       }
 
-      if (btn) btn.disabled = false;
+      if (btn) {
+        btn.dataset.sending = '0';
+        btn.disabled = false;
+        btn.textContent = prevLabel;
+      }
 
     }
 

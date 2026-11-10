@@ -55,7 +55,7 @@ export const CONTACT_HISTORY_PATH = '/mypage/contact';
 /**
  * 공부방·과외쌤 좌측 메뉴 순서:
  * 내 등록 → 쪽지·후기함 → 최근열람 → 관심 학생 → 찜한 공부방·과외쌤 → 내 문의 내역 → 구매이력 → 계정설정
- * 학생(parent) 순서는 PARENT_NAV_PATHS.
+ * 학생(parent) 순서: 내 등록 → 쪽지·후기함 → 최근열람 → 찜·비교 → 내 문의 내역 → 계정설정 (PARENT_NAV_PATHS).
  * @type {MypageNavItem[]}
  */
 export const MYPAGE_NAV = [
@@ -67,7 +67,7 @@ export const MYPAGE_NAV = [
     emphasis: ['parent', 'study_room', 'tutor'],
     roles: ['parent', 'study_room', 'tutor'],
   },
-  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉\uFE0E', screenId: 'P15-08', labels: { parent: '쪽지' } },
+  { path: '/mypage/messages', label: '쪽지·후기함', icon: '✉\uFE0E', screenId: 'P15-08' },
   { path: '/mypage/recent', label: '최근열람', icon: '◷', screenId: 'P15-07' },
   {
     path: '/mypage/student-review',
@@ -134,9 +134,9 @@ export function normalizeMypagePath(hashPath) {
 /** 학생 1차 메뉴 순서. 공부방·과외쌤 배열 순서는 바꾸지 않는다. */
 export const PARENT_NAV_PATHS = [
   '/mypage/registrations',
-  '/mypage/wishlist',
-  '/mypage/recent',
   '/mypage/messages',
+  '/mypage/recent',
+  '/mypage/wishlist',
   CONTACT_HISTORY_PATH,
   '/mypage/account',
 ];
@@ -226,7 +226,7 @@ export function screenTitle(screenId, path, role) {
     if (path === MESSAGES_BASE || isMessagesDetailPath(path)) {
       const msgScreenId = getMessagesScreenId(path);
       const isThread = msgScreenId === 'P16-02';
-      if (role === 'parent' && (path === MESSAGES_BASE || isThread)) return '쪽지';
+      if (role === 'parent' && (path === MESSAGES_BASE || isThread)) return '쪽지·후기함';
       return messagesScreenTitle(isThread ? 'P15-08' : msgScreenId);
     }
     if (isSubmissionBoardPath(path)) {

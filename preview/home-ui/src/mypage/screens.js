@@ -86,6 +86,7 @@ import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles
 import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
+import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import {
   EMPTY_ONBOARDING,
   SUBMISSION_RETIRED_COPY,
@@ -1051,7 +1052,7 @@ function renderAccount(role, profile) {
       <header class="account-settings__hero">
         <p class="account-settings__eyebrow">사이트에 보이는 이름</p>
         <h2 class="account-settings__name" data-display-name-current>${displayShown}</h2>
-        <p class="account-settings__lead">표시명·로그인·보안을 한곳에서 관리합니다.</p>
+        <p class="account-settings__lead">표시명·집주소·로그인·보안을 한곳에서 관리합니다.</p>
         ${
           justSaved
             ? '<p class="account-settings__toast" role="status">사이트 표시명이 저장되었습니다.</p>'
@@ -1083,6 +1084,42 @@ function renderAccount(role, profile) {
               <div class="account-form__actions">
                 <button type="submit" class="btn btn--primary btn--sm">표시명 저장</button>
                 <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-display-name">취소</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </article>
+
+      <article class="account-card" data-home-address-card>
+        <div class="account-card__head">
+          <h3 class="account-card__title">집주소</h3>
+          <p class="account-card__desc">계정·연락용입니다. 검색·지도·홍보에는 쓰지 않습니다.</p>
+        </div>
+        <div class="account-card__body">
+          <div class="account-identity" data-home-address-summary>
+            <div class="account-identity__row">
+              <span class="account-identity__label">등록된 집주소</span>
+              <strong class="account-identity__value" data-home-address-current>불러오는 중…</strong>
+            </div>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-home-address">집주소 수정</button>
+          </div>
+          <div class="account-identity-edit" data-home-address-edit hidden>
+            <form data-form="change-home-address" class="account-form" autocomplete="off">
+              <div class="form-group form-address" data-address-block>
+                <span class="form-label form-label--required">집주소</span>
+                <p class="form-hint">주소 검색으로 입력하세요. 지번을 골라도 도로명으로 저장됩니다.</p>
+                <div class="form-address__zip-row">
+                  <input class="form-input" type="text" id="mypage-address-zip" name="address_zip" placeholder="우편번호" readonly required />
+                  <button type="button" class="btn btn--secondary" data-action="search-home-address">주소 검색</button>
+                </div>
+                <input class="form-input" type="text" id="mypage-address-line1" name="address_line1" placeholder="도로명 주소 (검색으로 입력)" readonly required />
+                <input class="form-input" type="text" id="mypage-address-line2" name="address_line2" placeholder="상세주소 (동·호수 등)" autocomplete="address-line2" />
+              </div>
+              <p class="form-error" data-home-address-error hidden role="alert"></p>
+              <p class="form-success" data-home-address-success hidden role="status"></p>
+              <div class="account-form__actions">
+                <button type="submit" class="btn btn--primary btn--sm">집주소 저장</button>
+                <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-home-address">취소</button>
               </div>
             </form>
           </div>
@@ -1330,6 +1367,185 @@ function bindPasswordChangeEvents(root) {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = '변경 저장';
+      }
+    }
+  });
+}
+
+/**
+ * @param {HTMLElement} root
+ */
+function bindHomeAddressEvents(root) {
+  const card = root.querySelector('[data-home-address-card]');
+  if (!card) return;
+
+  const summaryVal = card.querySelector('[data-home-address-current]');
+  const editPanel = card.querySelector('[data-home-address-edit]');
+  const form = card.querySelector('[data-form="change-home-address"]');
+  const errorEl = card.querySelector('[data-home-address-error]');
+  const successEl = card.querySelector('[data-home-address-success]');
+  const zipEl = form?.querySelector('#mypage-address-zip');
+  const line1El = form?.querySelector('#mypage-address-line1');
+  const line2El = form?.querySelector('#mypage-address-line2');
+  bindInputFill(form);
+
+  /** @type {{ address_zip: string, address_line1: string, address_line2: string }} */
+  let cached = { address_zip: '', address_line1: '', address_line2: '' };
+
+  const formatSummary = (addr) => {
+    const line1 = String(addr.address_line1 || '').trim();
+    if (!line1) return '미등록 · 주소 검색으로 입력해 주세요';
+    const line2 = String(addr.address_line2 || '').trim();
+    return line2 ? `${line1} ${line2}` : line1;
+  };
+
+  const paintSummary = () => {
+    if (summaryVal) summaryVal.textContent = formatSummary(cached);
+  };
+
+  const fillForm = () => {
+    if (zipEl instanceof HTMLInputElement) zipEl.value = cached.address_zip || '';
+    if (line1El instanceof HTMLInputElement) line1El.value = cached.address_line1 || '';
+    if (line2El instanceof HTMLInputElement) line2El.value = cached.address_line2 || '';
+    refreshInputFill(form);
+  };
+
+  const closeEdit = () => {
+    if (editPanel) editPanel.hidden = true;
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+  };
+
+  fetch('/api/auth/profile-address.php', { credentials: 'include' })
+    .then((res) => res.json().catch(() => ({})))
+    .then((data) => {
+      if (data?.ok) {
+        cached = {
+          address_zip: String(data.address_zip || ''),
+          address_line1: String(data.address_line1 || ''),
+          address_line2: String(data.address_line2 || ''),
+        };
+      }
+      paintSummary();
+    })
+    .catch(() => {
+      if (summaryVal) summaryVal.textContent = '불러오지 못했어요';
+    });
+
+  card.querySelector('[data-action="toggle-home-address"]')?.addEventListener('click', () => {
+    if (!editPanel) return;
+    editPanel.hidden = !editPanel.hidden;
+    if (!editPanel.hidden) {
+      fillForm();
+      if (successEl) {
+        successEl.hidden = true;
+        successEl.textContent = '';
+      }
+      if (errorEl) {
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+      }
+    }
+  });
+
+  card.querySelector('[data-action="cancel-home-address"]')?.addEventListener('click', () => {
+    closeEdit();
+    fillForm();
+  });
+
+  card.querySelector('[data-action="search-home-address"]')?.addEventListener('click', async () => {
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    try {
+      await openKakaoPostcode((result) => {
+        if (zipEl instanceof HTMLInputElement) zipEl.value = result.zonecode || '';
+        if (line1El instanceof HTMLInputElement) {
+          line1El.value = result.roadAddress + (result.buildingExtra || '');
+        }
+        refreshInputFill(form);
+      });
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.';
+      }
+    }
+  });
+
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (errorEl) {
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    }
+    if (successEl) {
+      successEl.hidden = true;
+      successEl.textContent = '';
+    }
+
+    const fd = new FormData(form);
+    const payload = {
+      address_zip: String(fd.get('address_zip') ?? '').trim(),
+      address_line1: String(fd.get('address_line1') ?? '').trim(),
+      address_line2: String(fd.get('address_line2') ?? '').trim(),
+    };
+    if (!payload.address_zip || !payload.address_line1) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = '주소 검색으로 도로명 주소를 선택해 주세요.';
+      }
+      return;
+    }
+
+    const submitBtn = form.querySelector('[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '저장 중…';
+    }
+
+    try {
+      const res = await fetch('/api/auth/profile-address.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || `저장 실패 (HTTP ${res.status})`);
+      }
+      cached = {
+        address_zip: String(data.address_zip || payload.address_zip),
+        address_line1: String(data.address_line1 || payload.address_line1),
+        address_line2: String(data.address_line2 || payload.address_line2),
+      };
+      paintSummary();
+      fillForm();
+      if (successEl) {
+        successEl.hidden = false;
+        successEl.textContent = data.message || '집주소를 저장했어요.';
+      }
+      showP24Toast('집주소를 저장했어요');
+      closeEdit();
+    } catch (err) {
+      if (errorEl) {
+        errorEl.hidden = false;
+        errorEl.textContent = err instanceof Error ? err.message : '저장에 실패했습니다.';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '집주소 저장';
       }
     }
   });
@@ -1703,6 +1919,7 @@ export function bindMypageScreenEvents(root, rerender) {
   }
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
+  bindHomeAddressEvents(root);
   bindWithdrawEvents(root);
   bindPrimeMatchConsentEvents(root);
   if (path === '/mypage/wishlist') {

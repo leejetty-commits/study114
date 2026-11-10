@@ -79,8 +79,9 @@ function isBasicEditRequested() {
 
 /**
  * 공란 규칙
- * - 저장 필수: 교습형태, 이름, 주대상, 주력과목, 원장성별, 슬로건, 집주소, 사업장주소, 홍보지역 1곳
+ * - 저장 필수: 교습형태, 이름, 주대상, 주력과목, 원장성별, 슬로건, 사업장주소, 홍보지역 1곳
  * - 저장 선택: 홍보지역 2·3칸
+ * - 집주소는 계정(user_profiles) 표시만. 기본등록 필수·저장 대상 아님
  * - 홍보지역은 항상 3칸. 빈 칸은 자리를 유지하고 앞으로 당기지 않음.
  */
 function overviewRows() {
@@ -93,7 +94,10 @@ function overviewRows() {
     { label: '주력과목', value: s.main_subject_note },
     { label: '원장성별', value: genderLabel(s.gender) },
     { label: '슬로건', value: s.slogan },
-    { label: '집주소', value: [s.home_address, s.home_address_line2].filter((x) => String(x || '').trim()).join(' ') },
+    {
+      label: '집주소(계정)',
+      value: [s.home_address, s.home_address_line2].filter((x) => String(x || '').trim()).join(' '),
+    },
     { label: '사업장주소', value: [s.address_text, s.address_line2].filter((x) => String(x || '').trim()).join(' ') },
     {
       label: '홍보지역',
@@ -213,7 +217,7 @@ function openBasicEdit() {
   window.dispatchEvent(new Event('hashchange'));
 }
 
-/** 기본정보 현황 — 필수 5항목 + 집주소(선택) 현황판 */
+/** 기본정보 현황 — 필수 항목 + 계정 집주소(표시) 현황판 */
 function renderBasicOverview() {
   if (sessionStorage.getItem('study114_open_basic_edit') === '1') {
     sessionStorage.removeItem('study114_open_basic_edit');

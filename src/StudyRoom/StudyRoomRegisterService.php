@@ -465,10 +465,6 @@ final class StudyRoomRegisterService
 
     private function saveLocation(PDO $pdo, int $userId, int $roomId, array $input): void
     {
-        $home = trim((string) ($input['home_address'] ?? ''));
-        if ($home === '') {
-            throw new InvalidArgumentException('집주소를 검색해 주세요.');
-        }
         $addressText = trim((string) ($input['address_text'] ?? ''));
         if ($addressText === '') {
             throw new InvalidArgumentException('사업장주소를 검색해 주세요.');
@@ -542,7 +538,7 @@ final class StudyRoomRegisterService
             $input['region_basis_type'] = $basis;
         }
         $this->syncSavedRegions($pdo, $roomId, $input);
-        $this->saveHomeAddress($pdo, $userId, $input);
+        // 집주소(user_profiles)는 가입·계정에서만 관리. 기본등록 저장 시 덮어쓰지 않는다.
         $this->saveBusinessAddressLine2($pdo, $roomId, $input);
     }
 

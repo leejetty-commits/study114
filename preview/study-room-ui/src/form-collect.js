@@ -389,9 +389,6 @@ export function payloadForStep(step, state) {
         address_sido: state.address_sido,
         address_sigungu: state.address_sigungu,
         address_bname: state.address_bname,
-        home_address: state.home_address,
-        home_address_zip: state.home_address_zip,
-        home_address_line2: state.home_address_line2,
         ...businessCoordsForSave(state.address_text, state.latitude, state.longitude, state.geocoded_address),
         saved_regions: state.saved_regions,
       };
@@ -408,9 +405,6 @@ export function payloadForStep(step, state) {
         address_sido: state.address_sido,
         address_sigungu: state.address_sigungu,
         address_bname: state.address_bname,
-        home_address: state.home_address,
-        home_address_zip: state.home_address_zip,
-        home_address_line2: state.home_address_line2,
         ...businessCoordsForSave(state.address_text, state.latitude, state.longitude, state.geocoded_address),
         saved_regions: state.saved_regions,
       };
