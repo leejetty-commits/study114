@@ -11,7 +11,7 @@ use PDO;
  *
  * 정본: docs/ssot/18c-memo-ticket-refund-lock.md
  */
-final class RefundRepository
+class RefundRepository
 {
     public function __construct(private readonly PDO $pdo)
     {

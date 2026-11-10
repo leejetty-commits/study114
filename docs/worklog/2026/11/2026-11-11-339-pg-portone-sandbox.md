@@ -68,9 +68,17 @@
 - 통화 KRW만 · dotenv는 `PG_`/`PORTONE_`만 · cancel ID JSON 누적
 - `verify-339` 모의 클라이언트 25/25
 
+## 검수 보강 (2026-11-11, 승인 후)
+
+- `sql/schema/086_pg_cancel_ops_log.sql` + `PortOneCancelOpsLog` + `Connection::openIndependent` — 취소 성공 후 meta 실패·중간 실패 orphan을 TX 롤백과 분리 기록
+- `verify-339`: 노출 submit 배지 취소 중간 실패 → DB 롤백·ops 로그 · meta fail ops · 중복 complete 팩 COUNT=1
+- 로컬 Docker만 056·061·066·086 적용(운영 금지). `verify-339` **34/34**
+- `RefundRepository` `final` 해제(메타 실패 목용)
+
 ## 남은 위험
 
 - 웹훅 시크릿 비어 있으면 수신 불가(의도). 로컬은 complete 수동 재조회.
 - 토스/포트원 CSP 도메인은 콘솔 차단 로그로 추가 조정 가능.
-- 취소 성공 후 이후 배지 취소 실패 시 PortOne orphan cancel은 운영 확인 필요(로그에 paymentId·cancel_id·금액만).
+- 취소 성공 후 이후 배지 취소 실패 시 PortOne orphan cancel은 운영 확인 필요(로그·`provider_pg_cancel_ops_log`).
 - 테스트카드·포트원 콘솔 캡처는 수동 확인.
+- 운영에 `086` 미적용 — 로컬 전용.

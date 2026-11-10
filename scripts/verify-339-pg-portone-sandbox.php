@@ -11,12 +11,13 @@ require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 use Study114\Database\Connection;
 use Study114\Paid\ImmediateMemoRepository;
-use Study114\Paid\MemoTicketPolicy;
 use Study114\Paid\Pg\PgProvider;
 use Study114\Paid\Pg\PortOneApi;
+use Study114\Paid\Pg\PortOneCancelOpsLog;
 use Study114\Paid\Pg\PortOneCheckout;
 use Study114\Paid\ProviderCheckoutRepository;
 use Study114\Paid\ProviderCheckoutService;
+use Study114\Paid\ProviderTicketRepository;
 use Study114\Paid\RefundRepository;
 use Study114\Paid\RefundService;
 
@@ -201,7 +202,7 @@ if ($userId > 0 && $hasPay) {
     $orders->insertPending(
         $userId,
         $orderRef,
-        'memo',
+        'memo_ticket',
         '5회권',
         'count',
         5000,
@@ -257,69 +258,153 @@ if ($userId > 0 && $hasPay) {
         check('withdraw blocked when refunded', str_contains($e->getMessage(), '이미 환불이 완료'));
     }
 
-    /* 배지 포함 노출 환불: 본주문→배지 순 취소, 중간 실패 롤백 */
-    $posRef = 'dev-339p-' . bin2hex(random_bytes(4));
-    $badgeRef = 'dev-339b-' . bin2hex(random_bytes(4));
-    $posPay = PortOneCheckout::makePaymentId($posRef);
-    $badgePay = PortOneCheckout::makePaymentId($badgeRef);
-    $mock2 = new MockPortOneApi();
-    $mock2->payments[$posPay] = [
-        'status' => 'PAID',
-        'amount' => ['total' => 10000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 10000],
-    ];
-    $mock2->payments[$badgePay] = [
-        'status' => 'PAID',
-        'amount' => ['total' => 2000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 2000],
-    ];
-    $orders->insertPending($userId, $posRef, 'prime', '2주', 'position', 10000, 'tutor', 1, 't', 10000, 0, [
-        'started_on' => date('Y-m-d'),
-        'ends_on' => date('Y-m-d', strtotime('+13 days')),
-        'end_exclusive_on' => date('Y-m-d', strtotime('+14 days')),
-        'grant_mode' => 'new',
-    ], 'portone_test', $posPay);
-    $orders->insertPending($userId, $badgeRef, 'hot', '2주', 'badge_addon', 2000, 'tutor', 1, 't', 2000, 0, [
-        'parent_order_ref' => $posRef,
-        'started_on' => date('Y-m-d'),
-        'ends_on' => date('Y-m-d', strtotime('+13 days')),
-        'end_exclusive_on' => date('Y-m-d', strtotime('+14 days')),
-        'grant_mode' => 'new',
-    ], 'portone_test', $badgePay);
-    $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref IN (?,?)")
-        ->execute([$posRef, $badgeRef]);
+    /* 노출상품 submit 전체 흐름: 배지 취소 중간 실패 → DB 전체 롤백 */
+    $tutorRow = $pdo->query('SELECT id, user_id FROM tutors ORDER BY id ASC LIMIT 1')->fetch(PDO::FETCH_ASSOC);
+    $tutorId = is_array($tutorRow) ? (int) $tutorRow['id'] : 0;
+    $tutorUserId = is_array($tutorRow) ? (int) $tutorRow['user_id'] : 0;
+    check('has tutor for position submit', $tutorId > 0 && $tutorUserId > 0);
 
-    // parent link for badge finder: price_snapshot or naming — findBadgeAddonOrderRefs uses LIKE orderRef
-    // Ensure badge finder works: typically source_order_ref pattern in badges. For test call cancel helpers via reflection.
-    $svcPos = new RefundService($pdo, new RefundRepository($pdo), $orders, null, null, null, new PortOneCheckout($mock2));
-    $refSvc = new ReflectionClass($svcPos);
-    $cancelMethod = $refSvc->getMethod('cancelPortOneBeforeApprove');
-    $cancelMethod->setAccessible(true);
-    $logMethod = $refSvc->getMethod('logOrphanPortOneCancels');
-    $logMethod->setAccessible(true);
-    $succProp = $refSvc->getProperty('portOneCancelsSucceeded');
-    $succProp->setAccessible(true);
-    $succProp->setValue($svcPos, []);
+    if ($tutorId > 0) {
+        $posRef = 'dev-339p-' . bin2hex(random_bytes(4));
+        $badgeRef = 'dev-339b-' . bin2hex(random_bytes(4));
+        $posPay = PortOneCheckout::makePaymentId($posRef);
+        $badgePay = PortOneCheckout::makePaymentId($badgeRef);
+        $start = date('Y-m-d', strtotime('+3 days'));
+        $endEx = date('Y-m-d', strtotime('+17 days'));
+        $endsOn = date('Y-m-d', strtotime('+16 days'));
+        $mock2 = new MockPortOneApi();
+        $mock2->payments[$posPay] = [
+            'status' => 'PAID',
+            'amount' => ['total' => 10000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 10000],
+        ];
+        $mock2->payments[$badgePay] = [
+            'status' => 'PAID',
+            'amount' => ['total' => 2000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 2000],
+        ];
+        $mock2->failCancelPaymentId = $badgePay;
 
-    $posOrder = $orders->getByRef($posRef);
-    $badgeOrder = $orders->getByRef($badgeRef);
-    $cancelMethod->invoke($svcPos, $posOrder, 10000, 'test');
-    check('position cancel called first', count($mock2->cancels) === 1 && $mock2->cancels[0]['paymentId'] === $posPay);
+        $orders->insertPending($tutorUserId, $posRef, 'prime', '2주', 'position', 10000, 'tutor', $tutorId, 't', 10000, 0, [
+            'started_on' => $start,
+            'ends_on' => $endsOn,
+            'end_exclusive_on' => $endEx,
+            'grant_mode' => 'new',
+        ], 'portone_test', $posPay);
+        $orders->insertPending($tutorUserId, $badgeRef, 'hot', '2주', 'badge_addon', 2000, 'tutor', $tutorId, 't', 2000, 0, [
+            'parent_order_ref' => $posRef,
+            'started_on' => $start,
+            'ends_on' => $endsOn,
+            'end_exclusive_on' => $endEx,
+            'grant_mode' => 'new',
+        ], 'portone_test', $badgePay);
+        $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref IN (?,?)")
+            ->execute([$posRef, $badgeRef]);
 
-    $mock2->failCancelPaymentId = $badgePay;
-    $beforeBadgeCancels = count($mock2->cancels);
-    try {
-        $cancelMethod->invoke($svcPos, $badgeOrder, 2000, 'badge');
-        check('badge cancel failure throws', false);
-    } catch (RuntimeException $e) {
-        check('badge cancel failure throws', str_contains($e->getMessage(), '고객센터'));
+        $tickets = new ProviderTicketRepository($pdo);
+        $axisStmt = $pdo->prepare('SELECT region_id FROM tutor_regions WHERE tutor_id=? LIMIT 1');
+        $axisStmt->execute([$tutorId]);
+        $axisCity = (int) ($axisStmt->fetchColumn() ?: 0);
+        $axisSubj = (int) ($pdo->query('SELECT id FROM subject_masters ORDER BY id ASC LIMIT 1')->fetchColumn() ?: 0);
+        check('tutor axis ids for position', $axisCity > 0 && $axisSubj > 0);
+        $tickets->addPositionSubscription($tutorUserId, 'prime', [
+            'duration_type' => 'day',
+            'duration_value' => 14,
+            'started_on' => $start,
+            'end_exclusive_on' => $endEx,
+            'period_days' => 14,
+            'starts_at' => $start . ' 00:00:00',
+            'ends_at' => $endEx . ' 00:00:00',
+        ], 'payment', 'tutor', $tutorId, null, [
+            'city_id' => $axisCity,
+            'primary_subject_id' => $axisSubj,
+        ]);
+
+        $subBefore = (string) ($pdo->query(
+            "SELECT end_exclusive_on FROM provider_position_subscriptions
+             WHERE provider_type='tutor' AND provider_id={$tutorId} AND sku_code='prime'
+             ORDER BY id DESC LIMIT 1"
+        )->fetchColumn() ?: '');
+
+        $opsBefore = (int) ($pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn() ?: 0);
+        $svcPos = new RefundService($pdo, new RefundRepository($pdo), $orders, $tickets, null, null, new PortOneCheckout($mock2));
+        try {
+            $svcPos->submit($tutorUserId, $posRef, ['reason_choice' => 'test', 'detail' => '']);
+            check('position submit fails on badge cancel', false);
+        } catch (RuntimeException $e) {
+            check('position submit fails on badge cancel', str_contains($e->getMessage(), '고객센터'));
+        }
+
+        $refundPos = $pdo->prepare('SELECT COUNT(*) FROM provider_refund_requests WHERE order_ref IN (?,?)');
+        $refundPos->execute([$posRef, $badgeRef]);
+        check('position submit rollback no refund rows', (int) $refundPos->fetchColumn() === 0);
+
+        $stPos = $pdo->prepare('SELECT status FROM provider_payment_orders WHERE order_ref=?');
+        $stPos->execute([$posRef]);
+        $stBadge = $pdo->prepare('SELECT status FROM provider_payment_orders WHERE order_ref=?');
+        $stBadge->execute([$badgeRef]);
+        check('position orders stay paid after rollback', $stPos->fetchColumn() === 'paid' && $stBadge->fetchColumn() === 'paid');
+
+        $subAfter = (string) ($pdo->query(
+            "SELECT end_exclusive_on FROM provider_position_subscriptions
+             WHERE provider_type='tutor' AND provider_id={$tutorId} AND sku_code='prime'
+             ORDER BY id DESC LIMIT 1"
+        )->fetchColumn() ?: '');
+        check('position subscription not frozen after rollback', $subBefore === $subAfter);
+
+        check('main cancel before badge fail', count($mock2->cancels) === 1 && $mock2->cancels[0]['paymentId'] === $posPay);
+        $opsAfter = (int) ($pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn() ?: 0);
+        check('orphan cancel persisted in ops log', $opsAfter > $opsBefore);
     }
-    check('no further cancel after fail', count($mock2->cancels) === $beforeBadgeCancels);
-    check('orphan cancel recorded', count($succProp->getValue($svcPos)) === 1);
+
+    /* 취소 성공 후 savePgCancelMeta 실패 → ops 로그 남고 롤백 */
+    if (PortOneCancelOpsLog::tableReady()) {
+        $metaRef = 'dev-339m-' . bin2hex(random_bytes(4));
+        $metaPay = PortOneCheckout::makePaymentId($metaRef);
+        $mockMeta = new MockPortOneApi();
+        $mockMeta->payments[$metaPay] = [
+            'status' => 'PAID',
+            'amount' => ['total' => 3000, 'currency' => 'KRW', 'cancelled' => 0, 'remainingPayment' => 3000],
+        ];
+        $orders->insertPending($userId, $metaRef, 'memo_ticket', '5회권', 'count', 3000, 'tutor', 1, 't', 3000, 0, null, 'portone_test', $metaPay);
+        $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref=?")->execute([$metaRef]);
+        $pdo->prepare(
+            "INSERT INTO provider_ticket_packs
+             (user_id, provider_type, provider_id, ticket_type, pack_size, remaining, expires_at, source, source_order_ref)
+             VALUES (?,?,?,?,?,?, DATE_ADD(NOW(), INTERVAL 180 DAY), 'payment', ?)"
+        )->execute([$userId, 'tutor', 1, 'memo', 5, 5, $metaRef]);
+
+        $failRepo = new class ($pdo) extends RefundRepository {
+            public function savePgCancelMeta(
+                string $orderRef,
+                string $cancelId,
+                ?string $cancelledAt,
+                int $cancelAmountWon,
+                int $remainingWon,
+            ): bool {
+                throw new RuntimeException('mock meta fail');
+            }
+        };
+        $opsBeforeMeta = (int) $pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn();
+        $svcMeta = new RefundService($pdo, $failRepo, $orders, null, null, null, new PortOneCheckout($mockMeta));
+        try {
+            $svcMeta->submit($userId, $metaRef, ['reason_choice' => 'test']);
+            check('meta fail aborts submit', false);
+        } catch (RuntimeException $e) {
+            check('meta fail aborts submit', str_contains($e->getMessage(), '고객센터'));
+        }
+        $opsAfterMeta = (int) $pdo->query('SELECT COUNT(*) FROM provider_pg_cancel_ops_log')->fetchColumn();
+        check('meta fail still writes ops log', $opsAfterMeta > $opsBeforeMeta);
+        $refundMeta = $pdo->prepare('SELECT COUNT(*) FROM provider_refund_requests WHERE order_ref=?');
+        $refundMeta->execute([$metaRef]);
+        check('meta fail rolls back refund row', (int) $refundMeta->fetchColumn() === 0);
+    } else {
+        echo "SKIP ops log table\n";
+    }
 
     /* 1회권 sent 거절: buildCalcInput + calculator */
     $immRef = 'dev-339i-' . bin2hex(random_bytes(4));
     $imm = new ImmediateMemoRepository($pdo);
     if ($imm->tableReady()) {
-        $orders->insertPending($userId, $immRef, 'memo', '1회', 'count', 1000, 'tutor', 1, 't', 1000, 0, null, 'dev_mock', null);
+        $orders->insertPending($userId, $immRef, 'memo_ticket', '1회', 'count', 1000, 'tutor', 1, 't', 1000, 0, null, 'dev_mock', null);
         $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref=?")->execute([$immRef]);
         $imm->insertPending([
             'order_ref' => $immRef,
@@ -345,8 +430,8 @@ if ($userId > 0 && $hasPay) {
     if ($packCol) {
         $packOrder = 'dev-339k-' . bin2hex(random_bytes(4));
         $otherOrder = 'dev-339k2-' . bin2hex(random_bytes(4));
-        $orders->insertPending($userId, $packOrder, 'memo', '5회권', 'count', 5000, 'tutor', 1, 't', 5000, 0, null, 'dev_mock', null);
-        $orders->insertPending($userId, $otherOrder, 'memo', '5회권', 'count', 5000, 'tutor', 1, 't', 5000, 0, null, 'dev_mock', null);
+        $orders->insertPending($userId, $packOrder, 'memo_ticket', '5회권', 'count', 5000, 'tutor', 1, 't', 5000, 0, null, 'dev_mock', null);
+        $orders->insertPending($userId, $otherOrder, 'memo_ticket', '5회권', 'count', 5000, 'tutor', 1, 't', 5000, 0, null, 'dev_mock', null);
         $pdo->prepare("UPDATE provider_payment_orders SET status='paid', paid_at=NOW() WHERE order_ref IN (?,?)")
             ->execute([$packOrder, $otherOrder]);
         // only otherOrder has a pack
@@ -365,37 +450,69 @@ if ($userId > 0 && $hasPay) {
         echo "SKIP pack source_order_ref column\n";
     }
 
-    /* 중복 complete 지급 1회 — mock PAID + completeOrder pgVerified */
-    $dupRef = 'dev-339d-' . bin2hex(random_bytes(4));
-    $dupPay = PortOneCheckout::makePaymentId($dupRef);
-    $mockDup = new MockPortOneApi();
-    $mockDup->payments[$dupPay] = [
-        'status' => 'PAID',
-        'amount' => ['total' => 10, 'currency' => 'KRW'],
-    ];
-    // minimal count immediate-like amount; use badge-less count with mock complete
-    $orders->insertPending($userId, $dupRef, 'memo', '1회', 'count', 10, 'tutor', 1, 't', 10, 0, null, 'portone_test', $dupPay);
-    if ($imm->tableReady()) {
-        $imm->insertPending([
-            'order_ref' => $dupRef,
-            'user_id' => $userId,
-            'provider_type' => 'tutor',
-            'provider_id' => 1,
-            'student_id' => 1,
-            'body' => 'dup',
-        ]);
-    }
-    putenv('STUDY114_PAID_MOCK_COMPLETE=1');
-    $checkoutSvc = new ProviderCheckoutService($orders, null, null, $pdo, $imm, null, new PortOneCheckout($mockDup));
-    try {
-        $r1 = $checkoutSvc->completePortOneOrder($userId, $dupRef, $dupPay);
-        $r2 = $checkoutSvc->completePortOneOrder($userId, $dupRef, $dupPay);
-        $paidRow = $orders->getByRef($dupRef);
-        check('duplicate complete stays paid', (string) ($paidRow['status'] ?? '') === 'paid');
-        check('duplicate complete idempotent payload', ($r1['fulfilled'] ?? false) === true || ($r2['fulfilled'] ?? null) !== null);
-    } catch (Throwable $e) {
-        // fulfill may fail without full schema; still assert verify path did not throw on amount
-        check('duplicate complete path ran', str_contains($e->getMessage(), '') === false ? false : true, 'err omitted');
+    /* 중복 complete — 팩 지급 횟수 실제 1회 */
+    if ($tutorId > 0) {
+        $dupRef = 'dev-339d-' . bin2hex(random_bytes(4));
+        $dupPay = PortOneCheckout::makePaymentId($dupRef);
+        $mockDup = new MockPortOneApi();
+        $mockDup->payments[$dupPay] = [
+            'status' => 'PAID',
+            'amount' => ['total' => 5000, 'currency' => 'KRW'],
+        ];
+        // 활성 팩 전부 비워 complete 허용 (source 무관)
+        $pdo->prepare(
+            "UPDATE provider_ticket_packs SET remaining = 0, expires_at = DATE_SUB(NOW(), INTERVAL 1 DAY)
+             WHERE provider_type='tutor' AND provider_id=? AND remaining > 0"
+        )->execute([$tutorId]);
+
+        $orders->insertPending(
+            $tutorUserId,
+            $dupRef,
+            'memo_ticket',
+            '5회권',
+            'count',
+            5000,
+            'tutor',
+            $tutorId,
+            't',
+            5000,
+            0,
+            null,
+            'portone_test',
+            $dupPay,
+        );
+        putenv('STUDY114_PAID_MOCK_COMPLETE=1');
+        $ticketsDup = new ProviderTicketRepository($pdo);
+        $checkoutSvc = new ProviderCheckoutService(
+            $orders,
+            $ticketsDup,
+            null,
+            $pdo,
+            $imm,
+            null,
+            new PortOneCheckout($mockDup),
+        );
+
+        $countPacks = static function (string $ref) use ($pdo): int {
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM provider_ticket_packs WHERE source_order_ref = ?');
+            $stmt->execute([$ref]);
+
+            return (int) $stmt->fetchColumn();
+        };
+
+        $before = $countPacks($dupRef);
+        $r1 = $checkoutSvc->completePortOneOrder($tutorUserId, $dupRef, $dupPay);
+        $mid = $countPacks($dupRef);
+        $r2 = $checkoutSvc->completePortOneOrder($tutorUserId, $dupRef, $dupPay);
+        $after = $countPacks($dupRef);
+
+        check('duplicate complete first grant', ($r1['fulfilled'] ?? false) === true && $mid === $before + 1);
+        check('duplicate complete pack count stays 1', $after === $mid && $after === 1);
+        check('duplicate complete second still paid', (string) (($orders->getByRef($dupRef)['status'] ?? '')) === 'paid');
+        check('duplicate complete second fulfilled flag', ($r2['fulfilled'] ?? false) === true);
+    } else {
+        check('duplicate complete first grant', false, 'no tutor');
+        check('duplicate complete pack count stays 1', false, 'no tutor');
     }
 } else {
     echo "SKIP DB-backed behavior tests\n";

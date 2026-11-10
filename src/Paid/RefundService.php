@@ -10,6 +10,7 @@ use PDO;
 use RuntimeException;
 use Study114\Database\Connection;
 use Study114\Paid\Pg\PgProvider;
+use Study114\Paid\Pg\PortOneCancelOpsLog;
 use Study114\Paid\Pg\PortOneCheckout;
 
 /**
@@ -32,7 +33,7 @@ final class RefundService
     private ImmediateMemoRepository $immediate;
     private PortOneCheckout $portOne;
 
-    /** @var list<array{payment_id: string, cancel_id: string, amount: int}> */
+    /** @var list<array{payment_id: string, cancel_id: string, amount: int, order_ref?: string}> */
     private array $portOneCancelsSucceeded = [];
 
     public function __construct(
@@ -1070,20 +1071,46 @@ final class RefundService
                 $remaining,
                 $reason !== '' ? $reason : '환불',
             );
+            $cancelId = (string) $result['cancel_id'];
+            $cancelAmount = (int) $result['cancel_amount_won'];
             $this->portOneCancelsSucceeded[] = [
                 'payment_id' => $paymentId,
-                'cancel_id' => (string) $result['cancel_id'],
-                'amount' => (int) $result['cancel_amount_won'],
+                'cancel_id' => $cancelId,
+                'amount' => $cancelAmount,
+                'order_ref' => $orderRef,
             ];
-            $this->refunds->savePgCancelMeta(
-                $orderRef,
-                (string) $result['cancel_id'],
-                is_string($result['cancelled_at'] ?? null) ? (string) $result['cancelled_at'] : null,
-                (int) $result['cancel_amount_won'],
-                (int) $result['remaining_won'],
-            );
+            try {
+                $this->refunds->savePgCancelMeta(
+                    $orderRef,
+                    $cancelId,
+                    is_string($result['cancelled_at'] ?? null) ? (string) $result['cancelled_at'] : null,
+                    $cancelAmount,
+                    (int) $result['remaining_won'],
+                );
+            } catch (\Throwable $metaErr) {
+                // 포트원 취소는 이미 성공 — 롤백돼도 남도록 별도 연결에 기록
+                PortOneCancelOpsLog::record(
+                    $paymentId,
+                    $cancelId,
+                    $cancelAmount,
+                    $orderRef,
+                    'orphan_after_meta_fail',
+                );
+                error_log('[portone] savePgCancelMeta failed paymentId=' . $paymentId
+                    . ' cancel_id=' . $cancelId . ' amount=' . $cancelAmount
+                    . ' err=' . $metaErr->getMessage());
+                $this->logOrphanPortOneCancels();
+                throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
+            }
         } catch (InvalidArgumentException $e) {
             throw $e;
+        } catch (RuntimeException $e) {
+            if ($e->getMessage() === '환불 처리 중 오류, 고객센터 문의') {
+                throw $e;
+            }
+            error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
+            $this->logOrphanPortOneCancels();
+            throw new RuntimeException('환불 처리 중 오류, 고객센터 문의');
         } catch (\Throwable $e) {
             error_log('[portone] refund cancel failed paymentId=' . $paymentId . ' amount=' . $cancelAmountWon . ' err=' . $e->getMessage());
             $this->logOrphanPortOneCancels();
@@ -1108,6 +1135,13 @@ final class RefundService
     private function logOrphanPortOneCancels(): void
     {
         foreach ($this->portOneCancelsSucceeded as $row) {
+            PortOneCancelOpsLog::record(
+                $row['payment_id'],
+                $row['cancel_id'],
+                $row['amount'],
+                isset($row['order_ref']) ? (string) $row['order_ref'] : null,
+                'orphan_after_later_fail',
+            );
             error_log(sprintf(
                 '[portone] ORPHAN_CANCEL_NEEDS_OPS paymentId=%s cancel_id=%s amount=%d',
                 $row['payment_id'],
