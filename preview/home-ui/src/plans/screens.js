@@ -1150,7 +1150,7 @@ export function renderPlansPositions() {
           selectedRegionScope?.label ||
           (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
         periodLabel,
-        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터',
         listPriceText:
           selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
             ? formatKrw(selectedOption.listPriceKrw)
@@ -1281,7 +1281,7 @@ export function renderPlansPositions() {
             totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
             ctaDisabled: orderCtaDisabled,
             ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
-            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 결제 직전 서버가 최종 확인합니다.',
+            note: '시작일·종료일은 결제 완료 시 확정 · 자동연장 없음 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
           })}
         </aside>
       </div>
@@ -1909,7 +1909,6 @@ export function renderPlansCheckout() {
   if (!draft) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">주문·결제</p>
         <div class="mypage-info-box is-warn">
           <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
           <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
@@ -1920,7 +1919,6 @@ export function renderPlansCheckout() {
   if (role !== 'study_room' && role !== 'tutor') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">주문·결제</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1947,7 +1945,7 @@ export function renderPlansCheckout() {
   const periodRangeText =
     draft.startedOn && draft.endsOn
       ? `${draft.startedOn} ~ ${draft.endsOn}`
-      : '결제 완료 시점부터 (서버 확정)';
+      : '결제 완료 시점부터';
   const checkoutRows = isPosition
     ? buildPositionOrderRows({
         profileLabel: draft.providerLabel,
@@ -1990,14 +1988,13 @@ export function renderPlansCheckout() {
 
   return `
     <section class="mypage-panel plans-checkout">
-      <p class="mypage-lead">주문·결제</p>
       ${renderOrderSummaryBlock({
         family: isPosition ? 'position' : 'access',
         rows: checkoutRows,
         totalLabel: '예상 결제 금액',
         totalValue: formatKrw(previewTotal),
         showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 최종 확인합니다.',
+        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
       })}
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>
@@ -2108,7 +2105,7 @@ export function renderPlansResult() {
         ${resultBadgeLines}
         ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본, 배지 포함·같이 회수)</p>
+        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(배지 포함·같이 회수)</p>
         ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
