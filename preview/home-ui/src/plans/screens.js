@@ -1059,7 +1059,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>결제 테스트 모드 (금액은 카탈로그 기준)</span>
+      <span>결제 테스트 모드</span>
     </label>`;
 }
 
@@ -1257,7 +1257,7 @@ export function renderPlansPositions() {
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">상품 정보를 다시 불러와 주세요.</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
@@ -2647,7 +2647,7 @@ export function bindPlansScreenEvents(root, rerender) {
       payBtn.setAttribute('disabled', 'true');
       try {
         if (!getProductConfig(draft.productCode, draft.providerType)) {
-          throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
+          throw new Error('상품 정보가 아직 준비되지 않았어요. 잠시 후 다시 시도해 주세요.');
         }
         let created = null;
         if (draft.orderRef) {

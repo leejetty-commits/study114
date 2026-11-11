@@ -107,13 +107,16 @@ export async function hydratePaidCatalog(providerType, opts = {}) {
     const res = await fetch(`${PAID_ENDPOINTS.catalog}${qs}`, { credentials: 'include' });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.ok === false) {
-      const msg = data.message || `카탈로그를 불러오지 못했습니다 (HTTP ${res.status})`;
+      const msg = data.message || '상품 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
+      if (!data.message) {
+        console.warn('[catalog] load failed', res.status);
+      }
       catalogError = msg;
       catalogState = null;
       throw new Error(msg);
     }
     if (!Array.isArray(data.products) || !data.catalog_version) {
-      catalogError = '카탈로그 응답 형식이 올바르지 않습니다.';
+      catalogError = '상품 정보를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.';
       catalogState = null;
       throw new Error(catalogError);
     }
