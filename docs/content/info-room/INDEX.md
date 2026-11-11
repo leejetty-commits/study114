@@ -2,8 +2,8 @@
 
 - 기준일: 2026-11-11
 - 용도: 오픈 후 게시용 원고(마크다운). DB 미반영.
-- 카테고리 키: `startup`(창업, 신규·DB 미반영), `know-how`(운영 노하우), `recruit`(학생 모집·홍보)
-- 2026-11-11 최종검수 수정: 01-startup 반복제거·법령교정·한자제거·우동공과 한줄 · verify 강화. 02·03은 후속.
+- 카테고리 키: startup(창업, 신규·DB 미반영), know-how(운영 노하우), ecruit(학생 모집·홍보)
+- 최종검수 수정: 01·02 완료(반복0·2500~4000·한자0·우동공과1·법령표). 03 후속.
 
 | 번호 | 파일 | 제목 | 주제 | category_suggest | 글자 수 | 기준일 |
 |---|---|---|---|---|---|---|
@@ -29,28 +29,28 @@
 | 20 | 01-startup/20-seongbeomjoe-adong.md | 성범죄 경력 조회와 아동학대 예방 | startup | startup | 2635 | 2026-11-11 |
 | 21 | 01-startup/21-jongso-myeonse.md | 종합소득세와 면세 교육용역 일정 | startup | startup | 2688 | 2026-11-11 |
 | 22 | 01-startup/22-gyoyukjiwoncheong.md | 관할 교육지원청 찾고 문의하는 요령 | startup | startup | 2600 | 2026-11-11 |
-| 23 | 02-operation/01-sangdam-daebon.md | 첫 상담 대본, 원장님이 놓치지 않을 순서 | operation | know-how | 2702 | 2026-11-11 |
-| 24 | 02-operation/02-hakbumo-sotong.md | 학부모 소통 주기, 과하지 않게 꾸준히 | operation | know-how | 2631 | 2026-11-11 |
-| 25 | 02-operation/03-level-test.md | 레벨테스트, 짧게 보고 정확히 나누기 | operation | know-how | 2691 | 2026-11-11 |
-| 26 | 02-operation/04-chulgeol-bogang.md | 출결·보강 규칙, 처음부터 분명히 | operation | know-how | 2702 | 2026-11-11 |
-| 27 | 02-operation/05-minap-daeeung.md | 수강료 미납 대응, 감정 없이 절차로 | operation | know-how | 2724 | 2026-11-11 |
-| 28 | 02-operation/06-jaedeungnok.md | 재등록률을 올리는 운영 습관 | operation | know-how | 2705 | 2026-11-11 |
+| 23 | 02-operation/01-sangdam-daebon.md | 첫 상담 대본, 원장님이 놓치지 않을 순서 | operation | know-how | 2651 | 2026-11-11 |
+| 24 | 02-operation/02-hakbumo-sotong.md | 학부모 소통 주기, 과하지 않게 꾸준히 | operation | know-how | 2679 | 2026-11-11 |
+| 25 | 02-operation/03-level-test.md | 레벨테스트, 짧게 보고 정확히 나누기 | operation | know-how | 2674 | 2026-11-11 |
+| 26 | 02-operation/04-chulgeol-bogang.md | 출결·보강 규칙, 처음부터 분명히 | operation | know-how | 2607 | 2026-11-11 |
+| 27 | 02-operation/05-minap-daeeung.md | 수강료 미납 대응, 감정 없이 절차로 | operation | know-how | 2682 | 2026-11-11 |
+| 28 | 02-operation/06-jaedeungnok.md | 재등록률을 올리는 운영 습관 | operation | know-how | 2666 | 2026-11-11 |
 | 29 | 02-operation/07-siganpyo.md | 시간표 짜기, 1인 원장도 무너지지 않게 | operation | know-how | 2695 | 2026-11-11 |
-| 30 | 02-operation/08-siheom-gigan.md | 시험 기간 운영, 평소와 다르게 짜기 | operation | know-how | 2660 | 2026-11-11 |
-| 31 | 02-operation/09-banghak-teukgang.md | 방학 특강, 정규와 섞지 않고 설계하기 | operation | know-how | 2679 | 2026-11-11 |
-| 32 | 02-operation/10-1in-sigan.md | 1인 원장 시간관리, 수업 밖 일 챙기기 | operation | know-how | 2656 | 2026-11-11 |
-| 33 | 02-operation/11-adong-saenghwal.md | 아이 안전·생활지도, 수업 전후의 약속 | operation | know-how | 2645 | 2026-11-11 |
-| 34 | 02-operation/12-toewon-gwalli.md | 퇴원 관리, 마지막 인상이 다음을 만듭니다 | operation | know-how | 2655 | 2026-11-11 |
-| 35 | 02-operation/13-sukje-feedback.md | 숙제와 피드백, 부담 없이 루프 만들기 | operation | know-how | 2721 | 2026-11-11 |
-| 36 | 02-operation/14-hyeongje-dongban.md | 형제·동반 수업, 운영 전에 규칙을 | operation | know-how | 2721 | 2026-11-11 |
-| 37 | 02-operation/15-deunghawon-dongseon.md | 등하원·대기 동선, 수업 밖의 운영 | operation | know-how | 2701 | 2026-11-11 |
-| 38 | 02-operation/16-sujeob-girok.md | 수업 관찰·기록 습관, 짧게 남기기 | operation | know-how | 2689 | 2026-11-11 |
-| 39 | 02-operation/17-bulman-minwon.md | 학부모 불만·민원, 첫 대응 순서 | operation | know-how | 2702 | 2026-11-11 |
-| 40 | 02-operation/18-banhwan-silmu.md | 반환·중도 해지 안내 실무 | operation | know-how | 2657 | 2026-11-11 |
-| 41 | 02-operation/19-byeonghaeng-eommu.md | 보조 없이 병행 업무, 수업 중 방해 줄이기 | operation | know-how | 2603 | 2026-11-11 |
-| 42 | 02-operation/20-wolgan-ribyu.md | 월간 운영 리뷰, 숫자와 느낌을 같이 | operation | know-how | 2720 | 2026-11-11 |
-| 43 | 02-operation/21-haknyeon-jeonhwan.md | 학년·계절 전환 준비 체크 | operation | know-how | 2726 | 2026-11-11 |
-| 44 | 02-operation/22-geongang-gyeolseok.md | 건강·감염·결석 대응 운영 요령 | operation | know-how | 2624 | 2026-11-11 |
+| 30 | 02-operation/08-siheom-gigan.md | 시험 기간 운영, 평소와 다르게 짜기 | operation | know-how | 2633 | 2026-11-11 |
+| 31 | 02-operation/09-banghak-teukgang.md | 방학 특강, 정규와 섞지 않고 설계하기 | operation | know-how | 2625 | 2026-11-11 |
+| 32 | 02-operation/10-1in-sigan.md | 1인 원장 시간관리, 수업 밖 일 챙기기 | operation | know-how | 2701 | 2026-11-11 |
+| 33 | 02-operation/11-adong-saenghwal.md | 아이 안전·생활지도, 수업 전후의 약속 | operation | know-how | 2644 | 2026-11-11 |
+| 34 | 02-operation/12-toewon-gwalli.md | 퇴원 관리, 마지막 인상이 다음을 만듭니다 | operation | know-how | 2683 | 2026-11-11 |
+| 35 | 02-operation/13-sukje-feedback.md | 숙제와 피드백, 부담 없이 루프 만들기 | operation | know-how | 2699 | 2026-11-11 |
+| 36 | 02-operation/14-hyeongje-dongban.md | 형제·동반 수업, 운영 전에 규칙을 | operation | know-how | 2604 | 2026-11-11 |
+| 37 | 02-operation/15-deunghawon-dongseon.md | 등하원·대기 동선, 수업 밖의 운영 | operation | know-how | 2695 | 2026-11-11 |
+| 38 | 02-operation/16-sujeob-girok.md | 수업 관찰·기록 습관, 짧게 남기기 | operation | know-how | 2616 | 2026-11-11 |
+| 39 | 02-operation/17-bulman-minwon.md | 학부모 불만·민원, 첫 대응 순서 | operation | know-how | 2671 | 2026-11-11 |
+| 40 | 02-operation/18-banhwan-silmu.md | 반환·중도 해지 안내 실무 | operation | know-how | 2693 | 2026-11-11 |
+| 41 | 02-operation/19-byeonghaeng-eommu.md | 보조 없이 병행 업무, 수업 중 방해 줄이기 | operation | know-how | 2631 | 2026-11-11 |
+| 42 | 02-operation/20-wolgan-ribyu.md | 월간 운영 리뷰, 숫자와 느낌을 같이 | operation | know-how | 2690 | 2026-11-11 |
+| 43 | 02-operation/21-haknyeon-jeonhwan.md | 학년·계절 전환 준비 체크 | operation | know-how | 2618 | 2026-11-11 |
+| 44 | 02-operation/22-geongang-gyeolseok.md | 건강·감염·결석 대응 운영 요령 | operation | know-how | 2613 | 2026-11-11 |
 | 45 | 03-marketing/01-naver-place-deungrok.md | 네이버 플레이스 등록, 공부방 기본 세팅 | marketing | recruit | 2747 | 2026-11-11 |
 | 46 | 03-marketing/02-naver-place-review.md | 플레이스 리뷰·문의 응대 매너 | marketing | recruit | 2617 | 2026-11-11 |
 | 47 | 03-marketing/03-blog-geulssugi.md | 블로그로 공부방 알리기, 과장 없이 | marketing | recruit | 2620 | 2026-11-11 |
@@ -74,4 +74,4 @@
 | 65 | 03-marketing/21-position-malhagi.md | 경쟁 비교 없이 포지션 말하기 | marketing | recruit | 2687 | 2026-11-11 |
 | 66 | 03-marketing/22-hongbomul-geomsu.md | 홍보물 교정·검수 체크리스트 | marketing | recruit | 2663 | 2026-11-11 |
 
-총 66건. 출처: `_sources/01-startup-sources.md`, `02-operation-sources.md`, `03-marketing-sources.md`.
+총 66건.
