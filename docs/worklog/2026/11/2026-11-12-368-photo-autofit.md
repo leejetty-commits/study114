@@ -86,4 +86,5 @@ phpMyAdmin/SSH가 아니라 **PHP 한 줄 읽기** 또는 기존 진단 스크�
 
 ## 커밋
 
-(푸시 후 hash 기입)
+- hash: `35d0c307`
+- push: `origin/work/368-photo-autofit` (merge 안 함)
