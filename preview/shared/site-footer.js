@@ -20,7 +20,6 @@ export const SITE_FOOTER_COMPANY = {
   ceo: '이종현',
   address: '경기도 의정부시 능곡로26번길 40, 101동 1101호',
   bizNo: '471-29-01819',
-  bizCheckUrl: 'https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819',
   mailOrder: '제2025-의정부송산-0680호',
   email: 'help@study114.net',
   phone: '',
@@ -78,12 +77,9 @@ function renderCompanyBlock(company) {
   }
 
   if (String(company.bizNo || '').trim()) {
-    const check = company.bizCheckUrl
-      ? ` <a class="site-footer__biz-check" href="${escAttr(company.bizCheckUrl)}" target="_blank" rel="noopener noreferrer">사업자정보확인</a>`
-      : '';
     line2.push({
       label: '사업자등록번호',
-      valueHtml: `${esc(company.bizNo)}${check}`,
+      valueHtml: esc(company.bizNo),
     });
   }
   if (String(company.mailOrder || '').trim()) {
