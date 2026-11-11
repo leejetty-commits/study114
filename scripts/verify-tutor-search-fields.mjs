@@ -123,15 +123,21 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
   const baseT = fnBody(base, 'searchTutors');
   const whereFrom = '$where = [';
   const whereTo = '$total = (int) $stmt->fetchColumn();';
-  /** 기본등록 완료 게이트(161 remove-publish-code)만 허용. 그 밖의 글자는 기준 커밋과 같아야 한다. */
+  /** 기본등록 완료 게이트(161) · 테스트 카드 숨김(357)만 허용. 그 밖의 글자는 기준 커밋과 같아야 한다. */
   const gateLine = "\n            TutorBasicFields::completeSql('t'),";
+  const testOwnerTutorLine = "\n            TestOwnerVisibility::sql($pdo, 't.user_id'),";
+  const stripAllowed = (s) => (s ?? '')
+    .replace(gateLine, '')
+    .replace(testOwnerTutorLine, '');
   const cwRaw = between(curT, whereFrom, whereTo);
   const bwRaw = between(baseT, whereFrom, whereTo);
   const gateOnce = cwRaw !== null && cwRaw.split(gateLine).length === 2;
+  const testOwnerOnce = cwRaw !== null && cwRaw.split(testOwnerTutorLine).length === 2;
   ok('searchTutors WHERE 에 기본등록 완료 조건(TutorBasicFields::completeSql) 정확히 1번', gateOnce);
-  const cw = gateOnce ? cwRaw.replace(gateLine, '') : null;
-  const bw = bwRaw !== null ? bwRaw.replace(gateLine, '') : null;
-  ok('searchTutors WHERE·필터·COUNT·정렬식(orderBy) = 기준 커밋 글자 그대로 (게이트 1줄 제외)', cw !== null && bw !== null && cw === bw,
+  ok('searchTutors WHERE 에 TestOwnerVisibility(357) 정확히 1번', testOwnerOnce);
+  const cw = gateOnce && testOwnerOnce ? stripAllowed(cwRaw) : null;
+  const bw = bwRaw !== null ? stripAllowed(bwRaw) : null;
+  ok('searchTutors WHERE·필터·COUNT·정렬식(orderBy) = 기준 커밋 글자 그대로 (게이트·TestOwner 제외)', cw !== null && bw !== null && cw === bw,
     `${cw?.length ?? 'null'}/${bw?.length ?? 'null'}`);
   const fromTo = ['FROM tutors t\n            LEFT JOIN', 'LIMIT :limit OFFSET :offset'];
   const cf = between(curT, ...fromTo);
@@ -144,14 +150,25 @@ console.log('\n── (2) 정적: 노출 조건·정렬·손님 경로 무변경
     const b = between(baseT, ...seg);
     return a !== null && a === b;
   })());
-  ok('searchRooms 본문 = 기준 커밋(guest published · 좌표 플래그 포함)', () => {
-    const body = fnBody(cur, 'searchRooms');
+  ok('searchRooms 본문 = 기준 커밋(guest published · 좌표 플래그 포함, TestOwner 1줄 제외)', () => {
+    const testOwnerRoomLine = "\n            TestOwnerVisibility::sql($pdo, 'sr.user_id'),";
+    const body = fnBody(cur, 'searchRooms').replace(testOwnerRoomLine, '');
     const at276 = fnBody(readAt(ROOM_BODY_REF, 'src/Search/SearchService.php'), 'searchRooms');
-    return body !== '' && body === at276;
+    const roomOnce = fnBody(cur, 'searchRooms').split(testOwnerRoomLine).length === 2;
+    return roomOnce && body !== '' && body === at276;
   });
   ok('guestScopedFilters 본문 = 기준 커밋', fnBody(cur, 'guestScopedFilters', 'public') !== ''
     && fnBody(cur, 'guestScopedFilters', 'public') === fnBody(base, 'guestScopedFilters', 'public'));
-  ok('search.php(손님 지역 제한 · 학생 요청문 게이트) = 기준 커밋', read('public/api/search/search.php') === readBase('public/api/search/search.php'));
+  ok('search.php(손님 지역 제한 · 학생 요청문 게이트) = 기준 커밋 (TestOwner bind 제외)', () => {
+    const stripSearchPhp = (s) => s
+      .replace(/\r\n/g, '\n')
+      .replace(/\nuse Study114\\Visibility\\TestOwnerVisibility;/, '')
+      .replace(/\n    TestOwnerVisibility::reset\(\);\n    TestOwnerVisibility::bindViewer\(\$authUser\);\n/, '');
+    const curPhp = stripSearchPhp(read('public/api/search/search.php'));
+    const basePhp = stripSearchPhp(readBase('public/api/search/search.php'));
+    const hasBind = read('public/api/search/search.php').includes('TestOwnerVisibility::bindViewer($authUser)');
+    return hasBind && curPhp === basePhp;
+  });
   const detail = read('preview/home-ui/src/detail-decision/tutor-detail.js');
   const detailAt269 = readAt(TUTOR_DETAIL_REF, 'preview/home-ui/src/detail-decision/tutor-detail.js')
     .replace('<dt>성별</dt>', '<dt>과외쌤 성별</dt>')
