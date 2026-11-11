@@ -3,31 +3,32 @@
 - 기준일: 2026-11-11
 - 용도: 오픈 후 게시용 원고(마크다운). DB 미반영.
 - 카테고리 키: `startup`(창업, 신규·DB 미반영), `know-how`(운영 노하우), `recruit`(학생 모집·홍보)
+- 2026-11-11 최종검수 수정: 01-startup 반복제거·법령교정·한자제거·우동공과 한줄 · verify 강화. 02·03은 후속.
 
 | 번호 | 파일 | 제목 | 주제 | category_suggest | 글자 수 | 기준일 |
 |---|---|---|---|---|---|---|
-| 01 | 01-startup/01-gyoseupso-vs-gagin.md | 교습소와 개인과외교습자, 어디서 갈라질까요 | startup | startup | 2639 | 2026-11-11 |
-| 02 | 01-startup/02-gagin-singo-jeolcha.md | 개인과외교습자 신고, 서류부터 증명서까지 | startup | startup | 2668 | 2026-11-11 |
-| 03 | 01-startup/03-jip-vs-sangga.md | 집 공부방과 상가, 장소 선택 체크포인트 | startup | startup | 2750 | 2026-11-11 |
-| 04 | 01-startup/04-chogi-biyong.md | 오픈 전 초기 비용, 항목별로 나눠 보기 | startup | startup | 2767 | 2026-11-11 |
-| 05 | 01-startup/05-gwamok-daesang.md | 과목·학년·수업 형태부터 정하기 | startup | startup | 2662 | 2026-11-11 |
-| 06 | 01-startup/06-gyoseupbi-geshi.md | 교습비 정하기와 게시·변경 의무 | startup | startup | 2662 | 2026-11-11 |
-| 07 | 01-startup/07-saeopja-segeum.md | 사업자등록과 세금 기초, 공부방 창업 전에 | startup | startup | 2655 | 2026-11-11 |
-| 08 | 01-startup/08-boheom-anjeon.md | 보험·안전·아동 보호, 오픈 전 안전망 | startup | startup | 2714 | 2026-11-11 |
-| 09 | 01-startup/09-interior-dongseon.md | 인테리어와 동선, 가정과 수업 공간 나누기 | startup | startup | 2623 | 2026-11-11 |
-| 10 | 01-startup/10-gyojae-system.md | 교재·진도표·관리 시스템 준비 | startup | startup | 2686 | 2026-11-11 |
-| 11 | 01-startup/11-cheot-3months.md | 오픈 후 첫 3개월 운영 계획 | startup | startup | 2722 | 2026-11-11 |
-| 12 | 01-startup/12-silpae-gyohun.md | 창업 초반에 자주 겪는 실수와 보완 | startup | startup | 2672 | 2026-11-11 |
-| 13 | 01-startup/13-hakwonbeop-jorye.md | 학원법과 시·도 조례, 원장이 볼 핵심만 | startup | startup | 2608 | 2026-11-11 |
-| 14 | 01-startup/14-imdae-juggeo.md | 임대차·주거용 건물에서 교습할 때 | startup | startup | 2628 | 2026-11-11 |
-| 15 | 01-startup/15-hyeongeum-yeongsujeung.md | 현금영수증·영수증 발급 습관 만들기 | startup | startup | 2681 | 2026-11-11 |
-| 16 | 01-startup/16-byeongyeong-hyueop.md | 변경신고·휴업·폐업 타이밍 정리 | startup | startup | 2681 | 2026-11-11 |
-| 17 | 01-startup/17-franchise-vs-personal.md | 개인 창업과 프랜차이즈, 비교 전에 볼 것 | startup | startup | 2603 | 2026-11-11 |
-| 18 | 01-startup/18-gyoseup-sigan-jeongwon.md | 교습 시간·동시 인원 한도 이해하기 | startup | startup | 2691 | 2026-11-11 |
-| 19 | 01-startup/19-open-checklist.md | 오픈 전 총정리 체크리스트 | startup | startup | 2684 | 2026-11-11 |
-| 20 | 01-startup/20-seongbeomjoe-adong.md | 성범죄 경력 조회와 아동학대 예방 | startup | startup | 2704 | 2026-11-11 |
-| 21 | 01-startup/21-jongso-myeonse.md | 종합소득세와 면세 교육용역 일정 | startup | startup | 2677 | 2026-11-11 |
-| 22 | 01-startup/22-gyoyukjiwoncheong.md | 관할 교육지원청 찾고 문의하는 요령 | startup | startup | 2657 | 2026-11-11 |
+| 01 | 01-startup/01-gyoseupso-vs-gagin.md | 교습소와 개인과외교습자, 어디서 갈라질까요 | startup | startup | 2611 | 2026-11-11 |
+| 02 | 01-startup/02-gagin-singo-jeolcha.md | 개인과외교습자 신고, 서류부터 증명서까지 | startup | startup | 2699 | 2026-11-11 |
+| 03 | 01-startup/03-jip-vs-sangga.md | 집 공부방과 상가, 장소 선택 체크포인트 | startup | startup | 2652 | 2026-11-11 |
+| 04 | 01-startup/04-chogi-biyong.md | 오픈 전 초기 비용, 항목별로 나눠 보기 | startup | startup | 2636 | 2026-11-11 |
+| 05 | 01-startup/05-gwamok-daesang.md | 과목·학년·수업 형태부터 정하기 | startup | startup | 2619 | 2026-11-11 |
+| 06 | 01-startup/06-gyoseupbi-geshi.md | 교습비 정하기와 게시·변경 의무 | startup | startup | 2636 | 2026-11-11 |
+| 07 | 01-startup/07-saeopja-segeum.md | 사업자등록과 세금 기초, 공부방 창업 전에 | startup | startup | 2622 | 2026-11-11 |
+| 08 | 01-startup/08-boheom-anjeon.md | 보험·안전·아동 보호, 오픈 전 안전망 | startup | startup | 2620 | 2026-11-11 |
+| 09 | 01-startup/09-interior-dongseon.md | 인테리어와 동선, 가정과 수업 공간 나누기 | startup | startup | 2652 | 2026-11-11 |
+| 10 | 01-startup/10-gyojae-system.md | 교재·진도표·관리 시스템 준비 | startup | startup | 2619 | 2026-11-11 |
+| 11 | 01-startup/11-cheot-3months.md | 오픈 후 첫 3개월 운영 계획 | startup | startup | 2686 | 2026-11-11 |
+| 12 | 01-startup/12-silpae-gyohun.md | 창업 초반에 자주 겪는 실수와 보완 | startup | startup | 2687 | 2026-11-11 |
+| 13 | 01-startup/13-hakwonbeop-jorye.md | 학원법과 시·도 조례, 원장이 볼 핵심만 | startup | startup | 2656 | 2026-11-11 |
+| 14 | 01-startup/14-imdae-juggeo.md | 임대차·주거용 건물에서 교습할 때 | startup | startup | 2602 | 2026-11-11 |
+| 15 | 01-startup/15-hyeongeum-yeongsujeung.md | 현금영수증·영수증 발급 습관 만들기 | startup | startup | 2606 | 2026-11-11 |
+| 16 | 01-startup/16-byeongyeong-hyueop.md | 변경신고·휴업·폐업 타이밍 정리 | startup | startup | 2633 | 2026-11-11 |
+| 17 | 01-startup/17-franchise-vs-personal.md | 개인 창업과 프랜차이즈, 비교 전에 볼 것 | startup | startup | 2665 | 2026-11-11 |
+| 18 | 01-startup/18-gyoseup-sigan-jeongwon.md | 교습 시간·동시 인원 한도 이해하기 | startup | startup | 2607 | 2026-11-11 |
+| 19 | 01-startup/19-open-checklist.md | 오픈 전 총정리 체크리스트 | startup | startup | 2612 | 2026-11-11 |
+| 20 | 01-startup/20-seongbeomjoe-adong.md | 성범죄 경력 조회와 아동학대 예방 | startup | startup | 2635 | 2026-11-11 |
+| 21 | 01-startup/21-jongso-myeonse.md | 종합소득세와 면세 교육용역 일정 | startup | startup | 2688 | 2026-11-11 |
+| 22 | 01-startup/22-gyoyukjiwoncheong.md | 관할 교육지원청 찾고 문의하는 요령 | startup | startup | 2600 | 2026-11-11 |
 | 23 | 02-operation/01-sangdam-daebon.md | 첫 상담 대본, 원장님이 놓치지 않을 순서 | operation | know-how | 2702 | 2026-11-11 |
 | 24 | 02-operation/02-hakbumo-sotong.md | 학부모 소통 주기, 과하지 않게 꾸준히 | operation | know-how | 2631 | 2026-11-11 |
 | 25 | 02-operation/03-level-test.md | 레벨테스트, 짧게 보고 정확히 나누기 | operation | know-how | 2691 | 2026-11-11 |
@@ -64,7 +65,7 @@
 | 56 | 03-marketing/12-seonggwa-chukjeong.md | 홍보 성과 측정, 숫자 네 개만 | marketing | recruit | 2665 | 2026-11-11 |
 | 57 | 03-marketing/13-udonggong-card.md | 우동공과 카드로 알리기, 과장 없이 | marketing | recruit | 2680 | 2026-11-11 |
 | 58 | 03-marketing/14-gwanggo-pilsoo-pyosi.md | 광고 필수 표시, 빠뜨리면 안 되는 것들 | marketing | recruit | 2637 | 2026-11-11 |
-| 59 | 03-marketing/15-jeondan-baepo.md | 전단지 배포 동선과 매너 | marketing | recruit | 2694 | 2026-11-11 |
+| 59 | 03-marketing/15-jeondan-baepo.md | 전단지 배포 동선과 매너 | marketing | recruit | 2690 | 2026-11-11 |
 | 60 | 03-marketing/16-apt-gesipan.md | 아파트 게시판·엘리베이터 안내 요령 | marketing | recruit | 2673 | 2026-11-11 |
 | 61 | 03-marketing/17-hugi-sajin-dongui.md | 후기·사진 사용, 동의부터 | marketing | recruit | 2694 | 2026-11-11 |
 | 62 | 03-marketing/18-jiyeok-sns-manner.md | 지역 단톡·SNS 모임 홍보 매너 | marketing | recruit | 2638 | 2026-11-11 |

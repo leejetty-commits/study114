@@ -13,6 +13,8 @@ const MIN_SUMMARY = 3;
 const MIN_CHECKS = 5;
 const URL_RE = /https?:\/\/[^\s)\]]+/gi;
 const TITLE_SIM_WARN = 0.55;
+/** CJK Unified Ideographs (한자). 한글·가나·전각문장부호는 제외. */
+const HAN_RE = /[\u4e00-\u9fff]/g;
 
 const folder = process.argv[2];
 if (!folder) {
@@ -60,6 +62,46 @@ function parseFrontmatter(raw) {
     }
   }
   return { meta, body };
+}
+
+function splitParagraphs(body) {
+  return body
+    .split(/\r?\n\s*\r?\n/)
+    .map((p) => p.replace(/\r?\n/g, '\n').trim())
+    .filter((p) => p.length > 0);
+}
+
+/** 동일 문단(공백 정규화)이 2회 이상이면 반복으로 본다. */
+function findRepeatedParagraphs(body) {
+  const counts = new Map();
+  for (const p of splitParagraphs(body)) {
+    const key = p.replace(/[ \t]+/g, ' ').trim();
+    if (key.length < 40) continue; // 짧은 체크·불릿 블록은 제외
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  return [...counts.entries()].filter(([, c]) => c >= 2);
+}
+
+/** 반복 문단은 첫 등장만 남긴 본문 */
+function dedupeParagraphs(body) {
+  const parts = body.split(/(\r?\n\s*\r?\n)/);
+  const seen = new Set();
+  const out = [];
+  for (const part of parts) {
+    if (/^\r?\n\s*\r?\n$/.test(part) || part === '\n\n') {
+      out.push(part);
+      continue;
+    }
+    const key = part.replace(/[ \t]+/g, ' ').trim();
+    if (!key) {
+      out.push(part);
+      continue;
+    }
+    if (key.length >= 40 && seen.has(key)) continue;
+    if (key.length >= 40) seen.add(key);
+    out.push(part);
+  }
+  return out.join('').replace(/(\r?\n){3,}/g, '\n\n').replace(/\s+$/, '\n');
 }
 
 function countSummaryBullets(body) {
@@ -117,13 +159,26 @@ for (const file of files) {
     }
   }
 
-  const measured = [...body].length;
+  const reps = findRepeatedParagraphs(body);
+  if (reps.length) {
+    const top = reps.sort((a, b) => b[1] - a[1])[0];
+    issues.push(`repeated paragraph ${top[1]}x (len=${top[0].length})`);
+  }
+
+  const uniqueBody = dedupeParagraphs(body);
+  const measured = [...uniqueBody].length;
   const declared = meta?.chars;
   if (measured < MIN_CHARS || measured > MAX_CHARS) {
-    issues.push(`chars out of range measured=${measured}`);
+    issues.push(`chars out of range measured=${measured} (after dedupe)`);
   }
   if (typeof declared === 'number' && Math.abs(declared - measured) > 30) {
     issues.push(`chars mismatch declared=${declared} measured=${measured}`);
+  }
+
+  const han = uniqueBody.match(HAN_RE) || [];
+  if (han.length) {
+    const sample = [...new Set(han)].slice(0, 8).join('');
+    issues.push(`CJK Han residual ${han.length} (${sample})`);
   }
 
   const h1 = (body.match(/^#\s+.+/m) || []).length;
@@ -215,7 +270,7 @@ const measuredList = rows.map((r) => r.measured);
 const min = Math.min(...measuredList);
 const max = Math.max(...measuredList);
 const avg = Math.round(measuredList.reduce((a, b) => a + b, 0) / measuredList.length);
-console.log(`Char distribution: min=${min} avg=${avg} max=${max}`);
+console.log(`Char distribution (after dedupe): min=${min} avg=${avg} max=${max}`);
 console.log(`Result: ${fail === 0 ? 'PASS' : 'FAIL'} (${files.length - fail} pass / ${fail} fail)`);
 
 process.exit(fail === 0 ? 0 : 1);
