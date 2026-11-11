@@ -3,7 +3,7 @@
 - 기준일: 2026-11-11
 - 용도: 오픈 후 게시용 원고(마크다운). DB 미반영.
 - 카테고리 키: startup(창업, 신규·DB 미반영), know-how(운영 노하우), ecruit(학생 모집·홍보)
-- 최종검수 수정: 01·02 완료(반복0·2500~4000·한자0·우동공과1·법령표). 03 후속.
+- 최종검수 수정: 01·02·03 완료(반복0·2500~4000·한자0·우동공과1·법령표).
 
 | 번호 | 파일 | 제목 | 주제 | category_suggest | 글자 수 | 기준일 |
 |---|---|---|---|---|---|---|
@@ -51,27 +51,27 @@
 | 42 | 02-operation/20-wolgan-ribyu.md | 월간 운영 리뷰, 숫자와 느낌을 같이 | operation | know-how | 2690 | 2026-11-11 |
 | 43 | 02-operation/21-haknyeon-jeonhwan.md | 학년·계절 전환 준비 체크 | operation | know-how | 2618 | 2026-11-11 |
 | 44 | 02-operation/22-geongang-gyeolseok.md | 건강·감염·결석 대응 운영 요령 | operation | know-how | 2613 | 2026-11-11 |
-| 45 | 03-marketing/01-naver-place-deungrok.md | 네이버 플레이스 등록, 공부방 기본 세팅 | marketing | recruit | 2747 | 2026-11-11 |
-| 46 | 03-marketing/02-naver-place-review.md | 플레이스 리뷰·문의 응대 매너 | marketing | recruit | 2617 | 2026-11-11 |
-| 47 | 03-marketing/03-blog-geulssugi.md | 블로그로 공부방 알리기, 과장 없이 | marketing | recruit | 2620 | 2026-11-11 |
-| 48 | 03-marketing/04-momcafe-manner.md | 맘카페 홍보, 규칙과 매너부터 | marketing | recruit | 2740 | 2026-11-11 |
-| 49 | 03-marketing/05-danggeun-biz.md | 당근 비즈프로필로 동네에 알리기 | marketing | recruit | 2720 | 2026-11-11 |
-| 50 | 03-marketing/06-instagram.md | 인스타그램, 공부방 비주얼 운영 요령 | marketing | recruit | 2720 | 2026-11-11 |
-| 51 | 03-marketing/07-jeondan-hyeonsumak.md | 전단·현수막, 옥외광고 전에 확인할 것 | marketing | recruit | 2611 | 2026-11-11 |
-| 52 | 03-marketing/08-sogae-event.md | 소개 이벤트, 부담 없이 설계하기 | marketing | recruit | 2723 | 2026-11-11 |
-| 53 | 03-marketing/09-seolmyeonghoe.md | 소규모 설명회, 부담 없이 열기 | marketing | recruit | 2617 | 2026-11-11 |
-| 54 | 03-marketing/10-open-30days.md | 오픈 초기 30일 홍보 계획 | marketing | recruit | 2601 | 2026-11-11 |
+| 45 | 03-marketing/01-naver-place-deungrok.md | 네이버 플레이스 등록, 공부방 기본 세팅 | marketing | recruit | 2694 | 2026-11-11 |
+| 46 | 03-marketing/02-naver-place-review.md | 플레이스 리뷰·문의 응대 매너 | marketing | recruit | 2635 | 2026-11-11 |
+| 47 | 03-marketing/03-blog-geulssugi.md | 블로그로 공부방 알리기, 과장 없이 | marketing | recruit | 2697 | 2026-11-11 |
+| 48 | 03-marketing/04-momcafe-manner.md | 맘카페 홍보, 규칙과 매너부터 | marketing | recruit | 2681 | 2026-11-11 |
+| 49 | 03-marketing/05-danggeun-biz.md | 당근 비즈프로필로 동네에 알리기 | marketing | recruit | 2613 | 2026-11-11 |
+| 50 | 03-marketing/06-instagram.md | 인스타그램, 공부방 비주얼 운영 요령 | marketing | recruit | 2608 | 2026-11-11 |
+| 51 | 03-marketing/07-jeondan-hyeonsumak.md | 전단·현수막, 옥외광고 전에 확인할 것 | marketing | recruit | 2702 | 2026-11-11 |
+| 52 | 03-marketing/08-sogae-event.md | 소개 이벤트, 부담 없이 설계하기 | marketing | recruit | 2629 | 2026-11-11 |
+| 53 | 03-marketing/09-seolmyeonghoe.md | 소규모 설명회, 부담 없이 열기 | marketing | recruit | 2616 | 2026-11-11 |
+| 54 | 03-marketing/10-open-30days.md | 오픈 초기 30일 홍보 계획 | marketing | recruit | 2661 | 2026-11-11 |
 | 55 | 03-marketing/11-gwanggo-yesan.md | 광고 예산 배분, 감이 아니라 상한으로 | marketing | recruit | 2646 | 2026-11-11 |
-| 56 | 03-marketing/12-seonggwa-chukjeong.md | 홍보 성과 측정, 숫자 네 개만 | marketing | recruit | 2665 | 2026-11-11 |
-| 57 | 03-marketing/13-udonggong-card.md | 우동공과 카드로 알리기, 과장 없이 | marketing | recruit | 2680 | 2026-11-11 |
-| 58 | 03-marketing/14-gwanggo-pilsoo-pyosi.md | 광고 필수 표시, 빠뜨리면 안 되는 것들 | marketing | recruit | 2637 | 2026-11-11 |
-| 59 | 03-marketing/15-jeondan-baepo.md | 전단지 배포 동선과 매너 | marketing | recruit | 2690 | 2026-11-11 |
-| 60 | 03-marketing/16-apt-gesipan.md | 아파트 게시판·엘리베이터 안내 요령 | marketing | recruit | 2673 | 2026-11-11 |
+| 56 | 03-marketing/12-seonggwa-chukjeong.md | 홍보 성과 측정, 숫자 네 개만 | marketing | recruit | 2694 | 2026-11-11 |
+| 57 | 03-marketing/13-udonggong-card.md | 우동공과 카드로 알리기, 과장 없이 | marketing | recruit | 2665 | 2026-11-11 |
+| 58 | 03-marketing/14-gwanggo-pilsoo-pyosi.md | 광고 필수 표시, 빠뜨리면 안 되는 것들 | marketing | recruit | 2629 | 2026-11-11 |
+| 59 | 03-marketing/15-jeondan-baepo.md | 전단지 배포 동선과 매너 | marketing | recruit | 2609 | 2026-11-11 |
+| 60 | 03-marketing/16-apt-gesipan.md | 아파트 게시판·엘리베이터 안내 요령 | marketing | recruit | 2639 | 2026-11-11 |
 | 61 | 03-marketing/17-hugi-sajin-dongui.md | 후기·사진 사용, 동의부터 | marketing | recruit | 2694 | 2026-11-11 |
-| 62 | 03-marketing/18-jiyeok-sns-manner.md | 지역 단톡·SNS 모임 홍보 매너 | marketing | recruit | 2638 | 2026-11-11 |
-| 63 | 03-marketing/19-ipsomun-sogae.md | 입소문·소개가 자연스럽게 도는 구조 | marketing | recruit | 2675 | 2026-11-11 |
-| 64 | 03-marketing/20-season-campaign.md | 방학·개학 시즌 캠페인 짜기 | marketing | recruit | 2695 | 2026-11-11 |
-| 65 | 03-marketing/21-position-malhagi.md | 경쟁 비교 없이 포지션 말하기 | marketing | recruit | 2687 | 2026-11-11 |
-| 66 | 03-marketing/22-hongbomul-geomsu.md | 홍보물 교정·검수 체크리스트 | marketing | recruit | 2663 | 2026-11-11 |
+| 62 | 03-marketing/18-jiyeok-sns-manner.md | 지역 단톡·SNS 모임 홍보 매너 | marketing | recruit | 2658 | 2026-11-11 |
+| 63 | 03-marketing/19-ipsomun-sogae.md | 입소문·소개가 자연스럽게 도는 구조 | marketing | recruit | 2615 | 2026-11-11 |
+| 64 | 03-marketing/20-season-campaign.md | 방학·개학 시즌 캠페인 짜기 | marketing | recruit | 2604 | 2026-11-11 |
+| 65 | 03-marketing/21-position-malhagi.md | 경쟁 비교 없이 포지션 말하기 | marketing | recruit | 2644 | 2026-11-11 |
+| 66 | 03-marketing/22-hongbomul-geomsu.md | 홍보물 교정·검수 체크리스트 | marketing | recruit | 2635 | 2026-11-11 |
 
 총 66건.
