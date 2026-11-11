@@ -30,7 +30,7 @@ import { clearAuthClientResidue } from '../../shared/chrome-session.js';
 
 const CREDENTIALS = { credentials: 'include' };
 
-/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, oauth_role_pending?: boolean, phone_verified?: boolean, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
+/** @typedef {{ user_id: number, email: string, role_type: string, name: string, email_verified?: boolean, oauth_role_pending?: boolean, phone_verified?: boolean, identity_verified?: boolean, identity_verified_at?: string|null, admin_level?: string|null, must_change_password?: boolean, oauth_providers?: string[], oauth_provider_labels?: string[] }} AuthUser */
 
 /** @type {AuthUser|null} */
 let currentUser = null;
@@ -180,6 +180,8 @@ export async function fetchSession() {
           oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
           oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
           phone_verified: Boolean(data.phone_verified),
+          identity_verified: Boolean(data.identity_verified),
+          identity_verified_at: data.identity_verified_at ?? null,
         };
       }
       redirectToEmailVerifyWait();
@@ -205,6 +207,8 @@ export async function fetchSession() {
       oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
       oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
       phone_verified: Boolean(data.phone_verified),
+      identity_verified: Boolean(data.identity_verified),
+      identity_verified_at: data.identity_verified_at ?? null,
     };
   }
 }

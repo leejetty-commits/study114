@@ -98,6 +98,28 @@ final class MessagesRepository
         return $val !== false ? (int) $val : null;
     }
 
+    public function getStudyRoomInquiryStatus(int $studyRoomId): ?string
+    {
+        $stmt = $this->pdo->prepare('SELECT inquiry_status FROM study_rooms WHERE id = ? LIMIT 1');
+        $stmt->execute([$studyRoomId]);
+        $val = $stmt->fetchColumn();
+
+        return $val !== false ? (string) $val : null;
+    }
+
+    public function getTutorInquiryStatus(int $tutorId): ?string
+    {
+        try {
+            $stmt = $this->pdo->prepare('SELECT inquiry_status FROM tutors WHERE id = ? LIMIT 1');
+            $stmt->execute([$tutorId]);
+            $val = $stmt->fetchColumn();
+
+            return $val !== false ? (string) $val : null;
+        } catch (\PDOException) {
+            return null;
+        }
+    }
+
     public function getStudentGuardianUserId(int $studentId): ?int
     {
         $stmt = $this->pdo->prepare('SELECT guardian_user_id FROM students WHERE id = ? LIMIT 1');

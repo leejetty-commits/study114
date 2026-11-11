@@ -186,7 +186,7 @@
 **신규 공부방 기본값:** `open` (쪽지 받는 중). 사용자는 원하면 `paused`/`capacity_full`로 닫는다.  
 기존 실데이터는 **일괄 변경하지 않음**.
 
-**휴대폰 확인:** 노출 게이트 ✕ · `쪽지 받는 중` ON 저장 시도 시에만 `phone_verified_at` 확인.
+**본인인증 게이트 (365):** 노출 게이트 ✕ · `쪽지 받는 중` ON 저장 시도 시에만 공급자 본인인증(`identity_verified_at` · 포트원 V2×KG 통합인증) 확인. SMS OTP(`phone_verified_at`)는 법정 본인인증 대체 ✕ · 이 게이트에 쓰지 않음.
 
 DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zip.sql` (신규 DEFAULT `open`).  
 `052_inquiry_default_paused.sql` 은 **폐기(옛 설계 잔재)**.
@@ -306,7 +306,7 @@ DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zi
 
 **금지 표현:** 노출·상담 · 상담 수용 · 쪽지 활성화 · 대기 문의 가능(1차 UI).
 
-**휴대폰 게이트:** `쪽지 받는 중` ON 저장 시도 시 `phone_verified_at` 확인 · 실패 시 OFF·기존 사유 유지.
+**본인인증 게이트 (365):** `쪽지 받는 중` ON 저장 시도 시 `identity_verified_at`(+`identity_ci_hash`·`identity_tx_id`) 확인 · 미인증이면 `identity_required`로 거부·기존 사유 유지. 화면 상단에 본인인증 카드(1회). 유예 없음. 학생·학부모는 대상 아님.
 
 ### 7-2. P20-06 (논리 ID)
 

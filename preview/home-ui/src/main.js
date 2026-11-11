@@ -38,6 +38,7 @@ import './styles/student-detail.css';
 import './styles/promo-catalog.css';
 import './styles/promo-v2.css';
 import './styles/inquiry-settings-catalog.css';
+import './styles/provider-identity-gate.css';
 /* 학생 마이페이지·내 등록만. 홈·타역할 선택자는 없음 */
 import './styles/student-mypage-stage5b.css';
 import { bindCardTrustRailFit } from './exposure-render.js';

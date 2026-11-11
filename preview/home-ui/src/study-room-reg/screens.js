@@ -12,6 +12,12 @@ import {
   studyRoomInquiryStoredLine,
 } from './inquiry-display.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { getAuthUser } from '../auth-session.js';
+import {
+  renderProviderIdentityGate,
+  bindProviderIdentityGate,
+  lockInquiryReceivingUntilVerified,
+} from '../provider-identity-gate.js';
 import {
   parseStudyRoomRegPath,
   studyRoomHubPath,
@@ -647,6 +653,12 @@ function renderInquiries(room) {
   const form = parseInquiryFormState(room.inquiry_status);
   const badge = form.receiving ? P20_INQUIRY_COPY.badgeReceiving : P20_INQUIRY_COPY.badgeClosed;
   const stored = studyRoomInquiryStoredLine(room.inquiry_status);
+  const auth = getAuthUser();
+  const identityVerified = Boolean(auth?.identity_verified);
+  const identityGate = renderProviderIdentityGate({
+    verified: identityVerified,
+    verified_at: auth?.identity_verified_at ?? null,
+  });
 
   const reasonRadios = INQUIRY_OFF_REASONS.map((o) => {
     const selected = !form.receiving && form.reason === o.value;
@@ -659,8 +671,9 @@ function renderInquiries(room) {
   }).join('');
 
   const body = `
-    <div class="p21-inq p20-inq" data-p20-inquiries data-p20-room-id="${esc(room.id)}" data-inquiry-receiving="${form.receiving ? '1' : '0'}">
+    <div class="p21-inq p20-inq" data-p20-inquiries data-p20-room-id="${esc(room.id)}" data-inquiry-receiving="${form.receiving ? '1' : '0'}" data-identity-verified="${identityVerified ? '1' : '0'}">
       <p class="p21-inq__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
+      ${identityGate}
 
       <section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.currentStatusHeading)}">
         <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.currentStatusHeading)}</h3>
@@ -675,8 +688,8 @@ function renderInquiries(room) {
         <div class="p20-inq-edit-grid">
           <div class="p20-inq-edit-main">
             <div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">
-              <label class="p21-inq-choice${form.receiving ? ' is-selected' : ''}">
-                <input type="radio" name="p20_inquiry_receiving" value="1" data-p20-inquiry-receiving ${form.receiving ? 'checked' : ''} />
+              <label class="p21-inq-choice${form.receiving ? ' is-selected' : ''}${identityVerified ? '' : ' is-disabled'}">
+                <input type="radio" name="p20_inquiry_receiving" value="1" data-p20-inquiry-receiving ${form.receiving ? 'checked' : ''} ${identityVerified ? '' : 'disabled'} />
                 <span>${esc(P20_INQUIRY_COPY.receiving)}</span>
               </label>
               <label class="p21-inq-choice${!form.receiving ? ' is-selected' : ''}">
@@ -811,6 +824,39 @@ export function bindStudyRoomRegEvents(root, rerender) {
     });
   });
 
+  root.querySelectorAll('[data-p20-inquiries]').forEach((page) => {
+    if (!(page instanceof HTMLElement)) return;
+    const verified = page.dataset.identityVerified === '1' || Boolean(getAuthUser()?.identity_verified);
+    lockInquiryReceivingUntilVerified(page, verified);
+    bindProviderIdentityGate(page, {
+      onVerified: async (status) => {
+        const user = getAuthUser();
+        if (user) {
+          user.identity_verified = true;
+          user.identity_verified_at = status?.verified_at ?? new Date().toISOString();
+        }
+        const on = page.querySelector('input[name="p20_inquiry_receiving"][value="1"]');
+        if (on instanceof HTMLInputElement) {
+          on.disabled = false;
+          on.checked = true;
+          on.closest('label')?.classList.remove('is-disabled');
+        }
+        const off = page.querySelector('input[name="p20_inquiry_receiving"][value="0"]');
+        if (off instanceof HTMLInputElement) off.checked = false;
+        syncStudyRoomReasonState(page);
+        const id = Number(page.dataset.p20RoomId);
+        if (id) {
+          try {
+            await setInquiryStatus(id, 'open');
+          } catch (err) {
+            console.warn('[p20-identity-auto-open]', err);
+          }
+        }
+        rerender();
+      },
+    });
+  });
+
   root.querySelectorAll('[data-p20-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => {
       syncStudyRoomReasonState(input.closest('[data-p20-inquiries]'));
@@ -828,6 +874,10 @@ export function bindStudyRoomRegEvents(root, rerender) {
       const id = Number(section?.dataset.p20RoomId);
       if (!id) return;
       const receiving = section?.querySelector('input[name="p20_inquiry_receiving"]:checked')?.value === '1';
+      if (receiving && !(getAuthUser()?.identity_verified || section?.dataset.identityVerified === '1')) {
+        void s114Alert('쪽지를 받으려면 본인인증이 한 번 필요해요');
+        return;
+      }
       const reasonEl = section?.querySelector('input[name="inquiry_off_reason"]:checked');
       if (!receiving && (!reasonEl || (reasonEl.value !== 'paused' && reasonEl.value !== 'capacity_full'))) {
         void s114Alert(P20_INQUIRY_COPY.offReasonRequired);
@@ -843,7 +893,12 @@ export function bindStudyRoomRegEvents(root, rerender) {
           rerender();
         } catch (err) {
           console.warn('[p20]', err);
-          void s114Alert(P20_INQUIRY_COPY.saveFailed);
+          const code = /** @type {{ code?: string }} */ (err)?.code;
+          if (code === 'identity_required') {
+            void s114Alert('쪽지를 받으려면 본인인증이 한 번 필요해요');
+          } else {
+            void s114Alert(P20_INQUIRY_COPY.saveFailed);
+          }
           rerender();
         }
       };

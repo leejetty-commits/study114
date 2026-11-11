@@ -27,6 +27,18 @@ export default defineConfig({
     strictPort: true,
     host: '127.0.0.1',
     open: false,
+    // 365: 로컬 Vite에만 포트원·KG이니시스 본인인증 도메인 (운영 CSP/CF는 호스트 목록만 보고)
+    headers: {
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://sa.inicis.com https://*.inicis.com",
+        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://cdn.portone.io https://sa.inicis.com https://*.inicis.com",
+        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://sa.inicis.com https://*.inicis.com",
+        "img-src 'self' data: blob: https:",
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
+      ].join('; '),
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8080',
@@ -37,5 +49,16 @@ export default defineConfig({
   preview: {
     port: 4174,
     host: '127.0.0.1',
+    headers: {
+      'Content-Security-Policy': [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://sa.inicis.com https://*.inicis.com",
+        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://cdn.portone.io https://sa.inicis.com https://*.inicis.com",
+        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://sa.inicis.com https://*.inicis.com",
+        "img-src 'self' data: blob: https:",
+        "style-src 'self' 'unsafe-inline'",
+        "font-src 'self' data:",
+      ].join('; '),
+    },
   },
 });

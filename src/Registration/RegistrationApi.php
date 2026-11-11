@@ -88,6 +88,15 @@ final class RegistrationApi
             self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (\Study114\Auth\PhoneVerifyRequiredException $e) {
             self::fail(403, 'phone_verify_required', $e->getMessage());
+        } catch (\Study114\Auth\IdentityVerificationException $e) {
+            $code = $e->errorCode;
+            $http = match ($code) {
+                'identity_duplicate' => 409,
+                'identity_required' => 403,
+                'identity_channel' => 503,
+                default => 422,
+            };
+            self::fail($http, $code, $e->getMessage());
         } catch (SchemaPrerequisiteException $e) {
             self::fail(503, 'schema_missing', $e->getMessage());
         } catch (InvalidArgumentException $e) {

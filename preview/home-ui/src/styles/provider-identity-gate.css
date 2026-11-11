@@ -1,0 +1,58 @@
+/* 365 — 쪽지설정 본인인증 게이트. 데스크톱 레이아웃 0px 변경 목표 · 390에서 버튼 전체폭 */
+
+.p365-identity {
+  margin: 12px 0 0;
+  padding: 0;
+}
+
+.p365-identity__lead {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #334155;
+}
+
+.p365-identity__badge {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.p365-identity__error {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #b91c1c;
+}
+
+.p365-identity__error.is-hidden {
+  display: none;
+}
+
+.p365-identity__btn {
+  /* desktop: keep existing btn sizing */
+}
+
+.p365-identity-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 1400;
+  max-width: min(90vw, 360px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #1c1917;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 390px) {
+  .p365-identity__btn {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

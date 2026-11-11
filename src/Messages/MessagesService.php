@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Messages;
 
 use InvalidArgumentException;
+use Study114\Auth\IdentityVerificationException;
+use Study114\Auth\IdentityVerificationService;
 use Study114\Database\Connection;
 use Study114\Paid\StudentRequestTextAccess;
 
@@ -95,6 +97,7 @@ final class MessagesService
         if ($peerUserId === $userId) {
             throw new InvalidArgumentException('자기 자신에게는 보낼 수 없습니다.');
         }
+        $this->assertProviderPeerReceivingOpen($contextKind, $contextId, $peerUserId);
 
         [$low, $high] = $this->canonicalParticipants($userId, $peerUserId);
         $existing = $this->repo->findThreadByContext($contextKind, $contextId, $low, $high);
@@ -346,6 +349,33 @@ final class MessagesService
             'student'    => $this->repo->getStudentGuardianUserId($contextId),
             default      => null,
         };
+    }
+
+    /**
+     * 365 — 공부방·과외쌤에게 쪽지할 때 수신 open + 본인인증 완료 필수.
+     * 학생(context student)은 본인인증 검사 없음.
+     */
+    private function assertProviderPeerReceivingOpen(string $contextKind, int $contextId, int $peerUserId): void
+    {
+        if ($contextKind !== 'study_room' && $contextKind !== 'tutor') {
+            return;
+        }
+        $status = $contextKind === 'study_room'
+            ? $this->repo->getStudyRoomInquiryStatus($contextId)
+            : $this->repo->getTutorInquiryStatus($contextId);
+        if ($status !== 'open') {
+            throw new InvalidArgumentException('지금은 쪽지를 받지 않는 대상입니다.');
+        }
+        $role = $contextKind === 'study_room' ? 'study_room_owner' : 'tutor';
+        $identity = new IdentityVerificationService();
+        try {
+            $identity->assertProviderVerifiedForInquiryOpen([
+                'user_id' => $peerUserId,
+                'role_type' => $role,
+            ]);
+        } catch (IdentityVerificationException $e) {
+            throw new InvalidArgumentException('지금은 쪽지를 받지 않는 대상입니다.');
+        }
     }
 
     /**
