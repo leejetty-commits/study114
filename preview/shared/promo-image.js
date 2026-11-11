@@ -243,7 +243,7 @@ export function openPromoCropDialog(host, opts) {
 }
 
 /**
- * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number, caption?: string }} input
+ * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number, caption?: string, replaceImageId?: number }} input
  */
 export async function uploadPromoImage(input) {
   const fd = new FormData();
@@ -254,6 +254,7 @@ export async function uploadPromoImage(input) {
   fd.append('image_type', input.imageType || 'cover');
   if (input.sortOrder) fd.append('sort_order', String(input.sortOrder));
   if (input.caption) fd.append('caption', String(input.caption).slice(0, 80));
+  if (input.replaceImageId) fd.append('replace_image_id', String(input.replaceImageId));
 
   const res = await fetch('/api/study-room/promo-image.php', {
     method: 'POST',

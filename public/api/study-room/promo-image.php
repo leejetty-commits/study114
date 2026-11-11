@@ -79,6 +79,7 @@ try {
             (string) ($_POST['image_type'] ?? 'cover'),
             (int) ($_POST['sort_order'] ?? 0),
             (string) ($_POST['caption'] ?? ''),
+            (int) ($_POST['replace_image_id'] ?? 0),
         );
         echo json_encode(['ok' => true, 'image' => $image], JSON_UNESCAPED_UNICODE);
         exit;

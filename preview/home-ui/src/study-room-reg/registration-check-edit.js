@@ -14,7 +14,7 @@ import {
   shrinkPromoImageForUpload,
   openPromoCropDialog,
   uploadPromoImage,
-  deletePromoImage,
+
 } from '../../../shared/promo-image.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
@@ -280,18 +280,15 @@ async function openCoverModal(roomId, rerender) {
         void s114Alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
         return;
       }
-      // 대표사진 교체: 기존 cover(또는 5장 만석 시 1번)를 지운 뒤 새 cover 1장만 올린다.
+      // 대표사진 교체: 서버가 한 요청 안에서 원자적으로 처리한다.
       const real = (registerState.images || []).filter((img) => img && !img.is_system_default);
       const existingCover = real.find((img) => img.image_type === 'cover' && img.id) || null;
-      const toRemove =
-        existingCover ||
-        (real.length >= PROMO_IMAGE_SPEC.maxCount
-          ? real.slice().sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0))[0]
-          : null);
-      if (toRemove?.id) {
-        await deletePromoImage({ studyRoomId: id, imageId: Number(toRemove.id) });
+      // 5장 + 대표 없음 → 임의 삭제 금지, 안내 후 중단
+      if (!existingCover && real.length >= PROMO_IMAGE_SPEC.maxCount) {
+        await s114Alert('사진이 5장이에요. 한 장을 지운 뒤 다시 올려 주세요.');
+        return;
       }
-      const kept = real.filter((img) => Number(img.id) !== Number(toRemove?.id || 0));
+      const replaceId = existingCover ? Number(existingCover.id) : 0;
       const image = await uploadPromoImage({
         studyRoomId: id,
         file: prepared,
@@ -299,7 +296,9 @@ async function openCoverModal(roomId, rerender) {
         cropY: crop.cropY,
         imageType: 'cover',
         sortOrder: 1,
+        replaceImageId: replaceId,
       });
+      const kept = real.filter((img) => Number(img.id) !== replaceId);
       registerState.images = [image, ...kept.filter((img) => img.image_type !== 'cover')];
       if (isRegistrationsApiMode()) {
         try {
