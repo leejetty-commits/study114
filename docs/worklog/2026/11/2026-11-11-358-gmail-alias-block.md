@@ -81,8 +81,19 @@ curl·스크린샷: 로컬 HTTP 미기동 · 레이아웃 변경 0 → verify로
 
 ```
 [최종검수 패키지 — 358]
-브랜치 / 커밋: work/358-gmail-alias-block / (커밋 후 기입)
-변경 파일: (커밋 후 diff --stat)
+브랜치 / 커밋: work/358-gmail-alias-block / c70d44e9
+변경 파일: 11 files, +573/−3
+  .github/workflows/deploy.yml (+12/−2)
+  docs/worklog/2026/11/2026-11-11-358-gmail-alias-block.md (+96)
+  public/.htaccess (+2)
+  scripts/check-no-committed-secrets.sh (+6/−1)
+  scripts/verify-gmail-alias-block.php (+299)
+  sql/schema/085_users_email_canonical_draft.sql (+10)
+  src/Auth/AccountContactService.php (+6)
+  src/Auth/EmailNormalizer.php (+41)
+  src/Auth/GmailAliasAvailability.php (+86)
+  src/Auth/OAuthService.php (+11)
+  src/Auth/SignupService.php (+7)
 diff 요약:
 - EmailNormalizer canonical · GmailAliasAvailability
 - Signup/AccountContact/OAuth 적용
