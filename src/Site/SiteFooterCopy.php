@@ -23,8 +23,7 @@ final class SiteFooterCopy
      *   bizCheckUrl: string,
      *   mailOrder: string,
      *   email: string,
-     *   phone: string,
-     *   hosting: string
+     *   phone: string
      * }
      */
     public static function company(): array
@@ -38,7 +37,6 @@ final class SiteFooterCopy
             'mailOrder' => '제2025-의정부송산-0680호',
             'email' => 'help@study114.net',
             'phone' => '',
-            'hosting' => '닷홈',
         ];
     }
 

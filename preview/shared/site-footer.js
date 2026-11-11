@@ -13,7 +13,7 @@ export const SITE_FOOTER_COPYRIGHT = '© 2026 우동공과 · study114';
 
 /**
  * 사업자·운영 정보 단일 상수.
- * phone 이 비어 있으면 전화 줄은 숨긴다. hosting 상호 확정 시 이 값만 바꾼다.
+ * phone 이 비어 있으면 전화는 숨긴다. 값이 생기면 2줄 끝에 붙는다.
  */
 export const SITE_FOOTER_COMPANY = {
   name: '제이에이치커머스(서비스명 우동공과)',
@@ -24,7 +24,6 @@ export const SITE_FOOTER_COMPANY = {
   mailOrder: '제2025-의정부송산-0680호',
   email: 'help@study114.net',
   phone: '',
-  hosting: '닷홈',
 };
 
 export const SITE_FOOTER_LINKS = [
@@ -35,63 +34,75 @@ export const SITE_FOOTER_LINKS = [
 ];
 
 /**
+ * @param {{ label?: string, valueHtml: string }[]} items
+ */
+function renderCompanyRow(items) {
+  const parts = items.filter((item) => String(item.valueHtml || '').trim());
+  if (!parts.length) return '';
+  return `
+    <p class="site-footer__company-row">
+      ${parts
+        .map((item, index) => {
+          const sep =
+            index < parts.length - 1
+              ? `<span class="site-footer__company-sep" aria-hidden="true">|</span>`
+              : '';
+          const label = item.label
+            ? `<span class="site-footer__company-label">${esc(item.label)}</span> `
+            : '';
+          return `<span class="site-footer__company-item">${label}<span class="site-footer__company-value">${item.valueHtml}</span></span>${sep}`;
+        })
+        .join('')}
+    </p>`;
+}
+
+/**
  * @param {typeof SITE_FOOTER_COMPANY | null | undefined} company
  */
 function renderCompanyBlock(company) {
   if (!company || typeof company !== 'object') return '';
 
-  /** @type {{ label: string, valueHtml: string }[]} */
-  const items = [];
+  /** @type {{ label?: string, valueHtml: string }[]} */
+  const line1 = [];
+  /** @type {{ label?: string, valueHtml: string }[]} */
+  const line2 = [];
 
-  const push = (label, valueHtml) => {
-    if (!String(valueHtml || '').trim()) return;
-    items.push({ label, valueHtml });
-  };
-
-  push('상호', esc(company.name));
-  push('대표', esc(company.ceo));
-  push('주소', esc(company.address));
+  if (String(company.name || '').trim()) {
+    line1.push({ label: '상호', valueHtml: esc(company.name) });
+  }
+  if (String(company.ceo || '').trim()) {
+    line1.push({ label: '대표', valueHtml: esc(company.ceo) });
+  }
+  if (String(company.address || '').trim()) {
+    line1.push({ label: '주소', valueHtml: esc(company.address) });
+  }
 
   if (String(company.bizNo || '').trim()) {
-    const check =
-      company.bizCheckUrl
-        ? ` <a class="site-footer__biz-check" href="${escAttr(company.bizCheckUrl)}" target="_blank" rel="noopener noreferrer">사업자정보 확인</a>`
-        : '';
-    push('사업자등록번호', `${esc(company.bizNo)}${check}`);
+    const check = company.bizCheckUrl
+      ? ` <a class="site-footer__biz-check" href="${escAttr(company.bizCheckUrl)}" target="_blank" rel="noopener noreferrer">사업자정보확인</a>`
+      : '';
+    line2.push({
+      label: '사업자등록번호',
+      valueHtml: `${esc(company.bizNo)}${check}`,
+    });
   }
-
-  push('통신판매업신고', esc(company.mailOrder));
-
+  if (String(company.mailOrder || '').trim()) {
+    line2.push({ label: '통신판매업신고', valueHtml: esc(company.mailOrder) });
+  }
   if (String(company.email || '').trim()) {
     const mail = String(company.email).trim();
-    push(
-      '이메일',
-      `<a class="site-footer__mail" href="mailto:${escAttr(mail)}">${esc(mail)}</a>`,
-    );
+    line2.push({
+      label: '이메일',
+      valueHtml: `<a class="site-footer__mail" href="mailto:${escAttr(mail)}">${esc(mail)}</a>`,
+    });
   }
-
   if (String(company.phone || '').trim()) {
-    push('전화', esc(company.phone));
+    line2.push({ label: '전화', valueHtml: esc(company.phone) });
   }
 
-  if (String(company.hosting || '').trim()) {
-    push('호스팅 제공자', esc(company.hosting));
-  }
-
-  if (!items.length) return '';
-
-  return `
-    <p class="site-footer__company">
-      ${items
-        .map((item, index) => {
-          const sep =
-            index < items.length - 1
-              ? `<span class="site-footer__company-sep" aria-hidden="true">|</span>`
-              : '';
-          return `<span class="site-footer__company-item"><span class="site-footer__company-label">${esc(item.label)}</span> <span class="site-footer__company-value">${item.valueHtml}</span></span>${sep}`;
-        })
-        .join('')}
-    </p>`;
+  const rows = [renderCompanyRow(line1), renderCompanyRow(line2)].filter(Boolean);
+  if (!rows.length) return '';
+  return `<div class="site-footer__company">${rows.join('')}</div>`;
 }
 
 function esc(s) {
