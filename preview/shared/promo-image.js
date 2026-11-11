@@ -1,6 +1,7 @@
 /**
  * 홍보사진 — 원본 1장 업로드 후 서버가 Prime(16:9)·Basic(1:1) 파생본을 만든다.
- * 클라이언트는 형식·용량·최소 크기 검증과 초점(크롭) 1회 조정만 담당한다.
+ * 클라이언트는 형식·용량 검증과 초점(크롭) 1회 조정만 담당한다.
+ * 작아도 거절하지 않는다 — 서버가 키운다. 픽셀 숫자는 사용자에게 보여 주지 않는다.
  */
 
 import { bindDraggableDialog } from './draggable-dialog.js';
@@ -9,11 +10,14 @@ export const PROMO_IMAGE_SPEC = {
   accept: 'image/jpeg,image/png,image/webp',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
   maxBytes: 4 * 1024 * 1024,
+  /** 소프트 안내 기준(거절 아님). 서버도 같은 기준으로 soft_small 판정. */
   minWidth: 800,
   minHeight: 600,
   maxCount: 5,
-  recommended: '1600×1200 이상',
+  recommended: '또렷한 사진',
 };
+
+export const PROMO_SOFT_SMALL_HINT = '사진이 작아 조금 흐릿하게 보일 수 있어요';
 
 function extOf(name) {
   const m = String(name || '')
@@ -51,21 +55,41 @@ export function readImageSize(file) {
 export async function validatePromoImageFile(file) {
   if (!file) return '파일을 선택해 주세요.';
   const ext = extOf(file.name);
+  if (ext === 'heic' || ext === 'heif' || String(file.type || '').includes('heic') || String(file.type || '').includes('heif')) {
+    return '이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.';
+  }
   const mimeOk = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
   const extOk = PROMO_IMAGE_SPEC.acceptExt.includes(ext);
   if (!mimeOk && !extOk) {
-    return 'JPG, PNG, WebP 파일만 올릴 수 있습니다.';
+    return 'JPG, PNG, WebP 파일만 올릴 수 있어요.';
   }
   if (file.size > PROMO_IMAGE_SPEC.maxBytes) {
-    return '파일 용량은 4MB 이하여야 합니다.';
+    return '파일이 너무 커요. 4MB 이하로 줄여 주세요.';
   }
   try {
     const { width, height } = await readImageSize(file);
-    if (width < PROMO_IMAGE_SPEC.minWidth || height < PROMO_IMAGE_SPEC.minHeight) {
-      return `최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} 픽셀 이상이어야 합니다. (현재 ${width}×${height})`;
+    if (width < 1 || height < 1) {
+      return '이미지를 확인할 수 없어요.';
     }
   } catch (err) {
-    return err instanceof Error ? err.message : '이미지를 확인할 수 없습니다.';
+    return err instanceof Error ? err.message : '이미지를 확인할 수 없어요.';
+  }
+  return '';
+}
+
+/**
+ * 작아도 업로드는 통과. 소프트 안내 문구만 돌려준다(픽셀 숫자 없음).
+ * @param {File} file
+ * @returns {Promise<string>}
+ */
+export async function softHintPromoImageFile(file) {
+  try {
+    const { width, height } = await readImageSize(file);
+    if (width < PROMO_IMAGE_SPEC.minWidth || height < PROMO_IMAGE_SPEC.minHeight) {
+      return PROMO_SOFT_SMALL_HINT;
+    }
+  } catch {
+    return '';
   }
   return '';
 }

@@ -120,10 +120,49 @@ try {
 
     throw new InvalidArgumentException('action: upload | recrop | caption | delete');
 } catch (InvalidArgumentException $e) {
+    [$code, $userMsg] = study114_promo_image_error_parts($e->getMessage(), true);
+    error_log('[promo-image] ' . $code . ' ' . $e->getMessage());
     http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => false, 'error' => $code, 'message' => $userMsg], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    error_log('[promo-image] ' . $e->getMessage());
+    [$code, $userMsg] = study114_promo_image_error_parts($e->getMessage(), false);
+    error_log('[promo-image] ' . $code . ' ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'server_error', 'message' => '사진 처리 중 오류가 발생했습니다.'], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => false, 'error' => $code, 'message' => $userMsg], JSON_UNESCAPED_UNICODE);
+}
+
+/**
+ * @return array{0: string, 1: string} code, user message
+ */
+function study114_promo_image_error_parts(string $raw, bool $keepPlainValidation): array
+{
+    $known = ['gd_missing', 'write_failed', 'db_failed', 'too_large', 'bad_type'];
+    foreach ($known as $code) {
+        if (str_starts_with($raw, $code . ':')) {
+            return [$code, study114_promo_image_user_message($code, $raw)];
+        }
+    }
+    if (str_contains($raw, 'undefined function') && (str_contains($raw, 'image') || str_contains($raw, 'gd'))) {
+        return ['gd_missing', study114_promo_image_user_message('gd_missing', $raw)];
+    }
+    if ($keepPlainValidation && $raw !== '') {
+        // "too_large: …" 형태가 아니면 기존 검증 문구 유지(픽셀 숫자 문구는 이미 제거됨)
+        return ['validation', $raw];
+    }
+
+    return ['server_error', study114_promo_image_user_message('server_error', $raw)];
+}
+
+function study114_promo_image_user_message(string $code, string $raw): string
+{
+    return match ($code) {
+        'too_large' => '파일이 너무 커요. 4MB 이하로 줄여 주세요.',
+        'bad_type' => str_contains($raw, 'HEIC') || str_contains($raw, '형식은 아직')
+            ? '이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.'
+            : 'JPG, PNG, WebP 파일만 올릴 수 있어요.',
+        'gd_missing' => '지금은 사진을 처리할 수 없어요. 잠시 후 다시 시도해 주세요.',
+        'write_failed' => '사진을 저장하지 못했어요. 다시 시도해 주세요.',
+        'db_failed' => '사진 정보를 저장하지 못했어요. 다시 시도해 주세요.',
+        default => '사진을 처리하지 못했어요. 다시 시도해 주세요.',
+    };
 }

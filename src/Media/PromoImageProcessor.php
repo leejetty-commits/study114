@@ -10,6 +10,13 @@ use RuntimeException;
 /** GD 기반 크롭·리사이즈·WebP 저장. Imagick 없이 닷홈 PHP에서도 동작. */
 final class PromoImageProcessor
 {
+    public static function assertGdAvailable(): void
+    {
+        if (!extension_loaded('gd') || !function_exists('imagecreatefromstring') || !function_exists('imagecreatetruecolor')) {
+            throw new RuntimeException('gd_missing: 사진 처리 준비(GD)가 되어 있지 않아요.');
+        }
+    }
+
     /**
      * @return array{width: int, height: int, mime: string}
      */
@@ -17,13 +24,13 @@ final class PromoImageProcessor
     {
         $info = @getimagesize($absolutePath);
         if ($info === false) {
-            throw new InvalidArgumentException('이미지 파일을 읽을 수 없습니다.');
+            throw new InvalidArgumentException('bad_type: 이미지를 읽을 수 없어요. JPG, PNG, WebP로 올려 주세요.');
         }
         $width = (int) ($info[0] ?? 0);
         $height = (int) ($info[1] ?? 0);
         $mime = (string) ($info['mime'] ?? '');
         if ($width < 1 || $height < 1) {
-            throw new InvalidArgumentException('이미지 크기를 확인할 수 없습니다.');
+            throw new InvalidArgumentException('bad_type: 이미지 크기를 확인할 수 없어요.');
         }
 
         return ['width' => $width, 'height' => $height, 'mime' => $mime];
@@ -32,22 +39,21 @@ final class PromoImageProcessor
     public function assertUpload(string $absolutePath, int $sizeBytes, string $originalName, string $clientMime): array
     {
         if ($sizeBytes < 1 || $sizeBytes > PromoImageSpec::MAX_BYTES) {
-            throw new InvalidArgumentException('파일 용량은 4MB 이하여야 합니다.');
+            throw new InvalidArgumentException('too_large: 파일이 너무 커요. 4MB 이하로 줄여 주세요.');
         }
         $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        if (in_array($ext, ['heic', 'heif'], true)) {
+            throw new InvalidArgumentException('bad_type: 이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.');
+        }
         if (!in_array($ext, PromoImageSpec::ALLOWED_EXT, true)) {
-            throw new InvalidArgumentException('JPG, PNG, WebP 파일만 올릴 수 있습니다.');
+            throw new InvalidArgumentException('bad_type: JPG, PNG, WebP 파일만 올릴 수 있어요.');
         }
         $info = $this->inspect($absolutePath);
         $mime = $info['mime'] !== '' ? $info['mime'] : $clientMime;
         if (!in_array($mime, PromoImageSpec::ALLOWED_MIME, true)) {
-            throw new InvalidArgumentException('JPG, PNG, WebP 파일만 올릴 수 있습니다.');
+            throw new InvalidArgumentException('bad_type: JPG, PNG, WebP 파일만 올릴 수 있어요.');
         }
-        if ($info['width'] < PromoImageSpec::MIN_WIDTH || $info['height'] < PromoImageSpec::MIN_HEIGHT) {
-            throw new InvalidArgumentException(
-                '최소 ' . PromoImageSpec::MIN_WIDTH . '×' . PromoImageSpec::MIN_HEIGHT . ' 픽셀 이상이어야 합니다.'
-            );
-        }
+        // 작아도 거절하지 않음 — writeVariants / crop 경로에서 키운다.
 
         return $info;
     }
@@ -55,18 +61,20 @@ final class PromoImageProcessor
     /**
      * 웹 폴더에 저장하기 전에 임시 파일만 검사한다.
      * 확장자는 읽어 낸 MIME으로 정한다. 사용자 파일 이름은 쓰지 않는다.
+     * 최소 픽셀 거절 없음 — 작으면 파생본 만들 때 비율 유지로 키운다.
      *
-     * @return array{width: int, height: int, mime: string, ext: string}
+     * @return array{width: int, height: int, mime: string, ext: string, soft_small: bool}
      */
     public function assertUploadTmp(string $tmp, int $sizeBytes): array
     {
+        self::assertGdAvailable();
         $onDisk = $tmp !== '' && is_file($tmp) ? @filesize($tmp) : false;
         if (
             $sizeBytes < 1
             || $sizeBytes > PromoImageSpec::MAX_BYTES
             || ($onDisk !== false && $onDisk > PromoImageSpec::MAX_BYTES)
         ) {
-            throw new InvalidArgumentException('파일 용량은 4MB 이하여야 합니다.');
+            throw new InvalidArgumentException('too_large: 파일이 너무 커요. 4MB 이하로 줄여 주세요.');
         }
         $info = $this->inspect($tmp);
         $mime = $info['mime'];
@@ -77,7 +85,7 @@ final class PromoImageProcessor
             default => '',
         };
         if ($ext === '' || !in_array($mime, PromoImageSpec::ALLOWED_MIME, true)) {
-            throw new InvalidArgumentException('JPG, PNG, WebP 파일만 올릴 수 있습니다.');
+            throw new InvalidArgumentException('bad_type: JPG, PNG, WebP 파일만 올릴 수 있어요.');
         }
         $width = $info['width'];
         $height = $info['height'];
@@ -85,12 +93,7 @@ final class PromoImageProcessor
             max($width, $height) > 12000
             || ($width > 0 && $height > intdiv(40000000, $width))
         ) {
-            throw new InvalidArgumentException('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
-        }
-        if ($width < PromoImageSpec::MIN_WIDTH || $height < PromoImageSpec::MIN_HEIGHT) {
-            throw new InvalidArgumentException(
-                '최소 ' . PromoImageSpec::MIN_WIDTH . '×' . PromoImageSpec::MIN_HEIGHT . ' 픽셀 이상이어야 합니다.'
-            );
+            throw new InvalidArgumentException('too_large: 사진이 너무 커요. 더 작은 사진을 올려 주세요.');
         }
 
         return [
@@ -98,6 +101,7 @@ final class PromoImageProcessor
             'height' => $height,
             'mime' => $mime === 'image/jpg' ? 'image/jpeg' : $mime,
             'ext' => $ext,
+            'soft_small' => $width < PromoImageSpec::MIN_WIDTH || $height < PromoImageSpec::MIN_HEIGHT,
         ];
     }
 
@@ -107,7 +111,10 @@ final class PromoImageProcessor
      */
     public function writeVariants(string $sourceAbsolute, float $cropX, float $cropY, array $destAbsoluteByVariant): array
     {
+        self::assertGdAvailable();
         $src = $this->load($sourceAbsolute);
+        // 작으면 비율 유지로 키운 뒤 카드 비율(베이직 1:1)로 가운데 자른다. 프라임 16:9는 흐림 담기 유지.
+        $src = $this->upscaleForCropVariants($src, $destAbsoluteByVariant);
         $sw = imagesx($src);
         $sh = imagesy($src);
         $cropX = max(0.0, min(1.0, $cropX));
@@ -126,7 +133,7 @@ final class PromoImageProcessor
                     [$sx, $sy, $cw, $ch] = $this->cropRect($sw, $sh, $cropX, $cropY, $tw, $th);
                     $canvas = imagecreatetruecolor($tw, $th);
                     if ($canvas === false) {
-                        throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+                        throw new RuntimeException('write_failed: 이미지 캔버스를 만들 수 없어요.');
                     }
                     imagealphablending($canvas, false);
                     imagesavealpha($canvas, true);
@@ -143,16 +150,70 @@ final class PromoImageProcessor
         return $saved;
     }
 
+    /**
+     * 크롭 파생본(베이직 등) 목표보다 작으면 비율 유지로 키운다.
+     * contain(프라임)만 있으면 키우지 않는다 — 291 앞 사진 확대 금지 유지.
+     *
+     * @param \GdImage $src
+     * @param array<string, string> $destAbsoluteByVariant
+     * @return \GdImage
+     */
+    private function upscaleForCropVariants($src, array $destAbsoluteByVariant)
+    {
+        $needW = 0;
+        $needH = 0;
+        foreach (array_keys($destAbsoluteByVariant) as $variant) {
+            if (in_array($variant, PromoImageSpec::CONTAIN_VARIANTS, true)) {
+                continue;
+            }
+            [$tw, $th] = PromoImageSpec::VARIANTS[$variant] ?? [0, 0];
+            $needW = max($needW, $tw);
+            $needH = max($needH, $th);
+        }
+        if ($needW < 1 || $needH < 1) {
+            return $src;
+        }
+        $sw = max(1, imagesx($src));
+        $sh = max(1, imagesy($src));
+        // cover에 필요한 최소 원본: 목표 비율을 덮을 수 있을 만큼
+        $target = $needW / $needH;
+        $srcRatio = $sw / $sh;
+        if ($srcRatio > $target) {
+            $minH = $needH;
+            $minW = (int) ceil($needH * $srcRatio);
+        } else {
+            $minW = $needW;
+            $minH = (int) ceil($needW / max(0.0001, $srcRatio));
+        }
+        if ($sw >= $minW && $sh >= $minH) {
+            return $src;
+        }
+        $scale = max($minW / $sw, $minH / $sh);
+        $tw = max(1, (int) round($sw * $scale));
+        $th = max(1, (int) round($sh * $scale));
+        $canvas = imagecreatetruecolor($tw, $th);
+        if ($canvas === false) {
+            throw new RuntimeException('write_failed: 이미지 캔버스를 만들 수 없어요.');
+        }
+        imagealphablending($canvas, false);
+        imagesavealpha($canvas, true);
+        imagecopyresampled($canvas, $src, 0, 0, 0, 0, $tw, $th, $sw, $sh);
+        imagedestroy($src);
+
+        return $canvas;
+    }
+
     /** @return \GdImage */
     private function load(string $path)
     {
+        self::assertGdAvailable();
         $raw = @file_get_contents($path);
         if ($raw === false || $raw === '') {
-            throw new RuntimeException('원본 이미지를 읽지 못했습니다.');
+            throw new RuntimeException('write_failed: 원본 사진을 읽지 못했어요.');
         }
         $img = @imagecreatefromstring($raw);
         if ($img === false) {
-            throw new InvalidArgumentException('지원하지 않는 이미지 형식입니다.');
+            throw new InvalidArgumentException('bad_type: 지원하지 않는 사진 형식이에요. JPG, PNG, WebP로 올려 주세요.');
         }
 
         return $this->applyExifOrientation($img, $path);
@@ -266,14 +327,14 @@ final class PromoImageProcessor
         $sh = max(1, imagesy($src));
         $canvas = imagecreatetruecolor($tw, $th);
         if ($canvas === false) {
-            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+            throw new RuntimeException('write_failed: 이미지 캔버스를 만들 수 없어요.');
         }
         $bw = max(8, intdiv($tw, 8));
         $bh = max(8, intdiv($th, 8));
         $blur = imagecreatetruecolor($bw, $bh);
         if ($blur === false) {
             imagedestroy($canvas);
-            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+            throw new RuntimeException('write_failed: 이미지 캔버스를 만들 수 없어요.');
         }
         $cover = $bw / $bh;
         $srcRatio = $sw / $sh;
@@ -318,8 +379,9 @@ final class PromoImageProcessor
         int $quality = 82,
         int $targetBytes = 1048576,
     ): array {
+        self::assertGdAvailable();
         if (!function_exists('imagewebp')) {
-            throw new RuntimeException('사진을 WebP로 저장할 수 없어요.');
+            throw new RuntimeException('gd_missing: 사진을 WebP로 저장할 수 없어요.');
         }
         $this->inspect($sourceAbsolute);
         $src = $this->load($sourceAbsolute);
@@ -333,7 +395,7 @@ final class PromoImageProcessor
         $canvas = imagecreatetruecolor($tw, $th);
         if ($canvas === false) {
             imagedestroy($src);
-            throw new RuntimeException('이미지 캔버스를 만들 수 없습니다.');
+            throw new RuntimeException('write_failed: 이미지 캔버스를 만들 수 없어요.');
         }
         $white = imagecolorallocate($canvas, 255, 255, 255);
         imagefilledrectangle($canvas, 0, 0, $tw, $th, $white);
@@ -343,7 +405,7 @@ final class PromoImageProcessor
         $dir = dirname($destAbsolute);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
             imagedestroy($canvas);
-            throw new RuntimeException('사진 저장 폴더를 만들 수 없습니다.');
+            throw new RuntimeException('write_failed: 사진 저장 폴더를 만들 수 없어요.');
         }
 
         $q = max(30, min(100, $quality));
@@ -352,7 +414,7 @@ final class PromoImageProcessor
         do {
             if (!imagewebp($canvas, $destAbsolute, $q)) {
                 imagedestroy($canvas);
-                throw new RuntimeException('사진을 저장하지 못했어요.');
+                throw new RuntimeException('write_failed: 사진을 저장하지 못했어요.');
             }
             clearstatcache(true, $destAbsolute);
             $savedBytes = (int) (@filesize($destAbsolute) ?: 0);
@@ -372,7 +434,7 @@ final class PromoImageProcessor
     {
         $dir = dirname($dest);
         if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-            throw new RuntimeException('사진 저장 폴더를 만들 수 없습니다.');
+            throw new RuntimeException('write_failed: 사진 저장 폴더를 만들 수 없어요.');
         }
         if (function_exists('imagewebp') && str_ends_with(strtolower($dest), '.webp')) {
             $ok = imagewebp($canvas, $dest, 82);
@@ -382,7 +444,7 @@ final class PromoImageProcessor
         }
         $jpeg = preg_replace('/\.webp$/i', '.jpg', $dest) ?: ($dest . '.jpg');
         if (!imagejpeg($canvas, $jpeg, 86)) {
-            throw new RuntimeException('파생 이미지를 저장하지 못했습니다.');
+            throw new RuntimeException('write_failed: 파생 이미지를 저장하지 못했어요.');
         }
         if ($jpeg !== $dest && is_file($dest)) {
             @unlink($dest);

@@ -4,6 +4,7 @@ import { registerState, IMAGE_TYPES } from './state.js';
 import {
   PROMO_IMAGE_SPEC,
   validatePromoImageFile,
+  softHintPromoImageFile,
   openPromoCropDialog,
   uploadPromoImage,
   deletePromoImage,
@@ -83,7 +84,7 @@ export function renderPromoPhotoGrid() {
 }
 
 export function promoPhotoHint() {
-  return `JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 만듭니다.`;
+  return `JPG · PNG · WebP / ${PROMO_IMAGE_SPEC.recommended} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 맞춥니다. 작은 사진도 올릴 수 있어요.`;
 }
 
 export function syncPromoPhotoMeta(root) {
@@ -131,6 +132,10 @@ export function bindPromoPhotos(root, opts) {
     if (err) {
       void s114Alert(err);
       return;
+    }
+    const soft = await softHintPromoImageFile(file);
+    if (soft) {
+      void s114Alert(soft);
     }
     const crop = await openPromoCropDialog(document.body, { file });
     if (!crop) return;

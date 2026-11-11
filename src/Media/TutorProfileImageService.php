@@ -74,7 +74,7 @@ final class TutorProfileImageService
             'height' => $checked['height'],
             'mime' => $checked['mime'],
         ];
-        // PromoImageSpec 최소(800×600)만 적용 — 이미 리사이즈된 JPEG도 허용
+        // 최소 픽셀 거절 없음 — 작으면 프로세서가 키운 뒤 파생본 생성
         $dests = [
             'basic_360' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_360.webp',
             'basic_720' => $this->publicRoot() . '/' . $relDir . '/' . $token . '_basic_720.webp',

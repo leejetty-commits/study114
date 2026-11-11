@@ -7,6 +7,7 @@ namespace Study114\Media;
 final class PromoImageSpec
 {
     public const MAX_BYTES = 4_194_304;
+    /** 권장·소프트 안내용. 이보다 작아도 거절하지 않고 서버가 키워서 받는다. */
     public const MIN_WIDTH = 800;
     public const MIN_HEIGHT = 600;
     public const MAX_COUNT = 5;

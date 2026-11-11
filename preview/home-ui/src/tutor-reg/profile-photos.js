@@ -98,8 +98,8 @@ export function tutorCardImagePaths(tutor) {
 export function tutorProfilePhotoHint() {
   return [
     '최대 3장 · JPG/PNG/WebP · 파일당 최대 4MB',
-    '권장 1200×1200 이상 — 800×800보다 작으면 자동으로 확대합니다.',
-    '1번이 대표 사진입니다. (베이직 720×720 · 프라임 1280×720으로 맞춰집니다)',
+    '작은 사진도 올릴 수 있어요. 서버가 맞춰 줍니다.',
+    '1번이 대표 사진입니다.',
   ].join('\n');
 }
 
