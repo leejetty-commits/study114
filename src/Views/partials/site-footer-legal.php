@@ -47,12 +47,9 @@ if (trim($company['address']) !== '') {
 }
 
 if (trim($company['bizNo']) !== '') {
-    $bizCheck = $company['bizCheckUrl'] !== ''
-        ? ' <a class="auth-shell__footer-biz" href="' . study114_e($company['bizCheckUrl']) . '" target="_blank" rel="noopener noreferrer">사업자정보확인</a>'
-        : '';
     $line2[] = [
         'label' => '사업자등록번호',
-        'valueHtml' => study114_e($company['bizNo']) . $bizCheck,
+        'valueHtml' => study114_e($company['bizNo']),
     ];
 }
 if (trim($company['mailOrder']) !== '') {
