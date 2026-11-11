@@ -1,86 +1,57 @@
-# [369] 결제 화면(주문 요약) 레이아웃·문구 정리
+# [369] / [369-보완] / [369-보완2] 결제 화면(주문 요약) 레이아웃·문구
 
 ## 지시서 원문 (요약)
 
-- 대상: `work/369-checkout-layout` 브랜치 (main 기준)
-- 범위: home-ui 유료상품 결제(주문 요약) 화면의 CSS와 문구만
-- 필수 6개: 원인 확인 → 데스크톱 1280 → 모바일 390 → 문구 → 전후 캡처 → 커밋·push
+- 대상: `work/369-checkout-layout`
+- 범위: home-ui 유료상품 결제(주문 요약) CSS·문구·캡처
+- 369: 180px 갇힘 수정 → 1280/390 → 문구 → 캡처
+- 369-보완: 모바일 nowrap · mypage-lead 중복 제거 · 개발용어 · 실앱 캡처
+- 369-보완2: 잔여 개발용어 6곳 · 상품/지역 nowrap 해제 · P18-07 제목 중복 · captures 폴더 삭제 · shots-369 재캡처
 
-## 원인 분석
+## 원인 분석 (369)
 
-**~180px 갇힘의 근본 원인:**
+**~180px 갇힘:** `.sup-frame` 2열 그리드에서 checkout이 nav를 숨기면 body가 11.5rem 열에 갇힘.  
+수정: `.sup-frame--no-nav { display: block }` + `.plans-checkout { max-width: 44rem; margin-inline: auto }`
 
-| 계층 | 파일 | 설명 |
-|---|---|---|
-| `.sup-frame` grid | `home-support-guide.css:38-40` | `display: grid; grid-template-columns: 11.5rem minmax(0,1fr)` — 2열 그리드 |
-| checkout 셸 | `shell.js:82-84` | `hideNav = true` → nav HTML 미렌더 → `sup-frame__body`가 그리드 첫 열(11.5rem ≈ 184px)에 배치 |
-| 오른쪽 열 | — | `1fr` 열은 비어 있으나 남은 공간 차지 |
+## 캡처 (shots-369 기준, 369-보완2)
 
-고객센터(`/support`) 등은 nav + body가 2열에 정상 배치되지만,
-checkout·result은 nav를 숨기므로 body가 첫 번째 좁은 열에 갇힘.
-
-## 수정 내용
-
-### CSS (`plans-store.css`)
-
-```css
-/* nav 없는 결제·결과 화면은 단일 열 */
-.plans-layout .sup-frame--no-nav { display: block; }
-.plans-checkout { max-width: 44rem; margin-inline: auto; }
-```
-
-- 주문 요약 `dd`에 `white-space: nowrap` 추가 (데스크톱 날짜 끊김 방지)
-- 959px 이하 media query에서 `white-space: normal` 리셋
-
-### 셸 (`shell.js`)
-
-- `hideNav` 시 `.sup-frame--no-nav` modifier 클래스 추가
-
-### 문구
-
-| 파일 | Before | After |
-|---|---|---|
-| `order-blocks.js:436` | `결제 금액은 서버 카탈로그 기준으로 다시 확인됩니다` | `최종 금액은 결제 직전에 한 번 더 확인해요` |
-| `order-blocks.js:116-117` | `Prime ${n}/${cap} 마감` | `프라임 ${n}/${cap} 마감` |
-| `screens.js` checkout 제목 | `결제` | `주문·결제` |
-| `screens.js` totalLabel | `결제 예정(표시가·서버 재검증)` | `예상 결제 금액` |
-| `screens.js` note | `...결제 직전 서버가 재검증합니다` | `...결제 직전 서버가 최종 확인합니다` |
-| `router.js:61` | `결제` | `주문·결제` |
-| storefront totalLabel | `결제 예정(표시가·서버 재검증)` | `예상 결제 금액` |
-| storefront note | `...표시가는 참고이며 결제 직전 서버가 재검증합니다` | `...결제 직전 서버가 최종 확인합니다` |
-
-## 캡처
+경로: `docs/worklog/2026/11/shots-369/`
 
 | 파일 | 폭 | SHA-256(16) |
 |---|---|---|
-| **before/** | | |
-| prime-badge-1280 | 1280 | `0f9f272e5c679636` |
-| prime-badge-390 | 390 | `4b1d47bf41148ab8` |
-| prime-nobadge-1280 | 1280 | `4ab213e1409e8289` |
-| prime-nobadge-390 | 390 | `b9e354d67d5385ee` |
-| pick-badge-1280 | 1280 | `39eeec0ef521b67b` |
-| pick-badge-390 | 390 | `87820729c2ec9be1` |
-| pick-nobadge-1280 | 1280 | `84730566e88105d9` |
-| pick-nobadge-390 | 390 | `5a7e1ba544ae8220` |
-| **after/** | | |
-| prime-badge-1280 | 1280 | `1d15afe3999c70f5` |
-| prime-badge-390 | 390 | `5c81d774ceca2cfb` |
-| prime-nobadge-1280 | 1280 | `1c804c869fde4b63` |
-| prime-nobadge-390 | 390 | `45fba149d0d4a24b` |
-| pick-badge-1280 | 1280 | `9b4eb34bf04a2977` |
-| pick-badge-390 | 390 | `5094a7cae877541b` |
-| pick-nobadge-1280 | 1280 | `66b1ac1cbd7cd4ec` |
-| pick-nobadge-390 | 390 | `2a20334431f98d1e` |
+| after-prime-badge-1280.png | 1280 | `99891fda30864ba6` |
+| after-prime-badge-390.png | 390 | `34d4a66ee5399c2d` |
+| after-prime-nobadge-1280.png | 1280 | `6967bf5a084596fb` |
+| after-prime-nobadge-390.png | 390 | `3f8a887480e63f8a` |
+| after-pick-badge-1280.png | 1280 | `6cb50f2b1d74cf0e` |
+| after-pick-badge-390.png | 390 | `bef89addf09579ac` |
+| after-pick-nobadge-1280.png | 1280 | `9d96f5928e641a9b` |
+| after-pick-nobadge-390.png | 390 | `34aea07da3880bf4` |
+| result-success-1280.png | 1280 | `02edf679b887f63f` |
+| result-success-390.png | 390 | `d3d185be049ed269` |
+| storefront-prime-badge-390.png | 390 | `942cb1ba4129e351` |
 
-모든 해시 상이 ✓
+해시 중복 0. 루트 `captures/369-checkout-before`·`after` 폴더는 삭제.
 
-## 수정 파일
+### 390 날짜·금액 한 줄 확인
+
+| 시나리오 | 날짜 | 금액 |
+|---|---|---|
+| prime-badge | `2026-11-12 ~ 2027-02-09` nowrap | `99,000원` nowrap |
+| prime-nobadge | 동일 | 동일 |
+| pick-badge | `2026-11-12 ~ 2026-12-11` nowrap | `33,000원` nowrap |
+| pick-nobadge | 동일 | 동일 |
+
+## 수정 파일 (누적)
 
 1. `preview/home-ui/src/styles/plans-store.css`
 2. `preview/home-ui/src/plans/shell.js`
 3. `preview/home-ui/src/plans/order-blocks.js`
 4. `preview/home-ui/src/plans/screens.js`
 5. `preview/home-ui/src/plans/router.js`
+6. `preview/home-ui/src/plans/store-ui.js`
+7. `preview/home-ui/src/plans/index.js`
+8. `preview/home-ui/src/plans/runtime-config.js`
 
 ## 검수
 

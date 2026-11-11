@@ -1,4 +1,0 @@
-after-prime-badge-1280.png  sha256:26a5e5b1ede308ce
-after-prime-badge-390.png  sha256:7e214c52a397b98c
-after-pick-nobadge-1280.png  sha256:1f1c8fe3146f14c3
-after-pick-nobadge-390.png  sha256:a4f781fa67f0c7dc

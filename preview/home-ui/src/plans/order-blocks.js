@@ -408,8 +408,8 @@ export function buildPositionOrderRows(opts) {
   return [
     { label: '적용 프로필', value: opts.profileLabel },
     { label: '역할', value: opts.roleText, nowrap: true },
-    { label: '상품', value: opts.productName, nowrap: true },
-    { label: '적용 지역', value: opts.regionValue, nowrap: true },
+    { label: '상품', value: opts.productName },
+    { label: '적용 지역', value: opts.regionValue },
     { label: '기간', value: opts.periodLabel, nowrap: true },
     ...(opts.periodRangeText ? [{ label: '시작일 ~ 종료일', value: opts.periodRangeText, nowrap: true }] : []),
     ...(opts.listPriceText ? [{ label: '정상가', value: opts.listPriceText, nowrap: true }] : []),
@@ -486,11 +486,11 @@ export function renderPolicyAccordion(family, role) {
         <div class="plans-policy-acc__body">
           <ul class="plans-tier-list">
             <li>1회 즉시권: 7일 이내 미발송 시 전액 · 발송 완료 또는 7일 경과 시 0원</li>
-            <li>5회권·10회권: 결제 후 7일 이내 · 사용 구간별 환불표(서버·약관 정본)</li>
+            <li>5회권·10회권: 결제 후 7일 이내 · 사용 구간별 환불표(약관 기준)</li>
             <li>120일 만료 시 잔여 소멸(환불액 0) · 연장 없음</li>
             <li>회사 귀책 발송 실패는 횟수 복구를 우선합니다</li>
           </ul>
-          <p class="mypage-muted">환불 가능 여부와 금액은 프론트가 계산하지 않으며, 요청 시 서버가 확정합니다.</p>
+          <p class="mypage-muted">환불 가능 여부와 금액은 요청하시면 확인해 안내해요.</p>
         </div>
       </details>`;
   }

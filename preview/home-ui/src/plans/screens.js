@@ -2059,7 +2059,6 @@ export function renderPlansResult() {
   if (!result) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제 결과</p>
         <div class="mypage-info-box">
           <p>표시할 결과가 없습니다.</p>
           <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품홈</a>
@@ -2094,7 +2093,6 @@ export function renderPlansResult() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">${ok ? '결제 완료' : '결제 미완료'}</p>
       <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
         <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
         ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
@@ -2684,7 +2682,7 @@ export function bindPlansScreenEvents(root, rerender) {
         }
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
-          throw new Error('서버 결제금액이 올바르지 않습니다.');
+          throw new Error('결제 금액을 확인하지 못했어요. 다시 시도해 주세요.');
         }
         // 클라이언트 draft 금액과 달라도 서버 판매가를 사용한다
         if (Number(draft.priceKrw) !== serverAmount) {
