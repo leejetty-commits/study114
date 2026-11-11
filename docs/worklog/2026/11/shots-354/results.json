@@ -1,0 +1,58 @@
+[
+  {
+    "case": "tutor-select",
+    "w": 1920,
+    "pass": true,
+    "rid1": "41",
+    "hasCascade": true
+  },
+  {
+    "case": "tutor-select",
+    "w": 390,
+    "pass": true,
+    "rid1": "41",
+    "hasCascade": true
+  },
+  {
+    "case": "student-basic",
+    "w": 1920,
+    "pass": true
+  },
+  {
+    "case": "student-basic",
+    "w": 390,
+    "pass": true
+  },
+  {
+    "case": "study_room-basic",
+    "w": 1920,
+    "pass": true
+  },
+  {
+    "case": "study_room-basic",
+    "w": 390,
+    "pass": true
+  },
+  {
+    "case": "offline-error",
+    "w": 1920,
+    "pass": true
+  },
+  {
+    "case": "offline-error",
+    "w": 390,
+    "pass": true
+  },
+  {
+    "case": "account-region",
+    "w": 1920,
+    "pass": false,
+    "label": ""
+  },
+  {
+    "case": "account-region",
+    "w": 390,
+    "pass": false,
+    "label": ""
+  }
+]
