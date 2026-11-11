@@ -101,7 +101,7 @@ Content-Type: application/json; charset=utf-8
 
 ```
 [최종검수 패키지 — 354]
-브랜치 / 커밋: work/354-resend-gate-region-check / (커밋 후 기입)
+브랜치 / 커밋: work/354-resend-gate-region-check / 267a76de
 변경 파일: docs/worklog/2026/11/2026-11-11-354-resend-gate-region-check.md
   docs/worklog/2026/11/shots-354/*
 diff 요약: Resend gate 재확인·지역 UI/API 점검 보고·스크린샷만. 앱/스크립트 코드 변경 없음.
