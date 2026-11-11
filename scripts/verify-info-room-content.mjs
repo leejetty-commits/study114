@@ -45,7 +45,12 @@ let files = fs
   .sort();
 
 if (onlyPrefixes) {
-  files = files.filter((f) => onlyPrefixes.some((p) => f.startsWith(p.padStart(2, '0')) || f.startsWith(p)));
+  files = files.filter((f) =>
+    onlyPrefixes.some((p) => {
+      const pref = p.padStart(2, '0');
+      return f.startsWith(`${pref}-`);
+    })
+  );
 }
 
 if (files.length === 0) {
