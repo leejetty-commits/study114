@@ -1,7 +1,7 @@
 ---
 title: 관할 교육지원청 찾고 문의하는 요령
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2657
 uncertain_facts: ["기관별 전화 응대 시간·담당 부서명"]

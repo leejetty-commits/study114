@@ -1,7 +1,7 @@
 ---
 title: 교습비 정하기와 게시·변경 의무
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2662
 uncertain_facts: ["시·도별 교습비 게시 양식·조정명령 세부", "과태료 금액 최신 기준"]

@@ -1,7 +1,7 @@
 ---
 title: 사업자등록과 세금 기초, 공부방 창업 전에
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2655
 uncertain_facts: ["개인과외교습자 부가세 면세 조문 직접 명시 여부", "사업장현황신고 면제·소규모 기준 최신값"]

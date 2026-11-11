@@ -1,7 +1,7 @@
 ---
 title: 학원법과 시·도 조례, 원장이 볼 핵심만
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2608
 uncertain_facts: ["2026년 학원법 개정 세부 조항의 지역 적용", "시·도별 교습시간·게시 양식"]

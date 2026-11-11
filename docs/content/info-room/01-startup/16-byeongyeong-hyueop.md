@@ -1,7 +1,7 @@
 ---
 title: 변경신고·휴업·폐업 타이밍 정리
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2681
 uncertain_facts: ["변경신고 15일 등 기한의 지역 실무 차이", "학습자 주거지 교습 시 장소 변경 처리"]

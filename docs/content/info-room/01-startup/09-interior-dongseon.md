@@ -1,7 +1,7 @@
 ---
 title: 인테리어와 동선, 가정과 수업 공간 나누기
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2623
 uncertain_facts: ["개인과외교습 장소의면적·구조 세부 법기준"]

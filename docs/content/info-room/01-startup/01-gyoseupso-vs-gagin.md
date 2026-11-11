@@ -1,7 +1,7 @@
 ---
 title: 교습소와 개인과외교습자, 어디서 갈라질까요
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2639
 uncertain_facts: ["시·도 조례별 시설·인원 세부 수치", "오피스텔·상가 개인과외교습 가능 여부"]

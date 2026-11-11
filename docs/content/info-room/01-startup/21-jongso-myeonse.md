@@ -1,7 +1,7 @@
 ---
 title: 종합소득세와 면세 교육용역 일정
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2677
 uncertain_facts: ["사업장현황신고 대상·면제 최신 기준", "경비율·기장 의무 개별 적용"]

@@ -1,7 +1,7 @@
 ---
 title: 과목·학년·수업 형태부터 정하기
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2662
 uncertain_facts: ["교습소 1인 1과목 제한의지역 세부 적용"]

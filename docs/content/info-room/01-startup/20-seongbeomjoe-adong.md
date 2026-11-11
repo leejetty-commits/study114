@@ -1,7 +1,7 @@
 ---
 title: 성범죄 경력 조회와 아동학대 예방
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2704
 uncertain_facts: ["일반 범죄경력 조회 동의 필요 여부", "아동학대전력 조회 대상 범위의 지역 안내 차이"]

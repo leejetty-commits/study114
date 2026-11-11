@@ -1,7 +1,7 @@
 ---
 title: 임대차·주거용 건물에서 교습할 때
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2628
 uncertain_facts: ["단지별 관리규약·전대·영업 제한 조항", "주거지 교습 세부 건축 요건"]

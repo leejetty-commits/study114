@@ -1,7 +1,7 @@
 ---
 title: 오픈 전 초기 비용, 항목별로 나눠 보기
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2767
 uncertain_facts: ["지역·시기별 보증금·인테리어·교구 시세", "보험료·렌탈비 구체 금액"]

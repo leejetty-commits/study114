@@ -1,7 +1,7 @@
 ---
 title: 집 공부방과 상가, 장소 선택 체크포인트
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2750
 uncertain_facts: ["주거지 세부 면적·구조 요건", "단지별 관리규약·영업 제한"]

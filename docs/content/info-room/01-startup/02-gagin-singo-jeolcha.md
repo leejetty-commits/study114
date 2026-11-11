@@ -1,7 +1,7 @@
 ---
 title: 개인과외교습자 신고, 서류부터 증명서까지
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2668
 uncertain_facts: ["지역별 구비서류·사진 매수·처리일수", "건축물대장 필요 장소 범위"]

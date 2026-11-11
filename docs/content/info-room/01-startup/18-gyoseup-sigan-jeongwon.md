@@ -1,7 +1,7 @@
 ---
 title: 교습 시간·동시 인원 한도 이해하기
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2691
 uncertain_facts: ["시·도 조례상 교습시간 구체 시각", "과목별 인원 예외(피아노 등) 세부"]

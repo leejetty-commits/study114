@@ -1,7 +1,7 @@
 ---
 title: 오픈 후 첫 3개월 운영 계획
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2722
 uncertain_facts: ["지역별 모집 속도·적정 정원 수치"]

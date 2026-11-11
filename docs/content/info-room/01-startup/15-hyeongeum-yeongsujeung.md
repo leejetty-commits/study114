@@ -1,7 +1,7 @@
 ---
 title: 현금영수증·영수증 발급 습관 만들기
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2681
 uncertain_facts: ["의무발행 적용 수입·업종 세부 최신 기준", "가산세율 최신 수치"]

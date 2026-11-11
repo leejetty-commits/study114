@@ -1,7 +1,7 @@
 ---
 title: 교재·진도표·관리 시스템 준비
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2686
 uncertain_facts: ["특정 교재·프로그램 효과 비교"]

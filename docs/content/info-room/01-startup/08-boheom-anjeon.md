@@ -1,7 +1,7 @@
 ---
 title: 보험·안전·아동 보호, 오픈 전 안전망
 topic: startup
-category_suggest: admin-tax
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2714
 uncertain_facts: ["공부방 권장 보험 상품·가입 의무 범위", "시설 소화·대피 기준의 지역 적용"]

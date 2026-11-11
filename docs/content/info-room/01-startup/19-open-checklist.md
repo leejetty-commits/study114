@@ -1,7 +1,7 @@
 ---
 title: 오픈 전 총정리 체크리스트
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2684
 uncertain_facts: ["지역별 추가 서류·표지 부착 의무"]

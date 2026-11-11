@@ -1,7 +1,7 @@
 ---
 title: 창업 초반에 자주 겪는 실수와 보완
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2672
 uncertain_facts: []

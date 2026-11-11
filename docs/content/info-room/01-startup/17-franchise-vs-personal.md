@@ -1,7 +1,7 @@
 ---
 title: 개인 창업과 프랜차이즈, 비교 전에 볼 것
 topic: startup
-category_suggest: know-how
+category_suggest: startup
 basis_date: 2026-11-11
 chars: 2603
 uncertain_facts: ["가맹비·로열티 등 구체 금액", "정보공개서 최신 의무 세부"]
