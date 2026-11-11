@@ -432,7 +432,7 @@ export function renderTutorProfilePhotoEditor(tutor) {
         canAdd
           ? `<div class="p21-photos__actions">
               <label class="btn btn--secondary" for="${FILE_INPUT_ID}">
-                <input id="${FILE_INPUT_ID}" class="p21-photos__file" type="file" accept="${TUTOR_PROFILE_PHOTO_SPEC.accept},image/*" />
+                <input id="${FILE_INPUT_ID}" class="p21-photos__file" type="file" accept="${TUTOR_PROFILE_PHOTO_SPEC.accept}" />
                 + 사진 추가
               </label>
               <span class="p21-photos__count">${images.length}/${TUTOR_PROFILE_PHOTO_SPEC.maxCount}</span>

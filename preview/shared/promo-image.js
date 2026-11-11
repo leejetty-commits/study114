@@ -7,7 +7,7 @@
 import { bindDraggableDialog } from './draggable-dialog.js';
 
 export const PROMO_IMAGE_SPEC = {
-  accept: 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif',
+  accept: 'image/jpeg,image/png,image/webp',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
   maxBytes: 4 * 1024 * 1024,
   /** 업로드 전 브라우저 축소 긴 변 상한 */

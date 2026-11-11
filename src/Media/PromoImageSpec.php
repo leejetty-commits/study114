@@ -10,6 +10,10 @@ final class PromoImageSpec
     /** 권장·소프트 안내용. 이보다 작아도 거절하지 않고 서버가 키워서 받는다. */
     public const MIN_WIDTH = 800;
     public const MIN_HEIGHT = 600;
+    /** 홍보사진 업로드 긴 변 상한(BoardAttachmentService 상한과 별개). */
+    public const MAX_LONG_EDGE = 4096;
+    /** 약 1,680만 픽셀. */
+    public const MAX_PIXELS = 16_800_000;
     public const MAX_COUNT = 5;
     public const CROP_ONCE = true;
 

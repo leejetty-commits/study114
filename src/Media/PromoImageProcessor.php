@@ -86,12 +86,14 @@ final class PromoImageProcessor
         }
         $width = $info['width'];
         $height = $info['height'];
+        $pixels = $width * $height;
         if (
-            max($width, $height) > 12000
-            || ($width > 0 && $height > intdiv(40000000, $width))
+            max($width, $height) > PromoImageSpec::MAX_LONG_EDGE
+            || $pixels > PromoImageSpec::MAX_PIXELS
         ) {
             throw PromoImageException::tooLarge('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
         }
+        $this->assertFitsMemoryBudget($width, $height);
 
         return [
             'width' => $width,
@@ -102,6 +104,36 @@ final class PromoImageProcessor
         ];
     }
 
+    /** GD truecolor ≈ 4바이트/픽셀 · 원본+캔버스+임시 ≈ 3배. memory_limit을 넘기면 too_large. */
+    private function assertFitsMemoryBudget(int $width, int $height): void
+    {
+        $limit = self::memoryLimitBytes();
+        if ($limit < 1) {
+            return;
+        }
+        $estimate = $width * $height * 4 * 3;
+        $headroom = max(8_388_608, (int) ($limit * 0.15));
+        if ($estimate + memory_get_usage(true) + $headroom > $limit) {
+            throw PromoImageException::tooLarge('사진이 너무 커요. 더 작은 사진을 올려 주세요.');
+        }
+    }
+
+    private static function memoryLimitBytes(): int
+    {
+        $raw = trim((string) ini_get('memory_limit'));
+        if ($raw === '' || $raw === '-1') {
+            return 0;
+        }
+        $unit = strtolower(substr($raw, -1));
+        $num = (float) $raw;
+        return (int) match ($unit) {
+            'g' => $num * 1024 * 1024 * 1024,
+            'm' => $num * 1024 * 1024,
+            'k' => $num * 1024,
+            default => $num,
+        };
+    }
+
     /**
      * @param array<string, string> $destAbsoluteByVariant  variant => path
      * @return array<string, string> variant => saved path
@@ -110,7 +142,7 @@ final class PromoImageProcessor
     {
         self::assertGdAvailable();
         $src = $this->load($sourceAbsolute);
-        // 베이직(1:1) 등 크롭 파생본만 목표보다 작으면 비율 유지로 키운다. 프라임 contain은 여기서 키우지 않는다.
+        // 베이직 등 크롭용이면 목표 cover까지 키운다. 같은 $src를 프라임 contain에도 쓰므로 앞 사진이 원본보다 커질 수 있다.
         $src = $this->upscaleForCropVariants($src, $destAbsoluteByVariant);
         $sw = imagesx($src);
         $sh = imagesy($src);
@@ -148,8 +180,9 @@ final class PromoImageProcessor
     }
 
     /**
-     * 크롭 파생본(베이직 등)이 요청된 경우에만, 원본이 목표 cover보다 작으면 비율 유지로 키운다.
-     * 프라임 contain만 요청되면 키우지 않는다(containOnBlur가 앞 사진을 원본보다 키우지 않음).
+     * 크롭 파생본(베이직 등)이 요청되면 원본을 목표 cover까지 비율 유지로 키운다.
+     * 프라임+베이직을 같이 요청하면 키운 원본이 contain에도 들어가 앞 사진이 커질 수 있다.
+     * 프라임 contain만 요청하면 여기서는 키우지 않는다.
      *
      * @param \GdImage $src
      * @param array<string, string> $destAbsoluteByVariant
