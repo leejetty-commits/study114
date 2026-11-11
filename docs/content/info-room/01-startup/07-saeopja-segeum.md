@@ -4,6 +4,8 @@ topic: startup
 category_suggest: startup
 basis_date: 2026-11-11
 chars: 2284
+status: draft
+hold_reason: "사실 부족(세금 기초 미기재) — 재작성 전 게시 금지"
 uncertain_facts: ["업종 코드 및 면세 해당 여부 개별 판단", "지방세·보험료 구체 금액"]
 ---
 # 사업자등록과 세금 기초, 공부방 창업 전에
