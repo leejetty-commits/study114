@@ -7,6 +7,7 @@ namespace Study114\Neighborhood;
 use Study114\Database\Connection;
 use Study114\Region\TutorRegionUnit;
 use Study114\StudyRoom\StudyRoomPublicReadService;
+use Study114\Visibility\TestOwnerVisibility;
 use Study114\Visibility\WithdrawnOwnerSql;
 
 /** 동네 인사 1차. 파일 저장. 랭킹 가산 없음. */
@@ -572,9 +573,11 @@ final class NeighborhoodGreetingService
         if ($ids === [] || !in_array($table, ['study_rooms', 'tutors'], true)) {
             return [];
         }
-        $ownerSql = WithdrawnOwnerSql::notWithdrawn($userIdColumn);
+        $pdo = Connection::get();
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn($userIdColumn)
+            . ' AND ' . TestOwnerVisibility::sql($pdo, $userIdColumn);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = Connection::get()->prepare(
+        $stmt = $pdo->prepare(
             "SELECT {$alias}.id FROM {$table} {$alias} WHERE {$alias}.id IN ({$placeholders}) AND {$ownerSql}"
         );
         $stmt->execute($ids);
@@ -654,7 +657,9 @@ final class NeighborhoodGreetingService
 
     public static function tutorCardCondition(string $alias = 't'): string
     {
-        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id");
+        $pdo = Connection::get();
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id")
+            . ' AND ' . TestOwnerVisibility::sql($pdo, "{$alias}.user_id");
         return "{$alias}.profile_status <> 'hidden'
             AND {$ownerSql}
             AND EXISTS (
@@ -668,7 +673,9 @@ final class NeighborhoodGreetingService
 
     public static function studyRoomCardCondition(string $alias = 'sr'): string
     {
-        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id");
+        $pdo = Connection::get();
+        $ownerSql = WithdrawnOwnerSql::notWithdrawn("{$alias}.user_id")
+            . ' AND ' . TestOwnerVisibility::sql($pdo, "{$alias}.user_id");
         return "{$alias}.profile_status <> 'hidden'
             AND {$alias}.deleted_at IS NULL
             AND {$ownerSql}

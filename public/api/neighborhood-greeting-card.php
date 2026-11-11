@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\Neighborhood\NeighborhoodGreetingService;
+use Study114\Visibility\TestOwnerVisibility;
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -32,6 +33,7 @@ $providerType = $providerType === 'tutor' ? 'tutor' : 'study_room';
 $registrationId = (int) ($_GET['registration_id'] ?? 0);
 
 $isGuest = true;
+$authUser = null;
 $sessionCookie = session_name();
 $hasSession = session_status() === PHP_SESSION_ACTIVE
         || (isset($_COOKIE[$sessionCookie]) && $_COOKIE[$sessionCookie] !== '');
@@ -40,8 +42,11 @@ if ($hasSession) {
     AuthSession::close();
     if (is_array($auth) && (int) ($auth['user_id'] ?? 0) > 0) {
         $isGuest = false;
+        $authUser = $auth;
     }
 }
+TestOwnerVisibility::reset();
+TestOwnerVisibility::bindViewer($authUser);
 
 try {
     $item = NeighborhoodGreetingService::fromDefaultPath()->basicCard($providerType, $registrationId, $isGuest);
