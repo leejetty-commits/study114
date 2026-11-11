@@ -76,8 +76,17 @@ curl·스크린샷: 로컬 MySQL/HTTP 미기동 · 프론트 레이아웃 변경
 
 ```
 [최종검수 패키지 — 351]
-브랜치 / 커밋: work/351-phone-3-account-limit / (커밋 후 기입)
-변경 파일: (커밋 후 git diff --stat)
+브랜치 / 커밋: work/351-phone-3-account-limit / 9e78c686
+변경 파일: 9 files, +556/−1 (351 단독; 브랜치는 357 tip 기반)
+  docs/worklog/2026/11/2026-11-11-351-phone-3-account-limit.md (+90)
+  public/api/auth/account-contact.php (+3)
+  public/api/auth/signup.php (+8)
+  scripts/verify-phone-account-limit.php (+299)
+  src/Auth/AccountContactService.php (+15)
+  src/Auth/PhoneAccountLimit.php (+97)
+  src/Auth/PhoneAccountLimitException.php (+21)
+  src/Auth/PhoneVerificationService.php (+22/−1)
+  src/Auth/SignupService.php (+2)
 diff 요약:
 - PhoneAccountLimit(+Exception): 3계정 판정·탈퇴/허용목록 제외
 - Signup/AccountContact/OTP + API: 422 phone_account_limit
