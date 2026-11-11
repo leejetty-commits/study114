@@ -17,9 +17,13 @@ else
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY|STUDY114_PHONE_OTP_PEPPER|STUDY114_RESEND_API_KEY)[[:space:]]+([^[:space:]]+) ]]; then
+    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY|STUDY114_PHONE_OTP_PEPPER|STUDY114_RESEND_API_KEY|STUDY114_TEST_ACCOUNT_EMAILS)[[:space:]]+(.+)$ ]]; then
       key="${BASH_REMATCH[1]}"
       val="${BASH_REMATCH[2]}"
+      # 따옴표 허용: SetEnv KEY "__KEY__" 또는 SetEnv KEY __KEY__
+      if [[ "$val" == \"*\" ]]; then
+        val="${val:1:${#val}-2}"
+      fi
       expected="__${key}__"
       if [[ "$val" != "$expected" ]]; then
         warn "$htaccess: $key 값이 placeholder($expected)가 아닙니다. 실값을 커밋하지 마세요. → GitHub Secrets + deploy.yml 주입"
