@@ -74,12 +74,12 @@ export function renderProviderIdentityGate(identity) {
   const dateLine = verified ? formatVerifiedDate(identity?.verified_at) : '';
   if (verified) {
     return `
-      <div class="p365-identity" data-p365-identity data-verified="1">
+      <div class="p365-identity" data-p365-identity data-verified="1" aria-label="본인인증 상태">
         <p class="p365-identity__badge">본인인증 완료${dateLine ? ` · ${esc(dateLine)}` : ''}</p>
       </div>`;
   }
   return `
-    <div class="p365-identity" data-p365-identity data-verified="0">
+    <div class="p365-identity" data-p365-identity data-verified="0" aria-label="본인인증 안내">
       <p class="p365-identity__lead">쪽지를 받으려면 본인인증이 한 번 필요해요</p>
       <p class="p365-identity__error is-hidden" data-p365-identity-error role="alert"></p>
       <button type="button" class="btn btn--primary p365-identity__btn" data-p365-identity-start>본인인증하기</button>
@@ -130,8 +130,14 @@ export function bindProviderIdentityGate(root, opts = {}) {
       }
 
       const PortOne = await loadSdk();
-      const identityVerificationId = `identity-verification-${crypto.randomUUID()}`;
-      const response = await PortOne.requestIdentityVerification({
+      const identityVerificationId = String(cfg.identity_verification_id || '');
+      if (!identityVerificationId) {
+        showError('본인인증을 시작할 수 없어요. 잠시 후 다시 시도해 주세요.');
+        return;
+      }
+      const customerId = String(cfg.customer_id || '');
+      /** @type {Record<string, unknown>} */
+      const req = {
         storeId: String(cfg.store_id || ''),
         identityVerificationId,
         channelKey: String(cfg.channel_key || ''),
@@ -140,7 +146,11 @@ export function bindProviderIdentityGate(root, opts = {}) {
             flgFixedUser: 'N',
           },
         },
-      });
+      };
+      if (customerId) {
+        req.customer = { customerId };
+      }
+      const response = await PortOne.requestIdentityVerification(req);
 
       if (response?.code != null && String(response.code) !== '') {
         showError('본인인증이 완료되지 않았어요. 다시 시도해 주세요.');

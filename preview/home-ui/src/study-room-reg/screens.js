@@ -673,7 +673,6 @@ function renderInquiries(room) {
   const body = `
     <div class="p21-inq p20-inq" data-p20-inquiries data-p20-room-id="${esc(room.id)}" data-inquiry-receiving="${form.receiving ? '1' : '0'}" data-identity-verified="${identityVerified ? '1' : '0'}">
       <p class="p21-inq__lead">${esc(P20_INQUIRY_COPY.pageLead)}</p>
-      ${identityGate}
 
       <section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.currentStatusHeading)}">
         <h3 class="p21-inq-block__title">${esc(P20_INQUIRY_COPY.currentStatusHeading)}</h3>
@@ -681,6 +680,7 @@ function renderInquiries(room) {
           <p class="p21-inq-block__hint" data-p20-inquiry-stored>${esc(stored)}</p>
           <span class="p21-inq-badge p21-inq-badge--${form.receiving ? 'on' : 'off'}">${esc(badge)}</span>
         </div>
+        ${identityGate}
       </section>
 
       <section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P20_INQUIRY_COPY.editHeading)}">

@@ -46,7 +46,6 @@ export function renderTutorInquiries(tutor) {
   return `
     <div class="p21-inq" data-p21-inquiries data-p21-tutor-id="${esc(tutor.id)}" data-inquiry-status="${esc(status)}" data-inquiry-receiving="${pref.receiving ? '1' : '0'}" data-identity-verified="${identityVerified ? '1' : '0'}">
       <p class="p21-inq__lead">${esc(P21_INQUIRY_COPY.pageLead)}</p>
-      ${identityGate}
 
       <section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.currentStatusHeading)}">
         <h3 class="p21-inq-block__title">${esc(P21_INQUIRY_COPY.currentStatusHeading)}</h3>
@@ -54,6 +53,7 @@ export function renderTutorInquiries(tutor) {
           <p class="p21-inq-block__hint" data-p21-inquiry-stored>${esc(stored)}</p>
           <span class="p21-inq-badge p21-inq-badge--${pref.receiving ? 'on' : 'off'}">${esc(badge)}</span>
         </div>
+        ${identityGate}
       </section>
 
       <section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.editHeading)}">

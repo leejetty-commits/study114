@@ -30,7 +30,7 @@
 - `IdentityVerificationService` · `PortOneIdentityClient` · `IdentityVerificationException`
 - API: `GET/POST /api/auth/identity-verification/{config,complete}.php`
 - Hub `setInquiry` open 시 `identity_required` 가드 (공부방·과외)
-- Messages 수신 피어 open 시 미인증 거부
+- Messages: **새 쪽지(콜드)만** 수신 피어 `open`+본인인증 검사. 이미 시작된 대화 답장은 inquiry/본인인증 게이트 없음
 - 탈퇴 시 5칸 NULL
 - `me.php` → `identity_verified` / `identity_verified_at`
 - bootstrap: 로컬 `.env`의 `PORTONE_*` · `STUDY114_IDENTITY_*` 로드 (워크트리→루트)
@@ -45,19 +45,23 @@
 - **운영 CF CSP는 미변경** — 배포 전 아래 호스트 목록을 CF에 추가해야 함
 
 ### env · 배포
-- `public/.htaccess` placeholder: `PORTONE_STORE_ID` · `PORTONE_API_SECRET` · `PORTONE_IDENTITY_CHANNEL_KEY` · `STUDY114_IDENTITY_CI_PEPPER`
-- `deploy.yml` 필수 Secrets 주입 추가
-- `config/dothome.env.example` · `preview/home-ui/.env.example` 안내
+- `public/.htaccess` placeholder: `PORTONE_STORE_ID` · `PORTONE_API_SECRET` · `PORTONE_IDENTITY_CHANNEL_KEY` · `PORTONE_IDENTITY_TEST_CHANNEL_KEY` · `STUDY114_IDENTITY_CI_PEPPER`
+- `deploy.yml`: 365 Secrets는 **없으면 경고만**(fail-soft). 빈 값 주입 → 앱 fail-closed(쪽지 ON 불가, 사이트 정상)
+- `config/dothome.env.example` · `preview/home-ui/.env.example` 이름만
+- 채널: 허용목록(`STUDY114_TEST_ACCOUNT_EMAILS`) → `PORTONE_IDENTITY_TEST_CHANNEL_KEY`, 그 외 → `PORTONE_IDENTITY_CHANNEL_KEY`
 - SSOT 20: 휴대폰 게이트 → 본인인증 게이트로 교체
+- 자동 테스트: `npm run verify:identity-inquiry-gate` (`scripts/verify-identity-inquiry-gate.php`)
 
 ## 거부 경로
 
 | 코드 | 언제 |
 |------|------|
-| `identity_required` | 미인증 공급자가 `inquiry_status=open` 저장 / 쪽지 수신 피어 |
-| `identity_channel` | channelKey 불일치 · 채널 env 미설정 |
+| `identity_required` | 미인증 공급자가 `inquiry_status=open` 저장 / 쪽지 수신 피어(신규만) |
+| `identity_channel` | channel.key/type·storeId 불일치 · 허용목록 밖 TEST · 채널 env 미설정 |
+| `identity_pepper` | CI pepper 미설정(포트원 조회 전) |
+| `identity_replay` | 세션/ID 불일치 · tx 재사용 · verifiedAt 10분 초과 |
 | `identity_duplicate` | 동일 ci_hash 타 계정 |
-| `identity_invalid` | 미 VERIFIED · 페이로드 부족 · pepper 없음 등 |
+| `identity_invalid` | 미 VERIFIED · 페이로드 부족 등 |
 | `forbidden` | 비공급자 config/complete |
 
 ## 테스트표 (365-2단계 보완 · 로컬 Docker + 로컬 계정)
@@ -101,12 +105,12 @@
 ## 운영 배포 전 할 일 (사용자)
 
 1. 운영 phpMyAdmin에 **088** 적용
-2. GitHub Secrets: `PORTONE_STORE_ID` · `PORTONE_API_SECRET` · `PORTONE_IDENTITY_CHANNEL_KEY` · `STUDY114_IDENTITY_CI_PEPPER`(32자+ 난수)
+2. GitHub Secrets: `PORTONE_STORE_ID` · `PORTONE_API_SECRET` · `PORTONE_IDENTITY_CHANNEL_KEY`(실채널) · `PORTONE_IDENTITY_TEST_CHANNEL_KEY`(허용목록=샌드박스) · `STUDY114_IDENTITY_CI_PEPPER`(32자+ 난수). 미설정 시 배포는 되고 인증만 fail-closed
 3. CF CSP Enforce에 추가 (실측 위반 우선, 예상):
    - `script-src`: `https://cdn.portone.io` `https://*.portone.io` `https://sa.inicis.com` `https://*.inicis.com`
    - `frame-src`: `https://checkout-service.prod.iamport.co` `https://*.portone.io` `https://cdn.portone.io` `https://sa.inicis.com` `https://*.inicis.com`
    - `connect-src`: `https://api.portone.io` `https://*.portone.io` `https://cdn.portone.io` `https://sa.inicis.com` `https://*.inicis.com` `https://checkout-service.prod.iamport.co`
-4. 실채널(과금) 전환 시 `PORTONE_IDENTITY_CHANNEL_KEY`만 교체 · 샌드박스와 혼용 금지
+4. 허용목록 계정은 TEST 채널, 그 외는 실채널. 로컬 키는 TEST 키로 `PORTONE_IDENTITY_TEST_CHANNEL_KEY`에 둔다
 5. `.htaccess`·문서에 실키 평문 커밋 금지
 
 ## 자체검수
@@ -122,3 +126,35 @@
 - [x] config 미로그인 401
 - [x] PHP lint (Identity* · complete.php)
 - [x] API T1~T5 (로컬 계정)
+
+## 365-보완2 (PR #171 검수 보완)
+
+| # | 항목 | 결과 |
+|---|------|------|
+| 1 | 채널 2개(TEST 허용목록 / 실채널) · config/complete 동일 · TEST 거부 · 로컬키=TEST · impl·env.example | 반영 |
+| 2 | 서버 발급 ID+세션 · tx UNIQUE · verifiedAt 10분 · 재complete no-op · pepper 선검사 | 반영 |
+| 3 | 신규 inquiry 기본 paused · 088 open→paused · 공개/검색 마스킹(CTA 숨김) | 반영 |
+| 4 | AdminExposure open 금지 | 반영 |
+| 5 | Messages 새 쪽지만 게이트 · 문서 | 반영 |
+| 6 | 088 `USE study114` · rollback( paused 미복구 명시) | 반영 |
+| 7 | deploy 365 Secrets fail-soft · 앱 fail-closed | 반영 |
+| 8 | `npm run verify:identity-inquiry-gate` — pass=18 fail=0 | PASS |
+| 9 | 캡처·disabled·데스크톱 수치 | 아래 |
+
+### 보완2 캡처
+
+- `docs/worklog/2026/11/shots-365/365-complement2-success-toast-1280.png` — 토스트+자동 ON
+- `docs/worklog/2026/11/shots-365/365-complement2-duplicate-ci-1280.png` — 중복 CI
+- `docs/worklog/2026/11/shots-365/365-complement2-unverified-disabled-1280.png` — `.p21-inq-choice.is-disabled`
+- 수치 JSON: `365-complement2-desktop-compare.json`
+
+### main 대비 데스크톱 (1280)
+
+| 항목 | 값 |
+|------|-----|
+| 쪽지 카드 width | **736** (main 비교 기준과 동일, delta 0) |
+| left | **248** |
+| 저장 버튼 width | **120** (delta 0) |
+| 현재상태 카드 높이 | 미인증 **229** / 성공 **177** (게이트 축소 Δ52) |
+| 인증 블록 높이 | 미인증 게이트 **+100px** (성공 배지 48px) |
+| `.p21-inq-choice.is-disabled` | main 없음 → 브랜치 추가 |

@@ -32,11 +32,12 @@ if ($user === null) {
     echo json_encode(['ok' => false, 'error' => 'unauthorized', 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
     exit;
 }
-AuthSession::close();
+// 세션은 complete에서 pending 대조·삭제에 필요 — close는 성공/실패 후
 
 try {
     (new EmailVerificationGate())->assertVerified((int) $user['user_id']);
 } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
+    AuthSession::close();
     http_response_code(403);
     echo json_encode(['ok' => false, 'error' => 'email_verify_required', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
     exit;
@@ -46,6 +47,7 @@ $raw = file_get_contents('php://input');
 /** @var mixed $decoded */
 $decoded = json_decode($raw ?: '{}', true);
 if (!is_array($decoded)) {
+    AuthSession::close();
     http_response_code(400);
     echo json_encode(['ok' => false, 'error' => 'invalid_json', 'message' => 'JSON 본문이 필요합니다.'], JSON_UNESCAPED_UNICODE);
     exit;
@@ -56,13 +58,16 @@ $id = (string) ($decoded['identityVerificationId'] ?? $decoded['identity_verific
 try {
     $svc = new IdentityVerificationService();
     $status = $svc->completeFromPortOne($user, $id);
+    AuthSession::close();
     echo json_encode(['ok' => true, 'identity' => $status], JSON_UNESCAPED_UNICODE);
 } catch (IdentityVerificationException $e) {
+    AuthSession::close();
     $code = $e->errorCode;
     $http = match ($code) {
         'identity_duplicate' => 409,
         'identity_required' => 403,
-        'identity_channel' => 503,
+        'identity_channel', 'identity_pepper' => 503,
+        'identity_replay' => 409,
         default => 422,
     };
     http_response_code($http);
@@ -72,7 +77,8 @@ try {
         'message' => $e->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    error_log('[identity-complete] ' . get_class($e) . ': ' . $e->getMessage());
+    AuthSession::close();
+    error_log('[identity-complete] ' . get_class($e));
     http_response_code(500);
     echo json_encode([
         'ok' => false,

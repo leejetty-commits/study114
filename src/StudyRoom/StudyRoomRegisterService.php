@@ -378,7 +378,7 @@ final class StudyRoomRegisterService
 
             'INSERT INTO study_rooms (user_id, study_room_name, lesson_place_type, profile_status, detail_completion_status, inquiry_status)
 
-             VALUES (?, ?, ?, "draft", "basic_only", "open")'
+             VALUES (?, ?, ?, "draft", "basic_only", "paused")'
 
         );
 

@@ -10,7 +10,7 @@ use RuntimeException;
  * 365 — 포트원 REST V2 본인인증 단건 조회.
  * 로그에 CI·이름·생년·휴대폰·키를 남기지 않는다.
  */
-final class PortOneIdentityClient
+final class PortOneIdentityClient implements PortOneIdentityLookup
 {
     private const API_BASE = 'https://api.portone.io';
 

@@ -1,0 +1,35 @@
+{
+  "cards": [
+    {
+      "w": 736,
+      "h": 229,
+      "left": 248,
+      "top": 544
+    },
+    {
+      "w": 736,
+      "h": 387,
+      "left": 248,
+      "top": 789
+    }
+  ],
+  "status": {
+    "w": 736,
+    "h": 229,
+    "left": 248
+  },
+  "onDisabled": {
+    "w": 189,
+    "h": 58,
+    "left": 273
+  },
+  "saveW": 120,
+  "gate": {
+    "w": 686,
+    "h": 100,
+    "left": 273
+  },
+  "disabledClass": true,
+  "toast": false,
+  "receivingOn": false
+}

@@ -119,12 +119,13 @@ jobs:
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
           PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
           PORTONE_IDENTITY_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_CHANNEL_KEY }}
+          PORTONE_IDENTITY_TEST_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_TEST_CHANNEL_KEY }}
           STUDY114_IDENTITY_CI_PEPPER: ${{ secrets.STUDY114_IDENTITY_CI_PEPPER }}
         shell: bash
         run: |
           set -euo pipefail
           htaccess=public/.htaccess
-          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET STUDY114_PHONE_OTP_PEPPER STUDY114_RESEND_API_KEY PORTONE_STORE_ID PORTONE_API_SECRET PORTONE_IDENTITY_CHANNEL_KEY STUDY114_IDENTITY_CI_PEPPER"
+          required="OAUTH_NAVER_CLIENT_ID OAUTH_NAVER_CLIENT_SECRET OAUTH_KAKAO_REST_API_KEY OAUTH_KAKAO_CLIENT_SECRET OAUTH_GOOGLE_CLIENT_ID OAUTH_GOOGLE_CLIENT_SECRET STUDY114_PHONE_OTP_PEPPER STUDY114_RESEND_API_KEY"
           missing=0
           for v in $required; do
             if [ -z "${!v:-}" ]; then
@@ -135,6 +136,19 @@ jobs:
           if [ "$missing" != "0" ]; then
             echo "::error::필수 시크릿 미설정 — 배포 중단 (placeholder .htaccess 업로드 방지)"
             exit 1
+          fi
+          # 365 본인인증 Secrets: 없으면 경고만. 빈 값 주입 → 앱은 fail-closed(쪽지 ON 불가, 사이트 정상)
+          identity_soft="PORTONE_STORE_ID PORTONE_API_SECRET PORTONE_IDENTITY_CHANNEL_KEY PORTONE_IDENTITY_TEST_CHANNEL_KEY STUDY114_IDENTITY_CI_PEPPER"
+          identity_missing=0
+          for v in $identity_soft; do
+            if [ -z "${!v:-}" ]; then
+              echo "::warning::GitHub secret $v 미설정 — 본인인증 fail-closed (쪽지 켜기 불가, 배포는 계속)"
+              identity_missing=1
+              printf -v "$v" '%s' ""
+            fi
+          done
+          if [ "$identity_missing" != "0" ]; then
+            echo "::warning::365 identity Secrets 일부/전부 없음 — 인증 기능 비활성으로 배포"
           fi
           # Resend: 빈 값·placeholder 형식 거부 (값은 출력하지 않음)
           case "${STUDY114_RESEND_API_KEY}" in
@@ -158,7 +172,7 @@ jobs:
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
           fi
           data="$(cat "$htaccess")"
-          for v in $required STUDY114_MAIL_PROBE_KEY; do
+          for v in $required STUDY114_MAIL_PROBE_KEY $identity_soft; do
             token="__${v}__"
             repl="${!v}"
             case "$data" in

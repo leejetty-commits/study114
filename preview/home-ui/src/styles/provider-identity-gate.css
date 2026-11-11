@@ -1,36 +1,52 @@
-/* 365 — 쪽지설정 본인인증 게이트. 데스크톱 레이아웃 0px 변경 목표 · 390에서 버튼 전체폭 */
+/* 365 — 쪽지설정 본인인증. 현재상태 카드 안 인셋 블록 */
 
-.p365-identity {
-  margin: 12px 0 0;
-  padding: 0;
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
 }
 
-.p365-identity__lead {
-  margin: 0 0 8px;
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity[data-verified='1'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: #bbf7d0;
+  background: #ecfdf3;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__lead {
+  margin: 0 0 10px;
   font-size: 14px;
   line-height: 1.45;
   color: #334155;
 }
 
-.p365-identity__badge {
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__badge {
   margin: 0;
   font-size: 13px;
-  font-weight: 600;
-  color: #0f766e;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #15803d;
 }
 
-.p365-identity__error {
-  margin: 0 0 8px;
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__error {
+  margin: 0 0 10px;
   font-size: 13px;
+  line-height: 1.4;
   color: #b91c1c;
 }
 
-.p365-identity__error.is-hidden {
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__error.is-hidden {
   display: none;
 }
 
-.p365-identity__btn {
-  /* desktop: keep existing btn sizing */
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__btn {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .p365-identity-toast {
@@ -50,7 +66,7 @@
 }
 
 @media (max-width: 390px) {
-  .p365-identity__btn {
+  :is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__btn {
     display: block;
     width: 100%;
     box-sizing: border-box;

@@ -59,7 +59,7 @@ final class StudyRoomPublicReadService
         $ownerSql = WithdrawnOwnerSql::notWithdrawn('sr.user_id');
         $publishedSql = $guestPublishedOnly ? " AND sr.profile_status = 'published'" : '';
         $stmt = $this->pdo->prepare(
-            "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
+            "SELECT sr.id, sr.user_id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
                     sr.teaching_style, sr.lesson_place_type, sr.capacity_per_time,
                     sr.lesson_operation_type, sr.price_amount, sr.facility_note,
@@ -174,7 +174,8 @@ final class StudyRoomPublicReadService
             'instagram_url'                   => (string) ($row['instagram_url'] ?? ''),
             'tiktok_url'                      => (string) ($row['tiktok_url'] ?? ''),
             'naver_clip_url'                  => (string) ($row['naver_clip_url'] ?? ''),
-            'inquiry_status'                  => (string) ($row['inquiry_status'] ?? ''),
+            'inquiry_status'                  => (new \Study114\Auth\IdentityVerificationService($this->pdo))
+                ->publicInquiryStatus((int) ($row['user_id'] ?? 0), (string) ($row['inquiry_status'] ?? '')),
             'profile_status'                  => (string) ($row['profile_status'] ?? ''),
             'latitude'                        => $includePreciseCoordinates && $row['latitude'] !== null ? (float) $row['latitude'] : null,
             'longitude'                       => $includePreciseCoordinates && $row['longitude'] !== null ? (float) $row['longitude'] : null,

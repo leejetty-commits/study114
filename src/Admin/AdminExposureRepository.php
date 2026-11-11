@@ -138,7 +138,7 @@ final class AdminExposureRepository
     public function findStudyRoom(int $id): ?array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT id, study_room_name, profile_status, inquiry_status, published_at, updated_at
+            'SELECT id, user_id, study_room_name, profile_status, inquiry_status, published_at, updated_at
              FROM study_rooms WHERE id = ? AND deleted_at IS NULL LIMIT 1'
         );
         $stmt->execute([$id]);

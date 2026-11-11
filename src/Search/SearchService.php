@@ -782,7 +782,7 @@ final class SearchService
         $lpwExpr = $this->columnCache($pdo, 'study_rooms', 'lessons_per_week') ? 'sr.lessons_per_week' : 'NULL';
 
         $sql = "
-            SELECT DISTINCT sr.id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
+            SELECT DISTINCT sr.id, sr.user_id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
                    sr.main_subject_note, sr.teaching_style, {$gradeExpr} AS grade_band,
                    {$audienceExpr} AS audience_label,
                    sr.feature_1, sr.feature_2, sr.feature_3, sr.slogan,
@@ -880,7 +880,8 @@ final class SearchService
                 'capacity_per_time'          => $row['capacity_per_time'] ?? null,
                 'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
                 'facility_summary'           => trim((string) ($row['facility_note'] ?? '')),
-                'inquiry_status'             => (string) ($row['inquiry_status'] ?? ''),
+                'inquiry_status'             => (new \Study114\Auth\IdentityVerificationService($pdo))
+                    ->publicInquiryStatus((int) ($row['user_id'] ?? 0), (string) ($row['inquiry_status'] ?? '')),
                 'profile_status'             => (string) ($row['profile_status'] ?? 'draft'),
                 'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
                 'career_years'               => $row['career_years'] !== null ? (int) $row['career_years'] : null,
@@ -1063,11 +1064,11 @@ final class SearchService
         $tutorImgExpr = $this->tutorCoverImageExpr($pdo, 'basic');
 
         $sql = "
-            SELECT DISTINCT t.id, t.tutor_display_name, t.preferred_fee_amount,
+            SELECT DISTINCT t.id, t.user_id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
                    t.university_status, t.proof_document_available,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
-                   t.profile_status, t.published_at, t.created_at,
+                   t.inquiry_status, t.profile_status, t.published_at, t.created_at,
                    t.slogan, t.intro_short, t.intro_long, t.feature_1, t.feature_2, t.feature_3,
                    t.main_material_note, t.student_gender_group, t.student_count_group,
                    {$genderExpr} AS tutor_gender,
@@ -1172,6 +1173,8 @@ final class SearchService
                 'lessons_per_week'       => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
                 'minutes_per_lesson'     => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
                 'detail_completion_status' => $detailStatus,
+                'inquiry_status'         => (new \Study114\Auth\IdentityVerificationService($pdo))
+                    ->publicInquiryStatus((int) ($row['user_id'] ?? 0), (string) ($row['inquiry_status'] ?? '')),
                 'profile_status'         => (string) ($row['profile_status'] ?? 'draft'),
                 'prime_eligible'         => $detailStatus === 'expanded_complete',
                 'position_sku'           => $positionSku,

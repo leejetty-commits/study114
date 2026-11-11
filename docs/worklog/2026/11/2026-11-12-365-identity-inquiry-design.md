@@ -79,7 +79,7 @@
 | 대상 | 공부방·과외쌤만. 학생 제외 → 쪽지 거절/차단·신고 |
 | 트리거 | `inquiry_status` → **`open`** 저장 시 |
 | 화면 | 미인증이면 포트원 `requestIdentityVerification` → 서버 확정 후 ON |
-| 서버 | Hub `setInquiry(... open)` 거부 + Messages 수신 측도 `open`+인증 완료 검사 |
+| 서버 | Hub `setInquiry(... open)` 거부 + Messages **새 쪽지만** 수신 `open`+인증 완료 검사(기존 대화 답장은 미적용) |
 | 저장 | `ci_hash`(SHA-256+pepper) · `verified_at` · `provider` · `tx_id`(포트원 identityVerificationId) · **이름**. **생년월일·휴대폰·CI 원문 금지** |
 | 중복 | 동일 `ci_hash`의 다른 활성 공급자 계정이면 ON 거부(또는 운영 검토 — 구현 시 확정) |
 | 유예 | **없음** — 배포 후 `open` 전환·유지에 인증 필수. (기존 `open` 회원 처리 세부는 2단계 지시서에서: 강제 `paused` vs 다음 저장부터 차단 등) |

@@ -17,7 +17,7 @@ else
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
-    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY|STUDY114_PHONE_OTP_PEPPER|STUDY114_RESEND_API_KEY|STUDY114_TEST_ACCOUNT_EMAILS|PORTONE_STORE_ID|PORTONE_API_SECRET|PORTONE_IDENTITY_CHANNEL_KEY|STUDY114_IDENTITY_CI_PEPPER)[[:space:]]+(.+)$ ]]; then
+    if [[ "$line" =~ ^[[:space:]]*SetEnv[[:space:]]+(OAUTH_[A-Z0-9_]+|STUDY114_MAIL_PROBE_KEY|STUDY114_PHONE_OTP_PEPPER|STUDY114_RESEND_API_KEY|STUDY114_TEST_ACCOUNT_EMAILS|PORTONE_STORE_ID|PORTONE_API_SECRET|PORTONE_IDENTITY_CHANNEL_KEY|PORTONE_IDENTITY_TEST_CHANNEL_KEY|STUDY114_IDENTITY_CI_PEPPER)[[:space:]]+(.+)$ ]]; then
       key="${BASH_REMATCH[1]}"
       val="${BASH_REMATCH[2]}"
       # 따옴표 허용: SetEnv KEY "__KEY__" 또는 SetEnv KEY __KEY__

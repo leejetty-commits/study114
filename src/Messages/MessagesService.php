@@ -97,17 +97,19 @@ final class MessagesService
         if ($peerUserId === $userId) {
             throw new InvalidArgumentException('자기 자신에게는 보낼 수 없습니다.');
         }
-        $this->assertProviderPeerReceivingOpen($contextKind, $contextId, $peerUserId);
 
         [$low, $high] = $this->canonicalParticipants($userId, $peerUserId);
         $existing = $this->repo->findThreadByContext($contextKind, $contextId, $low, $high);
 
         if ($existing !== null) {
+            // 365: 이미 시작된 대화의 답장은 inquiry/본인인증 게이트를 적용하지 않는다.
             $threadId = (int) $existing['id'];
             $this->assertCanSendMessage($userId, $existing, $contextKind);
             $this->insertMessageWithFiles($threadId, $userId, $body, $files);
             $this->repo->upsertThreadRead($threadId, $userId);
         } else {
+            // 새 쪽지(콜드)만 공급자 inquiry open + 본인인증 확인
+            $this->assertProviderPeerReceivingOpen($contextKind, $contextId, $peerUserId);
             $this->assertComposeDirection($contextKind, $userId);
             if (!$skipTicketConsume) {
                 $this->assertColdMemoAllowed($userId, $contextKind, $input);

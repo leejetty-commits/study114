@@ -782,14 +782,15 @@ final class BasicRegisterService
                 $pdo->prepare(
                     'INSERT INTO tutors (
                         user_id, tutor_display_name, main_subject_note,
-                        profile_status, detail_completion_status
-                    ) VALUES (?, ?, ?, ?, ?)'
+                        profile_status, detail_completion_status, inquiry_status
+                    ) VALUES (?, ?, ?, ?, ?, ?)'
                 )->execute([
                     $userId,
                     $values['tutor_display_name'],
                     $values['main_subject_note'],
                     'draft',
                     'basic_only',
+                    'paused',
                 ]);
                 $tutorId = (int) $pdo->lastInsertId();
             }
