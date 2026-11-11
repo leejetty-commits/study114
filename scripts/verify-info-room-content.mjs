@@ -1,24 +1,30 @@
 #!/usr/bin/env node
 /**
  * 362 info-room content verifier (markdown files only).
- * Usage: node scripts/verify-info-room-content.mjs <folder>
+ * Usage:
+ *   node scripts/verify-info-room-content.mjs <folder>
+ *   node scripts/verify-info-room-content.mjs <folder> 01,02,03,04,05
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
 const MIN_CHARS = 2500;
 const MAX_CHARS = 4000;
+const MIN_CHARS_NOSPACE = 1800;
 const MIN_H2 = 4;
 const MIN_SUMMARY = 3;
 const MIN_CHECKS = 5;
 const URL_RE = /https?:\/\/[^\s)\]]+/gi;
 const TITLE_SIM_WARN = 0.55;
-/** CJK Unified Ideographs (한자). 한글·가나·전각문장부호는 제외. */
 const HAN_RE = /[\u4e00-\u9fff]/g;
+const TRIGRAM_FAIL = 0.6;
+const SHARE_FAIL = 0.1;
+const UDONG =
+  '우리 동네 공부방·과외 정보는 우동공과 카드로도 정리해 두시면 좋아요.';
 
 const folder = process.argv[2];
 if (!folder) {
-  console.error('Usage: node scripts/verify-info-room-content.mjs <folder>');
+  console.error('Usage: node scripts/verify-info-room-content.mjs <folder> [01,02,...]');
   process.exit(2);
 }
 
@@ -28,10 +34,19 @@ if (!fs.existsSync(abs) || !fs.statSync(abs).isDirectory()) {
   process.exit(2);
 }
 
-const files = fs
+const onlyRaw = process.argv[3];
+const onlyPrefixes = onlyRaw
+  ? onlyRaw.split(',').map((s) => s.trim()).filter(Boolean)
+  : null;
+
+let files = fs
   .readdirSync(abs)
   .filter((f) => f.endsWith('.md') && !f.startsWith('_'))
   .sort();
+
+if (onlyPrefixes) {
+  files = files.filter((f) => onlyPrefixes.some((p) => f.startsWith(p.padStart(2, '0')) || f.startsWith(p)));
+}
 
 if (files.length === 0) {
   console.error(`No markdown files in ${abs}`);
@@ -71,18 +86,72 @@ function splitParagraphs(body) {
     .filter((p) => p.length > 0);
 }
 
-/** 동일 문단(공백 정규화)이 2회 이상이면 반복으로 본다. */
+function isExceptionPara(p) {
+  const t = p.replace(/\s+/g, ' ').trim();
+  if (t === UDONG) return true;
+  if (/^(학원법|시행령|「학원)/.test(t) && /제\d+조/.test(t) && t.length < 220) return true;
+  if (/기준일\s*2026-11/.test(t) && /제\d+조/.test(t) && t.length < 280) return true;
+  return false;
+}
+
+/** 번호·「」제목·기호 제거 후 비교용 문자열 */
+function normalizeForCompare(p) {
+  return p
+    .replace(/실행\s*메모\s*\d+/g, '')
+    .replace(/준비\s*메모\s*\d+/g, '')
+    .replace(/「[^」]*」/g, '')
+    .replace(/『[^』]*』/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+function trigrams(s) {
+  const out = [];
+  if (s.length < 3) {
+    if (s.length) out.push(s);
+    return out;
+  }
+  for (let i = 0; i <= s.length - 3; i += 1) out.push(s.slice(i, i + 3));
+  return out;
+}
+
+function trigramOverlap(a, b) {
+  const A = trigrams(a);
+  const B = trigrams(b);
+  if (A.length === 0 || B.length === 0) return 0;
+  const setB = new Set(B);
+  let inter = 0;
+  for (const t of A) if (setB.has(t)) inter += 1;
+  return inter / Math.min(A.length, B.length);
+}
+
 function findRepeatedParagraphs(body) {
   const counts = new Map();
   for (const p of splitParagraphs(body)) {
     const key = p.replace(/[ \t]+/g, ' ').trim();
-    if (key.length < 40) continue; // 짧은 체크·불릿 블록은 제외
+    if (key.length < 40) continue;
     counts.set(key, (counts.get(key) || 0) + 1);
   }
   return [...counts.entries()].filter(([, c]) => c >= 2);
 }
 
-/** 반복 문단은 첫 등장만 남긴 본문 */
+function findNearDuplicatePairs(paras) {
+  const hits = [];
+  const norms = paras.map((p) => ({ p, n: normalizeForCompare(p) }));
+  for (let i = 0; i < norms.length; i += 1) {
+    if (norms[i].n.length < 30 || isExceptionPara(paras[i])) continue;
+    for (let j = i + 1; j < norms.length; j += 1) {
+      if (norms[j].n.length < 30 || isExceptionPara(paras[j])) continue;
+      const ov = trigramOverlap(norms[i].n, norms[j].n);
+      if (ov >= TRIGRAM_FAIL) {
+        hits.push({ i, j, ov });
+      }
+    }
+  }
+  return hits;
+}
+
 function dedupeParagraphs(body) {
   const parts = body.split(/(\r?\n\s*\r?\n)/);
   const seen = new Set();
@@ -102,6 +171,34 @@ function dedupeParagraphs(body) {
     out.push(part);
   }
   return out.join('').replace(/(\r?\n){3,}/g, '\n\n').replace(/\s+$/, '\n');
+}
+
+/** 「」 직후 조사 받침 검사 */
+function findParticleErrors(body) {
+  const errors = [];
+  const re = /「([^」]{1,80})」(을|를|이|가|은|는)/g;
+  let m;
+  while ((m = re.exec(body))) {
+    const inner = m[1];
+    const particle = m[2];
+    const hangul = [...inner].reverse().find((ch) => ch >= '가' && ch <= '힣');
+    if (!hangul) continue;
+    const code = hangul.charCodeAt(0) - 0xac00;
+    const jong = code % 28;
+    const hasBatchim = jong !== 0;
+    const expect = {
+      을: hasBatchim,
+      를: !hasBatchim,
+      이: hasBatchim,
+      가: !hasBatchim,
+      은: hasBatchim,
+      는: !hasBatchim,
+    };
+    if (expect[particle] === false) {
+      errors.push(`「…${hangul}」${particle}`);
+    }
+  }
+  return errors;
 }
 
 function countSummaryBullets(body) {
@@ -140,15 +237,41 @@ function jaccard(a, b) {
   return inter / (A.size + B.size - inter);
 }
 
+function countNoSpace(s) {
+  return [...s.replace(/\s+/g, '')].length;
+}
+
 const REQUIRED = ['title', 'topic', 'category_suggest', 'basis_date', 'chars', 'uncertain_facts'];
+
+/** 파일별 파싱 */
+const docs = files.map((file) => {
+  const full = path.join(abs, file);
+  const raw = fs.readFileSync(full, 'utf8');
+  const { meta, body } = parseFrontmatter(raw);
+  const paras = splitParagraphs(body);
+  return { file, full, raw, meta, body, paras };
+});
+
+/** 폴더 전역: 정규화 키 → 등장 파일 집합 (예외 문단 제외) */
+const globalNorm = new Map();
+for (const doc of docs) {
+  for (const p of doc.paras) {
+    if (isExceptionPara(p)) continue;
+    if (p.length < 40) continue;
+    if (/^#/.test(p) || /^- \[[ xX]\] /.test(p) || /^이 글에서 알 수 있는 것/.test(p)) continue;
+    const key = normalizeForCompare(p);
+    if (key.length < 30) continue;
+    if (!globalNorm.has(key)) globalNorm.set(key, new Set());
+    globalNorm.get(key).add(doc.file);
+  }
+}
+
 const rows = [];
 let fail = 0;
 const titles = [];
 
-for (const file of files) {
-  const full = path.join(abs, file);
-  const raw = fs.readFileSync(full, 'utf8');
-  const { meta, body } = parseFrontmatter(raw);
+for (const doc of docs) {
+  const { file, meta, body, paras } = doc;
   const issues = [];
 
   if (!meta) {
@@ -165,21 +288,95 @@ for (const file of files) {
     issues.push(`repeated paragraph ${top[1]}x (len=${top[0].length})`);
   }
 
-  const uniqueBody = dedupeParagraphs(body);
-  const measured = [...uniqueBody].length;
-  const declared = meta?.chars;
-  if (measured < MIN_CHARS || measured > MAX_CHARS) {
-    issues.push(`chars out of range measured=${measured} (after dedupe)`);
-  }
-  if (typeof declared === 'number' && Math.abs(declared - measured) > 30) {
-    issues.push(`chars mismatch declared=${declared} measured=${measured}`);
+  const near = findNearDuplicatePairs(paras);
+  if (near.length) {
+    const top = near.sort((a, b) => b.ov - a.ov)[0];
+    issues.push(`near-dup paragraphs ov=${(top.ov * 100).toFixed(0)}%`);
   }
 
-  const han = uniqueBody.match(HAN_RE) || [];
+  // 공유 문단 비율
+  let shareable = 0;
+  let shared = 0;
+  const sharedKeys = new Set();
+  for (const p of paras) {
+    if (isExceptionPara(p)) continue;
+    if (p.length < 40) continue;
+    if (/^#/.test(p) || /^- \[[ xX]\] /.test(p) || /^이 글에서 알 수 있는 것/.test(p)) continue;
+    const key = normalizeForCompare(p);
+    if (key.length < 30) continue;
+    shareable += 1;
+    const owners = globalNorm.get(key);
+    if (owners && owners.size > 1) {
+      shared += 1;
+      sharedKeys.add(key);
+    }
+  }
+  const shareRatio = shareable === 0 ? 0 : shared / shareable;
+  if (shareRatio > SHARE_FAIL) {
+    issues.push(`shared paras ${(shareRatio * 100).toFixed(1)}% > ${SHARE_FAIL * 100}% (${shared}/${shareable})`);
+  }
+
+  // 고유 본문: 공유·실행메모·템플릿성 문단 제외
+  const uniqueParas = paras.filter((p) => {
+    if (isExceptionPara(p)) return true; // 예외는 본문에 남아도 되지만 고유 측정에서는 제외
+    if (/실행\s*메모\s*\d+/.test(p) || /준비\s*메모\s*\d+/.test(p)) return false;
+    if (/^#/.test(p) || /^이 글에서 알 수 있는 것/.test(p) || /^- /.test(p) || /^### /.test(p)) return true;
+    const key = normalizeForCompare(p);
+    if (key.length >= 30 && sharedKeys.has(key)) return false;
+    // 제목만 바꾼 공통 마무리 패턴
+    if (/내용을 실행으로 옮길 때는 오늘/.test(p)) return false;
+    if (/가족과 나눌 때도 같은 세 칸/.test(p)) return false;
+    if (/상담에 쓸 때는 형태·장소/.test(p) || /상담·공지에 쓸 때는/.test(p) || /문구에 쓸 때는 혜택/.test(p)) return false;
+    if (/점검은 주간 리뷰로/.test(p)) return false;
+    if (/확인이 끝나면 다음 글/.test(p) || /확인이 끝나면, 오늘/.test(p)) return false;
+    if (/공간이 정해졌다면 사진 세 장/.test(p)) return false;
+    if (/일정이 밀리면 홍보를 줄이고/.test(p)) return false;
+    if (/시즌이 바뀌면/.test(p) && /체크를 한 번 더/.test(p)) return false;
+    if (/남은 불확실 항목은/.test(p)) return false;
+    if (/인쇄물·채팅/.test(p) && /필수 표시/.test(p)) return false;
+    if (/도움이 되는 동료·멘토/.test(p)) return false;
+    if (/배포 전에 「/.test(p) && /다른 사람 한 명/.test(p)) return false;
+    if (/사진·후기를 쓸 계획이면/.test(p)) return false;
+    if (/예산이 빠듯하면/.test(p)) return false;
+    if (/관련해서 「/.test(p) && /확인이 끝나면/.test(p)) return false;
+    if (/실행 메모 \d+:/.test(p)) return false;
+    return true;
+  });
+  // 고유 측정에서 예외·헤더·체크 제외한 본문 글자
+  const uniqueForMeasure = uniqueParas
+    .filter((p) => !isExceptionPara(p))
+    .filter((p) => !/^#/.test(p) && !/^이 글에서/.test(p) && !/^- \[[ xX]\] /.test(p) && !/^### /.test(p))
+    .join('\n\n');
+  const charsWithSpace = [...uniqueForMeasure].length;
+  const charsNoSpace = countNoSpace(uniqueForMeasure);
+
+  if (charsWithSpace < MIN_CHARS || charsWithSpace > MAX_CHARS) {
+    issues.push(`unique chars(with space)=${charsWithSpace} not in ${MIN_CHARS}-${MAX_CHARS}`);
+  }
+  if (charsNoSpace < MIN_CHARS_NOSPACE) {
+    issues.push(`unique chars(no space)=${charsNoSpace} < ${MIN_CHARS_NOSPACE}`);
+  }
+
+  const declared = meta?.chars;
+  if (typeof declared === 'number' && Math.abs(declared - charsWithSpace) > 80) {
+    // frontmatter는 전체 본문일 수 있어 경고성 — 고유 기준과 크게 어긋나면 FAIL
+    // 재작성 후 chars는 고유 with-space에 맞출 예정
+    issues.push(`chars mismatch declared=${declared} uniqueWithSpace=${charsWithSpace}`);
+  }
+
+  const particleErrs = findParticleErrors(body);
+  if (particleErrs.length) {
+    issues.push(`particle ${particleErrs.slice(0, 3).join(', ')}`);
+  }
+
+  const han = body.match(HAN_RE) || [];
   if (han.length) {
     const sample = [...new Set(han)].slice(0, 8).join('');
     issues.push(`CJK Han residual ${han.length} (${sample})`);
   }
+
+  const udongCount = (body.match(/우리 동네 공부방·과외 정보는 우동공과 카드로도 정리해 두시면 좋아요\./g) || []).length;
+  if (udongCount !== 1) issues.push(`udonggong lines ${udongCount} != 1`);
 
   const h1 = (body.match(/^#\s+.+/m) || []).length;
   if (h1 < 1) issues.push('missing # title');
@@ -207,7 +404,11 @@ for (const file of files) {
   rows.push({
     file,
     title,
-    measured,
+    charsWithSpace,
+    charsNoSpace,
+    shareRatio,
+    shared,
+    shareable,
     declared: declared ?? '',
     h2,
     summary,
@@ -219,16 +420,14 @@ for (const file of files) {
 }
 
 console.log(`Folder: ${abs}`);
-console.log(`Files: ${files.length}`);
+console.log(`Files: ${files.length}${onlyPrefixes ? ` (filter ${onlyPrefixes.join(',')})` : ''}`);
 console.log('');
 console.log(
   [
     'file'.padEnd(42),
-    'chars'.padStart(6),
-    'h2'.padStart(3),
-    'sum'.padStart(3),
-    'chk'.padStart(3),
-    'url'.padStart(3),
+    'w/sp'.padStart(5),
+    'noSp'.padStart(5),
+    'shr%'.padStart(5),
     'status'.padStart(6),
     'issues',
   ].join(' | ')
@@ -238,11 +437,9 @@ for (const r of rows) {
   console.log(
     [
       r.file.padEnd(42),
-      String(r.measured).padStart(6),
-      String(r.h2).padStart(3),
-      String(r.summary).padStart(3),
-      String(r.checks).padStart(3),
-      String(r.urls).padStart(3),
+      String(r.charsWithSpace).padStart(5),
+      String(r.charsNoSpace).padStart(5),
+      (r.shareRatio * 100).toFixed(0).padStart(4) + '%',
       r.status.padStart(6),
       r.issues || '-',
     ].join(' | ')
@@ -266,11 +463,14 @@ for (let i = 0; i < titles.length; i += 1) {
 if (warn === 0) console.log('  (none)');
 
 console.log('');
-const measuredList = rows.map((r) => r.measured);
-const min = Math.min(...measuredList);
-const max = Math.max(...measuredList);
-const avg = Math.round(measuredList.reduce((a, b) => a + b, 0) / measuredList.length);
-console.log(`Char distribution (after dedupe): min=${min} avg=${avg} max=${max}`);
+const ws = rows.map((r) => r.charsWithSpace);
+const ns = rows.map((r) => r.charsNoSpace);
+console.log(
+  `Unique chars with space: min=${Math.min(...ws)} avg=${Math.round(ws.reduce((a, b) => a + b, 0) / ws.length)} max=${Math.max(...ws)}`
+);
+console.log(
+  `Unique chars no space:   min=${Math.min(...ns)} avg=${Math.round(ns.reduce((a, b) => a + b, 0) / ns.length)} max=${Math.max(...ns)}`
+);
 console.log(`Result: ${fail === 0 ? 'PASS' : 'FAIL'} (${files.length - fail} pass / ${fail} fail)`);
 
 process.exit(fail === 0 ? 0 : 1);
