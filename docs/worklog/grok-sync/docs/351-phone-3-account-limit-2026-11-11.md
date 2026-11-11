@@ -2,7 +2,7 @@
 
 - 작성: 우동공과3 · 실행·1차 셀프검수: Cursor · 최종검수: 우동공과3
 - 브랜치: `work/351-phone-3-account-limit`
-- 선행: 없음 (main 최신 `5cf48f76` 이후)
+- 선행: **357 완료 후** (`TestAccountAllowlist`·`STUDY114_TEST_ACCOUNT_EMAILS`가 main에 있을 것)
 
 ## 대상
 가입·연락처 저장 시 휴대폰 번호 검증 서버 코드.
@@ -16,10 +16,13 @@
 ## 범위
 1. 서버 한 곳에 판정 함수 신설: 예) `src/Auth/PhoneAccountLimit.php` — `countActiveAccounts(PDO, string $phoneDigits, ?int $excludeUserId): int`, 상수 `MAX_ACCOUNTS_PER_PHONE = 3`.
    - 셈: `user_profiles.phone = ?`(digits 정규화) AND `users.status <> 'withdrawn'`. 자기 자신(번호 변경 시)은 제외.
+   - **테스트 계정 허용목록 제외 (357·358과 동일 env):** `STUDY114_TEST_ACCOUNT_EMAILS`의 정확한 이메일 계정은
+     (a) **3개 카운트에 넣지 않고**, (b) **가입·연락처·OTP 차단에서도 제외**한다.
+     판정은 `Study114\Auth\TestAccountAllowlist`(357)만 사용. 새 env 이름을 만들지 않는다.
 2. 적용 지점 (모두 같은 함수 호출):
-   - `SignupService::register()` — insert 전에 검사. 이미 3개면 거절.
-   - `AccountContactService::save()` — 새 번호 저장 전 검사 (자기 계정 제외).
-   - `PhoneVerificationService::sendOtp()` — OTP 보내기 전에 검사해 문자 비용 낭비 방지 (판정 결과만, 문자 미발송).
+   - `SignupService::register()` — insert 전에 검사. 이미 3개면 거절. (가입 이메일이 허용목록이면 제한 검사 스킵)
+   - `AccountContactService::save()` — 새 번호 저장 전 검사 (자기 계정 제외 · 허용목록 계정 스킵).
+   - `PhoneVerificationService::sendOtp()` — OTP 보내기 전에 검사해 문자 비용 낭비 방지 (판정 결과만, 문자 미발송 · 허용목록 스킵).
 3. 사용자 문구 (그대로 사용):
    「이 휴대폰 번호로는 이미 3개의 계정이 가입되어 있어요. 한 번호로는 최대 3개 계정까지 만들 수 있어요. 기존 계정으로 로그인하시거나, 아이디가 기억나지 않으시면 아이디 찾기를 이용해 주세요.」
    - 응답: HTTP 409(또는 기존 가입 오류와 같은 규칙의 422 — 현행 규칙을 따르고 보고), 코드 `phone_account_limit`.

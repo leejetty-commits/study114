@@ -13,6 +13,7 @@ use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
 use Study114\Region\TutorRegionUnit;
 use Study114\Tutor\TutorBasicFields;
+use Study114\Visibility\TestOwnerVisibility;
 use Study114\Visibility\WithdrawnOwnerSql;
 
 final class SearchService
@@ -636,6 +637,7 @@ final class SearchService
             "sr.profile_status <> 'hidden'",
             'sr.deleted_at IS NULL',
             WithdrawnOwnerSql::notWithdrawn('sr.user_id'),
+            TestOwnerVisibility::sql($pdo, 'sr.user_id'),
             $this->roomPromoSlot1Sql('sr'),
         ];
         if ($guestPublishedOnly) {
@@ -965,6 +967,7 @@ final class SearchService
         $where = [
             "t.profile_status <> 'hidden'",
             WithdrawnOwnerSql::notWithdrawn('t.user_id'),
+            TestOwnerVisibility::sql($pdo, 't.user_id'),
             $this->tutorSlot1Sql('t'),
             TutorBasicFields::completeSql('t'),
         ];
@@ -1231,6 +1234,7 @@ final class SearchService
             's.exposure_status = :status',
             's.deleted_at IS NULL',
             WithdrawnOwnerSql::notWithdrawn('s.guardian_user_id'),
+            TestOwnerVisibility::sql($pdo, 's.guardian_user_id'),
         ];
         $params = ['status' => 'published'];
 

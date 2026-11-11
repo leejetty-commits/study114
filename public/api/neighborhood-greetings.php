@@ -6,6 +6,7 @@ require_once dirname(__DIR__, 2) . '/src/bootstrap.php';
 
 use Study114\Auth\AuthSession;
 use Study114\Neighborhood\NeighborhoodGreetingService;
+use Study114\Visibility\TestOwnerVisibility;
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -31,6 +32,8 @@ try {
                 echo json_encode(['ok' => false, 'error' => 'auth_required', 'message' => '로그인이 필요해요.'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
+            TestOwnerVisibility::reset();
+            TestOwnerVisibility::bindViewer($user);
             $providerType = (string) ($_GET['provider_type'] ?? '');
             $registrationId = (int) ($_GET['registration_id'] ?? 0);
             $mine = $service->getMine((int) $user['user_id'], (string) ($user['role_type'] ?? ''), $providerType, $registrationId);
@@ -39,11 +42,16 @@ try {
         }
 
         $full = false;
+        $viewer = null;
         try {
-            $full = AuthSession::userIfActive() !== null;
+            $viewer = AuthSession::userIfActive();
+            $full = $viewer !== null;
         } catch (Throwable) {
             $full = false;
+            $viewer = null;
         }
+        TestOwnerVisibility::reset();
+        TestOwnerVisibility::bindViewer($viewer);
         echo json_encode([
             'ok' => true,
             'items' => $service->listPublic($full),
