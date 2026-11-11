@@ -8,7 +8,10 @@
 import { registerState } from '@study-room-ui/state.js';
 import { saveCurrentStep } from '@study-room-ui/save-flow.js';
 import {
+  PROMO_IMAGE_SPEC,
   validatePromoImageFile,
+  softHintPromoImageFile,
+  shrinkPromoImageForUpload,
   openPromoCropDialog,
   uploadPromoImage,
 } from '../../../shared/promo-image.js';
@@ -246,17 +249,28 @@ function openDrawer(roomId, field, rerender) {
 async function openCoverModal(roomId, rerender) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/jpeg,image/png,image/webp,image/*';
+  input.accept = PROMO_IMAGE_SPEC.accept;
   input.addEventListener('change', async () => {
     const file = input.files?.[0];
     input.remove();
     if (!file) return;
     const err = await validatePromoImageFile(file);
     if (err) {
-      void s114Alert(err);
+      await s114Alert(err);
       return;
     }
-    const crop = await openPromoCropDialog(document.body, { file });
+    let prepared = file;
+    try {
+      prepared = await shrinkPromoImageForUpload(file);
+    } catch (shrinkErr) {
+      await s114Alert(shrinkErr instanceof Error ? shrinkErr.message : '사진을 준비하지 못했어요.');
+      return;
+    }
+    const soft = await softHintPromoImageFile(prepared);
+    if (soft) {
+      await s114Alert(soft);
+    }
+    const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;
     try {
       await ensureEmbeddedRegister(roomId, { force: true });
@@ -267,7 +281,7 @@ async function openCoverModal(roomId, rerender) {
       }
       const image = await uploadPromoImage({
         studyRoomId: id,
-        file,
+        file: prepared,
         cropX: crop.cropX,
         cropY: crop.cropY,
         imageType: 'cover',

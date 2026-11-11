@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\AuthSession;
 use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
+use Study114\Media\PromoImageException;
 use Study114\Media\PromoImageSpec;
 use Study114\Media\TutorProfileImageService;
 
@@ -146,55 +147,31 @@ try {
     }
 
     throw new InvalidArgumentException('알 수 없는 동작입니다.');
-} catch (InvalidArgumentException $e) {
-    [$code, $userMsg] = tutor_profile_image_error_parts($e->getMessage(), true);
+} catch (PromoImageException $e) {
+    $code = $e->errorCode();
     error_log('[tutor-profile-image] ' . $code . ' ' . $e->getMessage());
     tutor_profile_image_json([
         'ok' => false,
         'error' => $code,
-        'message' => $userMsg,
+        'message' => $e->getMessage(),
+    ], in_array($code, ['too_large', 'bad_type'], true) ? 400 : 500);
+} catch (InvalidArgumentException $e) {
+    error_log('[tutor-profile-image] validation ' . $e->getMessage());
+    tutor_profile_image_json([
+        'ok' => false,
+        'error' => 'validation',
+        'message' => $e->getMessage(),
     ], 400);
 } catch (Throwable $e) {
-    [$code, $userMsg] = tutor_profile_image_error_parts($e->getMessage(), false);
+    $code = (str_contains($e->getMessage(), 'undefined function') && str_contains($e->getMessage(), 'image'))
+        ? 'gd_missing'
+        : 'server_error';
     error_log('[tutor-profile-image] ' . $code . ' ' . $e->getMessage() . "\n" . $e->getTraceAsString());
     tutor_profile_image_json([
         'ok' => false,
         'error' => $code,
-        'message' => $userMsg,
+        'message' => $code === 'gd_missing'
+            ? '지금은 사진을 처리할 수 없어요. 잠시 후 다시 시도해 주세요.'
+            : '사진을 처리하지 못했어요. 다시 시도해 주세요.',
     ], 500);
-}
-
-/**
- * @return array{0: string, 1: string}
- */
-function tutor_profile_image_error_parts(string $raw, bool $keepPlainValidation): array
-{
-    $known = ['gd_missing', 'write_failed', 'db_failed', 'too_large', 'bad_type'];
-    foreach ($known as $code) {
-        if (str_starts_with($raw, $code . ':')) {
-            return [$code, tutor_profile_image_user_message($code, $raw)];
-        }
-    }
-    if (str_contains($raw, 'undefined function') && (str_contains($raw, 'image') || str_contains($raw, 'gd'))) {
-        return ['gd_missing', tutor_profile_image_user_message('gd_missing', $raw)];
-    }
-    if ($keepPlainValidation && $raw !== '') {
-        return ['validation', $raw];
-    }
-
-    return ['server_error', tutor_profile_image_user_message('server_error', $raw)];
-}
-
-function tutor_profile_image_user_message(string $code, string $raw): string
-{
-    return match ($code) {
-        'too_large' => '파일이 너무 커요. 4MB 이하로 줄여 주세요.',
-        'bad_type' => str_contains($raw, '형식은 아직') || str_contains($raw, 'HEIC')
-            ? '이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.'
-            : 'JPG, PNG, WebP 파일만 올릴 수 있어요.',
-        'gd_missing' => '지금은 사진을 처리할 수 없어요. 잠시 후 다시 시도해 주세요.',
-        'write_failed' => '사진을 저장하지 못했어요. 다시 시도해 주세요.',
-        'db_failed' => '사진 정보를 저장하지 못했어요. 다시 시도해 주세요.',
-        default => '사진을 처리하지 못했어요. 다시 시도해 주세요.',
-    };
 }

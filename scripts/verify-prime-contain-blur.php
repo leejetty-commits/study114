@@ -145,6 +145,24 @@ $cropped = $dir . '/cropped.webp';
 writeCroppedWide($wide, $cropped);
 check('변조: prime을 crop으로 되돌리면 가로 끝 검사가 실패', widePrimeOk($p1280, 1280, 720) && !widePrimeOk($cropped, 1280, 720));
 
+$bothSrc = $dir . '/both.jpg';
+writeJpeg($bothSrc, 900, 600, function ($im, $w, $h): void {
+    $green = imagecolorallocate($im, 0, 170, 0);
+    $red = imagecolorallocate($im, 230, 0, 0);
+    $blue = imagecolorallocate($im, 0, 0, 230);
+    imagefilledrectangle($im, 0, 0, $w, $h, $green);
+    imagefilledrectangle($im, 0, 0, 49, $h, $red);
+    imagefilledrectangle($im, $w - 50, 0, $w, $h, $blue);
+});
+$bothPrime = $dir . '/both-prime.webp';
+$bothBasic = $dir . '/both-basic.webp';
+$processor->writeVariants($bothSrc, 0.5, 0.5, [
+    'prime_1280' => $bothPrime,
+    'basic_720' => $bothBasic,
+]);
+check('프라임+베이직 동시: prime 1280×720 contain', widePrimeOk($bothPrime, 1280, 720), describe($bothPrime));
+check('프라임+베이직 동시: basic 720×720 crop', sizeOfImage($bothBasic) === [720, 720], describe($bothBasic));
+
 cleanup($dir);
 exit($fail > 0 ? 1 : 0);
 

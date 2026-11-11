@@ -110,7 +110,7 @@ rg -n "health/db|room-account|api/health" --glob '!node_modules' . | rg -v "^./p
        max($width, $height) > 12000
        || ($width > 0 && $height > intdiv(40000000, $width))
        ```
-   - 최소 크기(`PromoImageSpec::MIN_WIDTH`·`MIN_HEIGHT`)는 지금처럼 유지.
+   - 최소 크기(`PromoImageSpec::MIN_WIDTH`·`MIN_HEIGHT`) — **[368 정정]** 거절하지 않는다. 업로드 정규화(크롭 파생본) 단계에서 서버가 키운다. 값은 soft 안내 기준으로만 쓴다.
    - 파일 이름 확장자 검사(`ALLOWED_EXT`)는 남겨도 된다(이중 확인). 단 **저장 확장자를 정하는 데는 쓰지 않는다.**
 2. **확장자는 서버가 정한다.** 읽어 낸 MIME → `image/jpeg`→`jpg`, `image/png`→`png`, `image/webp`→`webp`. 그 밖은 거절. 사용자 파일 이름은 절대 쓰지 않는다.
 3. 검사를 통과한 뒤에만 `{token}_orig.{서버가 정한 확장자}`로 저장(move_uploaded_file)한다.

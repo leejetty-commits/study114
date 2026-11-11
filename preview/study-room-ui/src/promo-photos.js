@@ -5,6 +5,7 @@ import {
   PROMO_IMAGE_SPEC,
   validatePromoImageFile,
   softHintPromoImageFile,
+  shrinkPromoImageForUpload,
   openPromoCropDialog,
   uploadPromoImage,
   deletePromoImage,
@@ -130,14 +131,21 @@ export function bindPromoPhotos(root, opts) {
     }
     const err = await validatePromoImageFile(file);
     if (err) {
-      void s114Alert(err);
+      await s114Alert(err);
       return;
     }
-    const soft = await softHintPromoImageFile(file);
-    if (soft) {
-      void s114Alert(soft);
+    let prepared = file;
+    try {
+      prepared = await shrinkPromoImageForUpload(file);
+    } catch (shrinkErr) {
+      await s114Alert(shrinkErr instanceof Error ? shrinkErr.message : '사진을 준비하지 못했어요.');
+      return;
     }
-    const crop = await openPromoCropDialog(document.body, { file });
+    const soft = await softHintPromoImageFile(prepared);
+    if (soft) {
+      await s114Alert(soft);
+    }
+    const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;
 
     if (!registerState.study_room_id) {
@@ -158,7 +166,7 @@ export function bindPromoPhotos(root, opts) {
       const hasCover = (registerState.images || []).some((img) => img.image_type === 'cover');
       const image = await uploadPromoImage({
         studyRoomId: Number(roomId),
-        file,
+        file: prepared,
         cropX: crop.cropX,
         cropY: crop.cropY,
         imageType: hasCover ? 'interior' : 'cover',

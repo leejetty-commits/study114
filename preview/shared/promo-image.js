@@ -7,9 +7,11 @@
 import { bindDraggableDialog } from './draggable-dialog.js';
 
 export const PROMO_IMAGE_SPEC = {
-  accept: 'image/jpeg,image/png,image/webp',
+  accept: 'image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
   maxBytes: 4 * 1024 * 1024,
+  /** 업로드 전 브라우저 축소 긴 변 상한 */
+  clientLongEdge: 2560,
   /** 소프트 안내 기준(거절 아님). 서버도 같은 기준으로 soft_small 판정. */
   minWidth: 800,
   minHeight: 600,
@@ -51,6 +53,7 @@ export function readImageSize(file) {
 /**
  * @param {File} file
  * @returns {Promise<string>} 오류 메시지. 통과면 빈 문자열.
+ * 용량 초과는 거절하지 않는다 — shrinkPromoImageForUpload로 줄인 뒤 올린다.
  */
 export async function validatePromoImageFile(file) {
   if (!file) return '파일을 선택해 주세요.';
@@ -58,13 +61,11 @@ export async function validatePromoImageFile(file) {
   if (ext === 'heic' || ext === 'heif' || String(file.type || '').includes('heic') || String(file.type || '').includes('heif')) {
     return '이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.';
   }
-  const mimeOk = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
+  const mimeOk =
+    !file.type || ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
   const extOk = PROMO_IMAGE_SPEC.acceptExt.includes(ext);
   if (!mimeOk && !extOk) {
     return 'JPG, PNG, WebP 파일만 올릴 수 있어요.';
-  }
-  if (file.size > PROMO_IMAGE_SPEC.maxBytes) {
-    return '파일이 너무 커요. 4MB 이하로 줄여 주세요.';
   }
   try {
     const { width, height } = await readImageSize(file);
@@ -75,6 +76,71 @@ export async function validatePromoImageFile(file) {
     return err instanceof Error ? err.message : '이미지를 확인할 수 없어요.';
   }
   return '';
+}
+
+/**
+ * 긴 변 clientLongEdge·용량 maxBytes 이하로 브라우저에서 줄인다(JPEG/WebP).
+ * 이미 작으면 원본 File을 그대로 돌려준다.
+ * @param {File} file
+ * @returns {Promise<File>}
+ */
+export async function shrinkPromoImageForUpload(file) {
+  const maxEdge = PROMO_IMAGE_SPEC.clientLongEdge;
+  const maxBytes = PROMO_IMAGE_SPEC.maxBytes;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('이미지를 읽을 수 없어요.'));
+      el.src = url;
+    });
+    const sw = img.naturalWidth || img.width;
+    const sh = img.naturalHeight || img.height;
+    const long = Math.max(sw, sh);
+    const needResize = long > maxEdge || file.size > maxBytes;
+    if (!needResize) {
+      return file;
+    }
+    const scale = long > maxEdge ? maxEdge / long : 1;
+    const tw = Math.max(1, Math.round(sw * scale));
+    const th = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw;
+    canvas.height = th;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('이미지 캔버스를 만들 수 없어요.');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, tw, th);
+
+    const preferWebp = String(file.type || '').includes('webp') || extOf(file.name) === 'webp';
+    const mime = preferWebp && typeof canvas.toBlob === 'function' ? 'image/webp' : 'image/jpeg';
+    const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+    const outName = `${baseName}.${mime === 'image/webp' ? 'webp' : 'jpg'}`;
+
+    let quality = 0.86;
+    /** @type {Blob|null} */
+    let blob = null;
+    for (let i = 0; i < 8; i++) {
+      blob = await new Promise((resolve) => {
+        canvas.toBlob((b) => resolve(b), mime, quality);
+      });
+      if (!blob) break;
+      if (blob.size <= maxBytes || quality <= 0.45) break;
+      quality = Math.max(0.45, quality - 0.1);
+    }
+    if (!blob) {
+      const dataUrl = canvas.toDataURL(mime, quality);
+      const bin = atob(dataUrl.split(',')[1] || '');
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      blob = new Blob([arr], { type: mime });
+    }
+    return new File([blob], outName, { type: mime, lastModified: Date.now() });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 /**

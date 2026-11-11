@@ -44,7 +44,8 @@ done
 
 ### 규칙
 - 파일 이름: 같은 사진의 다른 파일과 같은 토큰 + `_fit_1280.webp` (예: `..._prime_1280.webp` 옆에 `..._fit_1280.webp`).
-- 원본(`_orig`)에서 만든다. 자르지 않는다. 긴 변 1280. 원본이 더 작으면 **키우지 않는다**. webp.
+- 원본(`_orig`)에서 만든다. 자르지 않는다. 긴 변 1280. 원본이 더 작으면 **키우지 않는다**(fit_1280 규칙 유지). webp.
+- **[368 정정]** 카드용 파생본(베이직 등)의 최소 크기 거절은 폐지. 작으면 업로드 정규화에서 키운 뒤 자른다. fit_1280 자체는 여전히 키우지 않는다.
 - 이미 있는 함수 `PromoImageProcessor::shrinkLongEdgeWebp($src, $dest, 1280, 82, $targetBytes)`(src/Media/PromoImageProcessor.php:188-241)를 그대로 쓴다. 이 함수는 줄이기만 하고 키우지 않는다. `$targetBytes`는 약 400KB(409600)로 한다.
 - **`PromoImageSpec::VARIANTS`(src/Media/PromoImageSpec.php:22-27)·`VARIANT_ASPECT`(:30-35)에 fit을 넣지 않는다.** 넣으면 잘리고, 서비스의 반복문이 바뀐다. 대신 PromoImageSpec에 상수/함수 하나만 더한다(예: `FIT_KEY='fit_1280'`, `FIT_LONG_EDGE=1280`, `fitPathFor(string $variantPath): string` — `_prime_1280`/`_prime_1600`/`_basic_720`/`_basic_360`를 `_fit_1280`으로 바꾸고 확장자를 `.webp`로).
 - fit 만들기가 실패해도 사진 올리기 자체는 **실패시키지 않는다**(로그만 남김). 화면은 fit이 없으면 지금 파일을 쓴다.
