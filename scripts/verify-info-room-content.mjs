@@ -103,19 +103,45 @@ function isExceptionPara(p) {
   return false;
 }
 
-/** 법령 의무·우동공과 등 공유 허용 문장 */
+const APPENDIX_TITLE =
+  /^(마무리 한 걸음|바로 적용|운영 노트|요일 루틴|습관 한 가지|실행으로 옮기기|현장 메모)$/;
+
+/** 법령 의무·우동공과 등 공유 허용 문장 (글간 비교 예외). 글내 2회는 별도 FAIL */
 function isExceptionSentence(s) {
   const t = String(s || '').replace(/\s+/g, ' ').trim();
   if (!t) return true;
   if (t === UDONG) return true;
   if (/제\d+조/.test(t) && /(학원법|시행령|법\s*제)/.test(t) && t.length < 220) return true;
-  if (/개인과외교습자는 신고 사항이 바뀌면/.test(t) && /15일/.test(t)) return true;
+  if (/개인과외교습자는/.test(t) && /바뀌면/.test(t) && /15일/.test(t) && /변경신고/.test(t))
+    return true;
   if (/개인과외 장소로는 불가/.test(t) && t.length < 100) return true;
   if (/상가·오피스텔은 불가/.test(t) && t.length < 100) return true;
   if (/반환사유 발생일부터 5일/.test(t) && t.length < 180) return true;
   if (/신고증명서를 게시해야 하고/.test(t) && /제14조의2/.test(t) && t.length < 160) return true;
   if (/필수 표시가 빠진 광고는/.test(t) && t.length < 80) return true;
   return false;
+}
+
+function listH2Titles(body) {
+  const out = [];
+  for (const line of String(body || '').split(/\r?\n/)) {
+    const m = line.match(/^##\s+(.+)$/);
+    if (!m) continue;
+    const title = m[1].trim();
+    if (/체크리스트|점검하며/.test(title)) continue;
+    out.push(title);
+  }
+  return out;
+}
+
+function countAppendixSections(body) {
+  return listH2Titles(body).filter((t) => APPENDIX_TITLE.test(t)).length;
+}
+
+function h2OrderKey(body) {
+  return listH2Titles(body)
+    .filter((t) => !/^Q\s*&?\s*A/i.test(t) && t !== 'Q&A' && !/^Q&A/.test(t))
+    .join('›');
 }
 
 /** 번호·「」·영문·괄호 꼬리표·기호 제거 후 비교용 문자열 */
@@ -138,16 +164,24 @@ function normalizeForCompare(p) {
 }
 
 /** 본문을 비교용 문장 배열로 분해 */
-function splitSentences(text) {
+function splitSentences(text, minNoSpace = 18) {
   const flat = String(text || '')
     .replace(/\r?\n/g, ' ')
+    // Q./A. 뒤 마침표는 문장 종결이 아님
+    .replace(/\b([QA])\.\s+/g, '$1∶ ')
     .replace(/\s+/g, ' ')
     .trim();
   if (!flat) return [];
   const parts = flat.split(/(?<=[.!?。？！]|습니다|세요|니다|까요|습니까)\s+/);
   return parts
-    .map((s) => s.trim())
-    .filter((s) => countNoSpace(s) >= 18 && !/^#/.test(s) && !/^- \[[ xX]\] /.test(s));
+    .map((s) => s.trim().replace(/^([QA])∶\s*/, '$1. '))
+    .filter(
+      (s) =>
+        countNoSpace(s) >= minNoSpace &&
+        !/^#/.test(s) &&
+        !/^- \[[ xX]\] /.test(s) &&
+        !/^[QA]\.?\s*$/i.test(s)
+    );
 }
 
 /** Q&A 섹션 뒤에 이어지는 ## 절 개수 (체크리스트 제외) */
@@ -376,20 +410,40 @@ for (const doc of docs) {
   }
 }
 
-/** 파일별 문장 목록 (정규화 포함) */
+/** 파일별 문장 목록 (정규화 포함). 비교 최소 정규화 길이 15 */
+const SENT_NORM_MIN = 15;
 for (const doc of docs) {
   const sents = [];
+  const allSents = [];
   for (const p of doc.paras) {
     if (isExceptionPara(p)) continue;
     if (/^#/.test(p) || /^- \[[ xX]\] /.test(p) || /^이 글에서 알 수 있는 것/.test(p)) continue;
-    for (const s of splitSentences(p)) {
+    for (const s of splitSentences(p, 1)) {
+      const raw = String(s || '').replace(/\s+/g, ' ').trim();
+      if (!raw) continue;
+      allSents.push(raw);
       if (isExceptionSentence(s)) continue;
+      if (countNoSpace(raw) < 18) continue;
       const n = normalizeForCompare(s);
-      if (n.length < 40) continue;
-      sents.push({ s, n });
+      if (n.length < SENT_NORM_MIN) continue;
+      sents.push({ s: raw, n });
     }
   }
   doc.sents = sents;
+  doc.allSents = allSents;
+  doc.h2Key = h2OrderKey(doc.body);
+}
+
+/** 소제목 순서 동일 ≥3편이면 해당 키의 모든 파일 FAIL */
+const h2KeyOwners = new Map();
+for (const doc of docs) {
+  if (!doc.h2Key) continue;
+  if (!h2KeyOwners.has(doc.h2Key)) h2KeyOwners.set(doc.h2Key, []);
+  h2KeyOwners.get(doc.h2Key).push(doc.file);
+}
+const h2OrderFailFiles = new Set();
+for (const [, owners] of h2KeyOwners) {
+  if (owners.length >= 3) for (const f of owners) h2OrderFailFiles.add(f);
 }
 
 /** 글간 문장 유사도: 60% 이상이면 양쪽 FAIL 후보 */
@@ -440,15 +494,43 @@ for (const doc of docs) {
     issues.push(`near-dup paragraphs ov=${(top.ov * 100).toFixed(0)}%`);
   }
 
-  // 같은 글 안 문장 유사도
+  // 같은 글 안 문장 유사도 + 완전 동일 문장
   const sents = doc.sents || [];
+  const allSents = doc.allSents || [];
   let sentDup = 0;
+  let exactDup = 0;
+  const exactSeen = new Map();
+  for (const raw of allSents) {
+    if (!raw) continue;
+    exactSeen.set(raw, (exactSeen.get(raw) || 0) + 1);
+  }
+  for (const [, c] of exactSeen) {
+    if (c >= 2) exactDup += c - 1;
+  }
+  if (exactDup) issues.push(`exact-dup sentences in-file ${exactDup} pair(s)`);
+
   for (let i = 0; i < sents.length; i += 1) {
     for (let j = i + 1; j < sents.length; j += 1) {
       if (trigramOverlap(sents[i].n, sents[j].n) >= TRIGRAM_FAIL) sentDup += 1;
     }
   }
   if (sentDup) issues.push(`near-dup sentences in-file ${sentDup} pair(s)`);
+
+  // 같은 법령 예외 문장(공백 정규화 후 완전 동일)이 글 안에서 2회 이상
+  const lawCounts = new Map();
+  for (const raw of allSents) {
+    if (!raw || raw === UDONG || !isExceptionSentence(raw)) continue;
+    if (!/제\d+조|15일|5일|필수 표시|장소로는 불가|상가·오피스텔은 불가|변경신고/.test(raw))
+      continue;
+    const key = raw.replace(/\s+/g, ' ').trim();
+    lawCounts.set(key, (lawCounts.get(key) || 0) + 1);
+  }
+  const lawDup = [...lawCounts.values()].filter((c) => c >= 2).length;
+  if (lawDup) issues.push(`law-exception repeated in-file ${lawDup} form(s)`);
+
+  // 한 문장에 「바뀌면」 2회
+  const changeTwice = allSents.filter((raw) => (raw.match(/바뀌면/g) || []).length >= 2);
+  if (changeTwice.length) issues.push(`「바뀌면」×2 in sentence ${changeTwice.length}x`);
 
   // 글간 문장 유사도
   const cross = crossSentenceHits.get(file) || [];
@@ -465,6 +547,15 @@ for (const doc of docs) {
   // Q&A 뒤 절 2개 이상
   const afterQA = countSectionsAfterQA(body);
   if (afterQA >= 2) issues.push(`sections after Q&A ${afterQA} >= 2`);
+
+  // 덧붙임 절(고정 틀) — Q&A 위치와 무관
+  const appendix = countAppendixSections(body);
+  if (appendix >= 2) issues.push(`appendix sections ${appendix} >= 2`);
+
+  // 소제목 순서 동일 3편 이상
+  if (h2OrderFailFiles.has(file)) {
+    issues.push(`h2-order shared by ${h2KeyOwners.get(doc.h2Key)?.length || 0} files`);
+  }
 
   // 공유 문단 비율
   let shareable = 0;
