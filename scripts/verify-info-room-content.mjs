@@ -8,12 +8,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const MIN_CHARS = 2500;
+const MIN_CHARS = 2700;
 const MAX_CHARS = 4000;
-const MIN_CHARS_NOSPACE = 1800;
+const MIN_CHARS_NOSPACE = 2000;
 const MIN_H2 = 4;
 const MIN_SUMMARY = 3;
 const MIN_CHECKS = 5;
+const MIN_SECTION_SENTENCES = 3;
 const URL_RE = /https?:\/\/[^\s)\]]+/gi;
 const TITLE_SIM_WARN = 0.55;
 const HAN_RE = /[\u4e00-\u9fff]/g;
@@ -21,6 +22,9 @@ const TRIGRAM_FAIL = 0.6;
 const SHARE_FAIL = 0.1;
 const UDONG =
   '우리 동네 공부방·과외 정보는 우동공과 카드로도 정리해 두시면 좋아요.';
+/** 「」 직후 조사만 허용. 그 외 한글 밀착은 띄어쓰기 FAIL */
+const QUOTE_OK_PARTICLE =
+  /^(을|를|이|가|은|는|과|와|의|에|에서|로|으로|만|도|부터|까지|처럼|보다|라고|이라고|이라며|이며|이고|고|요|다|등|및|입니다|인가|인|할|한|하면|하거나|일|와)$/;
 
 const folder = process.argv[2];
 if (!folder) {
@@ -104,11 +108,62 @@ function normalizeForCompare(p) {
   return p
     .replace(/실행\s*메모\s*\d+/g, '')
     .replace(/준비\s*메모\s*\d+/g, '')
+    .replace(/시나리오\s*\d+/g, '')
+    .replace(/Q\.\s*/g, '')
+    .replace(/A\.\s*/g, '')
     .replace(/「[^」]*」/g, '')
     .replace(/『[^』]*』/g, '')
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
+    .replace(/\d+/g, '')
+    .replace(/[^\p{L}\s]/gu, '')
     .replace(/\s+/g, '')
     .toLowerCase();
+}
+
+/** 「」 직후 한글 밀착(조사 제외) */
+function findQuoteSpacingErrors(body) {
+  const errors = [];
+  const re = /」([가-힣]+)/g;
+  let m;
+  while ((m = re.exec(body))) {
+    if (!QUOTE_OK_PARTICLE.test(m[1])) errors.push(`」${m[1]}`);
+  }
+  return errors;
+}
+
+/** 소제목(##)마다 문장 수·나열만 있는 절 검사 */
+function findWeakSections(body) {
+  const issues = [];
+  const chunks = body.split(/^##\s+/m);
+  for (let i = 1; i < chunks.length; i += 1) {
+    const chunk = chunks[i];
+    const nl = chunk.indexOf('\n');
+    const title = (nl < 0 ? chunk : chunk.slice(0, nl)).trim();
+    let content = nl < 0 ? '' : chunk.slice(nl + 1);
+    if (/체크리스트|점검하며/.test(title)) continue;
+    // ### 이하는 본문 문장 집계에서 제외(체크만 있는 경우 대비)
+    content = content.replace(/^###[\s\S]*/m, '');
+    const flat = content.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+    if (flat.length < 40) continue;
+    const listOnly =
+      /장점\s*:/.test(flat) &&
+      /확인\s*항목\s*:/.test(flat) &&
+      (flat.match(/[.!?。]|습니다|세요|니다|까요/g) || []).length < 4;
+    if (listOnly) {
+      issues.push(`list-only section「${title.slice(0, 24)}」`);
+      continue;
+    }
+    // 문장: 종결·물음 패턴
+    const sentences = flat.match(
+      /[^.!?。]+?(?:습니다|세요|니다|까요|습니까)\.?|[^.!?。]+?[.!?。]/g
+    ) || [];
+    const meaningful = sentences.filter((s) => countNoSpace(s) >= 12);
+    if (meaningful.length < MIN_SECTION_SENTENCES && !/^Q&A/.test(title)) {
+      issues.push(
+        `section「${title.slice(0, 24)}」sentences ${meaningful.length}<${MIN_SECTION_SENTENCES}`
+      );
+    }
+  }
+  return issues;
 }
 
 function trigrams(s) {
@@ -369,6 +424,16 @@ for (const doc of docs) {
   const particleErrs = findParticleErrors(body);
   if (particleErrs.length) {
     issues.push(`particle ${particleErrs.slice(0, 3).join(', ')}`);
+  }
+
+  const quoteSpace = findQuoteSpacingErrors(body);
+  if (quoteSpace.length) {
+    issues.push(`quote-space ${quoteSpace.slice(0, 4).join(', ')}`);
+  }
+
+  const weakSecs = findWeakSections(body);
+  if (weakSecs.length) {
+    issues.push(weakSecs.slice(0, 3).join('; '));
   }
 
   const han = body.match(HAN_RE) || [];
