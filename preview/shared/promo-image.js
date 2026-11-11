@@ -19,7 +19,7 @@ export const PROMO_IMAGE_SPEC = {
   recommended: '또렷한 사진',
 };
 
-export const PROMO_SOFT_SMALL_HINT = '사진이 작아 조금 흐릿하게 보일 수 있어요';
+export const PROMO_SOFT_SMALL_HINT = '작은 사진은 확대되어 화질이 좋지 않을 수 있어요. 그래도 올릴 수 있어요.';
 
 function extOf(name) {
   const m = String(name || '')

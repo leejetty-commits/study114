@@ -85,7 +85,7 @@ export function renderPromoPhotoGrid() {
 }
 
 export function promoPhotoHint() {
-  return `JPG · PNG · WebP / ${PROMO_IMAGE_SPEC.recommended} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 맞춥니다. 작은 사진도 올릴 수 있어요.`;
+  return `JPG · PNG · WebP / ${PROMO_IMAGE_SPEC.recommended} / 큰 사진은 자동으로 줄여서 올려요 · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 맞춥니다.`;
 }
 
 export function syncPromoPhotoMeta(root) {
