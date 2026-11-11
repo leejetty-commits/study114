@@ -6,6 +6,7 @@ import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -54,27 +55,21 @@ export function renderSignupForm() {
         <div class="form-row">
           <div class="form-group">
             <label class="form-label form-label--required" for="signup-password">비밀번호</label>
-            <input
-              class="form-input"
-              type="password"
-              id="signup-password"
-              name="password"
-              placeholder="비밀번호 입력"
-              autocomplete="new-password"
-              required
-            />
+            ${renderPasswordField({
+              id: 'signup-password',
+              name: 'password',
+              placeholder: '비밀번호 입력',
+              autocomplete: 'new-password',
+            })}
           </div>
           <div class="form-group">
             <label class="form-label form-label--required" for="signup-password-confirm">비밀번호 확인</label>
-            <input
-              class="form-input"
-              type="password"
-              id="signup-password-confirm"
-              name="password_confirm"
-              placeholder="비밀번호 재입력"
-              autocomplete="new-password"
-              required
-            />
+            ${renderPasswordField({
+              id: 'signup-password-confirm',
+              name: 'password_confirm',
+              placeholder: '비밀번호 재입력',
+              autocomplete: 'new-password',
+            })}
           </div>
         </div>
         ${passwordRetryHint}
@@ -210,6 +205,7 @@ function showSignupError(root, msg) {
 
 export function bindSignupFormEvents(root) {
   bindGlobalEvents(root);
+  bindPasswordToggles(root);
 
   const form = root.querySelector('[data-form="signup"]');
   const errorEl = root.querySelector('[data-signup-error]');

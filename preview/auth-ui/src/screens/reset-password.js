@@ -9,6 +9,7 @@ import { bindGlobalEvents } from '../layout.js';
 import { passwordResetApi, passwordValidateTokenApi } from '../password-reset-api.js';
 import { validatePassword } from '../../../shared/password-policy.js';
 import { parseHashQuery } from '../../../shared/preview-links.js';
+import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 
 function renderLoadingCard() {
   return `
@@ -38,25 +39,21 @@ function renderFormCard(token) {
       <input type="hidden" name="token" value="${safeToken}" />
       <div class="form-group">
         <label class="form-label form-label--required" for="reset-password">새 비밀번호</label>
-        <input
-          class="form-input"
-          type="password"
-          id="reset-password"
-          name="password"
-          autocomplete="new-password"
-          required
-        />
+        ${renderPasswordField({
+          id: 'reset-password',
+          name: 'password',
+          autocomplete: 'new-password',
+          placeholder: '새 비밀번호',
+        })}
       </div>
       <div class="form-group">
         <label class="form-label form-label--required" for="reset-password-confirm">새 비밀번호 확인</label>
-        <input
-          class="form-input"
-          type="password"
-          id="reset-password-confirm"
-          name="password_confirm"
-          autocomplete="new-password"
-          required
-        />
+        ${renderPasswordField({
+          id: 'reset-password-confirm',
+          name: 'password_confirm',
+          autocomplete: 'new-password',
+          placeholder: '새 비밀번호 확인',
+        })}
       </div>
       ${renderPasswordRuleList()}
       <div class="form-error" data-reset-error hidden role="alert"></div>
@@ -107,6 +104,7 @@ function mapClientPasswordError(message) {
 
 export function bindResetPasswordEvents(root) {
   bindGlobalEvents(root);
+  bindPasswordToggles(root);
 
   const panel = root.querySelector('[data-reset-panel]');
   if (panel?.dataset.ready !== '1' && panel?.querySelector('.recovery-stage__loading')) {

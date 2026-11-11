@@ -11,6 +11,7 @@ import { AUTH_WELCOME_COPY, loginFailureMessage } from '../../../shared/auth-wel
 import { withLoginWelcome } from '../../../shared/login-welcome.js';
 import { getChromeUser } from '../../../shared/chrome-session.js';
 import { homeHashUrl, roleHomeHashPath } from '../../../shared/site-nav-config.js';
+import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -46,9 +47,9 @@ export function renderLogin() {
             <img class="brand-lockup__wordmark" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" />
           </span>
         </div>
-        <h1 class="auth-heading">로그인</h1>
+        <h1 class="auth-heading">${AUTH_WELCOME_COPY.gateTitle}</h1>
         <p class="auth-subheading login-stage__sub">
-          ${AUTH_WELCOME_COPY.login.sub}
+          ${AUTH_WELCOME_COPY.gateSub}
         </p>
         ${
           oauthError
@@ -72,15 +73,12 @@ export function renderLogin() {
           </div>
           <div class="form-group">
             <label class="form-label form-label--required" for="login-password">비밀번호</label>
-            <input
-              class="form-input"
-              type="password"
-              id="login-password"
-              name="password"
-              placeholder="비밀번호"
-              autocomplete="current-password"
-              required
-            />
+            ${renderPasswordField({
+              id: 'login-password',
+              name: 'password',
+              placeholder: '비밀번호',
+              autocomplete: 'current-password',
+            })}
           </div>
           <button type="submit" class="btn btn--primary btn--block">로그인</button>
         </form>
@@ -109,6 +107,7 @@ export function renderLogin() {
 
 export function bindLoginEvents(root) {
   bindGlobalEvents(root);
+  bindPasswordToggles(root);
   const returnTo = getLoginReturnTo();
 
   root.querySelectorAll('[data-action^="social-"]').forEach((btn) => {
