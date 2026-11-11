@@ -503,8 +503,8 @@ final class BasicRegisterService
                 $stmt = $pdo->prepare(
                     'INSERT INTO study_rooms (
                         user_id, study_room_name, main_subject_note, region_id, complex_id, region_basis_type,
-                        address_text, profile_status, detail_completion_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                        address_text, profile_status, detail_completion_status, inquiry_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
                 $stmt->execute([
                     $userId,
@@ -516,14 +516,15 @@ final class BasicRegisterService
                     $addressText,
                     'draft',
                     'basic_only',
+                    'paused',
                 ]);
                 $roomId = (int) $pdo->lastInsertId();
             } else {
                 $stmt = $pdo->prepare(
                     'INSERT INTO study_rooms (
                         user_id, study_room_name, main_subject_note, region_id, complex_id, address_text,
-                        profile_status, detail_completion_status
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                        profile_status, detail_completion_status, inquiry_status
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
                 );
                 $stmt->execute([
                     $userId,
@@ -534,6 +535,7 @@ final class BasicRegisterService
                     $addressText,
                     'draft',
                     'basic_only',
+                    'paused',
                 ]);
                 $roomId = (int) $pdo->lastInsertId();
             }

@@ -158,3 +158,23 @@
 | 현재상태 카드 높이 | 미인증 **229** / 성공 **177** (게이트 축소 Δ52) |
 | 인증 블록 높이 | 미인증 게이트 **+100px** (성공 배지 48px) |
 | `.p21-inq-choice.is-disabled` | main 없음 → 브랜치 추가 |
+
+## 365-보완3 (PR #171 마무리)
+
+| # | 항목 | 결과 |
+|---|------|------|
+| 1 | `channel.type` TEST/LIVE 엄격 · `storeId` 필수 | 반영 |
+| 2 | 고객 ID: `requestedCustomer.id` 우선 필수 대조(`verifiedCustomer.id` 폴백) · 로그에 필드명만 | 반영 |
+| 3 | verify: 오류 코드 확인 · Hub 「찾을 수 없」 제거 · 실제 답장 insert | **pass=19 fail=0** (커밋 전 재실행) |
+| 4 | 088 백업 테이블 + rollback 복구 · profiles 없는 소유자도 paused | 반영 |
+| 5 | BasicRegister 공부방 INSERT `inquiry_status=paused` | 반영 |
+| 6 | 검색·공개 JOIN 1회 CASE 마스킹 | 반영 |
+| 7 | 샌드박스 실인증 + CSP 호스트 | **미완** (아래) |
+
+### 7번 미완 사유
+
+1. 첫 샌드박스 실행 시 계정이 이미 인증 상태라 PortOne 창·호스트 수집 없이 `verified=true`만 찍힘  
+2. identity를 지운 뒤 재실행에서는 대기 시간 안에 인증이 완료되지 않음(호스트·CSP 빈 목록)  
+3. CTA 자동 클릭 재실행에서는 쪽지설정 게이트 버튼을 못 찾아 포트원 창이 열리지 않음  
+
+**실인증은 종현 수동 1회로 진행 예정.** 그 결과로 CSP 위반 목록·실사용 PortOne/이니시스 호스트를 확정한다.

@@ -780,6 +780,7 @@ final class SearchService
         $tsIdsExpr = $this->columnCache($pdo, 'study_rooms', 'teaching_style_ids') ? 'sr.teaching_style_ids' : 'NULL';
         $tsNoteExpr = $this->columnCache($pdo, 'study_rooms', 'teaching_style_note') ? 'sr.teaching_style_note' : 'NULL';
         $lpwExpr = $this->columnCache($pdo, 'study_rooms', 'lessons_per_week') ? 'sr.lessons_per_week' : 'NULL';
+        $inquiryExpr = \Study114\Auth\IdentityVerificationService::inquiryStatusSelectSql('sr');
 
         $sql = "
             SELECT DISTINCT sr.id, sr.user_id, sr.study_room_name, sr.price_amount, sr.intro_short, sr.intro_long,
@@ -790,7 +791,9 @@ final class SearchService
                    {$tsNoteExpr} AS teaching_style_note,
                    {$lpwExpr} AS lessons_per_week,
                    sr.lesson_place_type, sr.capacity_per_time, sr.lesson_operation_type,
-                   sr.facility_note, sr.inquiry_status, sr.profile_status,
+                   sr.facility_note,
+                   {$inquiryExpr} AS inquiry_status,
+                   sr.profile_status,
                    sr.education_office_registered, sr.detail_completion_status,
                    {$careerExpr} AS career_years,
                    {$bizExpr} AS business_registration_available,
@@ -806,6 +809,7 @@ final class SearchService
                    {$basic720Expr} AS image_path_basic_720,
                    {$basicImgExpr} AS image_path_basic
             FROM study_rooms sr
+            LEFT JOIN user_profiles up_id ON up_id.user_id = sr.user_id
             LEFT JOIN regions r ON sr.region_id = r.id
             LEFT JOIN complexes c ON sr.complex_id = c.id
             LEFT JOIN study_room_regions srr ON srr.study_room_id = sr.id AND srr.is_primary = 1
@@ -880,8 +884,7 @@ final class SearchService
                 'capacity_per_time'          => $row['capacity_per_time'] ?? null,
                 'lesson_operation_type'      => $row['lesson_operation_type'] ?? null,
                 'facility_summary'           => trim((string) ($row['facility_note'] ?? '')),
-                'inquiry_status'             => (new \Study114\Auth\IdentityVerificationService($pdo))
-                    ->publicInquiryStatus((int) ($row['user_id'] ?? 0), (string) ($row['inquiry_status'] ?? '')),
+                'inquiry_status'             => (string) ($row['inquiry_status'] ?? 'paused'),
                 'profile_status'             => (string) ($row['profile_status'] ?? 'draft'),
                 'education_office_registered'=> (bool) ($row['education_office_registered'] ?? false),
                 'career_years'               => $row['career_years'] !== null ? (int) $row['career_years'] : null,
@@ -1062,13 +1065,14 @@ final class SearchService
         $tutor360Expr = $this->tutorCoverImageExpr($pdo, 'basic_360');
         $tutor720Expr = $this->tutorCoverImageExpr($pdo, 'basic_720');
         $tutorImgExpr = $this->tutorCoverImageExpr($pdo, 'basic');
+        $tutorInquiryExpr = \Study114\Auth\IdentityVerificationService::inquiryStatusSelectSql('t');
 
         $sql = "
             SELECT DISTINCT t.id, t.user_id, t.tutor_display_name, t.preferred_fee_amount,
                    t.university_name, t.major_name, t.career_year_band,
                    t.university_status, t.proof_document_available,
                    t.lessons_per_week, t.minutes_per_lesson, t.detail_completion_status,
-                   t.inquiry_status, t.profile_status, t.published_at, t.created_at,
+                   {$tutorInquiryExpr} AS inquiry_status, t.profile_status, t.published_at, t.created_at,
                    t.slogan, t.intro_short, t.intro_long, t.feature_1, t.feature_2, t.feature_3,
                    t.main_material_note, t.student_gender_group, t.student_count_group,
                    {$genderExpr} AS tutor_gender,
@@ -1081,6 +1085,7 @@ final class SearchService
                    tst.subject_name, r.sigungu_name, r.sido_name,
                    r.sido_code, r.sigungu_code, r.unit_level, r.official_code, r.is_active
             FROM tutors t
+            LEFT JOIN user_profiles up_id ON up_id.user_id = t.user_id
             LEFT JOIN tutor_regions tr ON tr.tutor_id = t.id AND tr.is_primary = 1
             LEFT JOIN regions r ON tr.region_id = r.id
             LEFT JOIN tutor_subject_targets tst ON tst.tutor_id = t.id AND tst.is_primary = 1
@@ -1173,8 +1178,7 @@ final class SearchService
                 'lessons_per_week'       => $row['lessons_per_week'] !== null ? (int) $row['lessons_per_week'] : null,
                 'minutes_per_lesson'     => $row['minutes_per_lesson'] !== null ? (int) $row['minutes_per_lesson'] : null,
                 'detail_completion_status' => $detailStatus,
-                'inquiry_status'         => (new \Study114\Auth\IdentityVerificationService($pdo))
-                    ->publicInquiryStatus((int) ($row['user_id'] ?? 0), (string) ($row['inquiry_status'] ?? '')),
+                'inquiry_status'         => (string) ($row['inquiry_status'] ?? 'paused'),
                 'profile_status'         => (string) ($row['profile_status'] ?? 'draft'),
                 'prime_eligible'         => $detailStatus === 'expanded_complete',
                 'position_sku'           => $positionSku,

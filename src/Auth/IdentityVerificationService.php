@@ -131,6 +131,7 @@ final class IdentityVerificationService
 
     /**
      * 공개·검색용: 미인증 공급자의 open은 paused로 노출.
+     * (단건·레거시) DB를 한 번 더 칠 수 있음 — 목록은 JOIN 컬럼 + maskInquiryStatusFromJoin 사용.
      */
     public function publicInquiryStatus(int $ownerUserId, string $rawStatus): string
     {
@@ -143,6 +144,42 @@ final class IdentityVerificationService
         }
 
         return 'paused';
+    }
+
+    /**
+     * 목록 SQL LEFT JOIN user_profiles 결과로 마스킹 (추가 쿼리 없음).
+     */
+    public static function maskInquiryStatusFromJoin(
+        string $rawStatus,
+        mixed $identityVerifiedAt,
+        mixed $identityCiHash,
+        mixed $identityTxId,
+    ): string {
+        $status = trim($rawStatus);
+        if ($status !== 'open') {
+            return $status !== '' ? $status : 'paused';
+        }
+        $at = $identityVerifiedAt;
+        $hash = trim((string) ($identityCiHash ?? ''));
+        $tx = trim((string) ($identityTxId ?? ''));
+        if ($at !== null && $at !== '' && $hash !== '' && $tx !== '') {
+            return 'open';
+        }
+
+        return 'paused';
+    }
+
+    /** 목록 SELECT용 — sr/t 별칭 + up_id JOIN 전제. */
+    public static function inquiryStatusSelectSql(string $alias): string
+    {
+        return "CASE
+            WHEN {$alias}.inquiry_status <> 'open' THEN {$alias}.inquiry_status
+            WHEN up_id.identity_verified_at IS NOT NULL
+             AND NULLIF(TRIM(up_id.identity_ci_hash), '') IS NOT NULL
+             AND NULLIF(TRIM(up_id.identity_tx_id), '') IS NOT NULL
+            THEN 'open'
+            ELSE 'paused'
+          END";
     }
 
     /**
@@ -234,11 +271,7 @@ final class IdentityVerificationService
         $this->assertChannelAndStore($payload, $expected, $pending);
 
         $customer = is_array($payload['verifiedCustomer'] ?? null) ? $payload['verifiedCustomer'] : [];
-        $customerId = trim((string) ($customer['id'] ?? $customer['customerId'] ?? ''));
-        $expectedCustomer = (string) ($pending['customer_id'] ?? '');
-        if ($expectedCustomer !== '' && $customerId !== '' && !hash_equals($expectedCustomer, $customerId)) {
-            throw new IdentityVerificationException('인증 정보가 올바르지 않습니다.', 'identity_replay');
-        }
+        $this->assertCustomerIdMatchesPending($payload, $pending);
 
         $ci = trim((string) ($customer['ci'] ?? ''));
         $name = trim((string) ($customer['name'] ?? ''));
@@ -312,22 +345,21 @@ final class IdentityVerificationService
     private function assertChannelAndStore(array $payload, array $expected, array $pending): void
     {
         $channelKey = $this->extractChannelKey($payload);
-        $channelType = $this->extractChannelType($payload);
+        $channelType = strtoupper($this->extractChannelType($payload));
         $storeId = $this->extractStoreId($payload);
 
-        if ($channelType === '') {
+        // SelectedChannelType: TEST | LIVE — 허용목록은 TEST만, 그 외는 LIVE만
+        $expectedType = $expected['is_test'] ? 'TEST' : 'LIVE';
+        if ($channelType === '' || $channelType !== $expectedType) {
             throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
         }
-        if ($storeId !== '' && !hash_equals($expected['store_id'], $storeId)) {
+        if ($storeId === '') {
+            throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
+        }
+        if (!hash_equals($expected['store_id'], $storeId)) {
             throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
         }
         if ($channelKey === '' || !hash_equals($expected['channel_key'], $channelKey)) {
-            throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
-        }
-
-        $testKey = trim(study114_env('PORTONE_IDENTITY_TEST_CHANNEL_KEY'));
-        // 허용목록 밖이 TEST 채널로 오면 거부
-        if (!$expected['is_test'] && $testKey !== '' && hash_equals($testKey, $channelKey)) {
             throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
         }
 
@@ -335,6 +367,49 @@ final class IdentityVerificationService
         if ($pendingKey !== '' && !hash_equals($pendingKey, $channelKey)) {
             throw new IdentityVerificationException('인증 채널이 올바르지 않습니다.', 'identity_channel');
         }
+    }
+
+    /**
+     * 고객 ID 필수 대조.
+     * 포트원 단건 조회: requestedCustomer.id(요청 시 보낸 값) · verifiedCustomer.id(선택).
+     * 샌드박스 실측에서 값이 오는 필드를 우선 사용하고, 둘 다 비면 거부.
+     *
+     * @param array<string, mixed> $payload
+     * @param array<string, mixed> $pending
+     */
+    private function assertCustomerIdMatchesPending(array $payload, array $pending): void
+    {
+        $expectedCustomer = trim((string) ($pending['customer_id'] ?? ''));
+        if ($expectedCustomer === '') {
+            throw new IdentityVerificationException('인증 정보가 올바르지 않습니다.', 'identity_replay');
+        }
+
+        [$field, $customerId] = $this->extractCustomerIdWithField($payload);
+        // 값은 남기지 않고 필드 이름만 (실측·운영 로그용)
+        error_log('[identity] customer_id_field=' . ($field !== '' ? $field : 'missing'));
+        if ($field === '' || $customerId === '' || !hash_equals($expectedCustomer, $customerId)) {
+            throw new IdentityVerificationException('인증 정보가 올바르지 않습니다.', 'identity_replay');
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array{0: string, 1: string} [fieldName, id]
+     */
+    private function extractCustomerIdWithField(array $payload): array
+    {
+        $requested = is_array($payload['requestedCustomer'] ?? null) ? $payload['requestedCustomer'] : [];
+        $reqId = trim((string) ($requested['id'] ?? $requested['customerId'] ?? ''));
+        if ($reqId !== '') {
+            return ['requestedCustomer.id', $reqId];
+        }
+        $verified = is_array($payload['verifiedCustomer'] ?? null) ? $payload['verifiedCustomer'] : [];
+        $verId = trim((string) ($verified['id'] ?? $verified['customerId'] ?? ''));
+        if ($verId !== '') {
+            return ['verifiedCustomer.id', $verId];
+        }
+
+        return ['', ''];
     }
 
     /** @param array<string, mixed> $payload */

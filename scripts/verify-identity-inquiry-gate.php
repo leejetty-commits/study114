@@ -418,26 +418,28 @@ namespace {
         $assert(false, 'student_pass', $e->getMessage());
     }
 
-    // --- Hub: 미인증 open 거부 ---
+    // --- Hub: 미인증 open 거부 (오류 코드 identity_required만 PASS) ---
     $hub = new StudyRoomHubService(new StudyRoomHubRepository($pdo), $svc);
     try {
         $hub->applyAction(1001, 101, 'inquiry_status', ['inquiry_status' => 'open']);
-        $assert(false, 'hub_open_unverified');
+        $assert(false, 'hub_open_unverified', 'no_throw');
     } catch (IdentityVerificationException $e) {
         $assert($e->errorCode === 'identity_required', 'hub_open_unverified', $e->errorCode);
     } catch (Throwable $e) {
-        $assert(str_contains($e->getMessage(), '본인인증') || str_contains($e->getMessage(), '쪽지') || str_contains($e->getMessage(), '찾을 수 없'), 'hub_open_unverified', $e->getMessage());
+        $assert(false, 'hub_open_unverified', get_class($e) . ':' . $e->getMessage());
     }
 
     $tutorHub = new TutorHubService(new TutorHubRepository($pdo), $svc);
     try {
         $tutorHub->applyAction(2001, 201, 'inquiry_status', ['inquiry_status' => 'open']);
-        $assert(false, 'tutor_hub_open_unverified');
+        $assert(false, 'tutor_hub_open_unverified', 'no_throw');
+    } catch (IdentityVerificationException $e) {
+        $assert($e->errorCode === 'identity_required', 'tutor_hub_open_unverified', $e->errorCode);
     } catch (Throwable $e) {
-        $assert(true, 'tutor_hub_open_unverified', get_class($e));
+        $assert(false, 'tutor_hub_open_unverified', get_class($e) . ':' . $e->getMessage());
     }
 
-    // --- Admin open 거부 ---
+    // --- Admin open 거부 (InvalidArgumentException 메시지로 identity_required 경로) ---
     $admin = new AdminExposureService();
     try {
         $admin->applyCorrection([
@@ -448,9 +450,11 @@ namespace {
             'reason_category' => 'other',
             'internal_memo' => 'verify',
         ], 'admin@example.com');
-        $assert(false, 'admin_open_unverified');
+        $assert(false, 'admin_open_unverified', 'no_throw');
+    } catch (\InvalidArgumentException $e) {
+        $assert(str_contains($e->getMessage(), '본인인증'), 'admin_open_unverified', $e->getMessage());
     } catch (Throwable $e) {
-        $assert(true, 'admin_open_unverified', get_class($e));
+        $assert(false, 'admin_open_unverified', get_class($e) . ':' . $e->getMessage());
     }
 
     // --- issue + complete 성공 ---
@@ -466,9 +470,10 @@ namespace {
         'status' => 'VERIFIED',
         'verifiedAt' => gmdate('c'),
         'storeId' => 'store-verify',
-        'channel' => ['key' => 'channel-live-verify', 'type' => 'IDENTITY'],
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        // 샌드박스 실측 우선: requestedCustomer.id (요청 시 보낸 customerId 에코)
+        'requestedCustomer' => ['id' => $issued['customer_id']],
         'verifiedCustomer' => [
-            'id' => $issued['customer_id'],
             'ci' => 'ci-owner-1001',
             'name' => '홍길동',
         ],
@@ -507,8 +512,14 @@ namespace {
         'email' => 'normal2@example.com',
         'role_type' => 'study_room_owner',
     ]);
-    $fake->payload['verifiedCustomer']['id'] = $issued2['customer_id'];
-    $fake->payload['verifiedCustomer']['ci'] = 'ci-owner-1002';
+    $fake->payload = [
+        'status' => 'VERIFIED',
+        'verifiedAt' => gmdate('c'),
+        'storeId' => 'store-verify',
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        'requestedCustomer' => ['id' => $issued2['customer_id']],
+        'verifiedCustomer' => ['ci' => 'ci-owner-1002', 'name' => '위조'],
+    ];
     try {
         $svc->completeFromPortOne([
             'user_id' => 1002,
@@ -517,7 +528,7 @@ namespace {
         ], 'identity-verification-forged-id');
         $assert(false, 'forged_id');
     } catch (IdentityVerificationException $e) {
-        $assert(in_array($e->errorCode, ['identity_replay', 'identity_invalid'], true), 'forged_id', $e->errorCode);
+        $assert($e->errorCode === 'identity_replay', 'forged_id', $e->errorCode);
     }
 
     // --- 허용목록 밖 TEST 채널 거부 ---
@@ -532,9 +543,10 @@ namespace {
         'status' => 'VERIFIED',
         'verifiedAt' => gmdate('c'),
         'storeId' => 'store-verify',
-        'channel' => ['key' => 'channel-test-verify', 'type' => 'IDENTITY'],
+        // 허용목록 밖 + TEST type → identity_channel
+        'channel' => ['key' => 'channel-test-verify', 'type' => 'TEST'],
+        'requestedCustomer' => ['id' => $issued3['customer_id']],
         'verifiedCustomer' => [
-            'id' => $issued3['customer_id'],
             'ci' => 'ci-owner-1003',
             'name' => '김테스트',
         ],
@@ -548,6 +560,31 @@ namespace {
         $assert(false, 'test_channel_rejected_for_non_allowlist');
     } catch (IdentityVerificationException $e) {
         $assert($e->errorCode === 'identity_channel', 'test_channel_rejected_for_non_allowlist', $e->errorCode);
+    }
+
+    // --- storeId 없으면 거부 ---
+    $_SESSION = [];
+    $issuedStore = $svc->issuePendingVerification([
+        'user_id' => 1010,
+        'email' => 'normal10@example.com',
+        'role_type' => 'tutor',
+    ]);
+    $fake->payload = [
+        'status' => 'VERIFIED',
+        'verifiedAt' => gmdate('c'),
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        'requestedCustomer' => ['id' => $issuedStore['customer_id']],
+        'verifiedCustomer' => ['ci' => 'ci-owner-1010', 'name' => '스토어없음'],
+    ];
+    try {
+        $svc->completeFromPortOne([
+            'user_id' => 1010,
+            'email' => 'normal10@example.com',
+            'role_type' => 'tutor',
+        ], $issuedStore['identity_verification_id']);
+        $assert(false, 'store_id_required');
+    } catch (IdentityVerificationException $e) {
+        $assert($e->errorCode === 'identity_channel', 'store_id_required', $e->errorCode);
     }
 
     // --- tx 재사용 ---
@@ -569,9 +606,9 @@ namespace {
         'status' => 'VERIFIED',
         'verifiedAt' => gmdate('c'),
         'storeId' => 'store-verify',
-        'channel' => ['key' => 'channel-live-verify', 'type' => 'IDENTITY'],
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        'requestedCustomer' => ['id' => $issued4['customer_id']],
         'verifiedCustomer' => [
-            'id' => $issued4['customer_id'],
             'ci' => 'ci-owner-1004',
             'name' => '이재사용',
         ],
@@ -606,9 +643,9 @@ namespace {
         'status' => 'VERIFIED',
         'verifiedAt' => gmdate('c'),
         'storeId' => 'store-verify',
-        'channel' => ['key' => 'channel-live-verify', 'type' => 'IDENTITY'],
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        'requestedCustomer' => ['id' => $issued5['customer_id']],
         'verifiedCustomer' => [
-            'id' => $issued5['customer_id'],
             'ci' => $dupCi,
             'name' => '중복시도',
         ],
@@ -635,9 +672,9 @@ namespace {
         'status' => 'VERIFIED',
         'verifiedAt' => gmdate('c', time() - 1200),
         'storeId' => 'store-verify',
-        'channel' => ['key' => 'channel-live-verify', 'type' => 'IDENTITY'],
+        'channel' => ['key' => 'channel-live-verify', 'type' => 'LIVE'],
+        'requestedCustomer' => ['id' => $issued6['customer_id']],
         'verifiedCustomer' => [
-            'id' => $issued6['customer_id'],
             'ci' => 'ci-owner-1006',
             'name' => '만료',
         ],
@@ -663,21 +700,92 @@ namespace {
             'context_id' => 101,
             'body' => 'hello new',
         ], [], true);
-        $assert(false, 'messages_new_blocked');
+        $assert(false, 'messages_new_blocked', 'no_throw');
+    } catch (\InvalidArgumentException $e) {
+        $assert(str_contains($e->getMessage(), '쪽지'), 'messages_new_blocked', $e->getMessage());
     } catch (Throwable $e) {
-        $assert(true, 'messages_new_blocked', get_class($e));
+        $assert(false, 'messages_new_blocked', get_class($e) . ':' . $e->getMessage());
     }
 
-    // 기존 대화 답장: composeMessage 소스에서 inquiry 가드가 else(신규)에만 있는지 확인
-    $msgSrc = (string) file_get_contents(dirname(__DIR__) . '/src/Messages/MessagesService.php');
-    $elsePos = strpos($msgSrc, '} else {');
-    $guardPos = strpos($msgSrc, 'assertProviderPeerReceivingOpen');
-    $commentOk = str_contains($msgSrc, '이미 시작된 대화의 답장은 inquiry/본인인증 게이트를 적용하지 않는다');
-    $assert(
-        $commentOk && $guardPos !== false && $elsePos !== false && $guardPos > $elsePos,
-        'messages_reply_allowed',
-        'guard_only_on_new_thread'
-    );
+    // 기존 대화가 있으면 답장 compose가 성공해야 함 (inquiry paused여도)
+    $messageInserts = 0;
+    $prevResolver = $pdo->resolver;
+    $threadDetail = [
+        'id' => 77,
+        'is_blocked' => 0,
+        'context_kind' => 'study_room',
+        'context_id' => 101,
+        'participant_low_user_id' => 1001,
+        'participant_high_user_id' => 3001,
+        'context_label' => '상세',
+        'peer_display_name' => '상대',
+        'scope_badge' => '',
+        'scope_hint' => '',
+        'structured_line' => '',
+        'last_message_preview' => 'hello reply',
+        'updated_at' => '2026-11-12 00:00:00',
+        'last_message_at' => '2026-11-12 00:00:00',
+        'initiated_by_user_id' => 3001,
+        'last_sender_user_id' => 3001,
+        'read_at' => null,
+        'peer_read_at' => null,
+        'is_archived' => 0,
+        'is_important' => 0,
+        'block_reason' => null,
+        'reported_at' => null,
+        'first_message_body' => 'hello',
+        'student_request_summary' => null,
+        'any_participant_blocked' => 0,
+        'participant_low_status' => 'active',
+        'participant_high_status' => 'active',
+        'participant_low_real_name' => '나',
+        'participant_high_real_name' => '상대',
+        'show_request_in_panel' => 0,
+        'request_summary' => null,
+    ];
+    $pdo->resolver = static function (string $sql, array $p) use ($prevResolver, &$messageInserts, $threadDetail): array {
+        if (preg_match('/SELECT \* FROM message_threads/', $sql)) {
+            return ['row' => $threadDetail];
+        }
+        if (preg_match('/FROM message_threads t/', $sql)) {
+            return ['row' => $threadDetail];
+        }
+        if (preg_match('/message_thread_participant_state/', $sql)) {
+            return ['column' => false, 'row' => false];
+        }
+        if (preg_match('/INSERT INTO messages \(thread_id/', $sql)) {
+            $messageInserts++;
+
+            return ['rowCount' => 1];
+        }
+        if (preg_match('/SELECT id, sender_user_id, body, created_at FROM messages/', $sql)) {
+            return ['all' => [
+                ['id' => 1, 'sender_user_id' => 3001, 'body' => 'hello reply', 'created_at' => '2026-11-12 00:00:00'],
+            ]];
+        }
+        if (preg_match('/UPDATE message_threads SET last_message_preview/', $sql)) {
+            return ['rowCount' => 1];
+        }
+        if (preg_match('/INSERT INTO message_thread_reads|ON DUPLICATE KEY UPDATE read_at/', $sql)) {
+            return ['rowCount' => 1];
+        }
+        if (preg_match('/information_schema|message_attachments|participant_state|hasImportant/', $sql)) {
+            return ['column' => 0, 'row' => false, 'all' => []];
+        }
+
+        return $prevResolver($sql, $p);
+    };
+    try {
+        $msg->composeMessage(3001, [
+            'context_kind' => 'study_room',
+            'context_id' => 101,
+            'body' => 'hello reply',
+        ], [], true);
+        $assert($messageInserts >= 1, 'messages_reply_allowed', 'inserts=' . $messageInserts);
+    } catch (Throwable $e) {
+        $assert(false, 'messages_reply_allowed', $e->getMessage());
+    }
+    $pdo->resolver = $prevResolver;
 
     // --- publicInquiryStatus 마스킹 ---
     $masked = $svc->publicInquiryStatus(1006, 'open');
