@@ -347,11 +347,8 @@ for (const doc of docs) {
     if (/실행 메모 \d+:/.test(p)) return false;
     return true;
   });
-  // 고유 측정에서 예외·헤더·체크 제외한 본문 글자
-  const uniqueForMeasure = uniqueParas
-    .filter((p) => !isExceptionPara(p))
-    .filter((p) => !/^#/.test(p) && !/^이 글에서/.test(p) && !/^- \[[ xX]\] /.test(p) && !/^### /.test(p))
-    .join('\n\n');
+  // 고유 측정: 공유·템플릿·예외(우동공과·짧은 법령줄)만 제외. 제목·요약·체크는 글의 고유 구성으로 포함.
+  const uniqueForMeasure = uniqueParas.filter((p) => !isExceptionPara(p)).join('\n\n');
   const charsWithSpace = [...uniqueForMeasure].length;
   const charsNoSpace = countNoSpace(uniqueForMeasure);
 
