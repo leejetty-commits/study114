@@ -88,6 +88,8 @@ final class SignupService
         $pdo->beginTransaction();
         try {
             $this->ensureEmailAvailable($pdo, $email);
+            // 허용목록 이메일은 스킵. 동시 가입은 트랜잭션 + FOR UPDATE 로 4번째 방지.
+            PhoneAccountLimit::assertUnderLimit($pdo, $phone, null, $email, true);
             $userId = $this->insertUser($pdo, $email, $password);
             $this->insertProfile(
                 $pdo,

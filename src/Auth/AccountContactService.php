@@ -52,11 +52,14 @@ final class AccountContactService
         }
 
         $pdo = Connection::get();
+        $actorEmail = $this->userEmail($pdo, $userId);
         $pdo->beginTransaction();
         $finalUserId = $userId;
         $linked = false;
         $replacedStubEmail = false;
         try {
+            // 허용목록 계정 스킵 · 자기 계정 제외 · FOR UPDATE
+            PhoneAccountLimit::assertUnderLimit($pdo, $phone, $userId, $actorEmail, true);
             $this->upsertPhone($pdo, $userId, $phone);
 
             if ($status['needs_email']) {
@@ -147,6 +150,18 @@ final class AccountContactService
         $local = explode('@', $e)[0] ?? '';
 
         return str_ends_with($e, '@users.study114.local') || str_starts_with($local, 'oauth_');
+    }
+
+    private function userEmail(PDO $pdo, int $userId): ?string
+    {
+        $stmt = $pdo->prepare('SELECT email FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $email = $stmt->fetchColumn();
+        if ($email === false || $email === null || trim((string) $email) === '') {
+            return null;
+        }
+
+        return (string) $email;
     }
 
     private function upsertPhone(PDO $pdo, int $userId, string $phone): void
