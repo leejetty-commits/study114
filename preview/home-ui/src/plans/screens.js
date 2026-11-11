@@ -1059,7 +1059,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>결제 테스트 모드 (금액은 카탈로그 기준)</span>
+      <span>결제 테스트 모드</span>
     </label>`;
 }
 
@@ -1150,7 +1150,7 @@ export function renderPlansPositions() {
           selectedRegionScope?.label ||
           (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
         periodLabel,
-        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터',
         listPriceText:
           selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
             ? formatKrw(selectedOption.listPriceKrw)
@@ -1257,7 +1257,7 @@ export function renderPlansPositions() {
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">상품 정보를 다시 불러와 주세요.</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
@@ -1277,11 +1277,11 @@ export function renderPlansPositions() {
           ${renderOrderSummaryBlock({
             family: 'position',
             rows: orderRows,
-            totalLabel: '결제 예정(표시가·서버 재검증)',
+            totalLabel: '예상 결제 금액',
             totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
             ctaDisabled: orderCtaDisabled,
             ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
-            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+            note: '시작일·종료일은 결제 완료 시 확정 · 자동연장 없음 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
           })}
         </aside>
       </div>
@@ -1909,7 +1909,6 @@ export function renderPlansCheckout() {
   if (!draft) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
         <div class="mypage-info-box is-warn">
           <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
           <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
@@ -1920,7 +1919,6 @@ export function renderPlansCheckout() {
   if (role !== 'study_room' && role !== 'tutor') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1947,7 +1945,7 @@ export function renderPlansCheckout() {
   const periodRangeText =
     draft.startedOn && draft.endsOn
       ? `${draft.startedOn} ~ ${draft.endsOn}`
-      : '결제 완료 시점부터 (서버 확정)';
+      : '결제 완료 시점부터';
   const checkoutRows = isPosition
     ? buildPositionOrderRows({
         profileLabel: draft.providerLabel,
@@ -1990,14 +1988,13 @@ export function renderPlansCheckout() {
 
   return `
     <section class="mypage-panel plans-checkout">
-      <p class="mypage-lead">결제</p>
       ${renderOrderSummaryBlock({
         family: isPosition ? 'position' : 'access',
         rows: checkoutRows,
-        totalLabel: '결제 예정(표시가·서버 재검증)',
+        totalLabel: '예상 결제 금액',
         totalValue: formatKrw(previewTotal),
         showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 재검증합니다.',
+        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
       })}
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>
@@ -2062,7 +2059,6 @@ export function renderPlansResult() {
   if (!result) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제 결과</p>
         <div class="mypage-info-box">
           <p>표시할 결과가 없습니다.</p>
           <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품홈</a>
@@ -2097,7 +2093,6 @@ export function renderPlansResult() {
 
   return `
     <section class="mypage-panel">
-      <p class="mypage-lead">${ok ? '결제 완료' : '결제 미완료'}</p>
       <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
         <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
         ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
@@ -2108,7 +2103,7 @@ export function renderPlansResult() {
         ${resultBadgeLines}
         ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본, 배지 포함·같이 회수)</p>
+        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(배지 포함·같이 회수)</p>
         ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
@@ -2652,7 +2647,7 @@ export function bindPlansScreenEvents(root, rerender) {
       payBtn.setAttribute('disabled', 'true');
       try {
         if (!getProductConfig(draft.productCode, draft.providerType)) {
-          throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
+          throw new Error('상품 정보가 아직 준비되지 않았어요. 잠시 후 다시 시도해 주세요.');
         }
         let created = null;
         if (draft.orderRef) {
@@ -2687,7 +2682,7 @@ export function bindPlansScreenEvents(root, rerender) {
         }
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
-          throw new Error('서버 결제금액이 올바르지 않습니다.');
+          throw new Error('결제 금액을 확인하지 못했어요. 다시 시도해 주세요.');
         }
         // 클라이언트 draft 금액과 달라도 서버 판매가를 사용한다
         if (Number(draft.priceKrw) !== serverAmount) {

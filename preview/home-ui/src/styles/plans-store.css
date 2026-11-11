@@ -7,6 +7,15 @@
   max-width: 68rem;
 }
 
+/* ── 369 checkout: nav 없는 결제·결과 화면은 단일 열 ── */
+.plans-layout .sup-frame--no-nav {
+  display: block;
+}
+.plans-checkout {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
 .plans-store {
   display: flex;
   flex-direction: column;
@@ -1281,6 +1290,7 @@ a.plans-chip:hover {
   font-weight: 700;
   color: var(--plans-ink, #292823);
   text-align: right;
+  white-space: nowrap;
 }
 
 .plans-order-summary__total {
@@ -1970,21 +1980,26 @@ a.plans-chip:hover {
   }
 
   .plans-order-summary__row {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
-    gap: var(--space-1) var(--space-3);
+    gap: var(--space-3);
   }
 
   .plans-order-summary__row dt {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
   }
 
   .plans-order-summary__row dd {
-    flex: 1 1 8rem;
+    flex: 1 1 auto;
     min-width: 0;
     text-align: right;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* 날짜·금액 등 짧은 값은 줄바꿈 금지 */
+  .plans-order-summary__row--nowrap dd {
+    white-space: nowrap;
   }
 
   .plans-order-summary__total {

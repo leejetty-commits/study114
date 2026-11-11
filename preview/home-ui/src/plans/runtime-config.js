@@ -115,7 +115,7 @@ const PRODUCT_COPY = {
   },
   memo_ticket: {
     tagline: '학생에게 먼저 보내는 첫 쪽지 횟수권',
-    bullets: ['선제 쪽지만 차감', '묶음권 120일(서버 메타)', '답장·후속 무료'],
+    bullets: ['선제 쪽지만 차감', '묶음권 120일', '답장·후속 무료'],
     featured: true,
     implemented: true,
     family: 'access',

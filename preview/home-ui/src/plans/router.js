@@ -58,7 +58,7 @@ export function plansScreenTitle(screenId) {
     'P18-03': '쪽지권',
     'P18-04': '구매이력',
     'P18-05': '구매이력',
-    'P18-06': '결제',
+    'P18-06': '주문·결제',
     'P18-07': '결제 결과',
   };
   return map[screenId] || '유료상품';
