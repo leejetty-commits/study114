@@ -6,7 +6,7 @@ alwaysApply: true
 # 작업 루틴 (정본 70)
 
 정본 초안: `D:\work\study114-routine\docs\internal\70-work-routine-review-approval.md` — 저장소에 커밋되지 않은 초안. 이 규칙 파일이 현재 유효한 요약이다.
-인수인계: **새 채팅은 먼저 `docs/worklog/YYYY/MM/` 아래 가장 최근 날짜의 `*-handoff*.md`를 읽는다.** 현재 최신 = `docs/worklog/2026/11/2026-11-11-handoff.md` (**339** CI 통과·수동 테스트 대기 · **350** 자동메일 정상화 commit `aea355ba`·push 승인 대기 · **다음=336 헤더 태그라인** · 보안 잔여=후속 B·unsafe-inline · DNS D2·D3 승인 대기). 노션 마지막 반영 **2026-11-08**(동기화 검토. 3일 초과 → 다음 작업 시 노션 먼저). 새 인수인계를 쓰면 이 줄도 같이 고친다.
+인수인계: **새 채팅은 먼저 `docs/worklog/YYYY/MM/` 아래 가장 최근 날짜의 `*-handoff*.md`를 읽는다.** 현재 최신 = `docs/worklog/2026/11/2026-11-11-handoff.md` (**339** CI 통과·수동 테스트 대기 · **350** 자동메일 정상화 main `b83de40d`·cron active · **다음=336 헤더 태그라인** · E4-스위치 4개 종현이 직접 · DNS D2·D3 승인 대기). 노션 마지막 반영 **2026-11-08**(동기화 검토. 3일 초과 → 다음 작업 시 노션 먼저). 새 인수인계를 쓰면 이 줄도 같이 고친다.
 
 ## 역할
 
