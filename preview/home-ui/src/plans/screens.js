@@ -1277,11 +1277,11 @@ export function renderPlansPositions() {
           ${renderOrderSummaryBlock({
             family: 'position',
             rows: orderRows,
-            totalLabel: '결제 예정(표시가·서버 재검증)',
+            totalLabel: '예상 결제 금액',
             totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
             ctaDisabled: orderCtaDisabled,
             ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
-            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 결제 직전 서버가 최종 확인합니다.',
           })}
         </aside>
       </div>
@@ -1909,7 +1909,7 @@ export function renderPlansCheckout() {
   if (!draft) {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
+        <p class="mypage-lead">주문·결제</p>
         <div class="mypage-info-box is-warn">
           <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
           <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
@@ -1920,7 +1920,7 @@ export function renderPlansCheckout() {
   if (role !== 'study_room' && role !== 'tutor') {
     return `
       <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
+        <p class="mypage-lead">주문·결제</p>
         ${renderProfileBanner(null, role)}
       </section>`;
   }
@@ -1990,14 +1990,14 @@ export function renderPlansCheckout() {
 
   return `
     <section class="mypage-panel plans-checkout">
-      <p class="mypage-lead">결제</p>
+      <p class="mypage-lead">주문·결제</p>
       ${renderOrderSummaryBlock({
         family: isPosition ? 'position' : 'access',
         rows: checkoutRows,
-        totalLabel: '결제 예정(표시가·서버 재검증)',
+        totalLabel: '예상 결제 금액',
         totalValue: formatKrw(previewTotal),
         showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 재검증합니다.',
+        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 최종 확인합니다.',
       })}
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>

@@ -7,6 +7,15 @@
   max-width: 68rem;
 }
 
+/* ── 369 checkout: nav 없는 결제·결과 화면은 단일 열 ── */
+.plans-layout .sup-frame--no-nav {
+  display: block;
+}
+.plans-checkout {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
 .plans-store {
   display: flex;
   flex-direction: column;
@@ -1281,6 +1290,7 @@ a.plans-chip:hover {
   font-weight: 700;
   color: var(--plans-ink, #292823);
   text-align: right;
+  white-space: nowrap;
 }
 
 .plans-order-summary__total {
@@ -1983,6 +1993,7 @@ a.plans-chip:hover {
     flex: 1 1 8rem;
     min-width: 0;
     text-align: right;
+    white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
   }

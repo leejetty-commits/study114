@@ -113,8 +113,8 @@ export function studyRoomRegionPurchaseState(region, ctx) {
       const cap = Number(match.capacity) || 3;
       const place =
         region.region_basis_type === 'complex'
-          ? `해당 단지 Prime ${used}/${cap} 마감`
-          : `해당 행정동 Prime ${used}/${cap} 마감`;
+          ? `해당 단지 프라임 ${used}/${cap} 마감`
+          : `해당 행정동 프라임 ${used}/${cap} 마감`;
       return { purchasable: false, reason: place, tone: 'soldout' };
     }
   }
@@ -433,7 +433,7 @@ export function renderOrderSummaryBlock(opts) {
     <section class="plans-sf-panel plans-order-summary" data-plans-order-summary data-family="${esc(opts.family)}">
       <header class="plans-sf-panel__head">
         <h2 class="plans-sf-panel__title">주문 요약</h2>
-        <p class="plans-sf-panel__lead">결제 금액은 서버 카탈로그 기준으로 다시 확인됩니다.</p>
+        <p class="plans-sf-panel__lead">최종 금액은 결제 직전에 한 번 더 확인해요.</p>
       </header>
       <dl class="plans-order-summary__list">
         ${rows

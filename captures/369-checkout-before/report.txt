@@ -1,0 +1,10 @@
+prime-badge-1280.png  1280px  62380B  sha256=0f9f272e5c679636
+prime-badge-390.png  390px  53483B  sha256=4b1d47bf41148ab8
+prime-nobadge-1280.png  1280px  57598B  sha256=4ab213e1409e8289
+prime-nobadge-390.png  390px  49009B  sha256=b9e354d67d5385ee
+pick-badge-1280.png  1280px  57702B  sha256=39eeec0ef521b67b
+pick-badge-390.png  390px  49239B  sha256=87820729c2ec9be1
+pick-nobadge-1280.png  1280px  54990B  sha256=84730566e88105d9
+pick-nobadge-390.png  390px  46832B  sha256=5a7e1ba544ae8220
+
+✓ 모든 8개 파일의 해시가 서로 다릅니다.
