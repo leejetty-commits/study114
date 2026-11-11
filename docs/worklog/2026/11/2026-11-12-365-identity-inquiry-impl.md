@@ -60,30 +60,43 @@
 | `identity_invalid` | 미 VERIFIED · 페이로드 부족 · pepper 없음 등 |
 | `forbidden` | 비공급자 config/complete |
 
-## 테스트표
+## 테스트표 (365-2단계 보완 · 로컬 Docker + 로컬 계정)
+
+로컬 계정 alias만: `local-room1/2` · `local-tutor1` · `local-std1` (비밀번호·이메일은 비밀 파일, 채팅 미기록)
 
 | # | 시나리오 | 기대 | 결과 |
 |---|----------|------|------|
-| T1 | 미인증 + 공부방 open 저장 | 403 `identity_required` | 코드 가드 ○ · 실API는 로컬 API기동 후 |
-| T2 | 미인증 + 과외 open 저장 | 동일 | FE 잠금 ○ |
-| T3 | 인증 완료 후 open | 저장 성공 · 배지 표시 | 샌드박스 실인증 필요 |
-| T4 | 미인증 피어로 쪽지 작성 | 수신 거부 | 서버 가드 ○ |
-| T5 | 학생 역할 | 본인인증 대상 아님 | `isProviderRole` ○ |
-| T6 | 탈퇴 | 5칸 NULL · UNIQUE 해제 | 코드 ○ |
-| T7 | CSP 로컬 | SDK/인증창 blocked 없음 | Vite 헤더 추가 ○ · 실창 확인 필요 |
+| T1 | 미인증 공부방 PATCH inquiry `open` | 403 `identity_required` | **PASS** `http=403 error=identity_required` |
+| T1b | 미인증 과외 PATCH inquiry `open` | 403 `identity_required` | **PASS** |
+| T2 | 학생 me/게이트 | 인증 없이 me 통과 · config/complete는 공급자 아님 | **PASS** me_ok · cfg=403/forbidden · complete=422/identity_invalid |
+| T2b | 학생 `assertProviderVerifiedForInquiryOpen` | throw 없음 | **PASS** |
+| T3 | 위조 `identityVerificationId` | `identity_invalid` | **PASS** `422 identity_invalid` |
+| T3b | 빈 id | `identity_invalid` | **PASS** |
+| T4 | 동일 CI 해시 2계정 | UNIQUE 1062 + `ciHashTakenByOther` → duplicate 경로 | **PASS** |
+| T5a | room1→room2 inquiry PATCH (IDOR) | 거부 | **PASS** `422 validation`(타 소유 방 없음) |
+| T5b | room2 인증 시도 후 room1 verified 유지 false | 교차 변경 없음 | **PASS** |
+| T5c | room2 planted hash 유지 | 타계정 필드 불변 | **PASS** |
+| T7 | 샌드박스 실인증 E2E | 완료까지 | **STOP** PortOne UI 팝업(`pages_open=2`) — **종현이 공급자 창에서 인증 완료 필요** |
 
 ## 캡처
 
-경로: `docs/worklog/2026/11/shots-365/` (목 로그인 · 미인증)
+경로: `docs/worklog/2026/11/shots-365/`
 
-| 파일 | 비고 |
+| 파일 | 상태 |
 |------|------|
-| `365-room-inq-unverified-1280.png` | 공부방 · 게이트·ON 잠금 |
-| `365-room-inq-unverified-390.png` | 공부방 390 |
-| `365-tutor-inq-unverified-1280.png` | 과외 · 동일 |
-| `365-tutor-inq-unverified-390.png` | 과외 390 |
+| `365-before-1280.png` / `365-before-390.png` | 인증 전 |
+| `365-success-1280.png` / `365-success-390.png` | 인증 성공(배지) |
+| `365-fail-1280.png` / `365-fail-390.png` | 실패 문구 |
+| `365-room-inq-unverified-*` · `365-tutor-inq-unverified-*` | 초기 미인증 |
+| `365-sandbox-after-click.png` | 실인증 클릭 직후(공급자 UI) |
+| `365-sandbox-report.txt` | E2E 중단 로그(비밀 없음) |
 
-실측: `hasGate=true` · `receivingLocked=1` (미인증 시 받는 중 라디오 disabled)
+### 데스크톱 1px 비교
+
+`365-layout-before.json` vs `365-layout-success.json` (쪽지 카드 2개):
+
+- width **736=736** · left **248=248** · saveW **120=120** · `desktop_card_width_match=true`
+- 본인인증 카드는 **추가 블록**만. 기존 `p20-inq-card` 폭·좌측 오프셋 불변.
 
 ## 운영 배포 전 할 일 (사용자)
 
@@ -103,7 +116,9 @@
 - [x] SMS OTP 경로 미연결
 - [x] 유예 없음
 - [x] placeholder만 .htaccess
-- [ ] 샌드박스 실인증 E2E (종현 채널 · 로컬 로그인 후)
-- [x] 1280/390 미인증 UI 캡처 첨부
+- [~] 샌드박스 실인증 E2E — 로컬 로그인·CTA·PortOne 창까지 확인, **공급자 UI 인증은 종현**
+- [x] 1280/390 전·성공·실패 캡처
+- [x] 데스크톱 쪽지 카드 폭 1px 비교 (일치)
 - [x] config 미로그인 401
 - [x] PHP lint (Identity* · complete.php)
+- [x] API T1~T5 (로컬 계정)
