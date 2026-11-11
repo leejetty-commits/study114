@@ -71,10 +71,13 @@ function commonChecks(string $id, array $mail, string $badge, ?string $buttonUrl
     check(str_starts_with($mail['subject'], '[우동공과] '), "{$id}: 제목 머리 [우동공과]");
     check(!preg_match('/[\r\n]/', $mail['subject']), "{$id}: 제목 개행 없음");
     foreach (['plain', 'html'] as $part) {
-        check(str_contains($mail[$part], '보내기 전용 메일이라 답장을 받을 수 없어요'), "{$id}: {$part} 보내기 전용 고지");
+        check(str_contains($mail[$part], '발송 전용 메일이에요'), "{$id}: {$part} 발송 전용 고지");
+        check(str_contains($mail[$part], 'help@study114.net'), "{$id}: {$part} 고객 연락처 help@study114.net");
+        check(!str_contains($mail[$part], '고객센터 1:1 문의'), "{$id}: {$part} 구형 고객센터 링크 없음");
         check(str_contains($mail[$part], '— 우동공과 드림'), "{$id}: {$part} 서명");
     }
-    check(str_ends_with($mail['plain'], "\n고객센터 1:1 문의하기: " . $supportUrl), "{$id}: text 고객센터 링크");
+    check(str_ends_with($mail['plain'], '늘 감사한 마음으로 빠르게 답해 드릴게요.'), "{$id}: text 바닥글 끝 문구");
+    check(str_contains($mail['html'], 'href="mailto:help@study114.net"'), "{$id}: html 바닥글 mailto 링크");
     $all = $mail['subject'] . "\n" . $mail['plain'] . "\n" . $mail['html'];
     foreach ($forbidden as $word) {
         check(!str_contains($all, $word), "{$id}: 금지어 없음 「{$word}」");

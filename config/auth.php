@@ -14,8 +14,10 @@ return [
     'auth_ui'                    => rtrim($authUi, '/'),
     'home_ui'                    => rtrim($homeUi, '/'),
     'api_base'                   => rtrim($apiBase, '/'),
-    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영 From: 우동공과 <no-reply@study114.net> */
+    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영 From: 우동공과 고객센터 <no-reply@study114.net> */
     'mail_from'                  => study114_env('STUDY114_MAIL_FROM', 'no-reply@study114.local'),
+    /** 발신자 표시이름. 운영: 「우동공과 고객센터」. 미설정 시 기본값 사용. */
+    'mail_from_name'             => study114_env('STUDY114_MAIL_FROM_NAME', '우동공과 고객센터'),
     /**
      * resend | fake | disabled
      * smtp / php_mail / mail 은 허용하지 않음 (fail-closed).
