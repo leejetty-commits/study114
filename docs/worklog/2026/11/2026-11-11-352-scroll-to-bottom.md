@@ -64,8 +64,12 @@ node scripts/verify-back-to-bottom.mjs → 16 PASS / 0 FAIL
 
 ```
 [최종검수 패키지 — 352]
-브랜치 / 커밋: work/352-scroll-to-bottom / (커밋 후 기입)
-변경 파일: (커밋 후)
+브랜치 / 커밋: work/352-scroll-to-bottom / 752531c5
+변경 파일: 4 files, +251/−33
+  docs/worklog/2026/11/2026-11-11-352-scroll-to-bottom.md (+75)
+  preview/home-ui/src/styles/design-system.css (+17)
+  preview/shared/back-to-top.js (+146/−33)
+  scripts/verify-back-to-bottom.mjs (+46)
 diff 요약: back-to-top.js 맨아래 추가(모바일) · CSS 스택 · verify
 테스트: verify-back-to-bottom 16 PASS
 스크린샷: 로컬 UI 미기동 → 생략(정적 PASS)
