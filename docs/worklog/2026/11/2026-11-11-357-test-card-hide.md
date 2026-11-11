@@ -115,8 +115,19 @@ curl E2E·스크린샷: 로컬 HTTP+세션 환경 미기동 → **서버 단위 
 
 ```
 [최종검수 패키지 — 357]
-브랜치 / 커밋: work/357-test-card-hide / (커밋 후 기입)
-변경 파일: (커밋 후 git diff --stat main...HEAD)
+브랜치 / 커밋: work/357-test-card-hide / adf2558b
+변경 파일: 11 files, +563/−9 (git diff --stat origin/main...HEAD)
+  config/auth.php (+6)
+  docs/worklog/2026/11/2026-11-11-357-test-card-hide.md (+132)
+  docs/worklog/grok-sync/docs/351-phone-3-account-limit-2026-11-11.md (+11/−4)
+  public/api/neighborhood-greeting-card.php (+5)
+  public/api/neighborhood-greetings.php (+10/−1)
+  public/api/search/search.php (+4)
+  scripts/verify-test-card-hide.php (+223)
+  src/Auth/TestAccountAllowlist.php (+80)
+  src/Neighborhood/NeighborhoodGreetingService.php (+15/−4)
+  src/Search/SearchService.php (+4)
+  src/Visibility/TestOwnerVisibility.php (+82)
 diff 요약:
 - config/auth.php: test_account_emails env 키
 - src/Auth/TestAccountAllowlist.php: 허용목록 1곳
