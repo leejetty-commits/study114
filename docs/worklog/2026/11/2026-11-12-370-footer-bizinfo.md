@@ -37,8 +37,16 @@
 
 닷홈 메인 하단 실측 미확정 → **「닷홈」**만 표기. 확인되면 `SITE_FOOTER_COMPANY.hosting`만 수정.
 
+## 370-보완1
+
+1. 상호 괄호 앞 공백 제거
+2. ≥960 `company-item` nowrap · ≤959 자연 줄바꿈
+3. `layouts/auth.php` **사용 중** (`/auth/login|find-id|find-password`) → `SiteFooterCopy` + partial로 동일 문구 반영
+4. tip hash를 실제 tip으로 갱신
+5. 홈 푸터 1280·390 재캡처
+
 ## 커밋
 
-- tip: `87d34c51` — `370: 푸터 사업자정보 단일 상수 표기`
-- push: 미실시 (지시 대기)
-- 캡처·스크립트 포함
+- tip: (보완1 커밋 후 기입)
+- 이전: `167231d9` docs · `87d34c51` 370 본문
+- push: `167231d9`까지 완료 · 보완1 후 재push

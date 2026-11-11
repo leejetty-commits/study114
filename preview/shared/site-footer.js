@@ -16,7 +16,7 @@ export const SITE_FOOTER_COPYRIGHT = '© 2026 우동공과 · study114';
  * phone 이 비어 있으면 전화 줄은 숨긴다. hosting 상호 확정 시 이 값만 바꾼다.
  */
 export const SITE_FOOTER_COMPANY = {
-  name: '제이에이치커머스 (서비스명 우동공과)',
+  name: '제이에이치커머스(서비스명 우동공과)',
   ceo: '이종현',
   address: '경기도 의정부시 능곡로26번길 40, 101동 1101호',
   bizNo: '471-29-01819',

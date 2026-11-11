@@ -701,6 +701,12 @@ table {
   display: inline;
 }
 
+@media (min-width: 960px) {
+  .site-footer__company-item {
+    white-space: nowrap;
+  }
+}
+
 .site-footer__company-sep {
   display: inline;
   margin: 0 0.45em;
@@ -744,6 +750,10 @@ table {
 @media (max-width: 959px) {
   .site-footer__company {
     max-width: 100%;
+  }
+
+  .site-footer__company-item {
+    white-space: normal;
   }
 }
 
