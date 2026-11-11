@@ -103,20 +103,70 @@ function isExceptionPara(p) {
   return false;
 }
 
-/** 번호·「」제목·기호 제거 후 비교용 문자열 */
+/** 법령 의무·우동공과 등 공유 허용 문장 */
+function isExceptionSentence(s) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  if (!t) return true;
+  if (t === UDONG) return true;
+  if (/제\d+조/.test(t) && /(학원법|시행령|법\s*제)/.test(t) && t.length < 220) return true;
+  if (/개인과외교습자는 신고 사항이 바뀌면/.test(t) && /15일/.test(t)) return true;
+  if (/개인과외 장소로는 불가/.test(t) && t.length < 100) return true;
+  if (/상가·오피스텔은 불가/.test(t) && t.length < 100) return true;
+  if (/반환사유 발생일부터 5일/.test(t) && t.length < 180) return true;
+  if (/신고증명서를 게시해야 하고/.test(t) && /제14조의2/.test(t) && t.length < 160) return true;
+  if (/필수 표시가 빠진 광고는/.test(t) && t.length < 80) return true;
+  return false;
+}
+
+/** 번호·「」·영문·괄호 꼬리표·기호 제거 후 비교용 문자열 */
 function normalizeForCompare(p) {
   return p
     .replace(/실행\s*메모\s*\d+/g, '')
     .replace(/준비\s*메모\s*\d+/g, '')
     .replace(/시나리오\s*\d+/g, '')
+    .replace(/\(\d{2}-[a-z0-9-]+:\d+\)/gi, '')
+    .replace(/\([a-z0-9-]+:\d+\)/gi, '')
     .replace(/Q\.\s*/g, '')
     .replace(/A\.\s*/g, '')
     .replace(/「[^」]*」/g, '')
     .replace(/『[^』]*』/g, '')
+    .replace(/[A-Za-z]+/g, '')
     .replace(/\d+/g, '')
     .replace(/[^\p{L}\s]/gu, '')
     .replace(/\s+/g, '')
     .toLowerCase();
+}
+
+/** 본문을 비교용 문장 배열로 분해 */
+function splitSentences(text) {
+  const flat = String(text || '')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!flat) return [];
+  const parts = flat.split(/(?<=[.!?。？！]|습니다|세요|니다|까요|습니까)\s+/);
+  return parts
+    .map((s) => s.trim())
+    .filter((s) => countNoSpace(s) >= 18 && !/^#/.test(s) && !/^- \[[ xX]\] /.test(s));
+}
+
+/** Q&A 섹션 뒤에 이어지는 ## 절 개수 (체크리스트 제외) */
+function countSectionsAfterQA(body) {
+  const chunks = body.split(/^##\s+/m);
+  let seenQA = false;
+  let after = 0;
+  for (let i = 1; i < chunks.length; i += 1) {
+    const nl = chunks[i].indexOf('\n');
+    const title = (nl < 0 ? chunks[i] : chunks[i].slice(0, nl)).trim();
+    if (/^Q\s*&?\s*A/i.test(title) || title === 'Q&A' || /^Q&A/.test(title)) {
+      seenQA = true;
+      continue;
+    }
+    if (!seenQA) continue;
+    if (/체크리스트|점검하며/.test(title)) continue;
+    after += 1;
+  }
+  return after;
 }
 
 /** 「」 직후 한글 밀착(조사 제외) */
@@ -312,7 +362,7 @@ const docs = files.map((file) => {
   return { file, full, raw, meta, body, paras };
 });
 
-/** 폴더 전역: 정규화 키 → 등장 파일 집합 (예외 문단 제외) */
+/** 폴더 전역: 문단 공유 + 문장 단위 비교용 */
 const globalNorm = new Map();
 for (const doc of docs) {
   for (const p of doc.paras) {
@@ -323,6 +373,42 @@ for (const doc of docs) {
     if (key.length < 30) continue;
     if (!globalNorm.has(key)) globalNorm.set(key, new Set());
     globalNorm.get(key).add(doc.file);
+  }
+}
+
+/** 파일별 문장 목록 (정규화 포함) */
+for (const doc of docs) {
+  const sents = [];
+  for (const p of doc.paras) {
+    if (isExceptionPara(p)) continue;
+    if (/^#/.test(p) || /^- \[[ xX]\] /.test(p) || /^이 글에서 알 수 있는 것/.test(p)) continue;
+    for (const s of splitSentences(p)) {
+      if (isExceptionSentence(s)) continue;
+      const n = normalizeForCompare(s);
+      if (n.length < 40) continue;
+      sents.push({ s, n });
+    }
+  }
+  doc.sents = sents;
+}
+
+/** 글간 문장 유사도: 60% 이상이면 양쪽 FAIL 후보 */
+const crossSentenceHits = new Map(); // file -> samples
+for (let i = 0; i < docs.length; i += 1) {
+  for (let j = i + 1; j < docs.length; j += 1) {
+    const A = docs[i].sents;
+    const B = docs[j].sents;
+    for (const a of A) {
+      for (const b of B) {
+        const ov = trigramOverlap(a.n, b.n);
+        if (ov >= TRIGRAM_FAIL) {
+          if (!crossSentenceHits.has(docs[i].file)) crossSentenceHits.set(docs[i].file, []);
+          if (!crossSentenceHits.has(docs[j].file)) crossSentenceHits.set(docs[j].file, []);
+          crossSentenceHits.get(docs[i].file).push(`${docs[j].file} ov=${(ov * 100).toFixed(0)}%`);
+          crossSentenceHits.get(docs[j].file).push(`${docs[i].file} ov=${(ov * 100).toFixed(0)}%`);
+        }
+      }
+    }
   }
 }
 
@@ -353,6 +439,32 @@ for (const doc of docs) {
     const top = near.sort((a, b) => b.ov - a.ov)[0];
     issues.push(`near-dup paragraphs ov=${(top.ov * 100).toFixed(0)}%`);
   }
+
+  // 같은 글 안 문장 유사도
+  const sents = doc.sents || [];
+  let sentDup = 0;
+  for (let i = 0; i < sents.length; i += 1) {
+    for (let j = i + 1; j < sents.length; j += 1) {
+      if (trigramOverlap(sents[i].n, sents[j].n) >= TRIGRAM_FAIL) sentDup += 1;
+    }
+  }
+  if (sentDup) issues.push(`near-dup sentences in-file ${sentDup} pair(s)`);
+
+  // 글간 문장 유사도
+  const cross = crossSentenceHits.get(file) || [];
+  if (cross.length) {
+    issues.push(`cross-file sentence sim ${cross.slice(0, 2).join(', ')}`);
+  }
+
+  // slug·파일명 꼬리표
+  const slugHits = body.match(/\(\d{2}-[a-z0-9-]+:\d+\)/gi) || [];
+  if (slugHits.length) issues.push(`slug-tail ${slugHits.length}x`);
+  const base = file.replace(/\.md$/i, '');
+  if (body.includes(base)) issues.push(`filename string「${base}」in body`);
+
+  // Q&A 뒤 절 2개 이상
+  const afterQA = countSectionsAfterQA(body);
+  if (afterQA >= 2) issues.push(`sections after Q&A ${afterQA} >= 2`);
 
   // 공유 문단 비율
   let shareable = 0;
