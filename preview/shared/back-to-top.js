@@ -1,75 +1,155 @@
 /**
- * 맨 위 플로팅 버튼 — 문서가 1뷰포트보다 길 때만 표시
- * 상세·비교 모달이 열려 있으면 숨김 (닫기·✉ 가림 방지)
+ * 맨 위 / 맨 아래 플로팅 버튼
+ * - 「맨 위로」: 전 폭 (기존 위치·크기 유지)
+ * - 「맨 아래로」: 모바일(≤768px)만, 맨 위 버튼 바로 위 8px
+ * 상세·비교·후기 등 모달이 열려 있으면 둘 다 숨김
  */
 
-const BTN_ID = 'study114-back-to-top';
+const TOP_ID = 'study114-back-to-top';
+const BOTTOM_ID = 'study114-back-to-bottom';
+const MOBILE_MQ = '(max-width: 768px)';
+const EDGE_PX = 96;
 
 function pageOverflows() {
   const doc = document.documentElement;
   return doc.scrollHeight > window.innerHeight + 48;
 }
 
+/** 모달·오버레이 열림 — 목록은 보고용으로 유지 */
+export const MODAL_OPEN_SELECTORS = [
+  '#p24-detail-modal',
+  '#compare-modal-root',
+  '.review-sheet-root',
+  '#ng-login-gate',
+  '#ng-card-unavailable',
+  '.msg-overlay',
+  '.s114-confirm-backdrop',
+  '.shop-lightbox:not([hidden])',
+  '.modal-overlay.member-delete-modal',
+];
+
 function isModalOpen() {
-  return Boolean(
-    document.getElementById('p24-detail-modal') ||
-      document.getElementById('compare-modal-root') ||
-      document.body.classList.contains('p24-detail-open'),
-  );
+  if (document.body.classList.contains('p24-detail-open')) return true;
+  for (const sel of MODAL_OPEN_SELECTORS) {
+    if (document.querySelector(sel)) return true;
+  }
+  return false;
 }
 
-function syncVisibility(btn) {
+function prefersReducedMotion() {
+  return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
+}
+
+function scrollBehavior() {
+  return prefersReducedMotion() ? 'auto' : 'smooth';
+}
+
+function isMobileViewport() {
+  return Boolean(window.matchMedia?.(MOBILE_MQ)?.matches);
+}
+
+function distanceFromBottom() {
+  const doc = document.documentElement;
+  const maxScroll = Math.max(0, doc.scrollHeight - window.innerHeight);
+  return maxScroll - window.scrollY;
+}
+
+function syncTop(btn) {
+  if (!btn) return;
   if (isModalOpen()) {
     btn.hidden = true;
     btn.classList.remove('is-visible');
     return;
   }
-  const overflows = pageOverflows();
-  if (!overflows) {
+  if (!pageOverflows()) {
     btn.hidden = true;
     btn.classList.remove('is-visible');
     return;
   }
-  // 오버플로 페이지에서 조금 스크롤하면 표시 (맨 위에서는 숨김)
-  const show = window.scrollY > 96;
+  const show = window.scrollY > EDGE_PX;
   btn.hidden = false;
   btn.classList.toggle('is-visible', show);
 }
 
+function syncBottom(btn) {
+  if (!btn) return;
+  // 데스크톱: DOM은 두되 표시하지 않음 (레이아웃 0)
+  if (!isMobileViewport() || isModalOpen() || !pageOverflows()) {
+    btn.hidden = true;
+    btn.classList.remove('is-visible');
+    return;
+  }
+  const show = distanceFromBottom() > EDGE_PX;
+  btn.hidden = false;
+  btn.classList.toggle('is-visible', show);
+}
+
+function syncAll() {
+  syncTop(document.getElementById(TOP_ID));
+  syncBottom(document.getElementById(BOTTOM_ID));
+}
+
 /** 모달 open/close 직후 가시성 즉시 동기화 */
 export function refreshBackToTop() {
-  const btn = document.getElementById(BTN_ID);
-  if (btn) syncVisibility(btn);
+  syncAll();
+}
+
+function ensureTopButton() {
+  let btn = document.getElementById(TOP_ID);
+  if (btn) return btn;
+  btn = document.createElement('button');
+  btn.id = TOP_ID;
+  btn.type = 'button';
+  btn.className = 'back-to-top';
+  btn.setAttribute('aria-label', '맨 위로');
+  btn.setAttribute('title', '맨 위로');
+  btn.innerHTML = '<span aria-hidden="true">↑</span><span class="back-to-top__label">맨위</span>';
+  btn.hidden = true;
+  document.body.appendChild(btn);
+  btn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
+  });
+  return btn;
+}
+
+function ensureBottomButton() {
+  let btn = document.getElementById(BOTTOM_ID);
+  if (btn) return btn;
+  btn = document.createElement('button');
+  btn.id = BOTTOM_ID;
+  btn.type = 'button';
+  btn.className = 'back-to-top back-to-bottom';
+  btn.setAttribute('aria-label', '맨 아래로');
+  btn.setAttribute('title', '맨 아래로');
+  btn.innerHTML = '<span aria-hidden="true">↓</span><span class="back-to-top__label">맨아래</span>';
+  btn.hidden = true;
+  document.body.appendChild(btn);
+  btn.addEventListener('click', () => {
+    const top = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    window.scrollTo({ top, behavior: scrollBehavior() });
+  });
+  return btn;
 }
 
 /**
  * @param {ParentNode} [_root] 렌더 루트(미사용, 호출 호환용)
  */
 export function ensureBackToTop(_root) {
-  let btn = document.getElementById(BTN_ID);
-  if (!btn) {
-    btn = document.createElement('button');
-    btn.id = BTN_ID;
-    btn.type = 'button';
-    btn.className = 'back-to-top';
-    btn.setAttribute('aria-label', '맨 위로');
-    btn.setAttribute('title', '맨 위로');
-    btn.innerHTML = '<span aria-hidden="true">↑</span><span class="back-to-top__label">맨위</span>';
-    btn.hidden = true;
-    document.body.appendChild(btn);
-    btn.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+  ensureTopButton();
+  ensureBottomButton();
 
-    const onScroll = () => syncVisibility(btn);
+  if (!window.__study114BackToTopBound) {
+    window.__study114BackToTopBound = true;
+    const onScroll = () => syncAll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     if (typeof ResizeObserver !== 'undefined') {
       const ro = new ResizeObserver(onScroll);
       ro.observe(document.documentElement);
-      btn._ro = ro;
+      window.__study114BackToTopRo = ro;
     }
   }
-  requestAnimationFrame(() => syncVisibility(btn));
-  return btn;
+
+  requestAnimationFrame(() => syncAll());
+  return document.getElementById(TOP_ID);
 }
