@@ -88,6 +88,7 @@ final class SignupService
         $pdo->beginTransaction();
         try {
             $this->ensureEmailAvailable($pdo, $email);
+            GmailAliasAvailability::assertNoActiveConflict($pdo, $email);
             $userId = $this->insertUser($pdo, $email, $password);
             $this->insertProfile(
                 $pdo,
@@ -121,6 +122,12 @@ final class SignupService
                 throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
             }
             throw new RuntimeException('DB insert failed: ' . $e->getMessage(), 0, $e);
+        }
+
+        try {
+            GmailAliasAvailability::logAllowlistedSignup(Connection::get(), $userId, $email);
+        } catch (\Throwable $e) {
+            error_log('[signup] allowlist op log: ' . $e->getMessage());
         }
 
         return [

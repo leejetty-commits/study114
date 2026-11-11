@@ -115,6 +115,7 @@ jobs:
           STUDY114_REPORT_CRON_KEY: ${{ secrets.STUDY114_REPORT_CRON_KEY }}
           STUDY114_CRON_KEY: ${{ secrets.STUDY114_CRON_KEY }}
           STUDY114_STORAGE_SECRET: ${{ secrets.STUDY114_STORAGE_SECRET }}
+          STUDY114_TEST_ACCOUNT_EMAILS: ${{ secrets.STUDY114_TEST_ACCOUNT_EMAILS }}
         shell: bash
         run: |
           set -euo pipefail
@@ -180,12 +181,19 @@ jobs:
             *) echo "::error::placeholder $storage_token not found"; exit 1 ;;
           esac
           data="${data//"$storage_token"/"${STUDY114_STORAGE_SECRET}"}"
+          # 테스트 계정 허용목록 — 선택값(비어 있어도 배포 가능, 무동작)
+          test_emails_token="__STUDY114_TEST_ACCOUNT_EMAILS__"
+          case "$data" in
+            *"$test_emails_token"*) ;;
+            *) echo "::error::placeholder $test_emails_token not found"; exit 1 ;;
+          esac
+          data="${data//"$test_emails_token"/"${STUDY114_TEST_ACCOUNT_EMAILS:-}"}"
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__\|__STUDY114_TEST_ACCOUNT_EMAILS__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
-          echo "OAuth/Resend/Cron/Storage SetEnv 주입 완료 (값은 출력하지 않음)."
+          echo "OAuth/Resend/Cron/Storage/TestAllowlist SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh
