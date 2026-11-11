@@ -405,11 +405,17 @@ final class OAuthService
 
         $pdo->beginTransaction();
         try {
+            $email = EmailNormalizer::normalize($email);
             $existing = $pdo->prepare('SELECT id, status FROM users WHERE email = ? LIMIT 1');
             $existing->execute([$email]);
             $row = $existing->fetch(PDO::FETCH_ASSOC);
             if (is_array($row) && (string) ($row['status'] ?? '') === 'withdrawn') {
                 (new AccountWithdrawService())->releaseLoginIdentifiers($pdo, (int) $row['id']);
+            } elseif (is_array($row)) {
+                throw new InvalidArgumentException('이미 사용 중인 이메일입니다. 기존 계정으로 로그인해 주세요.');
+            }
+            if (!(new AccountContactService())->isInternalEmail($email)) {
+                GmailAliasAvailability::assertNoActiveConflict($pdo, $email);
             }
 
             $verifiedAt = ($profile['email'] !== '' && !(new AccountContactService())->isInternalEmail($email))
@@ -435,6 +441,11 @@ final class OAuthService
             $stmt->execute([$userId, $roleType, 'active']);
 
             $pdo->commit();
+            try {
+                GmailAliasAvailability::logAllowlistedSignup($pdo, $userId, $email);
+            } catch (\Throwable $e) {
+                error_log('[oauth] allowlist op log: ' . $e->getMessage());
+            }
             return [
                 'user_id'   => $userId,
                 'email'     => $email,

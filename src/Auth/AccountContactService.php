@@ -81,6 +81,7 @@ final class AccountContactService
                     $finalUserId = $this->linkStubToExisting($pdo, $userId, (int) $existing['id'], $phone);
                     $linked = true;
                 } else {
+                    GmailAliasAvailability::assertNoActiveConflict($pdo, $email, $userId);
                     $pdo->prepare('UPDATE users SET email = ? WHERE id = ?')
                         ->execute([$email, $userId]);
                     $replacedStubEmail = true;
@@ -101,6 +102,11 @@ final class AccountContactService
         }
 
         if ($replacedStubEmail) {
+            try {
+                GmailAliasAvailability::logAllowlistedSignup(Connection::get(), $finalUserId, EmailNormalizer::normalize((string) ($input['email'] ?? '')));
+            } catch (Throwable $e) {
+                error_log('[account-contact] allowlist op log: ' . $e->getMessage());
+            }
             try {
                 $verify = new EmailVerificationService();
                 $verify->clearVerifiedAt($finalUserId);
