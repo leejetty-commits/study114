@@ -23,7 +23,8 @@
 - `src/Admin/AdminOperationLogRepository.php` — 기존 `insert()` 재사용. `action_kind`는 `VARCHAR(50)`이라 ENUM 변경 없음.
 - `src/Admin/AdminRoleService.php` — 권한 판정은 현행 유지. 2차 비번 로직을 여기 넣지 않음.
 - `public/api/auth/me.php` — 관리자일 때만 `console_unlocked`(bool) 추가. 비관리자에게는 키 생략. 로그인 비밀번호·해시 노출 금지.
-- 마이그레이션 초안: `sql/schema/085_admin_console_auth.sql` (현재 마지막 번호는 `084_student_prime_match_opt_in.sql`. **085 사용. 운영 적용 금지**).
+- 마이그레이션 초안: `sql/schema/087_admin_console_auth.sql`. main의 마지막은 `084_student_prime_match_opt_in.sql`이지만, 열린 PR #164 (`work/339-pg-portone-sandbox`)가 이미 `085_pg_portone_sandbox.sql`·`086_pg_cancel_ops_log.sql`을 쓰므로 **087을 쓴다. 운영 적용 금지**.
+- **파일을 만들기 직전**에 `git fetch` 후 main과 열린 PR·work 브랜치의 `sql/schema/`를 다시 대조한다. 087이 이미 쓰였으면 그다음 빈 번호로 바꾸고, 지시서에 적은 087을 그 번호로 치환한 뒤 보고에 적는다. 085·086은 쓰지 않음.
 - 최초 설정 CLI: `scripts/admin-console-password-set.php` (stdin으로만 비번을 받음. argv·환경변수·로그에 평문 금지).
 - 종현용 운영 절차: `docs/internal/31-admin-console-password-ops.md` (재설정 SQL + CLI 사용법. **평문·예시 비번·해시 원문 금지**).
 
@@ -96,7 +97,7 @@
 
 9. **운영 적용 순서** (코드에 넣지 말고 보고·ops 문서에 명시)
    1) 머지·Deploy to dothome  
-   2) 종현이 운영에 `085` SQL 적용  
+   2) 종현이 운영에 `087` SQL 적용  
    3) 곧바로 SSH 또는 PC 해시 + SQL로 **자신의** 2차 비번 설정  
    4) 콘솔 잠금해제 확인  
    - 코드가 먼저 나가면 미설정 계정은 콘솔이 막힌다(의도된 fail-closed). 우회 env 스위치는 만들지 않음(운영 `.env` 변경 금지와 맞춤).
@@ -125,14 +126,14 @@
   - 변경 성공·기존 비번 틀리면 거절.
   - 로그·스크립트 출력에 평문·해시 없음(`grep`으로 확인).
 - 기존 관리자 관련 verify 회귀: `scripts/verify-admin-registration-list.php`, `scripts/verify-admin-162-settlement.php`, `scripts/verify-member-mail-admin.php` 등 관리자 verify 전부 PASS.
-- 로컬에서만 085 적용. 운영 DB·운영 `.env`·CSP 변경 없음.
+- 로컬에서만 087 적용. 운영 DB·운영 `.env`·CSP 변경 없음.
 - 스크린샷: `docs/worklog/2026/11/shots-363/` — 390·1280, 입력값 비가시. 게이트 / 실패(남은 횟수) / 잠금 / 해제 후 운영 홈 / (있으면) 변경 폼.
 
 ## 금지
 - 웹 최초 설정 화면, 메일·SMS 재설정, 임시 우회 쿼리·헤더·env 스위치 추가 금지.
 - `users.password_hash`·로그인 비번을 2차 비번으로 재사용 금지.
 - 비밀번호·해시·세션 원문을 문서·커밋·채팅·로그·스크린샷·verify 출력에 남기지 않음.
-- 운영 DB에 085 적용 금지, 운영 `.env`/CSP/`public/.htaccess` 변경 금지. SQL 초안만 추가.
+- 운영 DB에 087 적용 금지, 운영 `.env`/CSP/`public/.htaccess` 변경 금지. SQL 초안만 추가.
 - 개인정보 암호화 작업 금지(정본 선행 순서상 이 티켓 다음 단계, 이번 범위 밖).
 - 기존 관리자 셸·메뉴·운영 홈을 1px라도 바꾸지 않음(새 게이트 화면만 추가).
 ## 공통 금지 (모든 지시서 공통 · 생략 불가)
@@ -148,7 +149,7 @@
 - 범위 밖에서 발견한 버그는 고치지 말고 보고서 「발견 목록」에만 적음.
 
 ## 확인 (셀프검수 방법)
-1. 로컬 Docker DB에 085 적용 → CLI로 테스트 관리자 계정에 2차 비번 설정(평문 보고 금지).
+1. 로컬 Docker DB에 087 적용 → CLI로 테스트 관리자 계정에 2차 비번 설정(평문 보고 금지).
 2. 관리자 로그인 후 해제 없이 curl `GET /api/admin/members.php` → 403 `console_unlock_required`. `GET /api/admin/console-unlock.php` → 200, `unlocked: false`.
 3. POST 잠금해제 성공 후 같은 members 요청 → 200. 일반 회원·비로그인 우회는 401/403.
 4. 잘못된 비번 5회 → 잠금, 화면·API 메시지 확인. 잠금 중 올바른 비번도 거절.
@@ -173,7 +174,7 @@
 | 13 | 공통 금지 위반 없음 | | |
 
 ## 보고
-변경 파일, 085 SQL 요지(컬럼만), 해제 검사 예외 목록, verify 결과, 스크린샷 경로, 운영 적용 순서(SQL → 비번 설정 → 콘솔 확인). ⚠ 종현 결정 A~E는 권장안 적용 여부를 한 줄로. 운영 적용·비번 설정은 종현이 머지 후 직접.
+변경 파일, 087 SQL 요지(컬럼만), 해제 검사 예외 목록, verify 결과, 스크린샷 경로, 운영 적용 순서(SQL → 비번 설정 → 콘솔 확인). ⚠ 종현 결정 A~E는 권장안 적용 여부를 한 줄로. 운영 적용·비번 설정은 종현이 머지 후 직접.
 보고 문서: `docs/worklog/2026/11/2026-11-11-363-admin-console-2nd-password.md`
 ## 최종검수 패키지 (우동공과3에게 넘길 것)
 보고 맨 끝에 아래 형식 그대로 붙인다.
