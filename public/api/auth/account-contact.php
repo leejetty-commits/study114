@@ -72,6 +72,9 @@ try {
             ? '기존 계정에 소셜 로그인을 연결했습니다. 이 정보는 회원에게 공개되지 않습니다.'
             : '계정 연락처가 저장되었습니다. 이 정보는 회원에게 공개되지 않습니다.',
     ], JSON_UNESCAPED_UNICODE);
+} catch (\Study114\Auth\PhoneAccountLimitException $e) {
+    http_response_code(422);
+    echo json_encode(['ok' => false, 'error' => $e->errorCode(), 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
