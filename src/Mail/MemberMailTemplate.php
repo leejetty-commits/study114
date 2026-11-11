@@ -18,9 +18,10 @@ final class MemberMailTemplate
     public const SUPPORT_PATH = '/support/contact';
     public const HELP_EMAIL = 'help@study114.net';
     public const SIGNATURE = '— 우동공과 드림';
-    public const FOOTER_NOTICE = '이 메일은 우동공과(study114.net)에서 입력하신 주소로 보내드렸어요. '
-        . '보내기 전용 메일이라 답장을 받을 수 없어요. '
-        . '궁금한 점은 고객센터 1:1 문의로 남겨 주시면 빠르게 답해 드릴게요.';
+    public const FOOTER_NOTICE = '이 메일은 우동공과(study114.net)에서 입력하신 주소로 보내드린 발송 전용 메일이에요. '
+        . '궁금한 점이 있으시면 help@study114.net으로 편하게 문의해 주세요. '
+        . '늘 감사한 마음으로 빠르게 답해 드릴게요.';
+    /** @deprecated 바닥글 문구 통합으로 더 이상 메일 본문에 사용하지 않음. 외부 참조용으로만 유지. */
     public const SUPPORT_LINK_LABEL = '고객센터 1:1 문의하기';
     public const LINK_HINT = '버튼이 눌리지 않으면 아래 주소를 복사해 브라우저 주소창에 붙여 넣어 주세요.';
 
@@ -124,7 +125,6 @@ final class MemberMailTemplate
         $lines[] = '';
         $lines[] = '────────────';
         $lines[] = self::FOOTER_NOTICE;
-        $lines[] = self::SUPPORT_LINK_LABEL . ': ' . $mail['support_url'];
 
         return implode("\n", $lines);
     }
@@ -242,9 +242,11 @@ HTML;
 
         $heading = $e((string) $mail['heading']);
         $signature = $e(self::SIGNATURE);
-        $footer = $e(self::FOOTER_NOTICE);
-        $supportUrl = $e((string) $mail['support_url']);
-        $supportLabel = $e(self::SUPPORT_LINK_LABEL);
+        // 바닥글: help@study114.net을 mailto: 링크로 표시
+        $footerParts = explode(self::HELP_EMAIL, self::FOOTER_NOTICE, 2);
+        $footerHtml = count($footerParts) === 2
+            ? $e($footerParts[0]) . '<a href="mailto:' . self::HELP_EMAIL . '" style="color:' . $blue . ';">' . self::HELP_EMAIL . '</a>' . $e($footerParts[1])
+            : $e(self::FOOTER_NOTICE);
 
         return <<<HTML
 <!DOCTYPE html>
@@ -279,8 +281,7 @@ HTML;
           </tr>
           <tr>
             <td style="padding:18px 28px 24px;border-top:1px solid {$line};font-family:{$font};">
-              <p style="margin:0 0 8px;font-size:12px;line-height:1.7;color:{$muted};">{$footer}</p>
-              <p style="margin:0;font-size:12px;line-height:1.7;"><a href="{$supportUrl}" target="_blank" rel="noopener" style="color:{$blue};font-weight:600;">{$supportLabel}</a></p>
+              <p style="margin:0;font-size:12px;line-height:1.7;color:{$muted};">{$footerHtml}</p>
             </td>
           </tr>
         </table>

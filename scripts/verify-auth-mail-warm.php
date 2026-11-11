@@ -92,12 +92,13 @@ function commonChecks(string $id, array $mail, ?string $badge, string $link, str
     check(str_starts_with($mail['subject'], '[우동공과] '), "{$id}: 제목 머리 [우동공과]");
     check(!preg_match('/[\r\n]/', $mail['subject']), "{$id}: 제목 개행 없음");
     foreach (['plain', 'html'] as $part) {
-        check(str_contains($mail[$part], '보내기 전용 메일이라 답장을 받을 수 없어요'), "{$id}: {$part} 보내기 전용 고지");
-        check(str_contains($mail[$part], '고객센터 1:1 문의'), "{$id}: {$part} 고객센터 1:1 문의 안내");
+        check(str_contains($mail[$part], '발송 전용 메일이에요'), "{$id}: {$part} 발송 전용 고지");
+        check(str_contains($mail[$part], 'help@study114.net'), "{$id}: {$part} 고객 연락처 help@study114.net");
+        check(!str_contains($mail[$part], '고객센터 1:1 문의'), "{$id}: {$part} 구형 고객센터 링크 없음");
         check(str_contains($mail[$part], '— 우동공과 드림'), "{$id}: {$part} 서명");
     }
-    check(str_ends_with($mail['plain'], "\n고객센터 1:1 문의하기: " . $supportUrl), "{$id}: text 고객센터 링크 정확히 일치");
-    check(str_contains($mail['html'], 'href="' . htmlspecialchars($supportUrl, ENT_QUOTES, 'UTF-8') . '"'), "{$id}: html 고객센터 링크 정확히 일치");
+    check(str_ends_with($mail['plain'], '늘 감사한 마음으로 빠르게 답해 드릴게요.'), "{$id}: text 바닥글 끝 문구");
+    check(str_contains($mail['html'], 'href="mailto:help@study114.net"'), "{$id}: html 바닥글 mailto 링크");
     $all = $mail['subject'] . "\n" . $mail['plain'] . "\n" . $mail['html'];
     foreach ($forbidden as $word) {
         check(!str_contains($all, $word), "{$id}: 금지어 없음 「{$word}」");
@@ -191,7 +192,7 @@ check(!str_contains($social['plain'], 'reset-password'), 'social-only: 재설정
 // 소셜 표시명에 HTML이 섞여도 escape (표시명은 서버 고정값이지만 방어)
 $xss = PasswordResetMailTemplate::buildSocialOnly(['<b>x</b>'], '', '', $supportUrl);
 check(!str_contains($xss['html'], '<b>x</b>') && str_contains($xss['html'], '&lt;b&gt;x&lt;/b&gt;'), 'social-only: 동적 값 escape');
-check(str_contains(PasswordResetMailTemplate::build($resetLink)['plain'], "\n고객센터 1:1 문의하기: https://study114.net/support/contact"), 'reset: 고객센터 주소 생략 시 운영 기본값');
+check(str_contains(PasswordResetMailTemplate::build($resetLink)['plain'], 'help@study114.net'), 'reset: 고객센터 주소 생략 시 바닥글 help@ 포함');
 
 // ── 서비스 연결(정적) ──
 $verifySvc = (string) file_get_contents($root . '/src/Auth/EmailVerificationService.php');
@@ -252,6 +253,42 @@ foreach ($previews as $id => $mail) {
 $index .= '</ul></body></html>';
 file_put_contents($previewDir . DIRECTORY_SEPARATOR . 'index.html', $index);
 echo 'PREVIEW_DIR=' . $previewDir . PHP_EOL;
+
+// ── N2: From 표시이름 회귀 테스트 ──
+// encodeHeader는 =?UTF-8?B?<base64>?= 형식이므로 base64 복호화로 이름 확인
+$authMailerRef = new ReflectionClass(AuthMailer::class);
+$fromHeaderM = $authMailerRef->getMethod('fromHeader');
+$fromHeaderM->setAccessible(true);
+$authMailerI = $authMailerRef->newInstanceWithoutConstructor();
+$configPropR = $authMailerRef->getProperty('config');
+$configPropR->setAccessible(true);
+
+$decodeFromHeader = static function (string $hdr): string {
+    if (preg_match('/=\?UTF-8\?B\?([A-Za-z0-9+\/=]+)\?=/', $hdr, $m)) {
+        return base64_decode($m[1], true) ?: '';
+    }
+    return $hdr;
+};
+
+$configPropR->setValue($authMailerI, ['mail_from_name' => '우동공과 고객센터']);
+$hdr = (string) $fromHeaderM->invoke($authMailerI, 'no-reply@study114.net');
+check($decodeFromHeader($hdr) === '우동공과 고객센터' && str_contains($hdr, '<no-reply@study114.net>'), 'AuthMailer: fromHeader 기본 이름+주소');
+
+$configPropR->setValue($authMailerI, ['mail_from_name' => '커스텀이름']);
+$hdrCustom = (string) $fromHeaderM->invoke($authMailerI, 'help@study114.net');
+check($decodeFromHeader($hdrCustom) === '커스텀이름' && str_contains($hdrCustom, '<help@study114.net>'), 'AuthMailer: fromHeader 커스텀 이름 반영');
+
+$configPropR->setValue($authMailerI, []);
+$hdrFallback = (string) $fromHeaderM->invoke($authMailerI, 'no-reply@study114.net');
+check($decodeFromHeader($hdrFallback) === '우동공과 고객센터', 'AuthMailer: fromHeader config 미설정 시 기본값 「우동공과 고객센터」');
+
+// ── N5: 소셜 전용 분기 토큰 미생성 회귀 테스트 ──
+$resetSvcCode = (string) file_get_contents($root . '/src/Auth/PasswordResetService.php');
+$socialPos = strpos($resetSvcCode, 'if ($socialOnly)');
+$socialEndPos = strpos($resetSvcCode, 'return [\'sent\' => true', (int) $socialPos);
+$socialBranch = substr($resetSvcCode, (int) $socialPos, (int) $socialEndPos - (int) $socialPos);
+check(!str_contains($socialBranch, 'tokens->create'), 'PasswordResetService: 소셜 분기 토큰 생성 없음');
+check(substr_count($resetSvcCode, 'tokens->create') === 1, 'PasswordResetService: 일반 분기에만 토큰 생성 1회');
 
 echo "\nSUMMARY passed={$passed} failed={$failed}\n";
 exit($failed > 0 ? 1 : 0);

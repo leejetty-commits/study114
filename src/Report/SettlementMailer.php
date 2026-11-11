@@ -212,7 +212,9 @@ final class SettlementMailer
 
     private function fromHeader(string $fromEmail): string
     {
-        $name = MailMessageSanitizer::encodeHeader('우동공과');
+        $name = MailMessageSanitizer::encodeHeader(
+            (string) ($this->config['mail_from_name'] ?? '우동공과 고객센터')
+        );
 
         return $name . ' <' . $fromEmail . '>';
     }
