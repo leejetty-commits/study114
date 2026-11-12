@@ -130,7 +130,7 @@ lines.forEach((got, i) => {
   ok(`(2) 「${raw || '빈값'}」 → 「${want || '빈값'}」`, got === want, `got ${JSON.stringify(got)}`);
 });
 
-const { renderBasicRow, renderExposureBox } = await import('../preview/home-ui/src/exposure-render.js');
+const { renderBasicRow, renderExposureBox, renderStudentBasicSelfCard } = await import('../preview/home-ui/src/exposure-render.js');
 
 const room = {
   id: 7,
@@ -188,6 +188,19 @@ for (const [label, opts] of [
     }
   }
 }
+
+const ownOnHome = renderBasicRow('student', {
+  ...student,
+  student_name: '홍길동',
+  public_display_name: '홍*동',
+}, { viewerRole: 'parent', selfView: true });
+ok('(2) 본인 카드여도 홈 제목은 가린 값', ownOnHome.includes('홍*동') && !ownOnHome.includes('홍길동'));
+const mypagePreview = renderStudentBasicSelfCard({
+  ...student,
+  student_name: '홍길동',
+  public_display_name: '홍길동',
+});
+ok('(2) 마이페이지 미리보기는 이름 전체', mypagePreview.includes('홍길동'));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
