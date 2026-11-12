@@ -145,8 +145,80 @@ $cropped = $dir . '/cropped.webp';
 writeCroppedWide($wide, $cropped);
 check('변조: prime을 crop으로 되돌리면 가로 끝 검사가 실패', widePrimeOk($p1280, 1280, 720) && !widePrimeOk($cropped, 1280, 720));
 
+$bothSrc = $dir . '/both.jpg';
+writeJpeg($bothSrc, 900, 600, function ($im, $w, $h): void {
+    $green = imagecolorallocate($im, 0, 170, 0);
+    $red = imagecolorallocate($im, 230, 0, 0);
+    $blue = imagecolorallocate($im, 0, 0, 230);
+    imagefilledrectangle($im, 0, 0, $w, $h, $green);
+    imagefilledrectangle($im, 0, 0, 49, $h, $red);
+    imagefilledrectangle($im, $w - 50, 0, $w, $h, $blue);
+});
+$bothPrime = $dir . '/both-prime.webp';
+$bothBasic = $dir . '/both-basic.webp';
+$processor->writeVariants($bothSrc, 0.5, 0.5, [
+    'prime_1280' => $bothPrime,
+    'basic_720' => $bothBasic,
+]);
+check('프라임+베이직 동시: prime 1280×720 contain', widePrimeOk($bothPrime, 1280, 720), describe($bothPrime));
+check('프라임+베이직 동시: basic 720×720 crop', sizeOfImage($bothBasic) === [720, 720], describe($bothBasic));
+
+$smallBoth = $dir . '/663x380.jpg';
+writeJpeg($smallBoth, 663, 380, function ($im, $w, $h): void {
+    $green = imagecolorallocate($im, 0, 170, 0);
+    $yellow = imagecolorallocate($im, 255, 220, 80);
+    $red = imagecolorallocate($im, 220, 40, 40);
+    imagefilledrectangle($im, 0, 0, $w - 1, $h - 1, $green);
+    imagefilledrectangle($im, 0, 0, max(1, (int) ($w * 0.12)), $h - 1, $yellow);
+    imagefilledrectangle($im, $w - max(1, (int) ($w * 0.12)), 0, $w - 1, $h - 1, $red);
+});
+$sbPrime = $dir . '/663-prime.webp';
+$sbBasic = $dir . '/663-basic.webp';
+$processor->writeVariants($smallBoth, 0.5, 0.5, [
+    'prime_1280' => $sbPrime,
+    'basic_720' => $sbBasic,
+]);
+$fgW = foregroundWidth($sbPrime);
+echo "NOTE  663x380 prime+basic foreground_width={$fgW} (원본 가로 663 — 키우면 이보다 큼)\n";
+check('663×380 프라임+베이직: prime 1280×720', sizeOfImage($sbPrime) === [1280, 720], describe($sbPrime));
+check('663×380 프라임+베이직: basic 720×720', sizeOfImage($sbBasic) === [720, 720], describe($sbBasic));
+check('663×380 동시 처리 시 앞 사진 폭 ≥ 663', $fgW >= 663, "fgW={$fgW}");
+
 cleanup($dir);
 exit($fail > 0 ? 1 : 0);
+
+/** 프라임 contain 결과에서 앞(비흐림·고채도) 구간의 대략 가로 폭. */
+function foregroundWidth(string $path): int
+{
+    $im = @imagecreatefromwebp($path);
+    if ($im === false) {
+        return 0;
+    }
+    $w = imagesx($im);
+    $h = imagesy($im);
+    $y = intdiv($h, 2);
+    $left = -1;
+    $right = -1;
+    for ($x = 0; $x < $w; $x++) {
+        $rgb = imagecolorat($im, $x, $y);
+        $r = ($rgb >> 16) & 0xff;
+        $g = ($rgb >> 8) & 0xff;
+        $b = $rgb & 0xff;
+        $sat = max($r, $g, $b) - min($r, $g, $b);
+        if ($sat > 40 && max($r, $g, $b) > 60) {
+            if ($left < 0) {
+                $left = $x;
+            }
+            $right = $x;
+        }
+    }
+    imagedestroy($im);
+    if ($left < 0 || $right < $left) {
+        return 0;
+    }
+
+    return $right - $left + 1;
+}
 
 function widePrimeOk(string $path, int $w, int $h): bool
 {

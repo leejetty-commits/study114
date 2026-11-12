@@ -94,10 +94,19 @@ function noteCell(row) {
   return `<span class="rc-note rc-note--${miss ? 'miss' : 'ok'}">${esc(RC_COPY.board.required)}</span>`;
 }
 
+function coverActionCell(row) {
+  if (row.id !== 'cover') return '';
+  return `<button type="button" class="rc-link rc-cover-btn" data-rc-cover>${esc(RC_COPY.cover.pick)}</button>`;
+}
+
 function renderTable(rows, { plain = false } = {}) {
   const body = (rows || [])
     .map((r) => {
       const empty = r.status === 'empty';
+      const coverBtn = coverActionCell(r);
+      const valueHtml = empty
+        ? coverBtn || '—'
+        : `${esc(r.value)}${coverBtn ? ` · ${coverBtn}` : ''}`;
       if (plain) {
         return `
           <tr class="rc-row${empty ? ' is-empty' : ''}">
@@ -108,7 +117,7 @@ function renderTable(rows, { plain = false } = {}) {
       return `
           <tr class="rc-row${empty ? ' is-empty' : ''}">
             <th scope="row">${esc(r.label)}</th>
-            <td class="rc-row__value">${empty ? '—' : esc(r.value)}</td>
+            <td class="rc-row__value">${valueHtml}</td>
             <td class="rc-row__status">${statusCell(r)}</td>
             <td class="rc-row__note">${noteCell(r)}</td>
           </tr>`;

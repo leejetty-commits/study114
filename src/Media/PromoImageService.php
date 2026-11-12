@@ -20,9 +20,10 @@ final class PromoImageService
 
     /**
      * @param array<string, mixed> $file $_FILES entry
+     * @param int $replaceImageId 교체 대상 이미지 ID (0이면 새로 추가)
      * @return array<string, mixed>
      */
-    public function uploadForRoom(int $userId, int $roomId, array $file, float $cropX, float $cropY, string $imageType, int $sortOrder, string $caption = ''): array
+    public function uploadForRoom(int $userId, int $roomId, array $file, float $cropX, float $cropY, string $imageType, int $sortOrder, string $caption = '', int $replaceImageId = 0): array
     {
         $pdo = Connection::get();
         $this->ensureColumns($pdo);
@@ -31,17 +32,35 @@ final class PromoImageService
         // 상세1 실사진 업로드 시 시스템 기본 카드 이미지를 교체한다.
         (new StudyRoomDefaultImageService())->clearSystemDefaults($pdo, $roomId);
 
-        $countStmt = $pdo->prepare('SELECT sort_order FROM study_room_images WHERE study_room_id = ?');
+        // 교체 대상이 있으면 먼저 존재 확인 후 개수 계산에서 제외한다.
+        $replaceRow = null;
+        if ($replaceImageId > 0) {
+            $replaceRow = $this->findImage($pdo, $roomId, $replaceImageId);
+        }
+
+        $countStmt = $pdo->prepare('SELECT id, sort_order FROM study_room_images WHERE study_room_id = ?');
         $countStmt->execute([$roomId]);
-        $used = array_map('intval', $countStmt->fetchAll(PDO::FETCH_COLUMN));
+        $rows = $countStmt->fetchAll(PDO::FETCH_ASSOC);
+        $used = [];
+        foreach ($rows as $r) {
+            if ($replaceRow !== null && (int) $r['id'] === $replaceImageId) {
+                continue; // 교체 대상은 개수·슬롯에서 뺀다
+            }
+            $used[] = (int) $r['sort_order'];
+        }
         if (count($used) >= PromoImageSpec::MAX_COUNT) {
             throw new InvalidArgumentException('홍보사진은 최대 5장까지입니다.');
         }
-        $sortOrder = 0;
-        for ($slot = 1; $slot <= PromoImageSpec::MAX_COUNT; $slot++) {
-            if (!in_array($slot, $used, true)) {
-                $sortOrder = $slot;
-                break;
+        // 교체면 같은 슬롯 재사용, 새로 추가면 빈 슬롯 할당
+        if ($replaceRow !== null) {
+            $sortOrder = (int) $replaceRow['sort_order'];
+        } else {
+            $sortOrder = 0;
+            for ($slot = 1; $slot <= PromoImageSpec::MAX_COUNT; $slot++) {
+                if (!in_array($slot, $used, true)) {
+                    $sortOrder = $slot;
+                    break;
+                }
             }
         }
         if ($sortOrder < 1) {
@@ -91,34 +110,34 @@ final class PromoImageService
             }
             $imageType = $this->normalizeType($imageType);
             $caption = $this->clipCaption($caption);
-
-            $stmt = $pdo->prepare(
-                'INSERT INTO study_room_images
-                    (study_room_id, image_type, image_path, sort_order, original_filename, caption,
-                     original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
-                     crop_offset_x, crop_offset_y, original_width, original_height, original_bytes, original_mime)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-            );
             $coverPath = $paths['prime_1600'] ?? $paths['prime_1280'] ?? '/' . $originalRel;
-            $stmt->execute([
-            $roomId,
-            $imageType,
-            $coverPath,
-            $sortOrder,
-            $origName,
-            $caption !== '' ? $caption : null,
-            '/' . $originalRel,
-            $paths['prime_1280'] ?? '',
-            $paths['prime_1600'] ?? '',
-            $paths['basic_360'] ?? '',
-            $paths['basic_720'] ?? '',
-            $cropX,
-            $cropY,
-            $info['width'],
-            $info['height'],
-            $size,
-            $info['mime'],
-        ]);
+
+            // 원자적 교체: 트랜잭션 안에서 DELETE(old) → INSERT(new). 실패 시 ROLLBACK → 기존 유지.
+            $pdo->beginTransaction();
+            try {
+                if ($replaceRow !== null) {
+                    $pdo->prepare('DELETE FROM study_room_images WHERE id = ? AND study_room_id = ?')
+                        ->execute([$replaceImageId, $roomId]);
+                }
+                $pdo->prepare(
+                    'INSERT INTO study_room_images
+                        (study_room_id, image_type, image_path, sort_order, original_filename, caption,
+                         original_path, prime_1280_path, prime_1600_path, basic_360_path, basic_720_path,
+                         crop_offset_x, crop_offset_y, original_width, original_height, original_bytes, original_mime)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                )->execute([
+                    $roomId, $imageType, $coverPath, $sortOrder, $origName,
+                    $caption !== '' ? $caption : null, '/' . $originalRel,
+                    $paths['prime_1280'] ?? '', $paths['prime_1600'] ?? '',
+                    $paths['basic_360'] ?? '', $paths['basic_720'] ?? '',
+                    $cropX, $cropY, $info['width'], $info['height'], $size, $info['mime'],
+                ]);
+                $newId = (int) $pdo->lastInsertId();
+                $pdo->commit();
+            } catch (\Throwable $txErr) {
+                $pdo->rollBack();
+                throw $txErr;
+            }
         } catch (\Throwable $e) {
             @unlink($originalAbs);
             foreach ($dests as $abs) {
@@ -137,8 +156,13 @@ final class PromoImageService
             throw $e;
         }
 
+        // 교체 성공 → 기존 파일 정리 (DB 행은 이미 트랜잭션 안에서 삭제됨)
+        if ($replaceRow !== null) {
+            $this->deleteFilesForRow($replaceRow);
+        }
+
         return $this->mapRow([
-            'id' => (int) $pdo->lastInsertId(),
+            'id' => $newId,
             'image_type' => $imageType,
             'image_path' => $coverPath,
             'sort_order' => $sortOrder,
@@ -227,7 +251,19 @@ final class PromoImageService
         $this->ensureColumns($pdo);
         $this->assertRoomOwner($pdo, $userId, $roomId);
         $row = $this->findImage($pdo, $roomId, $imageId);
+        $this->deleteRowAndFiles($pdo, $roomId, $imageId, $row);
+    }
+
+    /** 행 DELETE + 연결 파일 정리. delete() 전용. */
+    private function deleteRowAndFiles(PDO $pdo, int $roomId, int $imageId, array $row): void
+    {
         $pdo->prepare('DELETE FROM study_room_images WHERE id = ? AND study_room_id = ?')->execute([$imageId, $roomId]);
+        $this->deleteFilesForRow($row);
+    }
+
+    /** 연결 파일만 정리 (DB 행은 이미 삭제된 뒤). */
+    private function deleteFilesForRow(array $row): void
+    {
         foreach (['original_path', 'image_path', 'prime_1280_path', 'prime_1600_path', 'basic_360_path', 'basic_720_path'] as $key) {
             $rel = ltrim((string) ($row[$key] ?? ''), '/');
             if ($rel === '' || str_contains($rel, '..')) {

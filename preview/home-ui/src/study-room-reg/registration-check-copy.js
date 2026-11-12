@@ -77,7 +77,7 @@ export const RC_COPY = {
     title: '대표사진 1장',
     lead: '검색 카드와 상세 진입에 쓰이는 대표사진입니다. 추가 사진(2장 이상)은 상세정보1에서 관리합니다.',
     pick: '사진 선택',
-    hint: 'JPG · PNG · WebP / 최소 800×600 / 최대 4MB',
+    hint: 'JPG · PNG · WebP / 큰 사진은 자동으로 줄여서 올려요',
   },
 };
 
