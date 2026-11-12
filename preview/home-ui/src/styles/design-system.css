@@ -582,11 +582,62 @@ body {
   white-space: nowrap;
 }
 
+.inquiry-fab__item--email {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  white-space: normal;
+}
+
+.inquiry-fab__item-email {
+  font-size: var(--fs-1);
+  font-weight: var(--fw-regular, 400);
+  color: var(--gray-600);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .inquiry-fab__item:hover,
 .inquiry-fab__item:focus-visible {
   background: var(--brand-blue-light, #eff6ff);
   color: var(--brand-blue-dark);
   outline: none;
+}
+
+.inquiry-fab__item--email:hover .inquiry-fab__item-email,
+.inquiry-fab__item--email:focus-visible .inquiry-fab__item-email {
+  color: var(--brand-blue-dark);
+}
+
+/* shared 짧은 상태 토스트 (문의하기 복사 안내 등) */
+.brief-status-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 5.5rem;
+  z-index: 1300;
+  max-width: min(20rem, calc(100vw - 2rem));
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: rgba(15, 23, 42, 0.92);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-medium);
+  line-height: 1.35;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.18);
+  transform: translate(-50%, 0.5rem);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.brief-status-toast.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 /* ── Buttons unify to brand blue (product UI) ── */
