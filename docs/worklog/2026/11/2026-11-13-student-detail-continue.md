@@ -48,11 +48,23 @@
 
 ```
 [최종검수 패키지 — 상세정보 이어서하기]
-브랜치 / 커밋: work/student-detail-continue / (push 후 tip)
-변경 파일: (git diff --stat main...HEAD)
-diff 요약: (파일별 1~2줄)
-테스트: (명령 → PASS n / FAIL n)
+브랜치 / 커밋: work/student-detail-continue / c9d9454d
+PR: https://github.com/leejetty-commits/study114/pull/185
+변경 파일:
+ preview/auth-ui/src/screens/signup-complete.js | +33 -3
+ docs/worklog/2026/11/2026-11-13-student-detail-continue.md
+ docs/worklog/2026/11/shots-student-detail-continue/* (6 png + meta)
+ scripts/verify-student-detail-continue.mjs
+ scripts/capture-student-detail-continue.mjs
+diff 요약:
+ signup-complete.js — 학생 go-detail-register → detail URL + API id 폴백
+ verify/capture — 정적 검사·로컬 캡처 스크립트
+ worklog/shots — 지시·셀프검수·1280·390
+테스트:
+ node scripts/verify-student-detail-continue.mjs → PASS 8 / FAIL 0
+ verify-signup-home-fix-20261009.mjs → PASS 45 / FAIL 0
+ capture-student-detail-continue.mjs → 캡처 6
 스크린샷: docs/worklog/2026/11/shots-student-detail-continue/ (1280·390, 신규·새로고침·탭)
-셀프검수 체크리스트: (위 표)
+셀프검수 체크리스트: 1~5 PASS (위 표)
 미해결·종현 결정 필요: 없음
 ```
