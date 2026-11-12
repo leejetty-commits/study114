@@ -10,6 +10,13 @@ import { getTutor } from '../tutor-reg/store.js';
 import { tierPurchaseGate } from './screens.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
 import { providerPageName } from '../mypage/mypage-copy.js';
+import {
+  MEMO_TICKET_REFUND_SHORT,
+  MEMO_TICKET_REFUND_DETAIL,
+  POSITION_REFUND_SHORT,
+  POSITION_REFUND_DETAIL,
+  POSITION_REFUND_SUMMARY_LINE,
+} from '../refund-policy-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -419,7 +426,7 @@ export function buildPositionOrderRows(opts) {
     ...badgeRows,
     ...(opts.badgeLines.length && opts.badgeSumText ? [{ label: '배지 소계', value: opts.badgeSumText, nowrap: true }] : []),
     { label: '자동연장', value: '없음', nowrap: true },
-    { label: '환불기준', value: opts.refundText || '시작 전 전액 · 시작 후 일할 계산' },
+    { label: '환불기준', value: opts.refundText || POSITION_REFUND_SUMMARY_LINE },
   ];
 }
 
@@ -470,7 +477,7 @@ export function renderAccessPurchaseCheck() {
         <h2 class="plans-sf-panel__title">구매 전 확인</h2>
       </header>
       <p>5회권과 10회권은 구매일부터 120일 동안 사용할 수 있습니다. 사용 중인 유료 묶음권은 중복 구매할 수 없으니 예상 사용량을 확인하고 필요한 만큼만 구매하세요.</p>
-      <p class="plans-muted">사용기한(120일) 경과 시 잔여 소멸(환불액 0) · 연장 없음. 환불은 결제 후 7일 이내 사용 구간별(환불규정).</p>
+      <p class="plans-muted">${esc(MEMO_TICKET_REFUND_SHORT)}</p>
     </section>`;
 }
 
@@ -479,18 +486,14 @@ export function renderAccessPurchaseCheck() {
  * @param {string} [role]
  */
 export function renderPolicyAccordion(family, role) {
+  void role;
   if (family === 'access') {
     return `
       <details class="plans-policy-acc">
         <summary>환불·소멸 안내</summary>
         <div class="plans-policy-acc__body">
-          <ul class="plans-tier-list">
-            <li>1회 즉시권: 7일 이내 미발송 시 전액 · 발송 완료 또는 7일 경과 시 0원</li>
-            <li>5회권·10회권: 결제 후 7일 이내 · 사용 구간별 환불표(약관 기준)</li>
-            <li>120일 만료 시 잔여 소멸(환불액 0) · 연장 없음</li>
-            <li>회사 귀책 발송 실패는 횟수 복구를 우선합니다</li>
-          </ul>
-          <p class="mypage-muted">환불 가능 여부와 금액은 요청하시면 확인해 안내해요.</p>
+          <p><strong>${esc(MEMO_TICKET_REFUND_SHORT)}</strong></p>
+          <p class="mypage-muted">${esc(MEMO_TICKET_REFUND_DETAIL)}</p>
         </div>
       </details>`;
   }
@@ -498,13 +501,8 @@ export function renderPolicyAccordion(family, role) {
     <details class="plans-policy-acc">
       <summary>환불·만료 안내</summary>
       <div class="plans-policy-acc__body">
-        <ul class="plans-tier-list">
-          <li>시작 전: 전액 환불</li>
-          <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산(배지 포함·같이 회수)</li>
-          <li>만료 후 베이직카드(기본 노출)로 복귀 · ${providerPageName(role)}은 유지</li>
-          <li>자동연장 없음</li>
-        </ul>
-        <p class="mypage-muted">환불 금액은 최종 결제 내역 기준으로 산정합니다. 화면 안내는 참고용입니다.</p>
+        <p><strong>${esc(POSITION_REFUND_SHORT)}</strong></p>
+        <p class="mypage-muted">${esc(POSITION_REFUND_DETAIL)}</p>
       </div>
     </details>`;
 }
