@@ -186,7 +186,15 @@ export function resolveFacilityNames(s) {
 
 function imgSrc(img) {
   if (!img || typeof img !== 'object') return '';
-  return blank(img.fit_1280_path || img.basic_720_path || img.image_path || img.name || img.src || img.prime_1280_path);
+  /* 368: 잘린 1:1(basic)보다 fit·원본·프라임 우선 */
+  return blank(
+    img.fit_1280_path
+    || img.image_path
+    || img.prime_1280_path
+    || img.name
+    || img.src
+    || img.basic_720_path,
+  );
 }
 
 function isSystemDefaultImage(img) {
@@ -203,7 +211,6 @@ export function collectShopPhotos(s) {
     const hasOrder = order !== undefined && order !== null && order !== '';
     photos.push({
       src,
-      blurSrc: blank(img?.basic_720_path) || src,
       type: blank(img?.image_type) || 'other',
       title: blank(img?.title || img?.caption || ''),
       _order: hasOrder ? Number(order) : null,
@@ -217,7 +224,7 @@ export function collectShopPhotos(s) {
       return ao - bo || a._i - b._i;
     });
   }
-  return photos.slice(0, 5).map(({ src, blurSrc, type, title }) => ({ src, blurSrc, type, title }));
+  return photos.slice(0, 5).map(({ src, type, title }) => ({ src, type, title }));
 }
 
 /** 올린 순서 그대로. 윗단 최대 2장, 아랫단 최대 3장. */

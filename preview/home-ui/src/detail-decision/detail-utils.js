@@ -27,25 +27,16 @@ export function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-function cssUrl(raw) {
-  const safe = String(raw || '')
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/[()]/g, (ch) => `\\${ch}`);
-  return `url('${safe}')`;
-}
-
 /**
- * 펼친 카드 사진. fit이면 16:9, 정사각 대체면 square.
- * 흐린 배경은 가벼운 파생본. 카드 목록 renderMedia 는 쓰지 않는다.
+ * 펼친 카드 사진 — 잘리지 않은 src를 칸에 contain.
+ * 단색 바탕만 (흐림 배경 금지). 카드 목록 renderMedia 는 쓰지 않는다.
  * @param {string} src
- * @param {string} blurSrc
+ * @param {string} [_unusedBlur] 하위 호환(무시)
  * @param {string} alt
- * @param {{ logo?: string, eager?: boolean, square?: boolean }} [opts]
+ * @param {{ logo?: string, eager?: boolean }} [opts]
  */
-export function renderUncroppedPhoto(src, blurSrc, alt, opts = {}) {
+export function renderUncroppedPhoto(src, _unusedBlur, alt, opts = {}) {
   const photo = String(src || '').trim();
-  const blur = String(blurSrc || '').trim();
   const logo = String(opts.logo || '').trim();
   const loading = opts.eager ? 'eager' : 'lazy';
   if (!photo) {
@@ -55,10 +46,8 @@ export function renderUncroppedPhoto(src, blurSrc, alt, opts = {}) {
     const initial = String(alt || '프로필').trim().slice(0, 1) || '·';
     return `<div class="p24-fit-photo p24-fit-photo--empty" role="img" aria-label="${esc(alt || '프로필')}"><span class="p24-fit-photo__initial">${esc(initial)}</span></div>`;
   }
-  const style = blur ? ` style="--p24-fit-blur:${esc(cssUrl(blur))}"` : '';
   const onerror = logo ? ` onerror="this.onerror=null;this.src='${esc(logo)}'"` : '';
-  const klass = opts.square ? 'p24-fit-photo p24-fit-photo--square' : 'p24-fit-photo';
-  return `<div class="${klass}"${style}><img src="${esc(photo)}" alt="${esc(alt || '')}" loading="${loading}" decoding="async"${onerror} /></div>`;
+  return `<div class="p24-fit-photo"><img src="${esc(photo)}" alt="${esc(alt || '')}" loading="${loading}" decoding="async"${onerror} /></div>`;
 }
 
 export function inquiryStatusLabel(status) {
