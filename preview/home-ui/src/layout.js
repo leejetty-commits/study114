@@ -275,7 +275,7 @@ export function renderHeader(role, opts = {}) {
       <div class="home-header__main">
         <div class="home-header__inner">
           <a href="#${logoPath}" class="home-header__logo" data-nav="${logoPath}" aria-label="우동공과 홈">
-            <img src="/assets/brand/udong-symbol-2026.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" class="home-header__wordmark" />
+            <img src="/assets/brand/udong-symbol-2026.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" class="home-header__wordmark" /><span class="home-header__tagline">우리동네 공부방과외</span>
           </a>
           <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
           <button type="button" class="home-hamburger" data-action="hamburger-toggle" aria-label="메뉴 열기" aria-expanded="false">
