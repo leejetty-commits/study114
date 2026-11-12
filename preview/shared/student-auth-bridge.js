@@ -78,6 +78,22 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     preferred_studyroom_regions: studySlots,
     preferred_tutor_regions: tutorSlots,
     preferred_region_note: String(data.preferred_region_note || ''),
+    preferred_tutor_region_extra_id: data.preferred_tutor_region_extra_id
+      ? Number(data.preferred_tutor_region_extra_id)
+      : undefined,
+    preferred_studyroom_region_extra_id: data.preferred_studyroom_region_extra_id
+      ? Number(data.preferred_studyroom_region_extra_id)
+      : undefined,
+    preferred_studyroom_complex_extra_id: data.preferred_studyroom_complex_extra_id
+      ? Number(data.preferred_studyroom_complex_extra_id)
+      : undefined,
+    preferred_studyroom_region_extra_basis:
+      data.preferred_studyroom_region_extra_basis === 'complex' || data.preferred_studyroom_region_extra_basis === 'dong'
+        ? data.preferred_studyroom_region_extra_basis
+        : undefined,
+    preferred_tutor_region_extra_label: String(data.preferred_tutor_region_extra_label || ''),
+    preferred_studyroom_region_extra_label: String(data.preferred_studyroom_region_extra_label || ''),
+    preferred_studyroom_complex_extra_label: String(data.preferred_studyroom_complex_extra_label || ''),
     subject_label: String(data.subject_names || data.subject_label || '').replace(/,/g, ' · '),
     lesson_places: lessonPlaces,
     lesson_format: lessonFormat,

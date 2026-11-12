@@ -130,6 +130,8 @@ final class StudentHubRepository
         'preferred_lesson_type', 'preferred_region_note',
         'preferred_tutor_region_id', 'preferred_studyroom_region_id',
         'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
+        'preferred_tutor_region_extra_id', 'preferred_studyroom_region_extra_id',
+        'preferred_studyroom_complex_extra_id', 'preferred_studyroom_region_extra_basis',
         'preferred_fee_amount', 'preferred_studyroom_fee_amount',
         'lessons_per_week', 'minutes_per_lesson', 'lesson_format',
         'student_gender_group', 'preferred_student_count_group',
@@ -143,7 +145,7 @@ final class StudentHubRepository
      */
     private const PATCH_RELATION_KEYS = [
         'lesson_places', 'teaching_style_badges', 'subject_label', 'subject_names', 'school_level',
-        'complex_name', 'complex_address',
+        'complex_name', 'complex_address', 'extra_complex_name', 'extra_complex_address',
     ];
 
     private const SCHOOL_LEVELS = ['preschool', 'elementary', 'middle', 'high', 'n_su', 'general', 'other'];
@@ -163,7 +165,7 @@ final class StudentHubRepository
                 throw new \InvalidArgumentException("{$listKey}: 값을 확인해 주세요.");
             }
         }
-        foreach (['subject_label', 'subject_names', 'school_level', 'complex_name', 'complex_address'] as $textKey) {
+        foreach (['subject_label', 'subject_names', 'school_level', 'complex_name', 'complex_address', 'extra_complex_name', 'extra_complex_address'] as $textKey) {
             if (array_key_exists($textKey, $patch) && $patch[$textKey] !== null && !is_string($patch[$textKey])) {
                 throw new \InvalidArgumentException("{$textKey}: 값을 확인해 주세요.");
             }
@@ -173,6 +175,12 @@ final class StudentHubRepository
         }
         if (isset($patch['complex_address']) && is_string($patch['complex_address']) && self::charLength(trim($patch['complex_address'])) > 255) {
             throw new \InvalidArgumentException('complex_address: 255자 이하로 입력해 주세요.');
+        }
+        if (isset($patch['extra_complex_name']) && is_string($patch['extra_complex_name']) && self::charLength(trim($patch['extra_complex_name'])) > 100) {
+            throw new \InvalidArgumentException('extra_complex_name: 100자 이하로 입력해 주세요.');
+        }
+        if (isset($patch['extra_complex_address']) && is_string($patch['extra_complex_address']) && self::charLength(trim($patch['extra_complex_address'])) > 255) {
+            throw new \InvalidArgumentException('extra_complex_address: 255자 이하로 입력해 주세요.');
         }
         $patchSchoolLevel = isset($patch['school_level']) ? trim((string) $patch['school_level']) : '';
         if ($patchSchoolLevel !== '' && !in_array($patchSchoolLevel, self::SCHOOL_LEVELS, true)) {
@@ -210,7 +218,20 @@ final class StudentHubRepository
             if (($values['preferred_studyroom_region_basis'] ?? null) === 'dong') {
                 $values['preferred_studyroom_complex_id'] = null;
             }
-            // 분기가 바뀌면 지역설정을 초기화한다. 이번 요청이 보낸 새 분기 지역만 남는다.
+            // 추가 희망지역 단지도 본 지역과 같이 이름만 오면 id 를 만든다. complex_name 은 본 지역 전용이다.
+            $this->applyNamedExtraStudyRoomComplex($branch, $patch, $values);
+            if (isset($values['preferred_studyroom_complex_extra_id']) && !array_key_exists('preferred_studyroom_region_extra_id', $values)) {
+                $values['preferred_studyroom_region_extra_id'] = $this->complexRegionId((int) $values['preferred_studyroom_complex_extra_id']);
+            }
+            if (($values['preferred_studyroom_region_extra_basis'] ?? null) === 'dong') {
+                $values['preferred_studyroom_complex_extra_id'] = null;
+            }
+            $extraCols = array_values(array_intersect(array_keys($values), [
+                ...self::TUTOR_EXTRA_COLUMNS,
+                ...self::STUDYROOM_EXTRA_COLUMNS,
+            ]));
+            $this->assertStudentColumns($extraCols);
+            // 분기가 바뀌면 본 지역만 초기화한다. 추가 지역은 유형이 달라도 저장값을 지우지 않는다.
             if ($branchChanged) {
                 foreach ([...self::TUTOR_REGION_COLUMNS, ...self::STUDYROOM_REGION_COLUMNS] as $col) {
                     $values[$col] = $values[$col] ?? null;
@@ -272,6 +293,15 @@ final class StudentHubRepository
         'preferred_studyroom_region_id', 'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
     ];
 
+    /** 희망지역 추가. 분기 변경으로 비우지 않는다. 반대 유형 요청 값만 버린다. */
+    private const TUTOR_EXTRA_COLUMNS = ['preferred_tutor_region_extra_id'];
+
+    private const STUDYROOM_EXTRA_COLUMNS = [
+        'preferred_studyroom_region_extra_id',
+        'preferred_studyroom_complex_extra_id',
+        'preferred_studyroom_region_extra_basis',
+    ];
+
     /**
      * 학생은 분기(preferred_lesson_type) 하나만 가진다. 요청의 반대 분기 지역 값은 버린다(서버 강제).
      * 같은 트랜잭션에서 현재 분기를 잠가 읽는다.
@@ -296,6 +326,13 @@ final class StudentHubRepository
         $opposite = $branch === 'tutor' ? self::STUDYROOM_REGION_COLUMNS : self::TUTOR_REGION_COLUMNS;
         foreach ($opposite as $col) {
             unset($patch[$col]);
+        }
+        $oppositeExtra = $branch === 'tutor' ? self::STUDYROOM_EXTRA_COLUMNS : self::TUTOR_EXTRA_COLUMNS;
+        foreach ($oppositeExtra as $col) {
+            unset($patch[$col]);
+        }
+        if ($branch === 'tutor') {
+            unset($patch['extra_complex_name'], $patch['extra_complex_address']);
         }
 
         return $current !== $branch;
@@ -335,6 +372,61 @@ final class StudentHubRepository
             $name,
             $addr !== '' ? $addr : null
         );
+    }
+
+    /**
+     * 추가 희망지역용. complex_name 은 본 공부방 지역 전용이라 extra_complex_name 만 본다.
+     *
+     * @param array<string, mixed> $patch
+     * @param array<string, mixed> $values
+     */
+    private function applyNamedExtraStudyRoomComplex(?string $branch, array $patch, array &$values): void
+    {
+        if ($branch !== 'study_room') {
+            return;
+        }
+        if (($values['preferred_studyroom_region_extra_basis'] ?? null) !== 'complex') {
+            return;
+        }
+        $existing = $values['preferred_studyroom_complex_extra_id'] ?? null;
+        if (is_int($existing) && $existing > 0) {
+            return;
+        }
+        $name = trim((string) ($patch['extra_complex_name'] ?? ''));
+        if ($name === '') {
+            return;
+        }
+        $regionId = $values['preferred_studyroom_region_extra_id'] ?? null;
+        if (!is_int($regionId) || $regionId <= 0) {
+            throw new \InvalidArgumentException('희망지역을 주소 검색으로 다시 선택해 주세요.');
+        }
+        $addr = trim((string) ($patch['extra_complex_address'] ?? ''));
+        $values['preferred_studyroom_complex_extra_id'] = ComplexEnsure::ensure(
+            $this->pdo,
+            $regionId,
+            $name,
+            $addr !== '' ? $addr : null
+        );
+    }
+
+    /** @param list<string> $columns */
+    private function assertStudentColumns(array $columns): void
+    {
+        if ($columns === []) {
+            return;
+        }
+        $holders = implode(', ', array_fill(0, count($columns), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME IN ({$holders})"
+        );
+        $stmt->execute(['students', ...$columns]);
+        $found = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        foreach ($columns as $col) {
+            if (!in_array($col, $found, true)) {
+                throw new \InvalidArgumentException('희망지역 추가: 저장 컬럼이 없습니다.');
+            }
+        }
     }
 
     private const PATCH_ENUMS = [
@@ -453,19 +545,22 @@ final class StudentHubRepository
         if ($col === 'memo_status' && !in_array($value, ['open', 'paused'], true)) {
             throw new \InvalidArgumentException('memo_status: 값을 확인해 주세요.');
         }
-        if ($col === 'preferred_tutor_region_id') {
+        if ($col === 'preferred_tutor_region_id' || $col === 'preferred_tutor_region_extra_id') {
             if ($value === null) {
                 return null;
             }
             if (!is_int($value) && !(is_string($value) && preg_match('/^\d+$/', $value))) {
-                throw new \InvalidArgumentException('preferred_tutor_region_id: 값을 확인해 주세요.');
+                throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
             }
             $regionId = (int) $value;
             TutorRegionUnit::assertUnit($this->pdo, $regionId);
 
             return $regionId;
         }
-        if (in_array($col, ['preferred_studyroom_region_id', 'preferred_studyroom_complex_id'], true)) {
+        if (in_array($col, [
+            'preferred_studyroom_region_id', 'preferred_studyroom_complex_id',
+            'preferred_studyroom_region_extra_id', 'preferred_studyroom_complex_extra_id',
+        ], true)) {
             if ($value === null) {
                 return null;
             }
@@ -473,7 +568,7 @@ final class StudentHubRepository
                 throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
             }
             $id = (int) $value;
-            $table = $col === 'preferred_studyroom_region_id' ? 'regions' : 'complexes';
+            $table = str_contains($col, 'complex') ? 'complexes' : 'regions';
             $stmt = $this->pdo->prepare("SELECT 1 FROM {$table} WHERE id = ? AND is_active = 1 LIMIT 1");
             $stmt->execute([$id]);
             if ($id <= 0 || !$stmt->fetchColumn()) {
@@ -482,8 +577,9 @@ final class StudentHubRepository
 
             return $id;
         }
-        if ($col === 'preferred_studyroom_region_basis' && $value !== null && !in_array($value, ['dong', 'complex'], true)) {
-            throw new \InvalidArgumentException('preferred_studyroom_region_basis: 값을 확인해 주세요.');
+        if (in_array($col, ['preferred_studyroom_region_basis', 'preferred_studyroom_region_extra_basis'], true)
+            && $value !== null && !in_array($value, ['dong', 'complex'], true)) {
+            throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
         }
         if ($col === 'request_summary' && $value !== null && mb_strlen((string) $value) > 200) {
             throw new \InvalidArgumentException('request_summary: 200자 이하로 입력해 주세요.');
@@ -586,6 +682,8 @@ final class StudentHubRepository
     {
         $tutorRegion = $this->tutorUnitRegion($row['preferred_tutor_region_id'] ?? null);
         $studyroomRegion = $this->officialRegion($row['preferred_studyroom_region_id'] ?? null);
+        $tutorExtra = $this->tutorUnitRegion($row['preferred_tutor_region_extra_id'] ?? null);
+        $studyroomExtra = $this->officialRegion($row['preferred_studyroom_region_extra_id'] ?? null);
         $regionLabel = $this->resolveStudentRegionLabel($row, $tutorRegion, $studyroomRegion);
         $subject = $this->primarySubject($studentId);
         $subjectLabel = $subject['name'];
@@ -611,10 +709,17 @@ final class StudentHubRepository
             'preferred_studyroom_region_id' => $row['preferred_studyroom_region_id'] !== null ? (int) $row['preferred_studyroom_region_id'] : null,
             'preferred_studyroom_complex_id'=> $row['preferred_studyroom_complex_id'] !== null ? (int) $row['preferred_studyroom_complex_id'] : null,
             'preferred_studyroom_region_basis' => $row['preferred_studyroom_region_basis'] !== null ? (string) $row['preferred_studyroom_region_basis'] : null,
+            'preferred_tutor_region_extra_id' => isset($row['preferred_tutor_region_extra_id']) ? (int) $row['preferred_tutor_region_extra_id'] : null,
+            'preferred_studyroom_region_extra_id' => isset($row['preferred_studyroom_region_extra_id']) ? (int) $row['preferred_studyroom_region_extra_id'] : null,
+            'preferred_studyroom_complex_extra_id' => isset($row['preferred_studyroom_complex_extra_id']) ? (int) $row['preferred_studyroom_complex_extra_id'] : null,
+            'preferred_studyroom_region_extra_basis' => isset($row['preferred_studyroom_region_extra_basis']) ? (string) $row['preferred_studyroom_region_extra_basis'] : null,
             'preferred_region_note'         => $row['preferred_region_note'] !== null ? (string) $row['preferred_region_note'] : null,
             'preferred_tutor_region_label'  => $tutorRegion['label'] ?? null,
             'preferred_studyroom_region_label' => $studyroomRegion['label'] ?? null,
             'preferred_studyroom_complex_label' => $this->complexLabel($row['preferred_studyroom_complex_id'] ?? null),
+            'preferred_tutor_region_extra_label' => $tutorExtra['label'] ?? null,
+            'preferred_studyroom_region_extra_label' => $studyroomExtra['label'] ?? null,
+            'preferred_studyroom_complex_extra_label' => $this->complexLabel($row['preferred_studyroom_complex_extra_id'] ?? null),
             'region_label'                  => $regionLabel,
             'subject_label'                 => $subjectLabel,
             'lesson_places'                 => $this->lessonPlaces($studentId),

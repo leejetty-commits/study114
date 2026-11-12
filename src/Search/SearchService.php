@@ -195,22 +195,46 @@ final class SearchService
         $parts = [];
         if ($tutorUnitId !== null) {
             $params['guest_tutor_unit_id'] = $tutorUnitId;
-            $parts[] = 's.preferred_tutor_region_id = :guest_tutor_unit_id';
+            $params['guest_tutor_unit_extra_id'] = $tutorUnitId;
+            $parts[] = $this->studentHopeOr(
+                's.preferred_tutor_region_id = :guest_tutor_unit_id',
+                's.preferred_tutor_region_extra_id = :guest_tutor_unit_extra_id',
+                'tutor',
+            );
         }
         if ($dongIds !== []) {
             $holders = [];
+            $extraHolders = [];
             foreach (array_values($dongIds) as $i => $dongId) {
                 $key = 'guest_dong_' . $i;
+                $extraKey = 'guest_dong_extra_' . $i;
                 $params[$key] = $dongId;
+                $params[$extraKey] = $dongId;
                 $holders[] = ':' . $key;
+                $extraHolders[] = ':' . $extraKey;
             }
-            $parts[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+            $parts[] = $this->studentHopeOr(
+                's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')',
+                's.preferred_studyroom_region_extra_id IN (' . implode(', ', $extraHolders) . ')',
+                'study_room',
+            );
         }
         if ($parts === []) {
             return '1 = 0';
         }
 
         return count($parts) === 1 ? $parts[0] : '(' . implode(' OR ', $parts) . ')';
+    }
+
+    /**
+     * 본 지역 또는 같은 희망 유형의 추가 지역. 다른 유형의 추가 값은 조건에 넣지 않는다.
+     * 같은 유형의 추가 희망지역도 본 지역과 OR로 맞춘다. 유형이 다른 추가 값은 쓰지 않는다.
+     */
+    private function studentHopeOr(string $primarySql, string $extraSql, string $lessonType): string
+    {
+        $lesson = $lessonType === 'study_room' ? 'study_room' : 'tutor';
+
+        return '(' . $primarySql . ' OR (s.preferred_lesson_type = \'' . $lesson . '\' AND ' . $extraSql . '))';
     }
 
     private function countGuestStudentsAtGu(PDO $pdo, int $guId): int
@@ -1258,28 +1282,51 @@ final class SearchService
         }
         $studyroomComplexId = $this->intFilter($filters, 'preferred_studyroom_complex_id');
         if ($studyroomComplexId !== null && $lessonForRegion === 'study_room') {
-            $where[] = 's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id';
             $params['preferred_studyroom_complex_id'] = $studyroomComplexId;
+            $params['preferred_studyroom_complex_extra_id'] = $studyroomComplexId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id',
+                's.preferred_studyroom_complex_extra_id = :preferred_studyroom_complex_extra_id',
+                'study_room',
+            );
         } elseif ($studyroomRegionId !== null) {
-            $where[] = 's.preferred_studyroom_region_id = :preferred_studyroom_region_id';
             $params['preferred_studyroom_region_id'] = $studyroomRegionId;
+            $params['preferred_studyroom_region_extra_id'] = $studyroomRegionId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_studyroom_region_id = :preferred_studyroom_region_id',
+                's.preferred_studyroom_region_extra_id = :preferred_studyroom_region_extra_id',
+                'study_room',
+            );
         } elseif ($regionId !== null && $lessonForRegion === 'study_room') {
             $dongIds = RegionGuLink::dongIdsUnderGu($regionId);
             if ($dongIds === []) {
                 $where[] = '1 = 0';
             } else {
                 $holders = [];
+                $extraHolders = [];
                 foreach (array_values($dongIds) as $i => $dongId) {
                     $key = 'sr_gu_dong_' . $i;
+                    $extraKey = 'sr_gu_dong_extra_' . $i;
                     $params[$key] = $dongId;
+                    $params[$extraKey] = $dongId;
                     $holders[] = ':' . $key;
+                    $extraHolders[] = ':' . $extraKey;
                 }
                 $where[] = "s.preferred_lesson_type = 'study_room'";
-                $where[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+                $where[] = $this->studentHopeOr(
+                    's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')',
+                    's.preferred_studyroom_region_extra_id IN (' . implode(', ', $extraHolders) . ')',
+                    'study_room',
+                );
             }
         } elseif ($regionId !== null && $lessonForRegion === 'tutor') {
-            $where[] = 's.preferred_tutor_region_id = :preferred_tutor_unit_id';
             $params['preferred_tutor_unit_id'] = $regionId;
+            $params['preferred_tutor_unit_extra_id'] = $regionId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_tutor_region_id = :preferred_tutor_unit_id',
+                's.preferred_tutor_region_extra_id = :preferred_tutor_unit_extra_id',
+                'tutor',
+            );
         } elseif ($regionId !== null) {
             $isGu = $this->isSelectableRegion($pdo, $regionId);
             $where[] = $this->studentGuBaseWhere(

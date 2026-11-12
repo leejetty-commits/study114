@@ -36,6 +36,16 @@ function minutesLabel(student) {
   return lessonDurationLabel(student?.minutes_per_lesson);
 }
 
+function extraHopeLabel(student) {
+  if (!student || typeof student !== 'object') return '';
+  if (student.preferred_lesson_type === 'study_room') {
+    const complex = String(student.preferred_studyroom_complex_extra_label || '').trim();
+    if (student.preferred_studyroom_region_extra_basis === 'complex' && complex) return complex;
+    return String(student.preferred_studyroom_region_extra_label || '').trim();
+  }
+  return String(student.preferred_tutor_region_extra_label || '').trim();
+}
+
 function lessonShapeLabel(student) {
   const format = LESSON_FORMAT_LABELS[student?.lesson_format] || '';
   const target = display(labelLessonTarget(student));
@@ -69,7 +79,7 @@ export function buildStudentProfileReadSections(student) {
       title: '상세정보',
       editSection: 'detail',
       rows: [
-        { label: '희망지역 추가', value: display(s.preferred_region_note) },
+        { label: '희망지역 추가', value: display(extraHopeLabel(s)) },
         { label: '희망 수업장소', value: display(labelPlaces(s.lesson_places)) },
         { label: '주 회수', value: weeklyLabel(s) },
         { label: '1회 수업시간', value: minutesLabel(s) },
