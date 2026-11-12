@@ -190,8 +190,8 @@ LIMIT 100;
 
 ```
 [최종검수 패키지 — 356-2]
-브랜치 / 커밋: work/356-refund-later-extension / (커밋 후 hash)
-변경 파일: (git diff --stat origin/main...HEAD)
+브랜치 / 커밋: work/356-refund-later-extension / 2c51826c
+변경 파일: docs/ssot/18d · worklog 356 · verify-position-refund · PositionRefundCalculator · RefundService (+ stage1 docs commit 63d3f475)
 diff 요약:
   - PositionRefundCalculator: has_live_later_extension true면 환불 차단
   - RefundService: later-extend 조회·calc 입력·denyMessage
