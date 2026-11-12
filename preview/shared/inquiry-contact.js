@@ -8,8 +8,11 @@ import { supportUiUrl } from './preview-links.js';
 /** 자주 묻는 질문 (기존 고객센터 FAQ) */
 export const INQUIRY_FAQ_HASH = '#/support/faq';
 
+/** 화면에 보이는 주소 · mailto 공통 (한곳) */
+export const INQUIRY_EMAIL = 'help@study114.net';
+
 /** 이메일 문의 (비로그인) */
-export const INQUIRY_MAILTO = 'mailto:help@study114.net';
+export const INQUIRY_MAILTO = `mailto:${INQUIRY_EMAIL}`;
 
 /** 운영문의 (로그인) — home-ui 밖에서도 고객센터로 가게 pathname 딥링크 */
 export function inquiryContactUrl() {

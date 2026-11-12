@@ -3,16 +3,18 @@
  * - 「맨 위로」: 전 폭 (기존 위치·크기 유지)
  * - 「맨 아래로」: 모바일(≤768px)만, 맨 위 버튼 바로 위 8px
  * - 「문의하기」: 맨 위로 자리 위(고정). 스크롤 무관 표시. 모달 시 숨김
- * - 둘째 항목: 로그인=운영문의, 비로그인=이메일 문의
+ * - 둘째 항목: 로그인=운영문의, 비로그인=이메일 문의(+주소 표시·복사)
  * 상세·비교·후기 등 모달이 열려 있으면 모두 숨김
  */
 
 import {
+  INQUIRY_EMAIL,
   INQUIRY_FAQ_HASH,
   INQUIRY_MAILTO,
   KAKAO_CHAT_URL,
   inquiryContactUrl,
 } from './inquiry-contact.js';
+import { showBriefStatusToast } from './brief-status-toast.js';
 import { isChromeLoggedIn } from './chrome-session.js';
 import { authRoleType } from '../home-ui/src/auth-role.js';
 
@@ -23,6 +25,7 @@ const INQUIRY_PANEL_ID = 'study114-inquiry-panel';
 const MOBILE_MQ = '(max-width: 768px)';
 const EDGE_PX = 96;
 const AUTH_EVENTS = ['auth:login', 'auth:logout', 'auth:session-hydrated'];
+const COPY_OK_MSG = '메일 주소를 복사했어요';
 
 function pageOverflows() {
   const doc = document.documentElement;
@@ -112,21 +115,63 @@ function closeInquiryPanel() {
   root?.classList.remove('is-open');
 }
 
-/** 로그인 여부에 맞춰 둘째 항목 라벨·href 갱신 */
+/** @param {string} text */
+async function copyText(text) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch {
+    /* fallback below */
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return Boolean(ok);
+  } catch {
+    return false;
+  }
+}
+
+function openMailto() {
+  window.location.assign(INQUIRY_MAILTO);
+}
+
+async function handleGuestEmailClick() {
+  const ok = await copyText(INQUIRY_EMAIL);
+  if (ok) showBriefStatusToast(COPY_OK_MSG);
+  openMailto();
+}
+
+/** 로그인 여부에 맞춰 둘째 항목 라벨·href·주소 줄 갱신 */
 function syncInquiryContactItem(panel) {
   if (!panel) return;
   const item = panel.querySelector('[data-inquiry-item="contact"]');
   if (!(item instanceof HTMLAnchorElement)) return;
   if (isViewerLoggedIn()) {
+    item.dataset.inquiryMode = 'contact';
+    item.classList.remove('inquiry-fab__item--email');
     item.textContent = '운영문의';
     item.setAttribute('href', inquiryContactUrl());
     item.removeAttribute('target');
     item.removeAttribute('rel');
   } else {
-    item.textContent = '이메일 문의';
+    item.dataset.inquiryMode = 'email';
+    item.classList.add('inquiry-fab__item--email');
     item.setAttribute('href', INQUIRY_MAILTO);
     item.removeAttribute('target');
     item.removeAttribute('rel');
+    item.innerHTML =
+      `<span class="inquiry-fab__item-label">이메일 문의</span>` +
+      `<span class="inquiry-fab__item-email">${INQUIRY_EMAIL}</span>`;
   }
 }
 
@@ -222,7 +267,7 @@ function ensureInquiryFab() {
   panel.hidden = true;
   panel.innerHTML = [
     `<a class="inquiry-fab__item" role="menuitem" href="${INQUIRY_FAQ_HASH}">자주 묻는 질문</a>`,
-    `<a class="inquiry-fab__item" role="menuitem" data-inquiry-item="contact" href="${INQUIRY_MAILTO}">이메일 문의</a>`,
+    `<a class="inquiry-fab__item inquiry-fab__item--email" role="menuitem" data-inquiry-item="contact" data-inquiry-mode="email" href="${INQUIRY_MAILTO}"><span class="inquiry-fab__item-label">이메일 문의</span><span class="inquiry-fab__item-email">${INQUIRY_EMAIL}</span></a>`,
     `<a class="inquiry-fab__item" role="menuitem" href="${KAKAO_CHAT_URL}" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>`,
   ].join('');
   syncInquiryContactItem(panel);
@@ -246,6 +291,11 @@ function ensureInquiryFab() {
 
   panel.addEventListener('click', (e) => {
     e.stopPropagation();
+    const contact = e.target instanceof Element ? e.target.closest('[data-inquiry-item="contact"]') : null;
+    if (!(contact instanceof HTMLAnchorElement)) return;
+    if (contact.dataset.inquiryMode !== 'email') return;
+    e.preventDefault();
+    void handleGuestEmailClick();
   });
 
   if (!window.__study114InquiryFabBound) {
