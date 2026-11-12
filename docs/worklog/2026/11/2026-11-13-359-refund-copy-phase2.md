@@ -61,7 +61,7 @@
 
 ```
 [최종검수 패키지 — 359-2단계]
-브랜치 / 커밋: work/359-refund-copy-unify / <push tip>
+브랜치 / 커밋: work/359-refund-copy-unify / d4c52320
 PR: https://github.com/leejetty-commits/study114/pull/195 (머지 안 함)
 변경 파일: (git diff --stat origin/main...HEAD)
 diff 요약:
