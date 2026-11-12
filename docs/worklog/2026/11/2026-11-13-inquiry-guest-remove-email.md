@@ -1,4 +1,4 @@
-# 문의하기 — 게스트 「이메일 문의」제거
+﻿# 문의하기 — 게스트 「이메일 문의」제거
 
 **브랜치:** `work/inquiry-guest-remove-email`  
 **워크트리:** `.wt/work-inquiry-guest-remove-email`  
@@ -39,4 +39,5 @@
 
 ## 커밋·PR
 
-- (커밋 후 갱신)
+- tip `3fbbcac6` · push·PR (머지 안 함) · #198 미머지
+
