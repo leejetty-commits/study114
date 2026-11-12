@@ -3,6 +3,7 @@
  * - 「맨 위로」: 전 폭 (기존 위치·크기 유지)
  * - 「맨 아래로」: 모바일(≤768px)만, 맨 위 버튼 바로 위 8px
  * - 「문의하기」: 맨 위로 자리 위(고정). 스크롤 무관 표시. 모달 시 숨김
+ * - 둘째 항목: 로그인=운영문의, 비로그인=이메일 문의
  * 상세·비교·후기 등 모달이 열려 있으면 모두 숨김
  */
 
@@ -10,7 +11,10 @@ import {
   INQUIRY_FAQ_HASH,
   INQUIRY_MAILTO,
   KAKAO_CHAT_URL,
+  inquiryContactUrl,
 } from './inquiry-contact.js';
+import { isChromeLoggedIn } from './chrome-session.js';
+import { authRoleType } from '../home-ui/src/auth-role.js';
 
 const TOP_ID = 'study114-back-to-top';
 const BOTTOM_ID = 'study114-back-to-bottom';
@@ -18,6 +22,7 @@ const INQUIRY_ID = 'study114-inquiry-fab';
 const INQUIRY_PANEL_ID = 'study114-inquiry-panel';
 const MOBILE_MQ = '(max-width: 768px)';
 const EDGE_PX = 96;
+const AUTH_EVENTS = ['auth:login', 'auth:logout', 'auth:session-hydrated'];
 
 function pageOverflows() {
   const doc = document.documentElement;
@@ -43,6 +48,11 @@ function isModalOpen() {
     if (document.querySelector(sel)) return true;
   }
   return false;
+}
+
+/** guest-gate-ui.isViewerLoggedIn 과 동일. auth-session 직접 import 금지. */
+function isViewerLoggedIn() {
+  return isChromeLoggedIn() || authRoleType() !== '';
 }
 
 function prefersReducedMotion() {
@@ -102,6 +112,24 @@ function closeInquiryPanel() {
   root?.classList.remove('is-open');
 }
 
+/** 로그인 여부에 맞춰 둘째 항목 라벨·href 갱신 */
+function syncInquiryContactItem(panel) {
+  if (!panel) return;
+  const item = panel.querySelector('[data-inquiry-item="contact"]');
+  if (!(item instanceof HTMLAnchorElement)) return;
+  if (isViewerLoggedIn()) {
+    item.textContent = '운영문의';
+    item.setAttribute('href', inquiryContactUrl());
+    item.removeAttribute('target');
+    item.removeAttribute('rel');
+  } else {
+    item.textContent = '이메일 문의';
+    item.setAttribute('href', INQUIRY_MAILTO);
+    item.removeAttribute('target');
+    item.removeAttribute('rel');
+  }
+}
+
 function syncInquiry(root) {
   if (!root) return;
   if (isModalOpen()) {
@@ -112,6 +140,8 @@ function syncInquiry(root) {
   }
   root.hidden = false;
   root.classList.add('is-visible');
+  const panel = document.getElementById(INQUIRY_PANEL_ID);
+  syncInquiryContactItem(panel);
 }
 
 function syncAll() {
@@ -164,7 +194,10 @@ function ensureBottomButton() {
 
 function ensureInquiryFab() {
   let root = document.getElementById(INQUIRY_ID);
-  if (root) return root;
+  if (root) {
+    syncInquiryContactItem(document.getElementById(INQUIRY_PANEL_ID));
+    return root;
+  }
 
   root = document.createElement('div');
   root.id = INQUIRY_ID;
@@ -189,9 +222,10 @@ function ensureInquiryFab() {
   panel.hidden = true;
   panel.innerHTML = [
     `<a class="inquiry-fab__item" role="menuitem" href="${INQUIRY_FAQ_HASH}">자주 묻는 질문</a>`,
-    `<a class="inquiry-fab__item" role="menuitem" href="${INQUIRY_MAILTO}">이메일 문의</a>`,
+    `<a class="inquiry-fab__item" role="menuitem" data-inquiry-item="contact" href="${INQUIRY_MAILTO}">이메일 문의</a>`,
     `<a class="inquiry-fab__item" role="menuitem" href="${KAKAO_CHAT_URL}" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>`,
   ].join('');
+  syncInquiryContactItem(panel);
 
   root.appendChild(panel);
   root.appendChild(toggle);
@@ -201,6 +235,7 @@ function ensureInquiryFab() {
     e.stopPropagation();
     const open = panel.hidden;
     if (open) {
+      syncInquiryContactItem(panel);
       panel.hidden = false;
       toggle.setAttribute('aria-expanded', 'true');
       root.classList.add('is-open');
@@ -227,6 +262,11 @@ function ensureInquiryFab() {
     );
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeInquiryPanel();
+    });
+    AUTH_EVENTS.forEach((name) => {
+      window.addEventListener(name, () => {
+        syncInquiryContactItem(document.getElementById(INQUIRY_PANEL_ID));
+      });
     });
   }
 
