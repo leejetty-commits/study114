@@ -1,4 +1,4 @@
-# 문의하기 — 게스트 이메일 주소 표시·복사
+﻿# 문의하기 — 게스트 이메일 주소 표시·복사
 
 **브랜치:** `work/inquiry-guest-email-copy`  
 **워크트리:** `.wt/work-inquiry-guest-email-copy`  
@@ -42,4 +42,5 @@
 
 ## 커밋·PR
 
-- (커밋 후 갱신)
+- tip `343d0f07` · push·PR (머지 안 함)
+
