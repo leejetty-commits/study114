@@ -1002,9 +1002,9 @@ function renderBasicStudentRow(item, opts) {
     ? 'parent'
     : opts.viewerRole || (opts.guest ? 'guest' : navRoleFromAuthUser(getAuthUser()));
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
-  const maskedName = selfView
-    ? String(item.student_name || item.public_display_name || '').trim()
-    : String(item.public_display_name || '').trim();
+  // 홈·찾기·상세는 본인 카드여도 서버가 가린 값만 쓴다. student_name 원문으로 바꾸지 않는다.
+  // 마이페이지 미리보기는 호출부가 이름 전체를 public_display_name 에 넣어 둔다.
+  const maskedName = String(item.public_display_name || '').trim();
   const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label, guestStudentRegionKind(item))
     : item.location_label;

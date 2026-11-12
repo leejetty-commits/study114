@@ -123,8 +123,11 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
   }
 
   // 과목이 비면 비워 둔다. summary 첫 조각은 지역일 수 있다.
+  // 제목은 서버가 가린 title 만 쓴다. 원문 키는 카드에 남기지 않는다.
+  const studentCard = { ...apiItem };
+  delete studentCard.student_name;
   const merged = {
-    ...apiItem,
+    ...studentCard,
     id,
     public_display_name: String(apiItem.title || ''),
     grade_level: String(apiItem.grade_level || ''),

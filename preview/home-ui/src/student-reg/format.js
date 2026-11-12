@@ -22,6 +22,7 @@ export function studentToExposureRow(s) {
   return {
     id: s.id,
     student_name: s.student_name || '',
+    // 마이페이지 카드 미리보기 전용. 홈·찾기 카드는 이 함수를 쓰지 않고, 가린 제목만 받는다.
     public_display_name: fullName,
     gender: s.gender,
     grade_level: s.grade_level,
