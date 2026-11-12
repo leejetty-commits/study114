@@ -1,4 +1,4 @@
-# 문의하기 — 로그인이면 운영문의
+﻿# 문의하기 — 로그인이면 운영문의
 
 **브랜치:** `work/inquiry-login-contact`  
 **워크트리:** `.wt/work-inquiry-login-contact`  
@@ -45,4 +45,5 @@
 
 ## 커밋·PR
 
-- (커밋 후 갱신)
+- tip `b472aadb` · push·PR (머지 안 함)
+
