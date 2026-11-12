@@ -21,9 +21,9 @@ $subjectSelected = (string) study114_old($old, 'subject_names', '');
 <form method="post" action="/auth/signup/basic" class="basic-register student-basic" data-basic-form="student">
   <input type="hidden" name="role_ui" value="student">
   <div class="student-basic__field">
-    <label class="form-label" for="public_display_name">표시명</label>
-    <input class="form-input" id="public_display_name" name="public_display_name" value="<?= study114_e((string) study114_old($old, 'public_display_name', '')) ?>" maxlength="40" autocomplete="nickname">
-    <p class="form-hint">Basic 카드에 보이는 이름입니다.</p>
+    <label class="form-label" for="student_name">학생 이름</label>
+    <input class="form-input" id="student_name" name="student_name" value="<?= study114_e((string) study114_old($old, 'student_name', '')) ?>" maxlength="50" autocomplete="name">
+    <p class="form-hint">본인 화면에는 이름 전체가 보이고, 다른 사람에게는 가운데가 가려집니다.</p>
   </div>
 
   <div class="student-basic__field" data-school-grade-pair>

@@ -84,7 +84,7 @@ const ME = {
   member: { user_id: 41, role_type: '', name: 'm', email: 'm@x' },
 };
 const PAID = new Set([11, 21]);
-const MASKED = { 31: '최진○', 32: '김○' };
+const MASKED = { 31: '최*호', 32: '김*' };
 
 // ── 가짜 서버 (posts.php · reactions.php · me.php). 글은 이 프로세스 메모리에 남는다(= 서버 DB) ──
 const requests = [];
@@ -543,7 +543,7 @@ async function signIn(who) {
   store?.resetInfoBoardData?.();
   return store.currentInfoViewer();
 }
-// 서버에 학생 글 하나(작성자 31 → 「최진○」), 다른 학생 글 하나(32 → 「김○」)
+// 서버에 학생 글 하나(작성자 31 → 「최*호」), 다른 학생 글 하나(32 → 「김*」)
 db.posts.push(
   { id: `${KEY}-1790000001-s1`, title: '오답노트 꿀팁', body: '주말에 한 번 더 봐요.', categoryId: 'study-howto', createdAt: '2026-10-01T08:00:00', authorId: 31, authorRole: 'parent', status: 'published' },
   { id: `${KEY}-1790000002-s2`, title: '시험 전날 루틴', body: '일찍 자요.', categoryId: 'exam-school', createdAt: '2026-10-01T08:30:00', authorId: 32, authorRole: 'parent', status: 'published' },
@@ -575,12 +575,12 @@ for (const [who, want] of Object.entries(ACCOUNTS)) {
     ok(`ui_${who}_write_login_notice`, !list.includes(`href="#${PATH}/new"`) && list.includes(COPY.loginToWrite) && !compose.includes('data-info-form') && compose.includes(COPY.loginToWrite));
   }
   if (want.access === 'full') {
-    ok(`ui_${who}_read_body_and_masked_author`, detail.includes('주말에 한 번 더 봐요.') && detail.includes('최진○') && !detail.includes('LEAK_'));
+    ok(`ui_${who}_read_body_and_masked_author`, detail.includes('주말에 한 번 더 봐요.') && detail.includes('최*호') && !detail.includes('LEAK_'));
     ok(`ui_${who}_cheer_button`, detail.includes(`data-info-cheer="${P1}"`) && detail.includes(TIPS.cheer) && detail.includes(TIPS.cheerEmoji));
     const mine = who === 'student' || who === 'admin';
     ok(`ui_${who}_edit_delete_by_server_flags`, detail.includes(`${P1}/edit`) === mine && detail.includes(`data-info-delete="${P1}"`) === mine);
   } else {
-    ok(`ui_${who}_read_titles_only`, !detail.includes('주말에 한 번 더 봐요.') && !detail.includes('최진○') && !detail.includes('LEAK_') && detail.includes(COPY.guestDetail));
+    ok(`ui_${who}_read_titles_only`, !detail.includes('주말에 한 번 더 봐요.') && !detail.includes('최*호') && !detail.includes('LEAK_') && detail.includes(COPY.guestDetail));
     ok(`ui_${who}_cheer_login_guidance`, !detail.includes('data-info-cheer=') && detail.includes(TIPS.cheerLogin));
     ok(`ui_${who}_no_edit_delete`, !detail.includes('/edit"') && !detail.includes('data-info-delete'));
   }
@@ -604,7 +604,7 @@ await okAsync('save_reload_still_present', async () => {
   const cleared = store.getInfoList(viewer, KEY) === null && store.getInfoPost(viewer, KEY, savedId) === null;
   const list = await store.loadInfoList(viewer, KEY, '');
   const detail = await store.loadInfoPost(viewer, KEY, savedId);
-  return Boolean(post) && cleared && list.status === 'ready' && list.posts.some((p) => p.id === savedId) && detail.post?.body === '하루 세 줄만 써요.' && detail.post?.authorLabel === '최진○';
+  return Boolean(post) && cleared && list.status === 'ready' && list.posts.some((p) => p.id === savedId) && detail.post?.body === '하루 세 줄만 써요.' && detail.post?.authorLabel === '최*호';
 });
 ok('save_payload_has_no_author_fields', () => {
   const post = requests.filter((q) => q.method === 'POST' && q.path.endsWith('/api/board/posts.php')).pop();

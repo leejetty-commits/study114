@@ -27,7 +27,7 @@ export const AUTH_WELCOME_COPY = {
   roleSubOAuth: '하나만 골라 주세요. 이메일을 확인하면 기본정보로 이어져요.',
   formSub: '공통으로 필요한 정보만 받아요. 학교·과목·희망 조건은 여기서 받지 않아요.',
   basicStudentLead: '학생 카드에 먼저 보일 내용을 적어요.',
-  basicDisplayNameHint: '학생 카드에 보이는 이름이에요.',
+  basicDisplayNameHint: '본인 화면에는 이름 전체가 보이고, 다른 사람에게는 가운데가 가려집니다.',
   basicSubjectHint: '학생 카드에 먼저 보일 과목이에요.',
   verify: {
     waitTitle: '이메일을 확인해 주세요',

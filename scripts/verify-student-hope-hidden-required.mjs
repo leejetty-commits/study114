@@ -522,7 +522,7 @@ function setValue(form, sel, value) {
   el.dispatchEvent({ type: 'change', bubbles: true });
 }
 function fillCommon(form) {
-  setValue(form, '#public_display_name', '검증학생');
+  setValue(form, '#student_name', '검증학생');
   setValue(form, '#school_level', 'preschool');
   const subject = form.querySelector('#subject_names').options.find((o) => o.value)?.value || '';
   setValue(form, '#subject_names', subject);
