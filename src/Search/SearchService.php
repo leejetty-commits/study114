@@ -182,18 +182,9 @@ final class SearchService
         return $filters;
     }
 
-    /** 본 지역 또는 같은 희망 유형의 추가 지역. 다른 유형의 추가 값은 조건에 넣지 않는다. */
-    private function studentHopeOr(string $primarySql, string $extraSql, string $lessonType): string
-    {
-        $lesson = $lessonType === 'study_room' ? 'study_room' : 'tutor';
-
-        return '(' . $primarySql . ' OR (s.preferred_lesson_type = \'' . $lesson . '\' AND ' . $extraSql . '))';
-    }
-
     /**
      * 학생 지역 조건(희망 유형을 고르지 않았을 때). 게스트 박스와 학생 검색이 이 메서드를 같이 쓴다.
      * 과외 희망지역이 그 과외 단위 id이거나, 공부방 희망지역이 그 구 소속 동 id이다.
-     * 같은 유형의 추가 희망지역도 본 지역과 OR로 맞춘다. 유형이 다른 추가 값은 쓰지 않는다.
      * 과외 단위가 없으면 공부방 쪽만, 소속 동이 없으면 과외 쪽만 비교한다.
      *
      * @param list<int> $dongIds
@@ -233,6 +224,17 @@ final class SearchService
         }
 
         return count($parts) === 1 ? $parts[0] : '(' . implode(' OR ', $parts) . ')';
+    }
+
+    /**
+     * 본 지역 또는 같은 희망 유형의 추가 지역. 다른 유형의 추가 값은 조건에 넣지 않는다.
+     * 같은 유형의 추가 희망지역도 본 지역과 OR로 맞춘다. 유형이 다른 추가 값은 쓰지 않는다.
+     */
+    private function studentHopeOr(string $primarySql, string $extraSql, string $lessonType): string
+    {
+        $lesson = $lessonType === 'study_room' ? 'study_room' : 'tutor';
+
+        return '(' . $primarySql . ' OR (s.preferred_lesson_type = \'' . $lesson . '\' AND ' . $extraSql . '))';
     }
 
     private function countGuestStudentsAtGu(PDO $pdo, int $guId): int

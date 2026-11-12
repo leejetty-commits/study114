@@ -46,6 +46,10 @@
 - `verify-student-branch-two-tabs.mjs`: `guardParentFindTab` 이 없고 GNB `find_room` 숨김이 기대와 다르다. 희망지역 추가 저장 검증은 통과했다.
 - `verify-student-location-flow.mjs` 화면 12건: 찾기 탭 직접 진입·의정부 잔존 문구. 서버 지역 라벨 검증은 통과했다.
 
+## 보완 (verify:tutor-search-fields)
+
+`studentHopeOr`를 `studentGuBaseWhere` 뒤로 옮겼다. `studentGuBaseWhere` 주석에 더했던 한 줄은 `studentHopeOr` 주석으로 옮겼다. `guestScopedFilters` 본문은 그대로다. 검사 스크립트는 바꾸지 않았다.
+
 ## 배포 전 사용자 할 일
 
 운영 phpMyAdmin에 `sql/schema/087_student_hope_region_extra.sql` 을 적용하기 전에는 추가 지역 저장과, 그 컬럼을 읽는 학생 찾기가 실패한다. Actions는 이 SQL을 실행하지 않는다.
