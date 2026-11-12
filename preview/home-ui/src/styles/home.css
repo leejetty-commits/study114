@@ -229,9 +229,9 @@ img {
 }
 
 .home-header__logo {
-  /* 336: 글자 로고 28→32. 심벌은 헤더 실측 비율(22.5/28)로 따라감 */
+  /* 336: 글자 로고 32px. 심벌은 334 lockup 비율(×1.05)로 함께 확대 */
   --home-header-wordmark-h: 32px;
-  --home-header-symbol-h: calc(var(--home-header-wordmark-h) * 22.5 / 28);
+  --home-header-symbol-h: calc(var(--home-header-wordmark-h) * 1.05);
   display: flex;
   align-items: flex-end;
   gap: 4px;
@@ -241,18 +241,20 @@ img {
 .home-header__symbol {
   height: var(--home-header-symbol-h);
   width: auto;
+  flex-shrink: 0;
 }
 
 .home-header__wordmark {
   height: var(--home-header-wordmark-h);
   width: auto;
+  flex-shrink: 0;
 }
 
 /* 글자 로고 오른쪽 · 아랫선 맞춤 · 간격 8px(gap 4 + margin 4) */
 .home-header__tagline {
   margin-inline-start: 4px;
-  color: #4b5563;
-  font-size: 12px; /* 메인메뉴 text-sm(14px) 대비 -2px */
+  color: #6b9bcb; /* 덜 진한 블루 */
+  font-size: 13px;
   font-weight: 500;
   line-height: 1;
   white-space: nowrap;
