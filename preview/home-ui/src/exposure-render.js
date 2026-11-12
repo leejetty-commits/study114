@@ -383,15 +383,27 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}, opts = {}) {
     </div>`;
 }
 
-export function listingImage(item, ratio) {
-  if (ratio === 'prime' || ratio === 'pick') {
-    return item.image_path_prime || item.image_path || '';
-  }
-  return item.image_path_basic_360 || item.image_path_basic || item.image_path || '';
+/**
+ * 카드 사진 — 잘린 1:1(basic)보다 안 잘린 fit/원본·프라임 우선.
+ * 칸 CSS는 object-fit:contain + 단색 바탕 (368-card-contain).
+ */
+export function listingImage(item, _ratio) {
+  const fit = String(item?.image_path_fit || '').trim();
+  if (fit) return fit;
+  return (
+    String(item?.image_path_prime || '').trim()
+    || String(item?.image_path || '').trim()
+    || String(item?.image_path_basic_720 || '').trim()
+    || String(item?.image_path_basic_360 || '').trim()
+    || String(item?.image_path_basic || '').trim()
+    || ''
+  );
 }
 
-/** 기본카드 선명한 화면용 720. 360과 같으면 비운다. */
+/** fit이 주 src면 별도 2x 크롭 체인 불필요. */
 function listingImageLarge(item) {
+  const fit = String(item?.image_path_fit || '').trim();
+  if (fit) return '';
   const large = String(item?.image_path_basic_720 || '').trim();
   const small = String(item?.image_path_basic_360 || item?.image_path_basic || '').trim();
   return large && large !== small ? large : '';

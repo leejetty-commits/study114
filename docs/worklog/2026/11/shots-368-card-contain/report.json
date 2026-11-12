@@ -1,0 +1,82 @@
+{
+  "outDir": "D:\\work\\study114\\.wt\\work-368-card-contain\\docs\\worklog\\2026\\11\\shots-368-card-contain",
+  "full": "368-card-contain-1280.png",
+  "shots": [
+    "368-card-prime-landscape-1280.png",
+    "368-card-pick-landscape-1280.png",
+    "368-detail-landscape-1280.png",
+    "368-card-portrait-1280.png",
+    "368-detail-portrait-1280.png",
+    "368-myshop-mixed-1280.png"
+  ],
+  "metrics": [
+    {
+      "sel": ".expo-media--prime img",
+      "box": {
+        "w": 568,
+        "h": 415
+      },
+      "objectFit": "contain",
+      "natural": {
+        "w": 663,
+        "h": 380
+      },
+      "rendered": {
+        "w": 568,
+        "h": 415
+      }
+    },
+    {
+      "sel": ".p24-fit-photo img",
+      "box": {
+        "w": 448,
+        "h": 252
+      },
+      "objectFit": "contain",
+      "natural": {
+        "w": 663,
+        "h": 380
+      },
+      "rendered": {
+        "w": 448,
+        "h": 252
+      }
+    },
+    {
+      "sel": ".shop-photo__area img",
+      "box": {
+        "w": 282,
+        "h": 212
+      },
+      "objectFit": "contain",
+      "natural": {
+        "w": 663,
+        "h": 380
+      },
+      "rendered": {
+        "w": 282,
+        "h": 212
+      }
+    },
+    {
+      "sel": ".shop-photos--bottom .shop-photo img",
+      "box": {
+        "w": 195,
+        "h": 195
+      },
+      "objectFit": "contain",
+      "natural": {
+        "w": 663,
+        "h": 380
+      },
+      "rendered": {
+        "w": 195,
+        "h": 195
+      }
+    }
+  ],
+  "asserts": {
+    "allContain": true,
+    "noPixelLabelsInHtml": true
+  }
+}
