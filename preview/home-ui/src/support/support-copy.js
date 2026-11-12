@@ -4,6 +4,7 @@
  */
 
 import { PICK_SET_SIZE_FALLBACK } from '../plans/runtime-config.js';
+import { FAQ_PAID_VS_TUTOR_FEE_REFUND } from '../refund-policy-copy.js';
 
 /** §3-1 3대 원칙 */
 export const PRINCIPLES_POSITIVE = [
@@ -336,7 +337,7 @@ export const FAQ_ITEMS = [
   {
     category: 'plans',
     q: '유료상품 환불과 과외비 환불은 같나요?',
-    a: '다릅니다. 유료상품 환불은 운영문의로 묻고, 과외비는 당사자가 정합니다.',
+    a: FAQ_PAID_VS_TUTOR_FEE_REFUND,
   },
 ];
 

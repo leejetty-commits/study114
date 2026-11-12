@@ -8,6 +8,7 @@ import { getNavRole, getMypagePath } from '../state.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
 import { bindWithdrawReasonChoices, readWithdrawReason, renderWithdrawReasonChoices } from '../withdraw-reason-ui.js';
+import { WITHDRAW_REFUND_HINT } from '../refund-policy-copy.js';
 import {
   getPreviewProfile,
   getSubmissionDocs,
@@ -1238,7 +1239,7 @@ function renderAccount(role, profile) {
             <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
             <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
             <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
-            <li>환불은 결제 후 7일 이내 · 사용 구간별 환불표(서버 정본)에 따라 처리됩니다.</li>
+            <li>${esc(WITHDRAW_REFUND_HINT)}</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
             ${renderWithdrawReasonChoices(role === 'parent' ? 'student' : role, {

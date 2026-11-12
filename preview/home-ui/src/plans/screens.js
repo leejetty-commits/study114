@@ -75,6 +75,13 @@ import {
   HISTORY_EMPTY_COPY,
 } from '../mypage/mypage-copy.js';
 import {
+  MEMO_TICKET_REFUND_SHORT,
+  POSITION_REFUND_SHORT,
+  refundCheckoutNote,
+  refundShort,
+  refundDetail,
+} from '../refund-policy-copy.js';
+import {
   resolveRoomPrimeInventory,
   getSlotForProduct,
   buildRoomPrimeBoard,
@@ -1350,6 +1357,7 @@ export function renderPlansAccess() {
           { label: '사용기한', value: '구매일부터 120일' },
           { label: '소멸', value: '사용기한 경과 시 잔여 소멸(환불액 0) · 연장 없음' },
         ]),
+    { label: '환불', value: MEMO_TICKET_REFUND_SHORT },
     { label: '적용 프로필', value: profile ? profile.label : '미선택' },
   ];
 
@@ -1805,10 +1813,19 @@ function renderV3RefundPanel(r) {
     ? ` (사용 ${elig.used_count}회)`
     : '';
 
+  const family = kind === 'position' ? 'position' : 'access';
+  const policyShort = refundShort(family);
+  const policyDetail = refundDetail(family);
+
   return `<div class="plans-hist-row__panel-inner">
     <b>환불 가능</b>
     <div class="refund-formula">환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong>${usedInfo}</div>
     ${breakdownHtml}
+    <p class="mypage-muted"><strong>${esc(policyShort)}</strong></p>
+    <details class="plans-policy-acc">
+      <summary>환불 규정 자세히</summary>
+      <p class="mypage-muted">${esc(policyDetail)}</p>
+    </details>
     <label class="refund-action-box__label">사유 선택
       <select data-refund-reason-select>
         ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
@@ -1994,7 +2011,7 @@ export function renderPlansCheckout() {
         totalLabel: '예상 결제 금액',
         totalValue: formatKrw(previewTotal),
         showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
+        note: refundCheckoutNote(isPosition ? 'position' : 'access'),
       })}
       <ol class="plans-checkout-steps">
         <li class="is-done"><strong>1. 적용 프로필</strong>
@@ -2103,7 +2120,11 @@ export function renderPlansResult() {
         ${resultBadgeLines}
         ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
         ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(배지 포함·같이 회수)</p>
+        <p>${esc(
+          result.startedOn || result.endsOn || (result.badgeCodes && result.badgeCodes.length)
+            ? POSITION_REFUND_SHORT
+            : MEMO_TICKET_REFUND_SHORT,
+        )}</p>
         ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
         ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
       </div>
