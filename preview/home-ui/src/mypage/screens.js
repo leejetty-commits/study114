@@ -1813,7 +1813,7 @@ function bindPrimeMatchConsentEvents(root) {
         .map((student) => {
           const id = Number(student.id);
           const on = Number(student.prime_match_opt_in) === 1;
-          const name = String(student.public_display_name || '').trim();
+          const name = String(student.student_name || '').trim();
           const nameHtml =
             students.length > 1 && name ? `<p class="account-meta__hint">${esc(name)}</p>` : '';
           return `${nameHtml}<label class="account-check">

@@ -15,7 +15,7 @@ final class StudentBasicCompleteness
 {
     /** 화면 안내 문구 정본. 키 순서 = 기본정보 화면 순서. */
     public const LABELS = [
-        'public_display_name'           => '표시명',
+        'student_name'                  => '학생 이름',
         'grade_level'                   => '학교급·학년',
         'preferred_lesson_type'         => '희망 유형',
         'preferred_region'              => '희망지역',
@@ -58,7 +58,7 @@ final class StudentBasicCompleteness
         }
 
         $ok = [
-            'public_display_name'           => self::text($s['public_display_name'] ?? null) !== '',
+            'student_name'                  => self::text($s['student_name'] ?? null) !== '',
             'grade_level'                   => $gradeOk,
             'preferred_lesson_type'         => $typeOk,
             'preferred_region'              => $regionOk,

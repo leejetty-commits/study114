@@ -51,7 +51,7 @@ export function mapAuthFormToStudentRecord(data, meta = {}) {
     : null;
 
   return {
-    student_name: String(data.public_display_name || data.student_name || '새 등록'),
+    student_name: String(data.student_name || '새 등록'),
     public_display_name: String(data.public_display_name || ''),
     grade_level: String(data.grade_level || ''),
     school_level: String(data.school_level || ''),

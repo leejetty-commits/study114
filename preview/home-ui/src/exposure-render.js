@@ -46,7 +46,6 @@ import {
   getBasicPool,
 } from './exposure-rules.js';
 import {
-  maskPublicDisplayName,
   guestStudentTeaserFields,
   guestStudentRegionKind,
   coarseRegionForGuest,
@@ -1003,7 +1002,9 @@ function renderBasicStudentRow(item, opts) {
     ? 'parent'
     : opts.viewerRole || (opts.guest ? 'guest' : navRoleFromAuthUser(getAuthUser()));
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
-  const maskedName = maskPublicDisplayName(item.public_display_name);
+  const maskedName = selfView
+    ? String(item.student_name || item.public_display_name || '').trim()
+    : String(item.public_display_name || '').trim();
   const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label, guestStudentRegionKind(item))
     : item.location_label;
@@ -1045,7 +1046,7 @@ function renderBasicStudentRow(item, opts) {
       ${renderExpoTable(
         [
           [
-            labeled('표시명', maskedName),
+            labeled('이름', maskedName),
             labeled('대상', item.grade_level),
             labeled('과목', item.subject_label),
             valOnly(formatStudentBudgetCard(item), { cls: 'expo-tbl__cell--price' }),

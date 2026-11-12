@@ -309,8 +309,8 @@ function renderBasicForm(student) {
         '카드에 보이는 기본 항목입니다.',
         `
         <label class="p19-field">
-          <span class="p19-field__label">표시명</span>
-          ${renderTextInput('public_display_name', student.public_display_name || '', { maxlength: 40 })}
+          <span class="p19-field__label">학생 이름</span>
+          ${renderTextInput('student_name', student.student_name || '', { maxlength: 50 })}
         </label>
         <div class="p19-row2">
           <label class="p19-field">
@@ -392,7 +392,7 @@ function renderDetailForm(student) {
         </header>
         <div class="p19-form-section__body student-detail-body">
           ${renderDetailField(
-            '희망지역 추가값',
+            '희망지역 추가',
             '기본정보 희망지역 외에 더 알릴 지역입니다.',
             renderTextInput('preferred_region_note', student.preferred_region_note || '', {
               placeholder: '예: 대치동 주변',

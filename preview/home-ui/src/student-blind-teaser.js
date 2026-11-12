@@ -1,29 +1,11 @@
 /**
  * 학생 카드·티저 블라인드 포맷 (10-6 · 운영 결정 2번 B-완화형)
  *
- * - 공개 표시명: 로그인 여부와 무관하게 항상 일부 마스킹
+ * - 학생 이름: 서버가 가린 값을 그대로 보여 준다. 화면에서 다시 가리지 않는다.
  * - 비로그인 티저: 조건은 보이되 사람·세부는 특정되지 않게
  */
 
 import { isTutorUnitLabel } from '../../shared/tutor-unit-cascade.js';
-
-/**
- * 공개 표시명 마스킹 — 마지막 글자만 가린다 (정보게시판 작성자 규칙과 같음).
- * 3자 이상 이공○ / 남궁○, 2자 이○, 1자 ○. 끝의 「학생」은 떼고 가린 뒤 다시 붙인다(김민○학생).
- * @param {string | null | undefined} raw
- */
-export function maskPublicDisplayName(raw) {
-  const s = String(raw || '').trim();
-  if (!s) return '○○학생';
-  const hasStudentSuffix = /학생$/.test(s);
-  const base = hasStudentSuffix ? s.replace(/학생$/, '') : s;
-  const chars = [...base];
-  const suffix = hasStudentSuffix ? '학생' : '';
-  if (!chars.length) return hasStudentSuffix ? '○학생' : '○○';
-  if (chars.length === 1) return `○${suffix}`;
-  if (chars.length === 2) return `${chars[0]}○${suffix}`;
-  return `${chars[0]}${chars[1]}○${suffix}`;
-}
 
 /**
  * 정확 학년 → 학교급만 (중2 → 중등)
@@ -145,7 +127,7 @@ export function guestStudentTeaserFields(item) {
       ? item.preferred_studyroom_fee_amount
       : item.preferred_fee_amount;
   return {
-    name: maskPublicDisplayName(item.public_display_name),
+    name: String(item.public_display_name || '').trim() || '학생',
     band: schoolBandFromGrade(item.grade_level),
     subject: primarySubjectOne(item.subject_label),
     region: coarseRegionForGuest(item.location_label, guestStudentRegionKind(item)),

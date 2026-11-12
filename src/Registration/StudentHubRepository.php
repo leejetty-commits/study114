@@ -126,7 +126,7 @@ final class StudentHubRepository
     }
 
     private const PATCH_COLUMNS = [
-        'public_display_name', 'grade_level', 'gender', 'birth_year',
+        'student_name', 'public_display_name', 'grade_level', 'gender', 'birth_year',
         'preferred_lesson_type', 'preferred_region_note',
         'preferred_tutor_region_id', 'preferred_studyroom_region_id',
         'preferred_studyroom_complex_id', 'preferred_studyroom_region_basis',
@@ -194,6 +194,10 @@ final class StudentHubRepository
                     continue;
                 }
                 $values[$col] = $this->normalizeStudentColumn($col, $patch[$col]);
+            }
+            // 화면의 이름 칸은 student_name 하나다. 옛 표시명 컬럼은 지우지 않고 같은 값만 남긴다.
+            if (array_key_exists('student_name', $values)) {
+                $values['public_display_name'] = $values['student_name'];
             }
             // 가입과 같이 단지 이름만 오면 이 트랜잭션 안에서 단지 id 를 만들거나 찾는다.
             // 과외 분기(반대 지역은 위에서 이미 버렸음)에서는 호출하지 않는다.
@@ -372,6 +376,16 @@ final class StudentHubRepository
             }
 
             return $value;
+        }
+        if ($col === 'student_name') {
+            if ($value === null || (string) $value === '') {
+                throw new \InvalidArgumentException('student_name: 이름을 입력해 주세요.');
+            }
+            if (mb_strlen((string) $value) > 50) {
+                throw new \InvalidArgumentException('student_name: 50자 이하로 입력해 주세요.');
+            }
+
+            return (string) $value;
         }
         if ($col === 'public_display_name') {
             if ($value !== null && mb_strlen((string) $value) > 40) {

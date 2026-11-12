@@ -67,25 +67,12 @@ final class InfoBoardService
     }
 
     /**
-     * 작성자 이름 가리기. 3자 이상 「최진○」(앞 두 글자 + ○), 2자 「최○」, 1자 「○」, 빈 값 ''.
+     * 작성자 이름 가리기. 규칙은 StudentPublicName::mask 한 곳.
      * 작성자 표시는 authorLabel() 한 곳에서 정하고, 이름이 들어가는 경우는 이 함수만 지난다.
      */
     public static function maskAuthorName(string $name): string
     {
-        $name = trim((string) preg_replace('/\s+/u', '', $name));
-        if ($name === '') {
-            return '';
-        }
-        $chars = preg_split('//u', $name, -1, PREG_SPLIT_NO_EMPTY) ?: [];
-        $n = count($chars);
-        if ($n <= 1) {
-            return '○';
-        }
-        if ($n === 2) {
-            return $chars[0] . '○';
-        }
-
-        return $chars[0] . $chars[1] . '○';
+        return \Study114\Registration\StudentPublicName::mask($name);
     }
 
     /**

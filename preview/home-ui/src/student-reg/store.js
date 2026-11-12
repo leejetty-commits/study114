@@ -174,7 +174,7 @@ export function getPublishReadiness(student) {
   const study = student.preferred_lesson_type === 'study_room';
   const tutor = student.preferred_lesson_type === 'tutor';
 
-  need(String(student.public_display_name || '').trim() !== '', '표시명');
+  need(String(student.student_name || '').trim() !== '', '학생 이름');
   need(String(student.grade_level || '').trim() !== '' || student.school_level === 'preschool', '학교급·학년');
   need(study || tutor, '희망 유형');
   need(

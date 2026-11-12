@@ -12,6 +12,7 @@ use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
 use Study114\Region\TutorRegionUnit;
+use Study114\Registration\StudentPublicName;
 use Study114\Tutor\TutorBasicFields;
 use Study114\Visibility\TestOwnerVisibility;
 use Study114\Visibility\WithdrawnOwnerSql;
@@ -1364,7 +1365,7 @@ final class SearchService
         $total = (int) $stmt->fetchColumn();
 
         $sql = "
-            SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.gender,
+            SELECT DISTINCT s.id, s.student_name, s.grade_level, s.gender,
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
                    s.preferred_lesson_type, s.lessons_per_week, s.minutes_per_lesson,
@@ -1397,7 +1398,7 @@ final class SearchService
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $genderLabel = self::GENDER_LABELS[$row['gender'] ?? ''] ?? '';
-            $leftTitle = $row['public_display_name'] ?: '학생';
+            $leftTitle = self::publicStudentTitle($row['student_name'] ?? null);
             $leftMeta = trim(($row['grade_level'] ?? '') . ($genderLabel !== '' ? ' · ' . $genderLabel : ''));
 
             $centerParts = [];
@@ -1487,9 +1488,17 @@ final class SearchService
         return ['tab' => 'student', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
 
+    /** 타인에게 보이는 학생 제목. 이름이 없으면 「학생」. 원문은 응답에 넣지 않는다. */
+    private static function publicStudentTitle(mixed $studentName): string
+    {
+        $masked = StudentPublicName::mask(is_string($studentName) ? $studentName : '');
+
+        return $masked !== '' ? $masked : '학생';
+    }
+
     /**
      * 프라임 과외쌤에게 쪽지로 보낼 요약만. 동의 OFF·미공개는 빠진다.
-     * student_name·연락처·실명 컬럼은 읽지 않는다.
+     * student_name 은 가리기 위해서만 읽고, 응답에는 가린 제목만 넣는다. 연락처는 읽지 않는다.
      *
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
@@ -1510,7 +1519,7 @@ final class SearchService
         $total = (int) $count->fetchColumn();
 
         $sql = "
-            SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.request_summary,
+            SELECT DISTINCT s.id, s.student_name, s.grade_level, s.request_summary,
                    s.preferred_lesson_type, s.published_at, sst.subject_name,
                    r.dong_name, r.sigungu_name
             FROM students s
@@ -1529,10 +1538,7 @@ final class SearchService
         $items = [];
         $rows = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $title = trim((string) ($row['public_display_name'] ?? ''));
-            if ($title === '') {
-                $title = '학생';
-            }
+            $title = self::publicStudentTitle($row['student_name'] ?? null);
             $region = trim((string) (($row['preferred_lesson_type'] ?? '') === 'study_room'
                 ? ($row['dong_name'] ?? '')
                 : ($row['sigungu_name'] ?? '')));

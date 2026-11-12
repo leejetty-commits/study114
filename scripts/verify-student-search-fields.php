@@ -167,7 +167,7 @@ final class SsfPdo extends PDO
 function studentRow(int $id, array $over = []): array
 {
     return array_merge([
-        'id' => $id, 'public_display_name' => '학생' . $id, 'grade_level' => '중2', 'gender' => 'male',
+        'id' => $id, 'student_name' => '학생' . $id, 'grade_level' => '중2', 'gender' => 'male',
         'lesson_format' => 'group', 'student_gender_group' => 'male', 'preferred_student_count_group' => 'two',
         'preferred_fee_amount' => 300000, 'preferred_studyroom_fee_amount' => null, 'preferred_lesson_type' => 'tutor',
         'lessons_per_week' => 2, 'minutes_per_lesson' => 60,
@@ -234,6 +234,7 @@ check('희망 수업장소 = [student_home, public_place]', ($s31['lesson_places
 check('희망 강의스타일 = 표시 순서대로 [from_basics, kind]', ($s31['teaching_style_badges'] ?? null) === ['from_basics', 'kind'], json_encode($s31['teaching_style_badges'] ?? '(없음)'));
 check('과목·학년·수업형태·인원 그대로', ($s31['subject_name'] ?? null) === '수학' && ($s31['grade_level'] ?? null) === '중2'
     && ($s31['lesson_format'] ?? null) === 'group' && ($s31['preferred_student_count_group'] ?? null) === 'two');
+check('제목은 가린 이름이고 원문 키는 없다', ($s31['title'] ?? null) === '학**1' && !array_key_exists('student_name', $s31) && !str_contains((string) json_encode($s31), '학생31'), (string) ($s31['title'] ?? ''));
 
 echo "── 빈 값은 비어 있음(지어내지 않음) ──\n";
 check('주회·분 없음 → null', array_key_exists('lessons_per_week', $s32) && $s32['lessons_per_week'] === null && $s32['minutes_per_lesson'] === null);

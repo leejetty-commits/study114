@@ -245,9 +245,11 @@ final class BasicRegisterService
     {
         $preferredLessonType = $this->requireEnum($input, 'preferred_lesson_type', ['tutor', 'study_room']);
 
-        // 표시명은 기본정보 필수 칸이다. 비어 있으면 기본값으로 채우지 않는다.
-        $publicName = $this->optionalBoundedString($input, 'public_display_name', 40);
-        $studentName = $this->optionalBoundedString($input, 'student_name', 50) ?? $publicName ?? '학생';
+        // 학생 이름은 기본정보 필수 칸이다. 옛 표시명 칸이 같이 오면 이름만 쓴다.
+        $enteredName = $this->optionalBoundedString($input, 'student_name', 50)
+            ?? $this->optionalBoundedString($input, 'public_display_name', 50);
+        // students.student_name 은 NOT NULL. 미입력 초안만 「학생」으로 채우고, 완료 판정은 입력값으로 한다.
+        $studentName = $enteredName ?? '학생';
 
         $studyroomRegionId = null;
         $studyroomComplexId = null;
@@ -303,7 +305,7 @@ final class BasicRegisterService
         $primeMatchOptIn = $this->optIn01($input, 'prime_match_opt_in');
 
         $complete = StudentBasicCompleteness::isComplete([
-            'public_display_name'            => $publicName,
+            'student_name'                   => $enteredName,
             'grade_level'                    => $gradeLevel,
             'school_level'                   => $subjects !== [] ? $schoolLevel : null,
             'preferred_lesson_type'          => $preferredLessonType,
@@ -322,7 +324,7 @@ final class BasicRegisterService
 
         $basicValues = [
             'student_name'                   => $studentName,
-            'public_display_name'            => $publicName,
+            'public_display_name'            => $studentName,
             'grade_level'                    => $gradeLevel,
             'preferred_lesson_type'          => $preferredLessonType,
             'preferred_studyroom_region_id'  => $studyroomRegionId,

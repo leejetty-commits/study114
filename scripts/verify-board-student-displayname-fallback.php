@@ -6,18 +6,17 @@ declare(strict_types=1);
  * 학생/학부모 고민방 표시 이름 fallback 검증
  *
  * 해결책:
- * - students 행이 있고 public_display_name 이 채워져 있으면 trim 한 값 반환
- * - students 행이 있고 public_display_name 이 NULL 이거나 공백이면 '학생' fallback 반환
- * - students 행이 없으면 (미등록/비정상 사용자) 기존처럼 '' 반환 (권한 확장 방지)
- * - student_name(실명)은 어떤 경우에도 반환되지 않음
+ * - students.student_name 을 StudentPublicName::mask 로 가려 반환
+ * - student_name 이 비어 있으면 '학생'
+ * - students 행이 없으면 '' (권한 확장 방지)
+ * - 이름 원문은 반환하지 않음
  * - 공부방·튜터 기존 동작 불변 유지
  *
  * 검증 항목:
- * - (a) public_display_name 값 있음 → 그 값
- * - (b) public_display_name NULL → '학생'
- * - (c) public_display_name 공백 문자열 → '학생'
- * - (d) 행 없음 (미등록 사용자) → '' (결정한 값: 권한 확장 방지)
- * - (e) student_name 이 있어도 절대 반환되지 않음 (실명 노출 방지)
+ * - (a) 3자 이름 → 가운뎃자 *
+ * - (b)(c) 이름 원문은 가린 값만
+ * - (d) 행 없음 → ''
+ * - (e) 원문 홍길동은 반환되지 않음
  * - (f) 공부방·튜터 기존 동작 불변
  * - (g) role_type alias: guardian_student, parent, student 3가지 모두 지원
  * - (h) 복수 행 존재 시 ORDER BY id ASC LIMIT 1 첫번째 행 채택
@@ -211,24 +210,24 @@ $resolver = new AuthorDisplayNameResolver($pdo);
 $valA = $resolver->resolve(['user_id' => 201, 'role_type' => 'student']);
 ok(
     'case_a_public_display_name_present',
-    $valA === '맑은하늘',
-    "expected '맑은하늘', got '{$valA}'"
+    $valA === '김*수',
+    "expected '김*수', got '{$valA}'"
 );
 
 // ─── (b) NULL → '학생' ───
 $valB = $resolver->resolve(['user_id' => 202, 'role_type' => 'student']);
 ok(
     'case_b_public_display_name_null_fallback_to_student',
-    $valB === '학생',
-    "expected '학생', got '{$valB}'"
+    $valB === '이*희',
+    "expected '이*희', got '{$valB}'"
 );
 
 // ─── (c) 공백 문자열 → '학생' ───
 $valC = $resolver->resolve(['user_id' => 203, 'role_type' => 'student']);
 ok(
     'case_c_public_display_name_whitespace_fallback_to_student',
-    $valC === '학생',
-    "expected '학생', got '{$valC}'"
+    $valC === '박*수',
+    "expected '박*수', got '{$valC}'"
 );
 
 // ─── (d) 행 없음 (미등록 사용자) → '' (결정한 값: 권한 확장 방지) ───
@@ -243,8 +242,8 @@ ok(
 $valE = $resolver->resolve(['user_id' => 204, 'role_type' => 'student']);
 ok(
     'case_e_student_name_never_returned',
-    $valE === '학생' && $valE !== '홍길동',
-    "expected '학생' (never '홍길동'), got '{$valE}'"
+    $valE === '홍*동' && $valE !== '홍길동',
+    "expected '홍*동' (never '홍길동'), got '{$valE}'"
 );
 
 // ─── (f-1) 공부방 기존 동작 불변 ───
@@ -274,7 +273,7 @@ $valG2 = $resolver->resolve(['user_id' => 202, 'role_type' => 'parent']);
 $valG3 = $resolver->resolve(['user_id' => 202, 'role_type' => 'student']);
 ok(
     'case_g_role_type_aliases_all_work',
-    $valG1 === '학생' && $valG2 === '학생' && $valG3 === '학생',
+    $valG1 === '이*희' && $valG2 === '이*희' && $valG3 === '이*희',
     "role aliases: G1='{$valG1}', G2='{$valG2}', G3='{$valG3}'"
 );
 
@@ -283,16 +282,16 @@ $valH1 = $resolver->resolve(['user_id' => 205, 'role_type' => 'student']);
 $valH2 = $resolver->resolve(['user_id' => 206, 'role_type' => 'student']);
 ok(
     'case_h_order_by_id_asc_first_row',
-    $valH1 === '첫째별명' && $valH2 === '학생',
-    "multi-row order: H1='{$valH1}' (expected '첫째별명'), H2='{$valH2}' (expected '학생')"
+    $valH1 === '첫**이' && $valH2 === '첫**이',
+    "multi-row order: H1='{$valH1}' (expected '첫**이'), H2='{$valH2}' (expected '첫**이')"
 );
 
 // ─── (trim) 별명 앞뒤 공백 trim ───
 $valTrim = $resolver->resolve(['user_id' => 207, 'role_type' => 'student']);
 ok(
     'case_trim_public_display_name',
-    $valTrim === '공부짱',
-    "expected '공부짱', got '{$valTrim}'"
+    $valTrim === '최*현',
+    "expected '최*현', got '{$valTrim}'"
 );
 
 // ─── (i) user_id <= 0 이거나 빈 auth 시 '' ───
