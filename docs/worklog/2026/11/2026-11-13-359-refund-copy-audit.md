@@ -203,9 +203,9 @@ rg -n "환불|취소|청약철회|일할" preview/home-ui/src preview/shared src
 
 ```
 [최종검수 패키지 — 359]
-브랜치 / 커밋: work/359-refund-copy-unify / <push 후 hash>
+브랜치 / 커밋: work/359-refund-copy-unify / a9716c03 (+ 후속 문서 보정 있으면 최신 tip)
 PR: (push 후 URL · 머지 안 함)
-변경 파일: (git diff --stat main...HEAD)
+변경 파일: docs only 18 files · +444 (제품 코드 0)
 diff 요약:
   - docs/worklog/grok-sync/docs/359-refund-copy-unify-2026-11-13.md : 실행 정본 반입
   - docs/worklog/2026/11/2026-11-13-359-refund-copy-audit.md : 1단계 전수·표·초안
