@@ -7,6 +7,9 @@ import '../styles/tutor-profile-photos.css';
 import {
   openPromoCropDialog,
   readImageSize,
+  shrinkPromoImageForUpload,
+  softHintPromoImageFile,
+  validatePromoImageFile,
   PROMO_IMAGE_SPEC,
 } from '../../../shared/promo-image.js';
 import { isRegistrationsApiMode, hydrateRegistrationsCache, patchTutorInCache } from '../registrations-backend.js';
@@ -97,9 +100,9 @@ export function tutorCardImagePaths(tutor) {
 
 export function tutorProfilePhotoHint() {
   return [
-    '최대 3장 · JPG/PNG/WebP · 파일당 최대 4MB',
-    '권장 1200×1200 이상 — 800×800보다 작으면 자동으로 확대합니다.',
-    '1번이 대표 사진입니다. (베이직 720×720 · 프라임 1280×720으로 맞춰집니다)',
+    '최대 3장 · JPG/PNG/WebP',
+    '작은 사진도 올릴 수 있어요. 올리면 알아서 맞춰 드려요.',
+    '1번이 대표 사진입니다.',
   ].join('\n');
 }
 
@@ -111,69 +114,12 @@ function extOfName(name) {
 }
 
 /**
- * 형식·용량만 검사. 픽셀이 작아도 통과(업로드 전 최소 크기로 확대).
+ * 형식만 검사. 용량·작은 픽셀은 거절하지 않는다(축소는 브라우저, 확대는 서버).
  * @param {File} file
  * @returns {Promise<string>} 오류 메시지. 통과면 빈 문자열.
  */
 export async function validateTutorProfilePhoto(file) {
-  if (!file) return '파일을 선택해 주세요.';
-  const ext = extOfName(file.name);
-  const mimeOk = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
-  const extOk = TUTOR_PROFILE_PHOTO_SPEC.acceptExt.includes(ext);
-  if (!mimeOk && !extOk) {
-    return 'JPG, PNG, WebP 파일만 올릴 수 있습니다.';
-  }
-  if (file.size > TUTOR_PROFILE_PHOTO_SPEC.maxBytes) {
-    return '파일 용량은 4MB 이하여야 합니다.';
-  }
-  try {
-    const { width, height } = await readImageSize(file);
-    if (width < 1 || height < 1) {
-      return '이미지를 확인할 수 없습니다.';
-    }
-  } catch (err) {
-    return err instanceof Error ? err.message : '이미지를 확인할 수 없습니다.';
-  }
-  return '';
-}
-
-/**
- * 가로·세로가 최소보다 작으면 비율 유지한 채 확대(둘 다 최소 이상).
- * @param {File} file
- * @returns {Promise<File>}
- */
-export async function ensureTutorProfilePhotoMinSize(file) {
-  const minW = TUTOR_PROFILE_PHOTO_SPEC.minWidth;
-  const minH = TUTOR_PROFILE_PHOTO_SPEC.minHeight;
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('이미지를 읽을 수 없습니다.'));
-      el.src = url;
-    });
-    const sw = img.naturalWidth || img.width;
-    const sh = img.naturalHeight || img.height;
-    if (sw >= minW && sh >= minH) {
-      return file;
-    }
-    const scale = Math.max(minW / Math.max(1, sw), minH / Math.max(1, sh));
-    const tw = Math.max(minW, Math.round(sw * scale));
-    const th = Math.max(minH, Math.round(sh * scale));
-    const canvas = document.createElement('canvas');
-    canvas.width = tw;
-    canvas.height = th;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('이미지 캔버스를 만들 수 없습니다.');
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(img, 0, 0, tw, th);
-    const dataUrl = canvasToJpegDataUrl(canvas, TUTOR_PROFILE_PHOTO_SPEC.jpegQuality);
-    return dataUrlToJpegFile(dataUrl, file.name || 'profile.jpg');
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+  return validatePromoImageFile(file);
 }
 
 /**
@@ -486,7 +432,7 @@ export function renderTutorProfilePhotoEditor(tutor) {
         canAdd
           ? `<div class="p21-photos__actions">
               <label class="btn btn--secondary" for="${FILE_INPUT_ID}">
-                <input id="${FILE_INPUT_ID}" class="p21-photos__file" type="file" accept="${TUTOR_PROFILE_PHOTO_SPEC.accept},image/*" />
+                <input id="${FILE_INPUT_ID}" class="p21-photos__file" type="file" accept="${TUTOR_PROFILE_PHOTO_SPEC.accept}" />
                 + 사진 추가
               </label>
               <span class="p21-photos__count">${images.length}/${TUTOR_PROFILE_PHOTO_SPEC.maxCount}</span>
@@ -550,15 +496,19 @@ export function bindTutorProfilePhotos(root, opts) {
     }
     const err = await validateTutorProfilePhoto(file);
     if (err) {
-      void s114Alert(err);
+      await s114Alert(err);
       return;
     }
     let prepared = file;
     try {
-      prepared = await ensureTutorProfilePhotoMinSize(file);
+      prepared = await shrinkPromoImageForUpload(file);
     } catch (e) {
-      void s114Alert(e instanceof Error ? e.message : '사진을 준비하지 못했습니다.');
+      await s114Alert(e instanceof Error ? e.message : '사진을 준비하지 못했어요.');
       return;
+    }
+    const soft = await softHintPromoImageFile(prepared);
+    if (soft) {
+      await s114Alert(soft);
     }
     const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;

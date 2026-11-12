@@ -8,9 +8,13 @@
 import { registerState } from '@study-room-ui/state.js';
 import { saveCurrentStep } from '@study-room-ui/save-flow.js';
 import {
+  PROMO_IMAGE_SPEC,
   validatePromoImageFile,
+  softHintPromoImageFile,
+  shrinkPromoImageForUpload,
   openPromoCropDialog,
   uploadPromoImage,
+
 } from '../../../shared/promo-image.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from '../registrations-backend.js';
 import { ensureEmbeddedRegister } from './embedded-panels.js';
@@ -246,17 +250,28 @@ function openDrawer(roomId, field, rerender) {
 async function openCoverModal(roomId, rerender) {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = 'image/jpeg,image/png,image/webp,image/*';
+  input.accept = PROMO_IMAGE_SPEC.accept;
   input.addEventListener('change', async () => {
     const file = input.files?.[0];
     input.remove();
     if (!file) return;
     const err = await validatePromoImageFile(file);
     if (err) {
-      void s114Alert(err);
+      await s114Alert(err);
       return;
     }
-    const crop = await openPromoCropDialog(document.body, { file });
+    let prepared = file;
+    try {
+      prepared = await shrinkPromoImageForUpload(file);
+    } catch (shrinkErr) {
+      await s114Alert(shrinkErr instanceof Error ? shrinkErr.message : '사진을 준비하지 못했어요.');
+      return;
+    }
+    const soft = await softHintPromoImageFile(prepared);
+    if (soft) {
+      await s114Alert(soft);
+    }
+    const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;
     try {
       await ensureEmbeddedRegister(roomId, { force: true });
@@ -265,18 +280,26 @@ async function openCoverModal(roomId, rerender) {
         void s114Alert('공부방 정보를 먼저 저장한 뒤 사진을 올려 주세요.');
         return;
       }
+      // 대표사진 교체: 서버가 한 요청 안에서 원자적으로 처리한다.
+      const real = (registerState.images || []).filter((img) => img && !img.is_system_default);
+      const existingCover = real.find((img) => img.image_type === 'cover' && img.id) || null;
+      // 5장 + 대표 없음 → 임의 삭제 금지, 안내 후 중단
+      if (!existingCover && real.length >= PROMO_IMAGE_SPEC.maxCount) {
+        await s114Alert('사진이 5장이에요. 한 장을 지운 뒤 다시 올려 주세요.');
+        return;
+      }
+      const replaceId = existingCover ? Number(existingCover.id) : 0;
       const image = await uploadPromoImage({
         studyRoomId: id,
-        file,
+        file: prepared,
         cropX: crop.cropX,
         cropY: crop.cropY,
         imageType: 'cover',
         sortOrder: 1,
+        replaceImageId: replaceId,
       });
-      const rest = (registerState.images || []).filter(
-        (img) => img.image_type !== 'cover' && !img.is_system_default,
-      );
-      registerState.images = [image, ...rest];
+      const kept = real.filter((img) => Number(img.id) !== replaceId);
+      registerState.images = [image, ...kept.filter((img) => img.image_type !== 'cover')];
       if (isRegistrationsApiMode()) {
         try {
           await hydrateRegistrationsCache();

@@ -946,7 +946,7 @@ function bindPhotoField(form, opts = {}) {
     if (!listEl) return;
     listEl.innerHTML = items.map((item, index) => {
       const small = item.kind === 'new' && item.small
-        ? '<p class="concern-photos__small">이 사진은 작아서 흐리게 보일 수 있어요.</p>'
+        ? '<p class="concern-photos__small">작은 사진은 확대되어 화질이 좋지 않을 수 있어요. 그래도 올릴 수 있어요.</p>'
         : '';
       return `
         <div class="concern-photos__item">

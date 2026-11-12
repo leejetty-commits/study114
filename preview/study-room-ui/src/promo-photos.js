@@ -4,6 +4,8 @@ import { registerState, IMAGE_TYPES } from './state.js';
 import {
   PROMO_IMAGE_SPEC,
   validatePromoImageFile,
+  softHintPromoImageFile,
+  shrinkPromoImageForUpload,
   openPromoCropDialog,
   uploadPromoImage,
   deletePromoImage,
@@ -83,7 +85,7 @@ export function renderPromoPhotoGrid() {
 }
 
 export function promoPhotoHint() {
-  return `JPG · PNG · WebP / 권장 ${PROMO_IMAGE_SPEC.recommended} / 최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} / 최대 4MB · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 만듭니다.`;
+  return `JPG · PNG · WebP / ${PROMO_IMAGE_SPEC.recommended} / 큰 사진은 자동으로 줄여서 올려요 · 5장. 원본 1장을 올리면 프라임(16:9)과 베이직(1:1) 썸네일을 자동으로 맞춥니다.`;
 }
 
 export function syncPromoPhotoMeta(root) {
@@ -129,10 +131,21 @@ export function bindPromoPhotos(root, opts) {
     }
     const err = await validatePromoImageFile(file);
     if (err) {
-      void s114Alert(err);
+      await s114Alert(err);
       return;
     }
-    const crop = await openPromoCropDialog(document.body, { file });
+    let prepared = file;
+    try {
+      prepared = await shrinkPromoImageForUpload(file);
+    } catch (shrinkErr) {
+      await s114Alert(shrinkErr instanceof Error ? shrinkErr.message : '사진을 준비하지 못했어요.');
+      return;
+    }
+    const soft = await softHintPromoImageFile(prepared);
+    if (soft) {
+      await s114Alert(soft);
+    }
+    const crop = await openPromoCropDialog(document.body, { file: prepared });
     if (!crop) return;
 
     if (!registerState.study_room_id) {
@@ -153,7 +166,7 @@ export function bindPromoPhotos(root, opts) {
       const hasCover = (registerState.images || []).some((img) => img.image_type === 'cover');
       const image = await uploadPromoImage({
         studyRoomId: Number(roomId),
-        file,
+        file: prepared,
         cropX: crop.cropX,
         cropY: crop.cropY,
         imageType: hasCover ? 'interior' : 'cover',
