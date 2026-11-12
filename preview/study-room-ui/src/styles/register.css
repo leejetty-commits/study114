@@ -733,7 +733,8 @@ form[data-form="facility"] > .register-guide {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* 368-내등록미리보기: 전체 보이게 · 단색 바탕은 frame background */
+  object-fit: contain;
   object-position: center;
   display: block;
 }

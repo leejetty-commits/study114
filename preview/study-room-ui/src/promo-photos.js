@@ -22,8 +22,17 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+/** 368: 잘린 1:1(basic) 말고 fit·원본·프라임으로 전체 미리보기 */
 function previewSrc(img) {
-  return img.basic_720_path || img.prime_1280_path || img.image_path || '';
+  if (!img || typeof img !== 'object') return '';
+  return (
+    img.fit_1280_path
+    || img.image_path
+    || img.prime_1280_path
+    || img.prime_1600_path
+    || img.basic_720_path
+    || ''
+  );
 }
 
 function renderPhotoCard(img, idx) {

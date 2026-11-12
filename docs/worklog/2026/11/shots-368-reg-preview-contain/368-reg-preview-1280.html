@@ -1,0 +1,1007 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>368 reg promo preview</title>
+<style>
+  body{margin:0;padding:1.25rem;font-family:system-ui,sans-serif;background:#fff;color:#0f172a}
+  h1{font-size:1rem;margin:0 0 .5rem}
+  .note{font-size:.8rem;color:#64748b;margin:0 0 1rem}
+  /* study-room-ui 전용 — 공통은 shared/register-flow.css */
+/* 로그인 후 폼만 본문 전체폭. 비로그인 안내는 유료상품과 동일 36rem */
+.register-body:not(.register-body--no-promo) .site-gate-wrap,
+.register-body--embed .site-gate-wrap {
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.register-body--embed {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+}
+
+.register-body--embed .home-main {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+/*
+ * 공부방상세정보 단독 페이지는 .register-body .home-main 에
+ * 마이페이지 좌측메뉴(10rem) 자리를 비워 본문 폭을 맞춘다.
+ * 마이페이지 임베드는 이미 사이드바가 있으므로 그 그리드를 끈다.
+ */
+@media (min-width: 1024px) {
+  .register-body--embed .home-main {
+    display: block;
+    grid-template-columns: none;
+  }
+
+  .register-body--embed .site-gate-wrap {
+    grid-column: auto;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+  }
+}
+
+.register-overview__lead {
+  margin: 0;
+  color: var(--gray-600, #64748b);
+  font-size: var(--reg-hint, 0.8125rem);
+  line-height: 1.5;
+}
+
+.register-overview__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.65rem 0.75rem;
+  margin: 0 0 1rem;
+}
+
+button.register-overview__edit-badge {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.register-region-slot .chip-group {
+  margin: 0.15rem 0 0.35rem;
+}
+
+.register-heading-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.register-heading-row .auth-heading {
+  margin: 0;
+}
+
+.register-heading-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.register-heading-row__lead {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+}
+
+.register-overview__dl {
+  margin: 0 0 1.25rem;
+  border-top: 1px solid var(--gray-200, #e5e7eb);
+}
+
+.register-overview__row {
+  display: grid;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.75rem 0.65rem;
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.register-overview__row.is-filled {
+  background: var(--gray-100, #f1f5f9);
+  color: var(--gray-600, #64748b);
+}
+
+.register-overview__row.is-empty {
+  background: #fff;
+}
+
+.register-overview__row:hover,
+.register-overview__row:focus-visible {
+  background: var(--brand-blue-soft, #eff6ff);
+  box-shadow: inset 0 0 0 1px var(--brand-blue, #2563eb);
+  outline: none;
+}
+
+.register-overview__row.is-filled:hover,
+.register-overview__row.is-filled:focus-visible {
+  background: #e2e8f0;
+}
+
+.register-overview__row dt {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-500, #64748b);
+}
+
+.register-overview__row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--gray-900, #0f172a);
+}
+
+.register-overview__row.is-filled dd {
+  color: var(--gray-600, #64748b);
+}
+
+.register-overview__row.is-empty dd > span {
+  color: var(--gray-400, #94a3b8);
+  min-height: 1.25em;
+}
+
+.register-basic-complete-gate {
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: 0.5rem;
+  background: var(--gray-50, #f8fafc);
+}
+
+.register-basic-complete-gate__msg {
+  margin: 0 0 0.85rem;
+  font-size: 0.9375rem;
+  color: var(--gray-700, #334155);
+  line-height: 1.45;
+}
+
+.register-basic-complete-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.register-overview__fold {
+  margin: 0.5rem 0 1rem;
+}
+
+.register-overview__fold > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-600, #64748b);
+  padding: 0.35rem 0;
+}
+
+.register-edit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  overflow: hidden;
+  background: rgb(92 45 12 / 0.38);
+}
+
+body.register-edit-open {
+  overflow: hidden;
+}
+
+.register-edit-dialog {
+  width: min(48rem, 100%);
+  max-height: calc(100vh - 2rem);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fffaf4 0%, #fff8f0 48%, #fff6ea 100%);
+  border-radius: 1.15rem;
+  border: 1px solid #f3c89a;
+  box-shadow: 0 1.25rem 3rem rgb(180 83 9 / 0.22);
+}
+
+.register-edit-dialog--wide {
+  width: min(56rem, 100%);
+}
+
+.register-edit-dialog__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+  padding: 0.7rem 1.1rem;
+  border-bottom: 0;
+  background: linear-gradient(135deg, var(--brand-orange, #f57c00), var(--brand-orange-dark, #e65100));
+  border-radius: 1.1rem 1.1rem 0 0;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.register-edit-dialog__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.register-edit-dialog__close {
+  border: 0;
+  background: rgb(255 255 255 / 0.18);
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: #fff;
+  cursor: pointer;
+  touch-action: auto;
+}
+
+.register-edit-dialog__close:hover {
+  background: rgb(255 255 255 / 0.3);
+}
+
+.register-edit-dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.85rem 1.1rem 0.4rem;
+}
+
+.register-edit-dialog__foot {
+  display: flex;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+  gap: 0.5rem;
+  padding: 0.7rem 1.1rem 0.85rem;
+  border-top: 1px solid #f3d0a8;
+  background: #fff4e6;
+  border-radius: 0 0 1.1rem 1.1rem;
+}
+
+.register-edit-dialog .register-region-slot {
+  padding: 0.7rem 0.8rem;
+  background: #fff;
+  border-color: #f0c9a0;
+}
+
+.register-edit-dialog .register-region-slot.is-primary {
+  background: #fff3e4;
+  border-color: #f5a623;
+}
+
+.register-edit-dialog .form-input,
+.register-edit-dialog .form-radio,
+.register-edit-dialog .form-address__zip-row .btn {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  min-height: 2.15rem;
+  box-sizing: border-box;
+}
+
+.register-edit-dialog .form-input {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  background: #fff;
+  border-color: #e8c8a4;
+  line-height: 1.35;
+}
+
+.register-edit-dialog .form-radio {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.register-edit-dialog .form-address__zip-row .btn {
+  padding-left: 0.85rem;
+  padding-right: 0.85rem;
+}
+
+.register-edit-dialog .form-group {
+  margin-bottom: 0.55rem;
+}
+
+.register-edit-dialog .form-label {
+  margin-bottom: 0.2rem;
+}
+
+/* 상세1·상세2 입력·선택칸 높이를 기본정보 수정 팝업과 같게 */
+form[data-form="lesson"] input.form-input,
+form[data-form="lesson"] select.form-input,
+form[data-form="facility"] input.form-input,
+form[data-form="facility"] select.form-input {
+  padding: 0.4rem 0.75rem;
+  min-height: 2.15rem;
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+
+.register-nav--overview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .register-overview__row {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+  }
+}
+
+.register-section-title.register-section-title--bar {
+  background: var(--brand-orange, #f57c00);
+  color: #fff;
+  border-bottom: none;
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 1.25rem 0 0.85rem;
+  padding: 0.55rem 0.9rem;
+}
+
+.register-section-title--bar .register-required-mark {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.18);
+  padding: 0.05em 0.4em;
+  border-radius: 0.25rem;
+  margin-left: 0.45rem;
+}
+
+form[data-form="facility"] > .register-section-title--bar:first-of-type,
+form[data-form="lesson"] > .register-section-title--bar:first-of-type {
+  margin-top: 0.75rem;
+}
+
+.register-flow:has(form[data-form="lesson"]) .auth-heading {
+  margin-bottom: 0.1rem;
+}
+
+form[data-form="lesson"] > .register-guide {
+  margin-top: 0;
+  margin-bottom: 0.55rem;
+}
+
+.register-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-6);
+  align-items: start;
+}
+
+@media (max-width: 720px) {
+  .register-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .register-grid-3__spacer {
+    display: none;
+  }
+}
+
+.register-add-btn {
+  margin-top: 0.3rem;
+}
+
+.register-plus-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.35rem;
+  padding: 0.45rem 1rem;
+  border: 1.5px dashed var(--brand-orange, #f57c00);
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1.3;
+  appearance: none;
+}
+
+.register-plus-btn:hover {
+  background: #ffedd5;
+}
+
+/* 사진추가: label+file. display:none / visibility:hidden / 1px clip 금지. iOS는 직접 클릭만 연다. */
+.register-plus-btn--photo {
+  position: relative;
+  overflow: hidden;
+}
+
+.register-plus-btn__file {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.register-plus-btn--photo > span {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.register-pay-checks {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem 1.5rem;
+}
+
+.register-pay-checks .form-check {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.register-pay-checks .form-check__label {
+  white-space: nowrap;
+}
+
+.register-edit-dialog form[data-form] > .register-section-title--bar {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+}
+
+.register-pane .register-section-title--bar {
+  margin: 0 0 0.85rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.register-schedule-price {
+  margin-top: 1.25rem;
+  align-items: stretch;
+}
+
+.register-pane {
+  min-width: 0;
+}
+
+.register-weekday-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.75rem;
+}
+
+.register-inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.register-inline-fields__num {
+  width: 4.5rem;
+  max-width: 4.5rem;
+}
+
+.register-subtitle {
+  margin: 0.15rem 0 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.register-proof-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.register-proof-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.register-proof-row .form-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.register-class-card {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.register-class-card.is-collapsed {
+  padding-bottom: 0.75rem;
+}
+
+.register-class-card.is-collapsed .register-class-card__body {
+  display: none;
+}
+
+.register-class-card.is-collapsed .register-class-card__head {
+  margin-bottom: 0;
+}
+
+.register-class-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.register-class-card__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: left;
+}
+
+.register-class-card__chevron {
+  flex: none;
+  color: var(--brand-orange, #f57c00);
+}
+
+.register-class-card__summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.register-class-card__toggle-hint {
+  flex: none;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.register-class-card__name-label {
+  font-weight: 800;
+  color: #c2410c;
+}
+
+.register-class-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.register-fee-manwon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.register-fee-manwon .form-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.register-fee-manwon__unit {
+  flex: none;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+.register-intro-long {
+  min-height: 10rem;
+}
+
+.register-subject-row .form-group,
+.register-price-row .form-group {
+  margin-bottom: 0;
+}
+
+.register-subject-row__custom {
+  min-width: 0;
+}
+
+[data-subjects-list] .register-subject-row:last-child,
+[data-price-list] .register-price-row:last-child {
+  margin-bottom: 0;
+}
+
+.register-price-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: 0.75rem;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+}
+
+.register-price-row__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr) auto;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.register-price-row__note {
+  width: 100%;
+}
+
+.register-flow:has(form[data-form="facility"]) .auth-heading {
+  margin-bottom: 0.1rem;
+}
+
+form[data-form="facility"] > .register-guide {
+  margin-top: 0;
+  margin-bottom: 0.55rem;
+}
+
+.register-photo-block {
+  margin: 0.35rem 0 1.15rem;
+  padding: 0.9rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.register-photo-block__empty {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.register-photo-block__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.register-photo-block__count {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.register-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+  margin: 0;
+}
+
+.register-photo-card,
+.register-photo-add {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #94a3b8;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.register-photo-card__frame,
+.register-photo-add {
+  position: relative;
+  aspect-ratio: 16 / 9;
+}
+
+.register-photo-card__frame {
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: #e2e8f0;
+}
+
+.register-photo-card__frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* 368-내등록미리보기: 전체 보이게 · 단색 바탕은 frame background */
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+
+.register-photo-card__empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.register-photo-card__meta .form-label {
+  margin-bottom: 0.2rem;
+}
+
+.register-photo-card__meta .form-input + .form-label {
+  margin-top: 0.75rem;
+}
+
+.register-photo-card__meta .register-hint {
+  margin: 0.25rem 0 0;
+}
+
+.register-photo-add {
+  cursor: pointer;
+  place-items: center;
+  text-align: center;
+  border-style: dashed;
+  color: #334155;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-photo-add__file {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 0;
+}
+
+.register-photo-add__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--brand-orange, #f57c00);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.register-photo-add__hint {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.promo-crop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 0.45);
+}
+
+.promo-crop-dialog {
+  width: min(40rem, 100%);
+  padding: 1.1rem 1.15rem 1rem;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 1rem 2.5rem rgb(15 23 42 / 0.18);
+}
+
+.promo-crop-dialog__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  cursor: move;
+  touch-action: none;
+  user-select: none;
+}
+
+.promo-crop-dialog__hint {
+  margin: 0 0 0.85rem;
+  color: #64748b;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.promo-crop-dialog__previews {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.7fr);
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.promo-crop-frame {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.6rem;
+  background: #0f172a;
+}
+
+.promo-crop-frame--prime {
+  aspect-ratio: 16 / 9;
+}
+
+.promo-crop-frame--basic {
+  aspect-ratio: 1 / 1;
+  cursor: crosshair;
+}
+
+.promo-crop-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  pointer-events: none;
+}
+
+.promo-crop-frame--prime .promo-crop-blur {
+  filter: blur(14px);
+  transform: scale(1.12);
+}
+
+.promo-crop-frame--prime .promo-crop-contain {
+  object-fit: contain;
+}
+
+.promo-crop-spot {
+  position: absolute;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: -0.425rem 0 0 -0.425rem;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 0 0 1px #f57c00;
+  pointer-events: none;
+}
+
+.promo-crop-frame__label {
+  position: absolute;
+  left: 0.4rem;
+  bottom: 0.4rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: rgb(15 23 42 / 0.7);
+  color: #fff;
+  font-size: 0.72rem;
+}
+
+.promo-crop-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .register-photo-grid,
+  .promo-crop-dialog__previews {
+    grid-template-columns: 1fr;
+  }
+}
+
+.register-work-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.register-work-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.1rem;
+  padding: 0.25rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.register-work-tabs__tab.is-active {
+  border-color: var(--brand-orange, #f57c00);
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.register-facility-note {
+  margin-top: 1.85rem;
+}
+
+.register-social-lead {
+  margin: 0 0 0.3rem;
+}
+
+.register-social-grid {
+  margin-top: 0.15rem;
+}
+
+.register-social-grid .form-group {
+  margin-bottom: 0.35rem;
+}
+
+form[data-form="facility"] .register-message-notice {
+  margin-top: 2rem;
+}
+
+.register-message-notice {
+  margin: 0.35rem 0 0.85rem;
+  padding: 0.85rem 0.95rem;
+  border: 2px solid #1d4ed8;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.register-message-notice__strong {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  color: #1e3a8a;
+}
+
+.register-message-notice__where {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #1e40af;
+}
+
+
+</style></head><body>
+  <h1>내등록 · 홍보사진 편집 미리보기 (테스트rm1)</h1>
+  <p class="note">fit 원본 · contain · 단색 바탕. 픽셀 숫자 비노출.</p>
+  <div class="register-photo-block" data-photo-grid>
+    <div class="register-photo-grid">
+      <article class="register-photo-card">
+        <div class="register-photo-card__frame"><img src="data:image/webp;base64,UklGRv4CAABXRUJQVlA4IPICAACQQgCdASqXAnwBPmEwlkikIqIhIZgoAIAMCWlu4XdZcB+GfCBdoKoB//5iSAC3agIGb1pw4cOHDhw4cOHDg3rpGnDhz3pmKBAgQIECBAgQIECAmBwzuTJlH6AfnTp06dOnTp06dOnQucOdqRImrQD86dOnTp06dOnTp06FzhztSJE1aAfnTp06dOnTp06dOnQucOdqRImrQD86dOnTp06dOnTp06FzhztSJE1aAfnTp06dOnTp06dOnQubu1IkSP4Gb1pw4cOHDhw4cOHDg4DhncmTKP0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnakSJq0A/OnTp06dOnTp06dOhc4c7UiRNWgH506dOnTp06dOnTp0LnDnZ0AAP7/2W///+xm/Rm/Rmpm//1aJ7YuSzU8Stj0F62J1Tarxlf+y3dsxHlMOR9DmeajvYKAbf24APzjv097xZShG37H78t1EMez8t1AQ0xSzjoDcc1uXabAim6SfZgEXoENaGYBF6BDWhmARegQ1oZgEXoRvRzMwCLznfmbAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAqrMAi9IFVZgEXpAYAA" alt="홍보사진 1" /></div>
+        <div class="register-photo-card__meta"><span class="form-label">가로 비율</span></div>
+      </article>
+      <article class="register-photo-card">
+        <div class="register-photo-card__frame"><img src="data:image/webp;base64,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" alt="홍보사진 2" /></div>
+        <div class="register-photo-card__meta"><span class="form-label">세로 비율</span></div>
+      </article>
+    </div>
+  </div>
+</body></html>
