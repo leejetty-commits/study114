@@ -1,7 +1,7 @@
 import { signupState } from '../state.js';
 import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 import { renderAuthShell, renderBrandHero, renderStepIndicator, bindGlobalEvents, navigate } from '../layout.js';
-import { fetchMeApi } from '../auth-api.js';
+import { fetchMeApi, parseApiJson } from '../auth-api.js';
 import { resolveAfterAuthUrl } from '../../../shared/auth-redirect.js';
 import {
   HOME_UI_BASE,
@@ -11,6 +11,35 @@ import {
 } from '../../../shared/preview-links.js';
 import { publishGreeting } from '../../../shared/neighborhood-greeting-store.js';
 import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
+import { studentSectionPath } from '../../../home-ui/src/student-reg/router.js';
+
+const STUDENT_LIST_HASH = '/mypage/registrations/students';
+
+function studentDetailUrl(id) {
+  return `${HOME_UI_BASE}/#${studentSectionPath(id, 'detail')}`;
+}
+
+function studentListUrl() {
+  return `${HOME_UI_BASE}/#${STUDENT_LIST_HASH}`;
+}
+
+/** @returns {Promise<number>} */
+async function resolveOwnStudentId() {
+  const result = signupState.basicRegisterResult;
+  if (result?.kind === 'student') {
+    const fromSignup = Number(result.id || 0);
+    if (fromSignup > 0) return fromSignup;
+  }
+  try {
+    const res = await fetch('/api/registrations/students.php', { credentials: 'include' });
+    const data = parseApiJson(await res.text());
+    if (!res.ok || data.ok === false) return 0;
+    const students = Array.isArray(data.students) ? data.students : [];
+    return Number(students[0]?.id || 0);
+  } catch {
+    return 0;
+  }
+}
 
 const PROMPT_DONE_KEY = 'study114-ng-prompt-done';
 
@@ -257,7 +286,7 @@ export function bindSignupCompleteEvents(root) {
     })
     .catch(() => navigate('/login'));
 
-  root.querySelector('[data-action="go-detail-register"]')?.addEventListener('click', () => {
+  root.querySelector('[data-action="go-detail-register"]')?.addEventListener('click', async () => {
     const role = signupState.role || 'student';
     // 가입 이어가기: 새 탭 금지. 과외쌤과 같이 같은 창에서 연다.
     if (role === 'study_room') {
@@ -268,7 +297,8 @@ export function bindSignupCompleteEvents(root) {
       window.location.assign(TUTOR_UI_BASE);
       return;
     }
-    window.location.assign(`${HOME_UI_BASE}/#/mypage/registrations/students`);
+    const studentId = await resolveOwnStudentId();
+    window.location.assign(studentId > 0 ? studentDetailUrl(studentId) : studentListUrl());
   });
 
   root.querySelector('[data-action="go-home"]')?.addEventListener('click', async () => {
