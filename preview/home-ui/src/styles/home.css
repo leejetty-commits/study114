@@ -229,20 +229,40 @@ img {
 }
 
 .home-header__logo {
+  /* 336: 글자 로고 28→32. 심벌은 헤더 실측 비율(22.5/28)로 따라감 */
+  --home-header-wordmark-h: 32px;
+  --home-header-symbol-h: calc(var(--home-header-wordmark-h) * 22.5 / 28);
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 4px;
+  text-decoration: none;
 }
 
-/* 334: 헤더 크기는 현행 유지(336에서 변수·비율 조정) */
 .home-header__symbol {
-  height: 22.5px;
+  height: var(--home-header-symbol-h);
   width: auto;
 }
 
 .home-header__wordmark {
-  height: 28px;
+  height: var(--home-header-wordmark-h);
   width: auto;
+}
+
+/* 글자 로고 오른쪽 · 아랫선 맞춤 · 간격 8px(gap 4 + margin 4) */
+.home-header__tagline {
+  margin-inline-start: 4px;
+  color: #4b5563;
+  font-size: 12px; /* 메인메뉴 text-sm(14px) 대비 -2px */
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+@media (max-width: 390px) {
+  .home-header__tagline {
+    display: none;
+  }
 }
 
 .home-gnb {
