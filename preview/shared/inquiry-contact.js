@@ -1,15 +1,13 @@
 /**
- * 플로팅 「문의하기」연락 상수 — URL·메일은 여기만.
+ * 플로팅 「문의하기」연락 상수 — URL은 여기만.
  * 카카오 JS SDK·외부 위젯 금지. 채팅은 pf.kakao.com 일반 링크.
+ * 문의하기 패널은 mailto를 쓰지 않는다(푸터 이메일은 별도).
  */
 
 import { supportUiUrl } from './preview-links.js';
 
 /** 자주 묻는 질문 (기존 고객센터 FAQ) */
 export const INQUIRY_FAQ_HASH = '#/support/faq';
-
-/** 이메일 문의 (비로그인) */
-export const INQUIRY_MAILTO = 'mailto:help@study114.net';
 
 /** 운영문의 (로그인) — home-ui 밖에서도 고객센터로 가게 pathname 딥링크 */
 export function inquiryContactUrl() {

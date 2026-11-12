@@ -3,13 +3,13 @@
  * - 「맨 위로」: 전 폭 (기존 위치·크기 유지)
  * - 「맨 아래로」: 모바일(≤768px)만, 맨 위 버튼 바로 위 8px
  * - 「문의하기」: 맨 위로 자리 위(고정). 스크롤 무관 표시. 모달 시 숨김
- * - 둘째 항목: 로그인=운영문의, 비로그인=이메일 문의
+ * - 로그인: FAQ · 운영문의 · 카카오톡 문의
+ * - 비로그인: FAQ · 카카오톡 문의 (이메일/mailto 없음)
  * 상세·비교·후기 등 모달이 열려 있으면 모두 숨김
  */
 
 import {
   INQUIRY_FAQ_HASH,
-  INQUIRY_MAILTO,
   KAKAO_CHAT_URL,
   inquiryContactUrl,
 } from './inquiry-contact.js';
@@ -112,22 +112,28 @@ function closeInquiryPanel() {
   root?.classList.remove('is-open');
 }
 
-/** 로그인 여부에 맞춰 둘째 항목 라벨·href 갱신 */
+/** 로그인: 운영문의 표시. 비로그인: 항목 제거(빈 칸·mailto 없음). */
 function syncInquiryContactItem(panel) {
   if (!panel) return;
-  const item = panel.querySelector('[data-inquiry-item="contact"]');
-  if (!(item instanceof HTMLAnchorElement)) return;
+  let item = panel.querySelector('[data-inquiry-item="contact"]');
   if (isViewerLoggedIn()) {
+    if (!(item instanceof HTMLAnchorElement)) {
+      item = document.createElement('a');
+      item.className = 'inquiry-fab__item';
+      item.setAttribute('role', 'menuitem');
+      item.dataset.inquiryItem = 'contact';
+      const kakao = panel.querySelector(`a[href="${KAKAO_CHAT_URL}"]`);
+      if (kakao) panel.insertBefore(item, kakao);
+      else panel.appendChild(item);
+    }
+    item.hidden = false;
     item.textContent = '운영문의';
     item.setAttribute('href', inquiryContactUrl());
     item.removeAttribute('target');
     item.removeAttribute('rel');
-  } else {
-    item.textContent = '이메일 문의';
-    item.setAttribute('href', INQUIRY_MAILTO);
-    item.removeAttribute('target');
-    item.removeAttribute('rel');
+    return;
   }
+  if (item) item.remove();
 }
 
 function syncInquiry(root) {
@@ -222,7 +228,6 @@ function ensureInquiryFab() {
   panel.hidden = true;
   panel.innerHTML = [
     `<a class="inquiry-fab__item" role="menuitem" href="${INQUIRY_FAQ_HASH}">자주 묻는 질문</a>`,
-    `<a class="inquiry-fab__item" role="menuitem" data-inquiry-item="contact" href="${INQUIRY_MAILTO}">이메일 문의</a>`,
     `<a class="inquiry-fab__item" role="menuitem" href="${KAKAO_CHAT_URL}" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>`,
   ].join('');
   syncInquiryContactItem(panel);
