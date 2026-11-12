@@ -1,6 +1,6 @@
 # 18d — 노출상품(프라임·픽) 환불액 계산 잠금
 
-**상태:** 잠금 (2026-10-28 종현)
+**상태:** 잠금 (2026-10-28 종현) · **뒤 연장 가드 확정 (2026-11-13 종현, 안 A)**
 **코드:** `src/Paid/PositionRefundCalculator.php`
 **검증:** `scripts/verify-position-refund.php`
 **서비스:** `src/Paid/RefundService.php` (position 분기)
@@ -55,6 +55,15 @@
 - **이전 이용 구간·이전 주문은 계산·정지·환불 대상 아님**
 - `snapshot.segment_started_on` (327 추가) — 없는 과거 extend는 주문 이력으로 재구성
 
+### 뒤에 살아 있는 연장이 있는 앞 주문 (356 · 2026-11-13 종현 확정 · 안 A)
+
+- **규칙:** 같은 자리(user·provider·product)에 이 주문보다 `paid_at`이 늦은 `grant_mode=extend` 주문이 `paid` 또는 `refund_requested`로 남아 있으면, **앞 주문 환불 불가**.
+- **reason_code:** `has_live_later_extension`
+- **안내 문구:** 「뒤에 이어진 연장 결제가 있어 이 건은 환불할 수 없습니다. 연장 건을 먼저 환불해 주세요.」
+- **적용:** eligibility · submit 모두 (`RefundService::buildPositionCalcInput` → `hasLiveLaterExtension` → 계산기).
+- **연장 주문 자체:** 뒤에 또 다른 live extend가 없으면 기존 규칙대로 환불 가능 (연장부터 환불).
+- **미선택:** 앞·뒤 묶음 환불(안 B), 뒤 구간 당겨 재계산(안 C) — 이 문서 범위 밖.
+
 ## badge_addon (배지 단독 추가)
 
 - 단독 신청 불가 (`badge_follows_position`)
@@ -77,6 +86,7 @@
 | `after_start_prorata` | 시작 후 일할 |
 | `last_day` | 마지막 날 (환불 불가) |
 | `period_ended` | 이용 기간 종료 (환불 불가) |
+| `has_live_later_extension` | 뒤에 살아 있는 연장 있어 앞 주문 환불 불가 (356 안 A) |
 | `badge_follows_position` | 배지 단독 불가 |
 | `not_paid` | 결제 미완료 |
 | `already_requested` | 진행 중 |

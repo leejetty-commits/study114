@@ -584,8 +584,50 @@ final class RefundService
             'grant_mode' => $grantMode,
             'segment_started_on' => $segStart,
             'segment_end_exclusive_on' => $segEnd,
+            'has_live_later_extension' => $this->hasLiveLaterExtension($order),
             'bundle_order_ref' => $orderRef,
         ];
+    }
+
+    /**
+     * 356 안 A — 같은 자리(user·provider·product)에 이 주문보다 나중에 산
+     * grant_mode=extend 주문이 paid|refund_requested 로 남아 있으면 true.
+     */
+    private function hasLiveLaterExtension(array $order): bool
+    {
+        $userId = (int) ($order['user_id'] ?? 0);
+        $productId = (string) ($order['product_id'] ?? '');
+        $providerType = (string) ($order['provider_type'] ?? '');
+        $providerId = (int) ($order['provider_id'] ?? 0);
+        $paidAt = (string) ($order['paid_at'] ?? '');
+        $orderRef = (string) ($order['order_ref'] ?? '');
+        if ($userId <= 0 || $productId === '' || $providerType === '' || $providerId <= 0 || $paidAt === '') {
+            return false;
+        }
+
+        $stmt = $this->pdo->prepare(
+            "SELECT price_snapshot_json FROM provider_payment_orders
+             WHERE user_id = ? AND product_id = ? AND provider_type = ? AND provider_id = ?
+               AND product_kind = 'position'
+               AND status IN ('paid', 'refund_requested')
+               AND paid_at > ?
+               AND order_ref <> ?
+             ORDER BY paid_at ASC, id ASC"
+        );
+        $stmt->execute([$userId, $productId, $providerType, $providerId, $paidAt, $orderRef]);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return false;
+        }
+        foreach ($rows as $row) {
+            $raw = $row['price_snapshot_json'] ?? null;
+            $snap = is_array($raw) ? $raw : (is_string($raw) ? json_decode($raw, true) : null);
+            if (is_array($snap) && ($snap['grant_mode'] ?? '') === 'extend') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1008,6 +1050,7 @@ final class RefundService
             'last_day' => '마지막 이용일이므로 환불할 수 없습니다.',
             'period_ended' => '이용 기간이 종료되어 환불할 수 없습니다.',
             'badge_follows_position' => '배지는 노출상품 환불 시 함께 처리됩니다. 단독 환불은 불가합니다.',
+            'has_live_later_extension' => '뒤에 이어진 연장 결제가 있어 이 건은 환불할 수 없습니다. 연장 건을 먼저 환불해 주세요.',
             default => '환불 조건에 해당하지 않습니다.',
         };
     }

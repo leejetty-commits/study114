@@ -136,21 +136,72 @@ LIMIT 100;
 - `php scripts/verify-position-refund.php` → **PASS 28 / FAIL 0**
 - `node scripts/verify-refund-apply.mjs` → **111 passed, 0 failed**
 
-## ⚠ 종현 결정 필요
+## 종현 결정 (2026-11-13)
 
-1. 수정안 **A / B / C** (또는 변형) 선택  
-2. 운영 SELECT 실행 승인 여부  
+1. 수정안 **A** 확정 — 뒤에 살아 있는 연장이 있으면 앞 주문 환불 차단.  
+2. 운영 SELECT **실행하지 않음** (사례 없음).
+
+---
+
+## 2단계 구현 (2026-11-13 · 안 A)
+
+지시 원문 요지: eligibility·submit 가드 · 안내 문구 고정 · verify a/b · 18d 종현 확정 반영 · 로컬 재현만 · PG·운영 DB 금지 · push/PR 허용 · 머지 금지.
+
+### 구현
+
+| 파일 | 내용 |
+|------|------|
+| `RefundService::hasLiveLaterExtension` | 같은 user·provider·product에서 `paid_at` 이후 `grant_mode=extend` + status `paid\|refund_requested` 존재 여부 |
+| `buildPositionCalcInput` | `has_live_later_extension` 키 주입 |
+| `PositionRefundCalculator::calculate` | 플래그 true → `refundable false` · `has_live_later_extension` |
+| `denyMessage` | 「뒤에 이어진 연장 결제가 있어 이 건은 환불할 수 없습니다. 연장 건을 먼저 환불해 주세요.」 |
+| eligibility / submit | 기존 calc 경로로 동일 가드 (별도 submit 우회 없음) |
+| `verify-position-refund.php` | P29–P31 (a 차단) · P32–P34 (b 연장 허용) |
+| `docs/ssot/18d-position-refund-lock.md` | 종현 확정(2026-11-13, 안 A) 절·reason 표 |
+
+### 로컬 재현 (eligibility만 · submit/PG 0)
+
+시드: 프라임 new 30일 + extend 30일 · Docker `study114_dev` · 오늘 2026-11-13
+
+| ID | 결과 |
+|----|------|
+| **(a)** 앞(new) | `eligible false` · `refund_won 0` · `has_live_later_extension` · 안내 문구 일치 |
+| **(b)** 연장 | `eligible true` · `refund_won 30000` · `before_start_full` |
+
+### 셀프검수 체크리스트 (2단계)
+
+| # | 항목 | 결과 | 근거 |
+|---|---|---|---|
+| 1 | 안 A만 구현 | **PASS** | B/C 코드 0 |
+| 2 | eligibility·submit 가드 | **PASS** | calc 입력 플래그 → checkPositionEligibility / submitPosition |
+| 3 | 안내 문구 고정 | **PASS** | denyMessage + 로컬 probe message |
+| 4 | verify a/b | **PASS** | P29–P34 |
+| 5 | 18d 종현 확정 | **PASS** | 상태줄·extend 절·reason 표 |
+| 6 | PG·운영 SELECT 0 | **PASS** | 로컬만 · 운영 미실행 |
+| 7 | main 합침 | **PASS** | merge `a7753e49` (충돌 없음) |
+
+### 검증 명령 (2단계)
+
+- `D:\php8.2\php.exe scripts/verify-position-refund.php` → **PASS 34 / FAIL 0**
+- `node scripts/verify-refund-apply.mjs` → **111 passed, 0 failed**
+- 로컬 probe (커밋 제외) → assert ALL_OK
 
 ---
 
 ```
-[최종검수 패키지 — 356]
-브랜치 / 커밋: work/356-refund-later-extension / (로컬 tip, push 안 함)
-변경 파일: docs/worklog/2026/11/2026-11-11-356-refund-later-extension.md (+156)
-diff 요약: 1단계 조사 보고(의도·시나리오·18d 불일치·수정안 A/B/C·운영 SELECT 초안). 코드 0.
-테스트: verify-position-refund.php → PASS 28 / FAIL 0; verify-refund-apply.mjs → PASS 111 / FAIL 0
-스크린샷: 없음 (API/계산 조사)
-API 확인: 로컬 eligibility (a) eligible true refund 19000 after_start_prorata; (b) eligible true refund 30000 before_start_full; has_live_later_extension 넣어도 identical. submit/PG 0.
-셀프검수 체크리스트: 1~6 PASS
-미해결·종현 결정 필요: 수정안 선택, 운영 SELECT 실행 승인
+[최종검수 패키지 — 356-2]
+브랜치 / 커밋: work/356-refund-later-extension / (커밋 후 hash)
+변경 파일: (git diff --stat origin/main...HEAD)
+diff 요약:
+  - PositionRefundCalculator: has_live_later_extension true면 환불 차단
+  - RefundService: later-extend 조회·calc 입력·denyMessage
+  - verify-position-refund: 시나리오 a/b (P29–P34)
+  - 18d: 종현 확정 2026-11-13 안 A
+  - worklog: 2단계 기록
+테스트: verify-position-refund.php → PASS 34 / FAIL 0; verify-refund-apply.mjs → PASS 111 / FAIL 0
+스크린샷: 없음
+API 확인: 로컬 eligibility (a) blocked has_live_later_extension + 안내문구; (b) before_start_full 30000. submit/PG/운영 SELECT 0.
+셀프검수 체크리스트: 2단계 1~7 PASS
+미해결·종현 결정 필요: 없음 (머지만 종현)
 ```
+
