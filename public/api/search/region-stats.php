@@ -11,7 +11,7 @@ declare(strict_types=1);
  *   공부방: 서울 강남구 대치동 동 행 id — 이름 또는 dong_code 11680101(개발 시드)·1168010600(법정동코드)
  *     매칭은 홍보 study_room_regions.region_id (슬롯 1·2·3). RegionGuLink::guestBaseDongId()
  *   과외쌤: official_code 1168000000 이고 is_selectable=1 인 행 id (tutor_regions.region_id)
- *   학생: 그 구 id(preferred_tutor_region_id) 또는 그 구 소속 동 id(preferred_studyroom_region_id)
+ *   학생: 그 구의 과외 단위(본·추가 preferred_tutor_region) 또는 그 구 소속 동(본·추가 preferred_studyroom_region). 추가는 같은 희망 유형만.
  *   각 축은 기존 목록 노출 조건의 total (유료만 아님).
  *   axes 문자열은 그 행의 dong_name / sigungu_name. 기준 행이 없으면 빈 문자열.
  *   regionIds 는 같은 기준 행 id. 게스트 목록이 search.php 필터

@@ -193,7 +193,7 @@ Pick: 소개 숨김 · 주교재 제외 · 특징1만. 정보 칸 13.
 
 ### 6-1. DB 필드
 
-`public_display_name` · `grade_level` · `gender` · `preferred_studyroom_region_id` / `preferred_tutor_region_id` / `preferred_region_note` · `student_subject_targets` · `preferred_fee_amount` / `preferred_studyroom_fee_amount` · `student_preferred_lesson_places` · `preferred_student_count_group` · `lessons_per_week` · `minutes_per_lesson` · `student_preferred_teaching_style_badges` · visibility 2축
+`public_display_name` · `grade_level` · `gender` · `preferred_studyroom_region_id` / `preferred_tutor_region_id` (카드에 보이는 본 희망지역) · `student_subject_targets` · `preferred_fee_amount` / `preferred_studyroom_fee_amount` · `student_preferred_lesson_places` · `preferred_student_count_group` · `lessons_per_week` · `minutes_per_lesson` · `student_preferred_teaching_style_badges` · visibility 2축. 희망지역 추가는 `preferred_*_extra` 이고 찾기에서 본 지역과 OR. `preferred_region_note` 는 카드·찾기에 쓰지 않음.
 
 ---
 
