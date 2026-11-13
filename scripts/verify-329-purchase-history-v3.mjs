@@ -53,7 +53,8 @@ ok('A8 is-open 토글', screens.includes("is-open"));
 /* ── B. v3 셀 5개 ────────────────────────────────────── */
 
 ok('B1 내역 셀', screens.includes("cellBtn('내역'"));
-ok('B2 환불 셀', screens.includes("cellBtn('환불'"));
+ok('B2 줄 위 환불 셀 없음', !screens.includes("cellBtn('환불'"));
+ok('B2b 내역 패널 환불 신청 링크', screens.includes('plans-hist-refund-link') && screens.includes('>환불 신청<'));
 ok('B3 진행상황 셀', screens.includes("cellBtn('진행상황'"));
 ok('B4 종료 셀', screens.includes("cellBtn('종료'"));
 ok('B5 소멸 셀', screens.includes("cellBtn('소멸'"));

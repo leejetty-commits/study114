@@ -377,13 +377,22 @@ final class ProviderCheckoutService
     public function listOrders(int $userId, int $limit = 50): array
     {
         $rows = $this->orders->listByUser($userId, $limit);
+        $countRefs = [];
+        foreach ($rows as $row) {
+            if ((string) ($row['product_kind'] ?? '') === 'count') {
+                $countRefs[] = (string) ($row['order_ref'] ?? '');
+            }
+        }
+        $memoRemaining = $this->tickets->memoRemainingByOrderRefs($countRefs);
         $orders = [];
         foreach ($rows as $row) {
+            $orderRef = (string) ($row['order_ref'] ?? '');
             $orders[] = [
-                'order_ref' => (string) ($row['order_ref'] ?? ''),
+                'order_ref' => $orderRef,
                 'product_id' => (string) ($row['product_id'] ?? ''),
                 'variant_label' => (string) ($row['variant_label'] ?? ''),
                 'product_kind' => (string) ($row['product_kind'] ?? ''),
+                'memo_remaining' => array_key_exists($orderRef, $memoRemaining) ? $memoRemaining[$orderRef] : null,
                 'provider_type' => isset($row['provider_type']) ? (string) $row['provider_type'] : null,
                 'provider_id' => isset($row['provider_id']) ? (int) $row['provider_id'] : null,
                 'amount_won' => (int) ($row['amount_won'] ?? 0),

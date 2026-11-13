@@ -597,6 +597,44 @@ final class ProviderTicketRepository
     }
 
     /**
+     * 구매이력 쪽지권 줄. 주문에 연결된 팩의 remaining 합. 환불 계산에 쓰지 않는다.
+     *
+     * @param list<string> $orderRefs
+     * @return array<string, int>
+     */
+    public function memoRemainingByOrderRefs(array $orderRefs): array
+    {
+        $refs = [];
+        foreach ($orderRefs as $ref) {
+            $ref = trim((string) $ref);
+            if ($ref !== '') {
+                $refs[$ref] = true;
+            }
+        }
+        $refs = array_keys($refs);
+        if ($refs === [] || !$this->packHasProfileColumns()) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($refs), '?'));
+        $stmt = $this->pdo->prepare(
+            "SELECT source_order_ref, COALESCE(SUM(remaining), 0) AS remaining
+             FROM provider_ticket_packs
+             WHERE ticket_type = 'memo' AND source_order_ref IN ({$placeholders})
+             GROUP BY source_order_ref"
+        );
+        $stmt->execute($refs);
+        $out = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $out[(string) ($row['source_order_ref'] ?? '')] = (int) ($row['remaining'] ?? 0);
+        }
+
+        return $out;
+    }
+
+    /**
      * @param array{
      *   duration_type: string,
      *   duration_value: int,

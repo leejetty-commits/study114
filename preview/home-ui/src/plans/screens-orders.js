@@ -206,7 +206,7 @@ function renderHistEmpty(tab) {
 /** 330: 흐린 예시 행 (클릭·환불 이벤트 속성 없음) */
 function renderHistExampleRow(tab) {
   const pack = tab === 'position' ? HISTORY_EMPTY_COPY.position : HISTORY_EMPTY_COPY.count;
-  const disabledActs = ['내역', '환불', '진행상황', '종료', '소멸']
+  const disabledActs = ['내역', '진행상황', '종료', '소멸']
     .map((label) => `<button type="button" disabled tabindex="-1">${esc(label)}</button>`)
     .join('');
   return `
@@ -300,41 +300,38 @@ function renderHistV3Row(r) {
   const cells = resolveV3Cells(r);
   const isOpen = openCell?.orderRef === ref;
   const curCell = isOpen ? openCell.cell : '';
-  const isRefundActive = cells.refund || cells.progress;
 
   const nameText = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
   const amountText = formatKrw(r.amountKrw);
   const dateText = esc(String(r.paidAt || '').slice(0, 10));
-  const remainingText = typeof r.remaining === 'number' ? ` · 남은 ${r.remaining}` : '';
+  const remainingText = isCountProduct(r) && typeof r.remaining === 'number'
+    ? ` · 남은 ${r.remaining}회`
+    : '';
   const metaText = `${amountText} · ${dateText}${remainingText}`;
 
   const badgeHtml = cells.statusBadge
     ? `<span class="plans-hist-row__st ${cells.statusClass}">${esc(cells.statusBadge)}</span>`
     : '';
 
-  const cellBtn = (name, enabled, isPrimary) => {
+  const cellBtn = (name, enabled) => {
     if (!enabled) return `<button type="button" disabled>${esc(name)}</button>`;
-    const cls = [
-      curCell === name ? 'is-cell-active' : '',
-      isPrimary ? 'is-primary' : '',
-    ].filter(Boolean).join(' ');
+    const cls = curCell === name ? 'is-cell-active' : '';
     return `<button type="button" class="${cls}" data-v3-cell="${esc(name)}" data-v3-ref="${esc(ref)}">${esc(name)}</button>`;
   };
 
   const panelHtml = isOpen ? renderV3Panel(r, curCell) : '';
 
   return `
-    <div class="plans-hist-row${isOpen ? ' is-open' : ''}${isRefundActive ? ' is-refund-active' : ''}" data-v3-row="${esc(ref)}">
+    <div class="plans-hist-row${isOpen ? ' is-open' : ''}" data-v3-row="${esc(ref)}">
       <div class="plans-hist-row__bar">
         <div class="plans-hist-row__info">
           <span class="plans-hist-row__name">${nameText}</span>${badgeHtml}<span class="plans-hist-row__meta">${metaText}</span>
         </div>
         <div class="plans-hist-row__acts">
-          ${cellBtn('내역', cells.detail, false)}
-          ${cellBtn('환불', cells.refund, true)}
-          ${cellBtn('진행상황', cells.progress, false)}
-          ${cellBtn('종료', cells.ended, false)}
-          ${cellBtn('소멸', cells.expired, false)}
+          ${cellBtn('내역', cells.detail)}
+          ${cellBtn('진행상황', cells.progress)}
+          ${cellBtn('종료', cells.ended)}
+          ${cellBtn('소멸', cells.expired)}
         </div>
       </div>
       <div class="plans-hist-row__panel">${panelHtml}</div>
@@ -363,6 +360,9 @@ function renderV3DetailPanel(r) {
   const dateText = esc(String(r.paidAt || '').slice(0, 10));
   const remaining = typeof r.remaining === 'number' ? r.remaining : '—';
   const used = typeof r.usedCount === 'number' ? r.usedCount : (typeof r.used_count === 'number' ? r.used_count : '—');
+  const refundLink = resolveV3Cells(r).refund
+    ? `<p class="plans-hist-refund-link"><button type="button" data-v3-cell="환불" data-v3-ref="${esc(r.orderRef || '')}">환불 신청</button></p>`
+    : '';
 
   return `<div class="plans-hist-row__panel-inner">
     <b>구성</b>
@@ -371,6 +371,7 @@ function renderV3DetailPanel(r) {
       <tr><td>결제일</td><td>${dateText}</td></tr>
       ${typeof r.remaining === 'number' ? `<tr><td>사용</td><td>${used}회 / 남은 ${remaining}회</td></tr>` : ''}
     </table>
+    ${refundLink}
   </div>`;
 }
 
