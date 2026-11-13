@@ -378,12 +378,73 @@
   color: #fff;
 }
 .refund-formula {
-  font-family: monospace;
+  font-family: inherit;
   background: #eef2ff;
   padding: 6px 8px;
   border-radius: 4px;
   margin: 6px 0;
   font-size: 12px;
+}
+.plans-hist-refund-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+.plans-hist-refund-actions__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.plans-hist-refund-actions__field--grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.plans-hist-refund-actions__field > span {
+  font-size: 12px;
+  line-height: 1.3;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.plans-hist-refund-actions select,
+.plans-hist-refund-actions input,
+.plans-hist-refund-actions__submit {
+  height: 40px;
+  box-sizing: border-box;
+  margin: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #fff;
+  color: #111;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  padding: 0 10px;
+}
+.plans-hist-refund-actions select {
+  width: 11rem;
+}
+.plans-hist-refund-actions input {
+  width: 100%;
+  min-width: 0;
+}
+.plans-hist-refund-actions__submit {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: max-content;
+  white-space: nowrap;
+  cursor: pointer;
+}
+@media (max-width: 480px) {
+  .plans-hist-refund-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .plans-hist-refund-actions select,
+  .plans-hist-refund-actions__submit {
+    width: 100%;
+  }
 }
 @media (min-width: 900px) {
   .plans-hist-row__bar {
