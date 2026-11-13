@@ -5,6 +5,7 @@ import {
 } from '../lifecycle-copy.js';
 import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
+import { bindQuickMatchScreen, renderQuickMatchScreen } from './quick-match-screen.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
 import { bindWithdrawReasonChoices, readWithdrawReason, renderWithdrawReasonChoices } from '../withdraw-reason-ui.js';
@@ -221,6 +222,7 @@ export function renderMypageScreen(path) {
   ) {
     return renderSubmissionRetired();
   }
+  if (path === '/mypage/quick-match') return renderQuickMatchScreen();
   if (path === '/mypage/account') return renderAccount(r, profile);
   const dest = getDefaultMypagePath(r);
   if (dest && dest !== path) return renderMypageScreen(dest);
@@ -1861,6 +1863,7 @@ function bindPrimeMatchConsentEvents(root) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
+  bindQuickMatchScreen(root);
   const path = getMypagePath();
   if (path === '/mypage/account') {
     const role = sessionMypageRole();

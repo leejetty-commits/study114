@@ -137,6 +137,7 @@ final class StudentHubRepository
         'student_gender_group', 'preferred_student_count_group',
         'preferred_tutor_gender', 'memo_status', 'request_summary', 'special_request_note',
         'prime_match_opt_in',
+        'preferred_director_age_bands', 'preferred_tutor_age_bands', 'quick_match_prefs',
     ];
 
     /**
@@ -245,6 +246,11 @@ final class StudentHubRepository
                 $colStmt->execute(['students', 'prime_match_opt_in']);
                 if (!$colStmt->fetchColumn()) {
                     throw new \InvalidArgumentException('prime_match_opt_in: 저장 컬럼이 없습니다.');
+                }
+            }
+            foreach (['preferred_director_age_bands', 'preferred_tutor_age_bands', 'quick_match_prefs'] as $qmCol) {
+                if (array_key_exists($qmCol, $values) && !$this->studentColumnExists($qmCol)) {
+                    unset($values[$qmCol]);
                 }
             }
             foreach ($values as $col => $value) {
@@ -439,8 +445,57 @@ final class StudentHubRepository
     /** DB NOT NULL 이라 비울 수 없는 컬럼 */
     private const PATCH_NOT_NULL = ['memo_status', 'prime_match_opt_in'];
 
+    /** @param list<string> $allowed */
+    private function normalizeSetList(string $col, mixed $value, array $allowed): ?string
+    {
+        if ($value === null || $value === '' || $value === []) {
+            return null;
+        }
+        $items = is_array($value) ? $value : explode(',', (string) $value);
+        $picked = [];
+        foreach ($items as $item) {
+            $code = trim((string) $item);
+            if ($code === '') {
+                continue;
+            }
+            if (!in_array($code, $allowed, true)) {
+                throw new \InvalidArgumentException("{$col}: 값을 확인해 주세요.");
+            }
+            $picked[$code] = $code;
+        }
+
+        return $picked === [] ? null : implode(',', array_values($picked));
+    }
+
+    /** @return list<string> */
+    private function splitSet(mixed $value): array
+    {
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        return array_values(array_filter(explode(',', $value), static fn (string $part): bool => $part !== ''));
+    }
+
+    private function studentColumnExists(string $column): bool
+    {
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+        );
+        $stmt->execute(['students', $column]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
     private function normalizeStudentColumn(string $col, mixed $value): mixed
     {
+        if (in_array($col, ['preferred_director_age_bands', 'preferred_tutor_age_bands'], true)) {
+            return $this->normalizeSetList($col, $value, ['20s', '30s', '40s', '50_plus']);
+        }
+        if ($col === 'quick_match_prefs') {
+            return $this->normalizeSetList($col, $value, ['sky', 'jjokjipge', 'grad_school', 'edu_office', 'franchise']);
+        }
         if ($col === 'prime_match_opt_in') {
             if ($value === true || $value === 1 || $value === '1' || $value === 'on') {
                 return 1;
@@ -734,6 +789,9 @@ final class StudentHubRepository
             'preferred_tutor_gender'        => $row['preferred_tutor_gender'] !== null ? (string) $row['preferred_tutor_gender'] : null,
             'request_summary'               => $row['request_summary'] !== null ? (string) $row['request_summary'] : null,
             'prime_match_opt_in'            => ((int) ($row['prime_match_opt_in'] ?? 0)) === 1 ? 1 : 0,
+            'preferred_director_age_bands'  => $this->splitSet($row['preferred_director_age_bands'] ?? null),
+            'preferred_tutor_age_bands'     => $this->splitSet($row['preferred_tutor_age_bands'] ?? null),
+            'quick_match_prefs'             => $this->splitSet($row['quick_match_prefs'] ?? null),
             'special_request_note'          => $row['special_request_note'] !== null ? (string) $row['special_request_note'] : null,
             'updated_at'                    => gmdate('c', strtotime((string) $row['updated_at'])),
             'published_at'                  => $row['published_at'] !== null

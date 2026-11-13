@@ -455,11 +455,38 @@ final class StudyRoomRegisterService
 
         ]);
 
+        $this->saveDirectorAgeBand($pdo, $roomId, $input);
+
         $this->savePrimaryAudiences($pdo, $roomId, $input);
 
     }
 
 
+
+    /** 칸이 없으면 기본정보 저장은 그대로 둔다. 화면은 1단계. */
+    private function saveDirectorAgeBand(PDO $pdo, int $roomId, array $input): void
+    {
+        if (!array_key_exists('director_age_band', $input)) {
+            return;
+        }
+        $col = $pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+        );
+        $col->execute(['study_rooms', 'director_age_band']);
+        if (!$col->fetchColumn()) {
+            return;
+        }
+        $raw = $input['director_age_band'];
+        $value = is_string($raw) ? trim($raw) : '';
+        if ($value === '') {
+            $value = null;
+        } elseif (!in_array($value, ['20s', '30s', '40s', '50_plus'], true)) {
+            throw new InvalidArgumentException('director_age_band: 값을 확인해 주세요.');
+        }
+        $upd = $pdo->prepare('UPDATE study_rooms SET director_age_band = ? WHERE id = ?');
+        $upd->execute([$value, $roomId]);
+    }
 
     /** @param array<string, mixed> $input */
 

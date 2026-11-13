@@ -58,11 +58,21 @@ final class StudentHubService
             unset($patch['id'], $patch['action']);
         }
 
+        $before = $this->repo->getForGuardian($guardianUserId, $studentId);
         $this->repo->transaction(function () use ($guardianUserId, $studentId, $patch): void {
             $this->repo->patchStudent($studentId, $patch);
             $this->rejudgeExposure($guardianUserId, $studentId);
         });
         $updated = $this->repo->getForGuardian($guardianUserId, $studentId);
+        try {
+            (new \Study114\QuickMatch\QuickMatchDispatcher())->afterStudentSave(
+                is_array($before) ? $before : null,
+                is_array($updated) ? $updated : null,
+                array_keys($patch),
+            );
+        } catch (\Throwable $e) {
+            error_log('[quick-match] student update hook: ' . $e->getMessage());
+        }
 
         return ['student' => $updated ?? []];
     }

@@ -1,5 +1,6 @@
 @import './mypage-ops-shell.css';
 @import './mypage-ops-register.css';
+@import './mypage-quick-match.css';
 /* ── 마이페이지 「내 공지」 카드 ── */
 .mypage-notice {
   margin: 0 0 var(--space-6);

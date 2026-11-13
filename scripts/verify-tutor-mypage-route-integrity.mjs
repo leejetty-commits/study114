@@ -13,7 +13,7 @@ import {
   TUTOR_REG_TOP_TABS,
   BASE,
 } from '../preview/home-ui/src/tutor-reg/router.js';
-import { MYPAGE_NAV } from '../preview/home-ui/src/mypage/router.js';
+import { MYPAGE_NAV, PARENT_NAV_PATHS } from '../preview/home-ui/src/mypage/router.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 let failed = 0;
@@ -96,6 +96,15 @@ const contactIdx = tutorNav.indexOf('내 문의 내역');
 const lastWishIdx = Math.max(tutorNav.indexOf('관심 학생'), tutorNav.indexOf('찜한 공부방·과외쌤'));
 const plansIdx = tutorNav.indexOf('구매이력');
 assert(contactIdx > lastWishIdx && contactIdx < plansIdx, 'nav order: 내 문의 내역 after 찜, before 구매이력');
+const qmIdx = MYPAGE_NAV.findIndex((n) => n.path === '/mypage/quick-match');
+const accountIdx = MYPAGE_NAV.findIndex((n) => n.path === '/mypage/account');
+assert(qmIdx >= 0 && qmIdx === accountIdx - 1, 'nav order: 실시간 퀵매칭 immediately before 계정설정');
+const qm = MYPAGE_NAV[qmIdx];
+assert(
+  Array.isArray(qm?.roles) && qm.roles.includes('study_room') && qm.roles.includes('tutor') && !qm.roles.includes('parent'),
+  'quick-match menu roles: study_room and tutor only',
+);
+assert(!PARENT_NAV_PATHS.includes('/mypage/quick-match'), 'quick-match is not in PARENT_NAV_PATHS');
 
 // —— D. 상단 탭 키·라벨·경로 1:1
 const expectedTabs = [

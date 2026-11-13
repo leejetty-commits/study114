@@ -119,6 +119,21 @@ export function renderMessagesScreen(path) {
   return renderList(parseThreadId(path));
 }
 
+function messageOrigin() {
+  const hash = typeof window === 'undefined' ? '' : window.location.hash;
+  const query = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
+  return new URLSearchParams(query).get('origin') === 'quick_match' ? 'quick_match' : 'general';
+}
+
+function renderOriginTabs(active) {
+  const general = `${MESSAGES_BASE}?origin=general`;
+  const quick = `${MESSAGES_BASE}?origin=quick_match`;
+  return `<div class="qm-origin-tabs" role="tablist" aria-label="쪽지 구분">
+    <a href="#${general}" class="qm-origin-tabs__tab${active === 'general' ? ' is-active' : ''}">일반</a>
+    <a href="#${quick}" class="qm-origin-tabs__tab${active === 'quick_match' ? ' is-active' : ''}">실시간 퀵매칭</a>
+  </div>`;
+}
+
 function renderMessagesHub(active) {
   const msgHref = MESSAGES_BASE;
   const revHref = REVIEWS_BASE;
@@ -131,11 +146,13 @@ function renderMessagesHub(active) {
 /** @param {number|null} expandedId */
 function renderList(expandedId) {
   const role = resolveMemoRole(getNavRole());
-  const threads = getThreadsForTab('all');
+  const origin = messageOrigin();
+  const threads = getThreadsForTab('all').filter((t) => (t.threadOrigin === 'quick_match' ? 'quick_match' : 'general') === origin);
 
   if (threads.length === 0) {
     return `
     ${renderMessagesHub('messages')}
+    ${renderOriginTabs(origin)}
     <section class="mp-card msg-card"><p class="mp-card__empty">${esc(getEmptyCopy('messages').title)}</p></section>`;
   }
 
@@ -152,6 +169,7 @@ function renderList(expandedId) {
 
   return `
     ${renderMessagesHub('messages')}
+    ${renderOriginTabs(origin)}
     <section class="mp-card msg-card"><div class="msg-list">${sections.join('')}</div></section>`;
 }
 
@@ -233,8 +251,12 @@ function renderExpandedBody(thread, role) {
       </form>`
     : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(t, role))}</p>`;
 
+  const advice = t.threadOrigin === 'quick_match'
+    ? '<p class="qm-advice">학력 등 조건은 상담할 때 쌤(원장님)의 인증서류로 꼭 확인해 주세요.</p>'
+    : '';
   return `
     <div class="msg-row__expand">
+      ${advice}
       <div class="msg-scope">
         <span class="msg-scope__label">공개 범위:</span>
         <span class="msg-badge">${esc(t.scopeBadge)}</span>
