@@ -197,7 +197,11 @@ ok('key-settings', settingsSrc.includes("id: 'guardian_student'"));
 ok('key-channel-store', channelSrc.includes("id: 'guardian_student'"));
 
 const hubSrc = readFileSync(join(srcRoot, 'admin', 'a28-today-hub.js'), 'utf8');
-const bindSrc = readFileSync(join(srcRoot, 'admin', 'a28-screens-bind.js'), 'utf8');
+const bindSrc = [
+  'a28-screens-bind-members.js',
+  'a28-screens-bind-content.js',
+  'a28-screens-bind.js',
+].map((name) => readFileSync(join(srcRoot, 'admin', name), 'utf8')).join('\n');
 ok('hub-no-hash-write', !hubSrc.includes('location.hash ='));
 ok('hub-uses-path-guard', hubSrc.includes('canAccessAdminPath('));
 ok('hub-no-home-popup-attr', !hubSrc.includes('data-home-popup'));
