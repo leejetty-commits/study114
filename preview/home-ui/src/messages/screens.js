@@ -37,7 +37,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 
-import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
+import { BLOCK_THREAD_COPY, displayContextLabel, resolveMemoRole } from './messages-copy.js';
 import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import { showP24Toast } from '../detail-decision/detail-utils.js';
@@ -196,8 +196,7 @@ function renderRow(t, expandedId, role) {
         open
           ? ''
           : `<div class="msg-row__chips">
-        <span class="msg-chip">${esc(t.contextLabel)}</span>
-        <span class="msg-badge msg-badge--sm">${esc(t.scopeBadge)}</span>
+        <span class="msg-chip">${esc(displayContextLabel(t.contextLabel))}</span>
       </div>`
       }
     </article>`;
@@ -257,11 +256,6 @@ function renderExpandedBody(thread, role) {
   return `
     <div class="msg-row__expand">
       ${advice}
-      <div class="msg-scope">
-        <span class="msg-scope__label">공개 범위:</span>
-        <span class="msg-badge">${esc(t.scopeBadge)}</span>
-        <span class="msg-scope__hint">${esc(t.scopeHint)}</span>
-      </div>
       <details class="msg-summary">
         <summary>상대 요약</summary>
         <p>${esc(t.structuredLine)}</p>

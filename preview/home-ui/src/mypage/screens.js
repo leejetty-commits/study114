@@ -38,6 +38,7 @@ import { formatResumeToken } from '../handoff-resume.js';
 import { renderDecisionStickers } from '../handoff-sticker.js';
 import { openDetailDecision, showP24Toast } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
+import { displayContextLabel } from '../messages/messages-copy.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
   getWishlistEntries,
@@ -818,7 +819,7 @@ function renderMemoUsedTargets() {
         <li class="mp-card__row mp-card__row--split">
           <div>
             <p class="mp-card__row-title">${esc(t.name)}</p>
-            ${t.contextLabel ? `<p class="mp-card__row-meta">${esc(t.contextLabel)}</p>` : ''}
+            ${t.contextLabel ? `<p class="mp-card__row-meta">${esc(displayContextLabel(t.contextLabel))}</p>` : ''}
           </div>
           <a href="#${href}" class="mp-card__link" data-mypage-nav="${href}">쪽지상세</a>
         </li>`;
