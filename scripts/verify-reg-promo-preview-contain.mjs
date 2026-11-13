@@ -42,7 +42,7 @@ const listing = readFileSync(join(ROOT, 'preview/home-ui/src/exposure-render.js'
 ok('카드 listingImage fit 유지', /image_path_fit/.test(listing) && /listingImage/.test(listing));
 const myshopCss = readFileSync(join(ROOT, 'preview/home-ui/src/styles/myshop.css'), 'utf8');
 ok('마이샵 shop-photo-blur 없음 유지', !myshopCss.includes('shop-photo-blur'));
-const homeList = readFileSync(join(ROOT, 'preview/home-ui/src/styles/home-listings.css'), 'utf8');
+const homeList = ['home-listings-headings.css', 'home-listings-cards.css', 'home-listings.css'].map((name) => readFileSync(join(ROOT, 'preview/home-ui/src/styles', name), 'utf8')).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 ok('카드 expo-media contain 유지', /\.expo-media img\s*\{[^}]*object-fit:\s*contain/.test(homeList));
 
 /* 과외쌤: 다른 컴포넌트 — fit+contain 이미 있음(보고용 확인) */

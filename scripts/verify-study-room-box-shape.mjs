@@ -122,7 +122,7 @@ const screenSrc = read('preview/home-ui/src/screens/study-room.js');
 const mapSrc = read('preview/search-ui/src/search-map.js');
 const css = read('preview/home-ui/src/styles/udx-std-apply.css');
 const mkt = read('preview/home-ui/src/styles/home-marketing-banner.css');
-const listings = read('preview/home-ui/src/styles/home-listings.css');
+const listings = ['preview/home-ui/src/styles/home-listings-headings.css', 'preview/home-ui/src/styles/home-listings-cards.css', 'preview/home-ui/src/styles/home-listings.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const visily = read('preview/search-ui/src/styles/search-visily.css');
 const surfaceSrc = [
   read('preview/search-ui/src/search-find-place.js'),
