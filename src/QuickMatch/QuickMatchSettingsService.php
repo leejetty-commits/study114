@@ -132,6 +132,9 @@ final class QuickMatchSettingsService
             }
             $clean[$name] = $value ? 1 : 0;
         }
+        if ($clean === []) {
+            throw new QuickMatchHttpException(400, 'no_toggles', '선택 조건이 없으면 저장하지 않아요.');
+        }
         $current = $this->loadSettings($provider['type'], $provider['id']);
         if (!$this->saveAllowed($current)) {
             throw new QuickMatchHttpException(

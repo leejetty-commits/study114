@@ -251,8 +251,8 @@ function renderExpandedBody(thread, role) {
       </form>`
     : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(t, role))}</p>`;
 
-  const advice = t.threadOrigin === 'quick_match'
-    ? '<p class="qm-advice">학력 등 조건은 상담할 때 쌤(원장님)의 인증서류로 꼭 확인해 주세요.</p>'
+  const advice = t.threadOrigin === 'quick_match' && role === 'parent'
+    ? '<p class="qm-advice">학력·등록 여부 등은 쌤이 직접 입력한 정보예요. 상담하실 때 증명서류를 직접 확인해 주세요.</p>'
     : '';
   return `
     <div class="msg-row__expand">

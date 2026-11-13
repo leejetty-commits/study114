@@ -35,8 +35,8 @@ export function bindQuickMatchScreen(root) {
         .then((res) => res.json().then((saved) => ({ status: res.status, saved })))
         .then(({ status, saved }) => {
           if (status === 409) {
-            const when = saved.next_change_at ? ` 다음 변경일 ${saved.next_change_at}` : '';
-            if (note) note.textContent = `${saved.message || '이번 주는 이미 저장했어요.'}${when}`;
+            const when = formatNextChangeDay(saved.next_change_at);
+            if (note) note.textContent = `${saved.message || '이번 주는 이미 저장했어요.'}${when ? ` 다음 변경일 ${when}` : ''}`;
             return;
           }
           if (saved.ok === false) {
@@ -76,16 +76,32 @@ function paint(data) {
         <p>${esc(NOT_PRIME_BODY)}</p>
       </div>`;
   }
-  const next = data.next_change_at ? `다음 변경일 ${esc(data.next_change_at)}` : '다음 변경일 없음';
+  const day = formatNextChangeDay(data.next_change_at);
+  const next = day ? `다음 변경일 ${esc(day)}` : '다음 변경일 없음';
   const count = Number(data.today_count || 0);
+  const saveButton = hasOptionalToggles(data)
+    ? `<form class="qm-screen__save" data-quick-match-save>
+      <button type="submit" class="btn btn--primary btn--sm" ${data.can_save ? '' : 'disabled'}>저장</button>
+      <p class="qm-screen__meta" data-quick-match-note></p>
+    </form>`
+    : '';
   return `
     <div class="qm-screen__benefit">
       <h2>프라임 회원 전용 혜택</h2>
     </div>
     <p class="qm-screen__meta">오늘 받은 매칭 쪽지 ${count}건 · 하루 20건까지</p>
     <p class="qm-screen__meta">${next}</p>
-    <form class="qm-screen__save" data-quick-match-save>
-      <button type="submit" class="btn btn--primary btn--sm" ${data.can_save ? '' : 'disabled'}>저장</button>
-      <p class="qm-screen__meta" data-quick-match-note></p>
-    </form>`;
+    ${saveButton}`;
+}
+
+function hasOptionalToggles(data) {
+  const toggles = data.optional_toggles;
+  return !!toggles && !Array.isArray(toggles) && Object.keys(toggles).length > 0;
+}
+
+/** 서버가 준 서울 시각의 날짜만 「11월 21일」로 보여 준다. */
+function formatNextChangeDay(value) {
+  const match = String(value || '').trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return '';
+  return `${Number(match[2])}월 ${Number(match[3])}일`;
 }
