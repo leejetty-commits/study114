@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>내 등록 · 우동공과 시안</title>
+  <link rel="stylesheet" href="css/mock.css" />
+</head>
+<body data-role="parent">
+  <div class="home-app home-app--mypage home-app--role-parent">
+    
+<header class="home-header">
+  <div class="home-header__util">
+    <div class="home-header__util-inner">
+      <nav class="home-util" aria-label="유틸 메뉴">
+        <a class="home-util__link is-active" href="#">마이페이지</a>
+        <a class="home-util__link" href="#">로그아웃</a>
+      </nav>
+    </div>
+  </div>
+  <div class="home-header__main">
+    <div class="home-header__inner">
+      <a href="#" class="home-header__logo" aria-label="우동공과 홈">
+        <img src="assets/brand/udong-symbol-2026.png" alt="" class="home-header__symbol" />
+        <img src="assets/brand/logo-wordmark-2026.png" alt="우동공과" class="home-header__wordmark" />
+        <span class="home-header__tagline">우리동네 공부방과외</span>
+      </a>
+      <nav class="home-gnb" aria-label="메인 메뉴"><a class="home-gnb__item" href="#">홈</a><a class="home-gnb__item" href="#">공부방찾기</a><a class="home-gnb__item" href="#">과외쌤찾기</a><a class="home-gnb__item" href="#">학생찾기</a><a class="home-gnb__item" href="#">커뮤니티</a><a class="home-gnb__item" href="#">고객센터</a></nav>
+      <button type="button" class="home-hamburger" aria-label="메뉴 열기">
+        <span class="home-hamburger__bar"></span>
+        <span class="home-hamburger__bar"></span>
+        <span class="home-hamburger__bar"></span>
+      </button>
+    </div>
+  </div>
+</header>
+    <div class="home-body">
+      <div class="mypage-layout">
+        
+<aside class="mypage-sidebar" aria-label="마이페이지 메뉴">
+  <p class="mypage-sidebar__title">마이페이지</p>
+  <div class="mypage-account-card">
+    <span class="mypage-account-card__avatar" aria-hidden="true">김</span>
+    <span class="mypage-account-card__body">
+      <strong class="mypage-account-card__email">김민수</strong>
+      <span class="mypage-account-card__role">학생</span>
+    </span>
+  </div>
+  <nav class="mypage-nav"><a href="#" class="mypage-nav__link is-active is-emphasis"><span class="mypage-nav__icon" aria-hidden="true">✎</span><span class="mypage-nav__label">내 등록</span></a><a href="#" class="mypage-nav__link"><span class="mypage-nav__icon" aria-hidden="true">✉</span><span class="mypage-nav__label">쪽지·후기함</span></a><a href="#" class="mypage-nav__link"><span class="mypage-nav__icon" aria-hidden="true">◷</span><span class="mypage-nav__label">최근열람</span></a><a href="#" class="mypage-nav__link"><span class="mypage-nav__icon" aria-hidden="true">♡</span><span class="mypage-nav__label">찜·비교</span></a><a href="#" class="mypage-nav__link"><span class="mypage-nav__icon" aria-hidden="true">▤</span><span class="mypage-nav__label">내 문의 내역</span></a><a href="#" class="mypage-nav__link"><span class="mypage-nav__icon" aria-hidden="true">⚙</span><span class="mypage-nav__label">계정설정</span></a></nav>
+</aside>
+        <div class="mypage-content">
+          <header class="mypage-content__head">
+            <nav class="mypage-breadcrumb" aria-label="현재 위치">
+              <a href="#">마이페이지</a>
+              <span class="mypage-breadcrumb__sep" aria-hidden="true">-</span>
+              <span aria-current="page">내 등록</span>
+            </nav>
+            <h1 class="mypage-content__title">내 등록</h1>
+          </header>
+          
+<div class="mp-room">
+  <header class="mp-room__head"><nav class="mp-room__tabs"><a href="#" class="mp-room__tab">마이프로필</a><a href="#" class="mp-room__tab is-active">기본정보</a><a href="#" class="mp-room__tab">상세정보</a><a href="#" class="mp-room__tab">쪽지설정</a></nav></header>
+  <div class="mp-room__body">
+    <form class="p19-form">
+      <section class="p19-form-section">
+        <header class="p19-form-section__head">
+          <h3 class="p19-form-section__title">기본정보</h3>
+          <p class="p19-form-section__lead">카드에 보이는 기본 항목입니다.</p>
+        </header>
+        <div class="p19-form-section__body">
+          <label class="p19-field">
+            <span class="p19-field__label">학생 이름</span>
+            <input class="p19-input" value="김민수" readonly />
+          </label>
+          <div class="p19-row2">
+            <label class="p19-field">
+              <span class="p19-field__label">학교급<span class="match-tag match-tag--req">매칭 필수</span></span>
+              <div class="p19-input p19-select">중학교</div>
+            </label>
+            <label class="p19-field">
+              <span class="p19-field__label">학년</span>
+              <div class="p19-input p19-select">2학년</div>
+            </label>
+          </div>
+          <label class="p19-field">
+            <span class="p19-field__label">희망 유형</span>
+            <div class="p19-input p19-select">과외</div>
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">희망지역</span>
+            <input class="p19-input" value="서울 강남구" readonly />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">예산 (천원)<span class="match-tag match-tag--req">매칭 필수</span></span>
+            <input class="p19-input" value="400" readonly />
+          </label>
+          <label class="p19-field">
+            <span class="p19-field__label">희망과목<span class="match-tag match-tag--req">매칭 필수</span></span>
+            <div class="p19-input p19-select">수학</div>
+          </label>
+          <div class="p19-field">
+            <span class="p19-field__label">희망 과외쌤 성별<span class="match-tag match-tag--req">매칭 필수</span></span>
+            <div class="p19-chip-group"><span class="p19-chip is-checked">여</span><span class="p19-chip">남</span><span class="p19-chip">무관</span></div>
+          </div>
+
+          <h3 class="match-section-title">실시간 퀵매칭</h3>
+          <div class="match-block">
+            <p class="match-legend"><span class="match-tag match-tag--req">매칭 필수</span>는 꼭 맞아야 연결되는 항목이에요. <span class="match-tag match-tag--opt">매칭 선택</span>은 고른 것만 맞춰 봐요.</p>
+            <p class="p19-info-callout">조건을 많이 고를수록 더 꼭 맞는 상대와 연결돼요. 대신 조건이 많으면 연결되는 수는 줄어들 수 있어요.</p>
+          </div>
+
+          
+          <div class="p19-field">
+            <span class="p19-field__label">스카이<span class="match-tag match-tag--opt">매칭 선택</span></span>
+            <div class="p19-chip-group"><span class="p19-chip is-checked">희망</span><span class="p19-chip">상관없음</span></div>
+          </div>
+          <div class="p19-field">
+            <span class="p19-field__label">쪽집게<span class="match-tag match-tag--opt">매칭 선택</span></span>
+            <div class="p19-chip-group"><span class="p19-chip">희망</span><span class="p19-chip is-checked">상관없음</span></div>
+          </div>
+          <div class="p19-field">
+            <span class="p19-field__label">희망 강의스타일<span class="match-tag match-tag--opt">매칭 선택</span></span>
+            <div class="p19-chip-group"><span class="p19-chip">열정</span><span class="p19-chip">꼼꼼</span><span class="p19-chip">친절</span><span class="p19-chip is-checked">기초부터</span><span class="p19-chip">고난이도</span><span class="p19-chip is-checked">개념중심</span><span class="p19-chip">풀이중심</span></div>
+          </div>
+          <div class="p19-field">
+            <span class="p19-field__label">대학원 이상<span class="match-tag match-tag--opt">매칭 선택</span></span>
+            <div class="p19-chip-group"><span class="p19-chip">희망</span><span class="p19-chip is-checked">상관없음</span></div>
+          </div>
+          <div class="p19-field">
+            <span class="p19-field__label">희망하는 과외쌤 나이대<span class="match-tag match-tag--opt">매칭 선택</span></span>
+            <div class="p19-chip-group"><span class="p19-chip is-checked">20대</span><span class="p19-chip is-checked">30대</span><span class="p19-chip">40대</span><span class="p19-chip">50대 이상</span></div>
+            <span class="p19-field__hint">여러 개를 고를 수 있어요. 비워 두면 나이대는 보지 않아요. 이 정보는 카드나 공개 화면에 보이지 않아요.</span>
+          </div>
+
+          <div class="p19-row2">
+            <label class="p19-field">
+              <span class="p19-field__label">수업형태</span>
+              <div class="p19-input p19-select">1:1</div>
+            </label>
+            <label class="p19-field">
+              <span class="p19-field__label">수업인원</span>
+              <div class="p19-input p19-select">1명</div>
+            </label>
+          </div>
+          <label class="p19-field">
+            <span class="p19-field__label">한 줄 요청문</span>
+            <input class="p19-input" value="개념부터 차근차근 봐 주시면 좋겠어요." readonly />
+          </label>
+        </div>
+      </section>
+      <footer class="p19-form-footer">
+        <button type="button" class="btn btn--primary">저장</button>
+      </footer>
+    </form>
+  </div>
+</div>
+        </div>
+      </div>
+    </div>
+    <footer class="site-footer">우리동네 공부방과외 · 우동공과</footer>
+  </div>
+</body>
+</html>
