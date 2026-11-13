@@ -406,15 +406,19 @@ function renderV3RefundPanel(r) {
       <summary>환불 규정 자세히</summary>
       ${renderRefundDetailHtml(family)}
     </details>
-    <label class="refund-action-box__label">사유 선택
-      <select data-refund-reason-select>
-        ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
-      </select>
-    </label>
-    <label class="refund-action-box__label">상세 (선택)
-      <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
-    </label>
-    <button type="button" class="btn btn--primary btn--sm" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
+    <div class="refund-action-box plans-hist-refund-actions">
+      <label class="refund-action-box__label plans-hist-refund-actions__field">
+        <span>사유 선택</span>
+        <select data-refund-reason-select>
+          ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
+        </select>
+      </label>
+      <label class="refund-action-box__label plans-hist-refund-actions__field plans-hist-refund-actions__field--grow">
+        <span>상세 (선택)</span>
+        <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
+      </label>
+      <button type="button" class="plans-hist-refund-actions__submit" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
+    </div>
   </div>`;
 }
 
