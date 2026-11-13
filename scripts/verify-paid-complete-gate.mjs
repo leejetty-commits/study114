@@ -62,7 +62,7 @@ ok(
   fulfillComment.includes('PaidCheckoutGate::mockCompleteAllowed()'),
 );
 
-const notice = '결제 기능을 준비하고 있어요. 곧 열릴 예정이에요';
+const notice = '결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.';
 const unavailableStart = screens.indexOf("result.status === 'unavailable'");
 const unavailableEnd = screens.indexOf('const ok = result.status', unavailableStart);
 const unavailable = unavailableStart >= 0 ? screens.slice(unavailableStart, unavailableEnd) : '';
@@ -87,6 +87,22 @@ ok(
   completeClient.includes("err.code === 'payment_not_available'") && completeClient.includes("err.code = 'payment_not_available'"),
 );
 ok('htaccess_has_no_flag', !htaccess.includes('STUDY114_PAID_MOCK_COMPLETE'));
+const paymentsFnStart = gate.indexOf('function paymentsEnabled');
+const paymentsFn = gate.slice(paymentsFnStart, gate.indexOf('}', paymentsFnStart) + 1);
+ok(
+  'payments_gate_reads_getenv_only',
+  paymentsFn.includes("getenv('STUDY114_PAYMENTS_ENABLED') === '1'") &&
+    !paymentsFn.includes('$_ENV') &&
+    !paymentsFn.includes('$_SERVER') &&
+    !paymentsFn.includes('study114_env'),
+);
+ok(
+  'checkout_blocks_when_payments_disabled',
+  checkout.includes('PaidCheckoutGate::paymentsEnabled()') &&
+    checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('createOrder(') &&
+    checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('completePortOneOrder('),
+);
+ok('htaccess_has_no_payments_flag', !htaccess.includes('STUDY114_PAYMENTS_ENABLED'));
 
 if (failed > 0) {
   console.error(`\n${failed} failed`);

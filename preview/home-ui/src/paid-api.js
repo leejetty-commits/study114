@@ -108,6 +108,13 @@ export async function fetchPaidCatalog(providerType) {
 /** @param {string} productId @param {string} variant
  * @param {{ providerType?: 'study_room'|'tutor', providerId?: string|number, studentId?: number, body?: string, badgeCodes?: string[], regionBasisType?: string, regionId?: string|number, complexId?: string|number, slotGroup?: string, regionLabel?: string, cityId?: string|number, primarySubjectId?: string|number }} [ctx]
  */
+/** 서버 결제 스위치. 실패하면 꺼진 것으로 본다. */
+export async function fetchPaymentsEnabled() {
+  const res = await fetch(PAID_ENDPOINTS.checkout, { ...CREDENTIALS });
+  const data = await parseJson(res);
+  return data.payments_enabled === true;
+}
+
 export async function createPaidCheckout(productId, variant, ctx = {}) {
   const body = {
     action: 'create',
@@ -146,13 +153,17 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
   return parseJson(res);
 }
 
-/** @param {string} orderRef */
-export async function completePaidCheckout(orderRef) {
+/** @param {string} orderRef @param {{ paymentId?: string }} [opts] */
+export async function completePaidCheckout(orderRef, opts = {}) {
+  const body = { action: 'complete', order_ref: orderRef };
+  if (opts.paymentId) {
+    body.payment_id = String(opts.paymentId);
+  }
   const res = await fetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
-    body: JSON.stringify({ action: 'complete', order_ref: orderRef }),
+    body: JSON.stringify(body),
   });
   try {
     return await parseJson(res);

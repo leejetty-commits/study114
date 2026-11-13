@@ -14,6 +14,7 @@ import {
   fetchPrimeWaitlist,
   cancelPrimeWaitlist,
 } from '../paid-api.js';
+import { requestPortOneCardPayment } from './portone-checkout.js';
 import {
   getProviderStatus,
   hydrateProviderStatus,
@@ -1397,6 +1398,12 @@ export function bindPlansScreenEvents(root, rerender) {
             ends_on: draft.endsOn,
             city_id: draft.cityId,
             memo_bundle: 0,
+            pg_provider: draft.pgProvider || '',
+            payment_id: draft.paymentId || '',
+            store_id: draft.storeId || '',
+            channel_key: draft.channelKey || '',
+            order_name: draft.orderName || '',
+            currency: draft.payCurrency || 'CURRENCY_KRW',
           };
         } else {
           created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
@@ -1424,7 +1431,39 @@ export function bindPlansScreenEvents(root, rerender) {
         if (Number(draft.priceKrw) !== serverAmount) {
           console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
         }
-        const completed = await completePaidCheckout(created.order_ref);
+        let completed;
+        if (String(created.pg_provider || '') === 'portone_test') {
+          const pay = await requestPortOneCardPayment({
+            storeId: String(created.store_id || ''),
+            channelKey: String(created.channel_key || ''),
+            paymentId: String(created.payment_id || ''),
+            orderName: String(created.order_name || `${draft.productName} ${draft.optionLabel}`),
+            totalAmount: serverAmount,
+            currency: String(created.currency || 'CURRENCY_KRW'),
+          });
+          if (!pay.ok) {
+            setCheckoutResult({
+              status: pay.kind === 'cancel' ? 'canceled' : 'failed',
+              message: pay.message,
+              orderRef: created.order_ref,
+              productName: draft.productName,
+              optionLabel: draft.optionLabel,
+              providerLabel: draft.providerLabel,
+              providerType: draft.providerType,
+              providerId: draft.providerId,
+              chargeKrw: serverAmount,
+            });
+            if (errEl) {
+              errEl.hidden = false;
+              errEl.textContent = pay.message;
+            }
+            window.location.hash = '#/plans/result';
+            return;
+          }
+          completed = await completePaidCheckout(created.order_ref, { paymentId: pay.paymentId });
+        } else {
+          completed = await completePaidCheckout(created.order_ref);
+        }
         invalidateProviderStatus();
         resetAccessStatusSync();
         await hydrateProviderStatusStrict().catch(() => hydrateProviderStatus());

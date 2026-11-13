@@ -270,4 +270,55 @@ function study114_session_save_path(): ?string
     return $dir;
 }
 
+/**
+ * 로컬·개발에서만 루트 .env의 PG_·PORTONE_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
+ * study114_env('STUDY114_APP_ENV')===production 이면 실행하지 않는다. 값은 로그하지 않는다.
+ */
+function study114_load_dotenv_local(): void
+{
+    if (strtolower(study114_env('STUDY114_APP_ENV', 'local')) === 'production') {
+        return;
+    }
+    $path = dirname(__DIR__) . '/.env';
+    if (!is_file($path) || !is_readable($path)) {
+        return;
+    }
+    $lines = file($path, FILE_IGNORE_NEW_LINES);
+    if ($lines === false) {
+        return;
+    }
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        if (!str_contains($line, '=')) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        $key = trim($key);
+        if ($key === '' || (!str_starts_with($key, 'PG_') && !str_starts_with($key, 'PORTONE_'))) {
+            continue;
+        }
+        if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+            continue;
+        }
+        $existing = getenv($key);
+        if (is_string($existing) && $existing !== '') {
+            continue;
+        }
+        $value = trim($value);
+        if (
+            (str_starts_with($value, '"') && str_ends_with($value, '"'))
+            || (str_starts_with($value, "'") && str_ends_with($value, "'"))
+        ) {
+            $value = substr($value, 1, -1);
+        }
+        putenv($key . '=' . $value);
+        $_ENV[$key] = $value;
+    }
+}
+
+study114_load_dotenv_local();
+
 \Study114\Site\SiteSettingsService::rejectWriteIfActive();

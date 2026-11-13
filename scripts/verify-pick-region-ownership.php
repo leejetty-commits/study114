@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
+putenv('STUDY114_PAYMENTS_ENABLED=1');
 putenv('STUDY114_PAID_MOCK_COMPLETE=1');
 
 use Study114\Paid\ProviderCheckoutService;
