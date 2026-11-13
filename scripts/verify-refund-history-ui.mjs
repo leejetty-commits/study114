@@ -220,7 +220,7 @@ ok('O10 개발자 sourceNote 제거', () => {
 });
 ok('O11 탭 15px CSS', () => {
   const css = exists('preview/home-ui/src/styles/mypage-ops.css')
-    ? read('preview/home-ui/src/styles/mypage-ops.css')
+    ? ['preview/home-ui/src/styles/mypage-ops-shell.css', 'preview/home-ui/src/styles/mypage-ops-register.css', 'preview/home-ui/src/styles/mypage-ops.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '')
     : '';
   const idx = css.indexOf('.plans-hist-tabs .plans-tab');
   if (idx < 0) return false;

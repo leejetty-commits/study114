@@ -31,7 +31,9 @@ function ok(name, cond, detail = '') {
 
 const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
 const myScreens = exists('preview/home-ui/src/mypage/screens.js') ? read('preview/home-ui/src/mypage/screens.js') : '';
-const css = exists('preview/home-ui/src/styles/mypage-ops.css') ? read('preview/home-ui/src/styles/mypage-ops.css') : '';
+const css = exists('preview/home-ui/src/styles/mypage-ops.css')
+  ? ['preview/home-ui/src/styles/mypage-ops-shell.css', 'preview/home-ui/src/styles/mypage-ops-register.css', 'preview/home-ui/src/styles/mypage-ops.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '')
+  : '';
 const copy = exists('preview/home-ui/src/mypage/mypage-copy.js') ? read('preview/home-ui/src/mypage/mypage-copy.js') : '';
 const router = exists('preview/home-ui/src/plans/router.js') ? read('preview/home-ui/src/plans/router.js') : '';
 
