@@ -11,6 +11,7 @@ import {
   mypageNavLabel,
 } from './router.js';
 import { renderMypageNoticeStrip, bindMypageNoticeStrip } from './mypage-notice-strip.js';
+import { getProviderStatus } from '../provider-status.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -101,9 +102,14 @@ export function renderMypageShell(currentPath, bodyHtml) {
     const label = lines
       ? `<span class="mypage-nav__label">${lines.map((line) => `<span class="mypage-nav__label-line">${esc(line)}</span>`).join('')}</span>`
       : `<span class="mypage-nav__label">${esc(mypageNavLabel(item, role))}</span>`;
+    const primeOn = item.path === '/mypage/quick-match' && getProviderStatus()?.prime_active === true;
+    const qmClass = item.path === '/mypage/quick-match' ? (primeOn ? ' is-qm is-prime' : ' is-qm is-muted') : '';
+    const iconHtml = item.icon === 'event'
+      ? '<span class="qm-nav__event" aria-hidden="true">Event</span>'
+      : `<span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>`;
     return `
-      <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}${lines ? ' is-multiline' : ''}" data-mypage-nav="${href}">
-        <span class="mypage-nav__icon" aria-hidden="true">${esc(item.icon || '•')}</span>
+      <a href="#${href}" class="mypage-nav__link${active ? ' is-active' : ''}${emph}${lines ? ' is-multiline' : ''}${qmClass}" data-mypage-nav="${href}">
+        ${iconHtml}
         ${label}
       </a>`;
     })

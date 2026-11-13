@@ -33,6 +33,13 @@ final class BasicRegisterService
             default      => throw new InvalidArgumentException('role: 지원하지 않는 역할입니다.'),
         };
         $this->notifyCardPosted($userId, $result['kind'], $result['id']);
+        if ($result['kind'] === 'student') {
+            try {
+                (new \Study114\QuickMatch\QuickMatchDispatcher())->onRegister((int) $result['id']);
+            } catch (\Throwable $e) {
+                error_log('[quick-match] register hook: ' . $e->getMessage());
+            }
+        }
 
         return $result;
     }

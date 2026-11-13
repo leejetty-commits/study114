@@ -40,9 +40,10 @@ ProviderReviewApi::run(static function (): void {
         $auth = ProviderReviewApi::requireAuth();
         // lane: all | written | received | targets | ''(all)
         $lane = ProviderReviewApi::queryString('lane', '') ?? '';
+        $origin = ProviderReviewApi::queryString('origin', '') ?? '';
         $page = ProviderReviewApi::queryInt('page', 1);
         $limit = ProviderReviewApi::queryInt('limit', ReviewPolicy::PAGE_SIZE);
-        ProviderReviewApi::ok($service->inbox($auth, $lane, $page, $limit));
+        ProviderReviewApi::ok($service->inbox($auth, $lane, $page, $limit, $origin));
     }
 
     if ($method === 'GET' && $action === 'count') {

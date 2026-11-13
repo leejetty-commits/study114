@@ -1,0 +1,60 @@
+.mypage-nav__link.is-qm.is-prime {
+  color: #b8860b;
+}
+.mypage-nav__link.is-qm.is-muted {
+  color: #9a948a;
+}
+.qm-nav__event {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.4rem;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.28rem;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: inherit;
+  border: 1px solid currentColor;
+}
+.qm-screen__benefit,
+.qm-screen__off {
+  margin: 0 0 0.8rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: #f7f4ec;
+}
+.qm-screen__benefit h2,
+.qm-screen__off h2 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+.qm-screen__off p,
+.qm-screen__meta {
+  margin: 0.25rem 0;
+}
+.qm-screen__save {
+  margin-top: 0.8rem;
+}
+.qm-origin-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 0.7rem;
+}
+.qm-origin-tabs__tab {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid #d9d3c7;
+}
+.qm-origin-tabs__tab.is-active {
+  border-color: #b8860b;
+  color: #8a6510;
+}
+.qm-advice {
+  margin: 0 0 0.6rem;
+  font-size: 0.92rem;
+}
