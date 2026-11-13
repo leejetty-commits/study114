@@ -69,6 +69,8 @@ const cssFiles = [
   'preview/home-ui/src/styles/design-system.css',
   'preview/home-ui/src/styles/home-listings.css',
   'preview/home-ui/src/styles/product-chrome.css',
+  'preview/home-ui/src/styles/mypage-ops-shell.css',
+  'preview/home-ui/src/styles/mypage-ops-register.css',
   'preview/home-ui/src/styles/mypage-ops.css',
   'preview/home-ui/src/styles/registration-check.css',
   'preview/shared/register-form-primitives.css',

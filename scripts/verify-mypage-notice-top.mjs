@@ -43,7 +43,7 @@ function walkCss(dir, acc = []) {
 const screensSrc = read('preview/home-ui/src/mypage/screens.js');
 const shellSrc = read('preview/home-ui/src/mypage/shell.js');
 const mainSrc = read('preview/home-ui/src/main.js');
-const css = read('preview/home-ui/src/styles/mypage-ops.css');
+const css = ['preview/home-ui/src/styles/mypage-ops-shell.css', 'preview/home-ui/src/styles/mypage-ops-register.css', 'preview/home-ui/src/styles/mypage-ops.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const shellFn = shellSrc.slice(shellSrc.indexOf('export function renderMypageShell'));
 
 ok('(b) screens.js에 renderMypageNoticeStrip 없음', !screensSrc.includes('renderMypageNoticeStrip'));
