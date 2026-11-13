@@ -242,9 +242,6 @@
   margin-bottom: 6px;
   overflow: hidden;
 }
-.plans-hist-row.is-refund-active {
-  border-left: 3px solid #2563eb;
-}
 .plans-hist-row__bar {
   display: flex;
   align-items: stretch;
@@ -316,9 +313,19 @@
   box-shadow: inset 0 -3px 0 #111;
   font-weight: 700;
 }
-.plans-hist-row__acts button.is-primary {
-  background: #2563eb;
-  color: #fff;
+.plans-hist-refund-link {
+  margin: 10px 0 0;
+  text-align: right;
+}
+.plans-hist-refund-link button {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .plans-hist-row__panel {
   max-height: 0;
