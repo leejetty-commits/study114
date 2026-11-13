@@ -309,6 +309,9 @@ final class ProviderCheckoutRepository
     }
 
     /**
+     * 구매이력 전용. 결제 완료와 그 이후(환불 진행·환불 완료)만.
+     * pending·failed·cancelled·만료된 대기는 제외. 관리자 목록·정산·환불 계산은 이 메서드를 쓰지 않는다.
+     *
      * @return list<array<string, mixed>>
      */
     public function listByUser(int $userId, int $limit = 50): array
@@ -328,6 +331,7 @@ final class ProviderCheckoutRepository
             "SELECT {$cols}
              FROM provider_payment_orders
              WHERE user_id = ?
+               AND status IN ('paid', 'refund_requested', 'refunded')
              ORDER BY COALESCE(paid_at, created_at) DESC, id DESC
              LIMIT {$limit}"
         );
