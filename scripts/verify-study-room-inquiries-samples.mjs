@@ -28,7 +28,7 @@ const hubService = read('src/Registration/StudyRoomHubService.php');
 assert(store.includes('hydrateRegistrationsCache'), 'store: inquiry save hydrates cache');
 assert(store.includes("apiStudyRoomAction(id, 'inquiry_status'"), 'store: PATCH inquiry_status');
 assert(!hubService.includes('PhoneVerifyRequiredException'), 'api: study-room open does not require phone');
-const css = read('preview/home-ui/src/styles/home-member-flows.css');
+const css = ['preview/home-ui/src/styles/home-member-flows-account.css', 'preview/home-ui/src/styles/home-member-flows.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const rcRender = read('preview/home-ui/src/study-room-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/study-room-reg/registration-check-model.js');
 
