@@ -6,7 +6,7 @@ import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVi
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
 import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, logout } from './auth-session.js';
 import { resolveAccountDisplayName } from './auth/display-identity.js';
-import { ensureBackToTop } from '../../shared/back-to-top.js';
+import { ensureBackToTop, closeInquiryPanel, renderDrawerInquiryMarkup, bindDrawerInquiry } from '../../shared/back-to-top.js';
 import { isHandoffApiMode } from './handoff-backend.js';
 import { isMessagesApiMode } from './messages-backend.js';
 import { SHOW_PREVIEW_TOOLBAR } from '../../shared/preview-flags.js';
@@ -296,6 +296,7 @@ export function renderHeader(role, opts = {}) {
           <div class="home-drawer__gnb">${drawerGnb}</div>
           ${drawerPromo}
           <div class="home-drawer__util">${utilHtml}</div>
+          ${renderDrawerInquiryMarkup(loggedIn)}
         </nav>
       </div>
     </header>
@@ -468,6 +469,7 @@ function openDrawer(header) {
   const drawer = header.querySelector('[data-drawer]');
   const btn = header.querySelector('[data-action="hamburger-toggle"]');
   if (!drawer) return;
+  closeInquiryPanel();
   drawer.hidden = false;
   document.body.classList.add('is-drawer-open');
   if (btn) btn.setAttribute('aria-expanded', 'true');
@@ -517,6 +519,10 @@ export function bindLayoutEvents(root, rerender) {
     if (e.target.closest('[data-action]') || e.target.closest('[data-util-href]')) {
       closeDrawer(header);
     }
+  });
+  bindDrawerInquiry(header, {
+    isLoggedIn: () => isLoggedIn(),
+    closeDrawer: () => closeDrawer(header),
   });
 
   root.querySelectorAll('[data-nav]').forEach((el) => {

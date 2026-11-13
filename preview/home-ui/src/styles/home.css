@@ -1107,8 +1107,77 @@ a.sup-term-chip:hover {
   padding: var(--space-2) var(--space-3);
 }
 
+.home-drawer__inquiry {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--gray-100);
+  gap: var(--space-1);
+}
+
+.home-drawer__inquiry-toggle,
+.home-drawer__inquiry-item {
+  display: flex;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2) 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+  text-decoration: none;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.home-drawer__inquiry-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-drawer__inquiry-panel[hidden] {
+  display: none !important;
+}
+
+.home-drawer__inquiry-toggle:hover,
+.home-drawer__inquiry-toggle:focus-visible,
+.home-drawer__inquiry-item:hover,
+.home-drawer__inquiry-item:focus-visible {
+  color: var(--brand-blue);
+}
+
 body.is-drawer-open {
   overflow: hidden;
+}
+
+@media (max-width: 899px) {
+  .home-drawer__panel {
+    width: 50vw;
+    min-width: 12.5rem;
+  }
+
+  .home-drawer__gnb .home-gnb__item,
+  .home-drawer__promo-item,
+  .home-drawer__util .home-util__link,
+  .home-drawer__util .home-util__account,
+  .home-drawer__inquiry-toggle,
+  .home-drawer__inquiry-item {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  body.is-drawer-open #study114-back-to-top,
+  body.is-drawer-open #study114-back-to-bottom,
+  body.is-drawer-open #study114-inquiry-fab,
+  body.is-drawer-open .back-to-top,
+  body.is-drawer-open .back-to-bottom,
+  body.is-drawer-open .inquiry-fab {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
 }
 
 .temp-notice {

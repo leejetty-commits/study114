@@ -103,13 +103,100 @@ function syncBottom(btn) {
   btn.classList.toggle('is-visible', show);
 }
 
-function closeInquiryPanel() {
+export function closeInquiryPanel() {
   const root = document.getElementById(INQUIRY_ID);
   const panel = document.getElementById(INQUIRY_PANEL_ID);
   const btn = root?.querySelector('.inquiry-fab__toggle');
   if (panel) panel.hidden = true;
   if (btn) btn.setAttribute('aria-expanded', 'false');
   root?.classList.remove('is-open');
+}
+
+/**
+ * 드로어 맨 아래 「문의하기」. 문구·순서·링크는 플로팅 패널과 같다.
+ * @param {boolean} loggedIn
+ */
+export function renderDrawerInquiryMarkup(loggedIn) {
+  const contact = loggedIn
+    ? `<a class="home-drawer__inquiry-item" data-drawer-inquiry-item="contact" href="${inquiryContactUrl()}">운영문의</a>`
+    : '';
+  return `<div class="home-drawer__inquiry" data-drawer-inquiry>
+    <button type="button" class="home-drawer__inquiry-toggle" data-drawer-inquiry-toggle aria-expanded="false">문의하기</button>
+    <div class="home-drawer__inquiry-panel" data-drawer-inquiry-panel hidden>
+      <a class="home-drawer__inquiry-item" href="${INQUIRY_FAQ_HASH}">자주 묻는 질문</a>
+      ${contact}
+      <a class="home-drawer__inquiry-item" href="${KAKAO_CHAT_URL}" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
+    </div>
+  </div>`;
+}
+
+/** @param {HTMLElement} panel @param {boolean} loggedIn */
+export function syncDrawerInquiryContact(panel, loggedIn) {
+  if (!(panel instanceof HTMLElement)) return;
+  let item = panel.querySelector('[data-drawer-inquiry-item="contact"]');
+  if (loggedIn) {
+    if (!(item instanceof HTMLAnchorElement)) {
+      item = document.createElement('a');
+      item.className = 'home-drawer__inquiry-item';
+      item.dataset.drawerInquiryItem = 'contact';
+      const kakao = panel.querySelector(`a[href="${KAKAO_CHAT_URL}"]`);
+      if (kakao) panel.insertBefore(item, kakao);
+      else panel.appendChild(item);
+    }
+    item.hidden = false;
+    item.textContent = '운영문의';
+    item.href = inquiryContactUrl();
+    item.removeAttribute('target');
+    item.removeAttribute('rel');
+    return;
+  }
+  if (item) item.remove();
+}
+
+/** @type {() => boolean} */
+let drawerInquiryLoggedIn = () => false;
+
+function ensureDrawerInquiryAuthSync() {
+  if (window.__study114DrawerInquiryAuth) return;
+  window.__study114DrawerInquiryAuth = true;
+  AUTH_EVENTS.forEach((name) => {
+    window.addEventListener(name, () => {
+      document.querySelectorAll('[data-drawer-inquiry-panel]').forEach((panel) => {
+        if (panel instanceof HTMLElement) syncDrawerInquiryContact(panel, drawerInquiryLoggedIn());
+      });
+    });
+  });
+}
+
+/**
+ * 메뉴 안에서 문의 항목을 펼친다. 플로팅 패널은 열지 않는다.
+ * @param {HTMLElement} header
+ * @param {{ isLoggedIn: () => boolean, closeDrawer: () => void }} opts
+ */
+export function bindDrawerInquiry(header, opts) {
+  if (!header || typeof opts?.isLoggedIn !== 'function' || typeof opts?.closeDrawer !== 'function') return;
+  drawerInquiryLoggedIn = opts.isLoggedIn;
+  ensureDrawerInquiryAuthSync();
+  const inquiry = header.querySelector('[data-drawer-inquiry]');
+  if (!(inquiry instanceof HTMLElement) || inquiry.dataset.drawerInquiryBound === '1') return;
+  inquiry.dataset.drawerInquiryBound = '1';
+  inquiry.addEventListener('click', (e) => {
+    const target = e.target instanceof Element ? e.target : null;
+    if (!target) return;
+    const toggle = target.closest('[data-drawer-inquiry-toggle]');
+    if (toggle && inquiry.contains(toggle)) {
+      e.preventDefault();
+      const panel = inquiry.querySelector('[data-drawer-inquiry-panel]');
+      if (!(panel instanceof HTMLElement) || !(toggle instanceof HTMLElement)) return;
+      const willOpen = panel.hidden;
+      if (willOpen) syncDrawerInquiryContact(panel, opts.isLoggedIn());
+      panel.hidden = !willOpen;
+      toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      return;
+    }
+    const link = target.closest('a');
+    if (link && inquiry.contains(link)) opts.closeDrawer();
+  });
 }
 
 /** 로그인: 운영문의 표시. 비로그인: 항목 제거(빈 칸·mailto 없음). */
