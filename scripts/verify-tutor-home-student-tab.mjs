@@ -36,7 +36,11 @@ function ok(name, cond, detail = '') {
 
 const seedSrc = read('preview/home-ui/src/tutor-home-seed.js');
 const tutorScreenSrc = read('preview/home-ui/src/screens/tutor.js');
-const surfaceSrc = read('preview/search-ui/src/search-find-surface.js');
+const surfaceSrc = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 const feedSrc = read('preview/search-ui/src/search-region-feed.js');
 const tierSrc = read('preview/search-ui/src/search-tier-render.js');
 const roomSeedSrc = read('preview/home-ui/src/study-room-home-seed.js');

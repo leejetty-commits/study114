@@ -30,7 +30,11 @@ const visily = read('preview/search-ui/src/styles/search-visily.css');
 const provider = read('preview/home-ui/src/provider-home.js');
 const tier = read('preview/search-ui/src/search-tier-render.js');
 const exposure = read('preview/home-ui/src/exposure-render.js');
-const surface = read('preview/search-ui/src/search-find-surface.js');
+const surface = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 const branchVerify = read('scripts/verify-student-branch-two-tabs.mjs');
 
 const parentTutorRule =
