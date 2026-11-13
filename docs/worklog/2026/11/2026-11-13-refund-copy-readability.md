@@ -57,4 +57,23 @@
 
 ## [최종검수 패키지 — 환불 안내 가독성]
 
-해시는 이 기록을 커밋한 뒤 보고에 적는다. PR은 만들고 머지하지 않는다.
+```
+[최종검수 패키지 — 환불 안내 가독성]
+브랜치 / 커밋: work/refund-copy-readability / 47cb1f37
+PR: https://github.com/leejetty-commits/study114/pull/207 (머지 안 함)
+변경 파일: git diff --stat origin/main...47cb1f37
+  preview/home-ui/src/refund-policy-copy.js  +105 근처
+  preview/home-ui/src/plans/order-blocks.js  7줄
+  preview/home-ui/src/plans/screens-orders.js  5줄
+  preview/home-ui/src/styles/plans-store.css  +18
+  docs/worklog/2026/11/2026-11-13-refund-copy-readability.md
+  docs/worklog/2026/11/refund-copy-readability-captures/*.png
+diff 요약:
+  - refund-policy-copy.js: 자세한 안내를 단락·목록으로 나누고 renderRefundDetailHtml을 둠. 금액·조건 문장은 확정문.
+  - order-blocks.js·screens-orders.js: 한 단락 출력을 목록 HTML로 바꿈. 제목·짧은 안내는 유지.
+  - plans-store.css: 점 목록 간격만. 예정액 목록(refund-breakdown)과 구분.
+테스트: 문구 모양 PASS 24. verify-refund-history-ui PASS 73/0. verify-refund-apply PASS 111/0. verify-paid-renewal PASS 38/0. verify-refund-foundation PASS 27 / FAIL 7 (옛 문장 검사, 미수정).
+스크린샷: docs/worklog/2026/11/refund-copy-readability-captures/ acc-access·acc-position·acc-history-* 1280·390, faq-live-1280.png
+운영 FAQ 보드: faq-19 없음. 시드와 같음(덮이지 않음).
+미해결·종현 결정 필요: 없음
+```
