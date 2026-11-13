@@ -124,7 +124,11 @@ const css = read('preview/home-ui/src/styles/udx-std-apply.css');
 const mkt = read('preview/home-ui/src/styles/home-marketing-banner.css');
 const listings = read('preview/home-ui/src/styles/home-listings.css');
 const visily = read('preview/search-ui/src/styles/search-visily.css');
-const surfaceSrc = read('preview/search-ui/src/search-find-surface.js');
+const surfaceSrc = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 
 function boxSlice(html) {
   const start = html.indexOf(`aria-label="${COPY.badge}"`);

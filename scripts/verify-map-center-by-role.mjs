@@ -479,7 +479,11 @@ console.log('##### 화면 속성 #####');
   const guard = 'if (options.usePins !== false) {';
   const reverted = src.replace(guard, 'if (true) {');
   ok('mutation self-check: 소스의 usePins 가드 한 줄을 지우면 핀 평균이 복구된다', src.includes(guard) && !reverted.includes(guard));
-  const surface = read('preview/search-ui/src/search-find-surface.js');
+  const surface = [
+    read('preview/search-ui/src/search-find-place.js'),
+    read('preview/search-ui/src/search-find-region.js'),
+    read('preview/search-ui/src/search-find-surface.js'),
+  ].join('\n');
   ok('찾기 화면이 resolveStudyRoomMapQuery 를 지도 질의로 넘긴다', /resolveStudyRoomMapQuery\(state, variant\)/.test(surface) && /geocodeQuery: studyRoomMap \? studyRoomMap\.query : undefined/.test(surface));
 }
 ok('mutation self-check: 단지를 promo_label 질의로 되돌리면 (b)가 실패한다', () => {
