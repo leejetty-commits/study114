@@ -1374,6 +1374,24 @@ a.plans-chip:hover {
   font-size: var(--text-sm);
 }
 
+.refund-policy-detail p {
+  margin: 0 0 0.45rem;
+}
+
+.refund-policy-list {
+  list-style: disc;
+  margin: 0 0 0.65rem;
+  padding-left: 1.2em;
+}
+
+.refund-policy-list li {
+  margin: 0.2rem 0;
+}
+
+.refund-policy-detail .refund-policy-list:last-child {
+  margin-bottom: 0;
+}
+
 /* aux-nav — 봇 시안 */
 .plans-access-aux {
   padding: var(--space-4) var(--space-5);
