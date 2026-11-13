@@ -25,7 +25,7 @@ import {
   POSITION_REFUND_SHORT,
   refundCheckoutNote,
   refundShort,
-  refundDetail,
+  renderRefundDetailHtml,
 } from '../refund-policy-copy.js';
 import { renderOrderSummaryBlock, buildPositionOrderRows } from './order-blocks.js';
 import { sanitizeBadgeCodes, applyBadgeQuery, badgeDisplayName } from './badge-options.js';
@@ -364,7 +364,6 @@ function renderV3RefundPanel(r) {
 
   const family = kind === 'position' ? 'position' : 'access';
   const policyShort = refundShort(family);
-  const policyDetail = refundDetail(family);
 
   return `<div class="plans-hist-row__panel-inner">
     <b>환불 가능</b>
@@ -373,7 +372,7 @@ function renderV3RefundPanel(r) {
     <p class="mypage-muted"><strong>${esc(policyShort)}</strong></p>
     <details class="plans-policy-acc">
       <summary>환불 규정 자세히</summary>
-      <p class="mypage-muted">${esc(policyDetail)}</p>
+      ${renderRefundDetailHtml(family)}
     </details>
     <label class="refund-action-box__label">사유 선택
       <select data-refund-reason-select>

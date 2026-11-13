@@ -12,10 +12,9 @@ import { buildPlansHref, parsePlansQuery } from './router.js';
 import { providerPageName } from '../mypage/mypage-copy.js';
 import {
   MEMO_TICKET_REFUND_SHORT,
-  MEMO_TICKET_REFUND_DETAIL,
   POSITION_REFUND_SHORT,
-  POSITION_REFUND_DETAIL,
   POSITION_REFUND_SUMMARY_LINE,
+  renderRefundDetailHtml,
 } from '../refund-policy-copy.js';
 
 function esc(s) {
@@ -493,7 +492,7 @@ export function renderPolicyAccordion(family, role) {
         <summary>환불·소멸 안내</summary>
         <div class="plans-policy-acc__body">
           <p><strong>${esc(MEMO_TICKET_REFUND_SHORT)}</strong></p>
-          <p class="mypage-muted">${esc(MEMO_TICKET_REFUND_DETAIL)}</p>
+          ${renderRefundDetailHtml('access')}
         </div>
       </details>`;
   }
@@ -502,7 +501,7 @@ export function renderPolicyAccordion(family, role) {
       <summary>환불·만료 안내</summary>
       <div class="plans-policy-acc__body">
         <p><strong>${esc(POSITION_REFUND_SHORT)}</strong></p>
-        <p class="mypage-muted">${esc(POSITION_REFUND_DETAIL)}</p>
+        ${renderRefundDetailHtml('position')}
       </div>
     </details>`;
 }
