@@ -97,4 +97,13 @@ DirectoryIndex index.html index.php
   SetEnv STUDY114_STORAGE_SECRET __STUDY114_STORAGE_SECRET__
   # 테스트 계정 허용목록(쉼표 구분 이메일). 비어 있으면 무동작. 배포 시 Secret 선택 주입.
   SetEnv STUDY114_TEST_ACCOUNT_EMAILS "__STUDY114_TEST_ACCOUNT_EMAILS__"
+  # 339 결제. 실값은 배포 시 주입. 저장소에는 placeholder만.
+  # PG_PROVIDER·STUDY114_PAYMENTS_ENABLED 는 GitHub Variables. 비어 있으면 결제 꺼짐.
+  # PORTONE_* 는 GitHub Secrets.
+  SetEnv PG_PROVIDER __PG_PROVIDER__
+  SetEnv PORTONE_STORE_ID __PORTONE_STORE_ID__
+  SetEnv PORTONE_CHANNEL_KEY __PORTONE_CHANNEL_KEY__
+  SetEnv PORTONE_API_SECRET __PORTONE_API_SECRET__
+  SetEnv PORTONE_WEBHOOK_SECRET __PORTONE_WEBHOOK_SECRET__
+  SetEnv STUDY114_PAYMENTS_ENABLED __STUDY114_PAYMENTS_ENABLED__
 </IfModule>
