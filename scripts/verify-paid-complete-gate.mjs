@@ -102,7 +102,13 @@ ok(
     checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('createOrder(') &&
     checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('completePortOneOrder('),
 );
-ok('htaccess_has_no_payments_flag', !htaccess.includes('STUDY114_PAYMENTS_ENABLED'));
+ok(
+  'htaccess_payments_placeholder_only',
+  htaccess.includes('SetEnv STUDY114_PAYMENTS_ENABLED __STUDY114_PAYMENTS_ENABLED__') &&
+    htaccess.includes('SetEnv PG_PROVIDER __PG_PROVIDER__') &&
+    !/SetEnv STUDY114_PAYMENTS_ENABLED\s+(?!__STUDY114_PAYMENTS_ENABLED__)(\S+)/.test(htaccess) &&
+    !/SetEnv PG_PROVIDER\s+(?!__PG_PROVIDER__)(\S+)/.test(htaccess),
+);
 
 if (failed > 0) {
   console.error(`\n${failed} failed`);
