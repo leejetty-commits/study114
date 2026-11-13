@@ -20,7 +20,7 @@ function read(rel) {
   return fs.readFileSync(path.join(root, rel), 'utf8');
 }
 
-const screens = read('preview/home-ui/src/plans/screens.js');
+const screens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const storeUi = read('preview/home-ui/src/plans/store-ui.js');
 const orderBlocks = read('preview/home-ui/src/plans/order-blocks.js');
 const slotInv = read('preview/home-ui/src/plans/slot-inventory.js');

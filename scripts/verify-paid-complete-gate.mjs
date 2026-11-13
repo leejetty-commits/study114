@@ -23,7 +23,7 @@ function ok(name, cond, detail = '') {
 
 const checkout = read('public/api/paid/checkout.php');
 const service = read('src/Paid/ProviderCheckoutService.php');
-const screens = read('preview/home-ui/src/plans/screens.js');
+const screens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const paidApi = read('preview/home-ui/src/paid-api.js');
 const htaccess = read('public/.htaccess');
 const gate = read('src/Paid/PaidCheckoutGate.php');

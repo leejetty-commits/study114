@@ -500,7 +500,7 @@ ok(
 );
 ok(
   'frontend_pay_uses_server_amount',
-  read('preview/home-ui/src/plans/screens.js').includes('created.amount_won'),
+  ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n').includes('created.amount_won'),
 );
 
 // catalog API filters
