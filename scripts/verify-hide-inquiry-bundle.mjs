@@ -484,7 +484,7 @@ const planReason = studyRoomRegionPurchaseState(
   { has_scope_id: true },
   { room: { profile_status: 'hidden' }, productCode: 'prime' },
 ).reason;
-const plansSrc = read('preview/home-ui/src/plans/screens.js');
+const plansSrc = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const blob = `${ctas}\n${regHtml}\n${planReason}\n${plansSrc}`;
 assert('(g) 다시 켜·해제 후·공개 신청 0', !blob.includes('다시 켜') && !blob.includes('해제 후') && !blob.includes('공개 신청'));
 assert('(g) plans 문구', planReason === '숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.' && plansSrc.includes(planReason));

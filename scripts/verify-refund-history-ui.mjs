@@ -29,7 +29,9 @@ function ok(name, cond, detail = '') {
   }
 }
 
-const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
+const screens = exists('preview/home-ui/src/plans/screens.js')
+  ? ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n')
+  : '';
 const paidApi = exists('preview/home-ui/src/paid-api.js') ? read('preview/home-ui/src/paid-api.js') : '';
 const histMock = exists('preview/home-ui/src/plans/history-mock.js') ? read('preview/home-ui/src/plans/history-mock.js') : '';
 const copy = exists('preview/home-ui/src/mypage/mypage-copy.js') ? read('preview/home-ui/src/mypage/mypage-copy.js') : '';

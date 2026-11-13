@@ -73,7 +73,7 @@ ok('C5 mypage-copy 라벨 ≠ a28 라벨', () => {
 
 // --- D. A6 문구 (환불 없음 제거) ---
 const orderBlocks = read('preview/home-ui/src/plans/order-blocks.js');
-const plansScreens = read('preview/home-ui/src/plans/screens.js');
+const plansScreens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 ok('D1 order-blocks.js 「환불 없음」 0건', !orderBlocks.includes('환불 없음'));
 ok('D2 plans/screens.js 「환불 없음」 0건', !plansScreens.includes('환불 없음'));
 ok('D3 order-blocks 「환불·연장되지 않습니다」 0건', !orderBlocks.includes('환불·연장되지 않습니다'));
