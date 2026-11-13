@@ -805,7 +805,7 @@ class FillNode {
   }
 }
 
-const memberCss = read('preview/home-ui/src/styles/home-member-flows.css');
+const memberCss = ['preview/home-ui/src/styles/home-member-flows-account.css', 'preview/home-ui/src/styles/home-member-flows.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const stageCss = read('preview/home-ui/src/styles/student-mypage-stage5b.css');
 const p19InputRule = memberCss.slice(memberCss.indexOf('.p19-input {'), memberCss.indexOf('}', memberCss.indexOf('.p19-input {')) + 1);
 const surfaceRule = stageCss.slice(stageCss.indexOf('.home-app--role-parent .mypage-layout {'), stageCss.indexOf('}', stageCss.indexOf('.home-app--role-parent .mypage-layout {')) + 1);

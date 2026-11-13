@@ -63,6 +63,7 @@ if (typeof globalThis.matchMedia !== 'function') {
 const cssFiles = [
   'preview/home-ui/src/styles/tokens.css',
   'preview/home-ui/src/styles/home.css',
+  'preview/home-ui/src/styles/home-member-flows-account.css',
   'preview/home-ui/src/styles/home-member-flows.css',
   'preview/home-ui/src/styles/home-right-rail.css',
   'preview/search-ui/src/styles/search.css',
