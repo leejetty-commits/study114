@@ -8,7 +8,7 @@
 
 
 
-import { buildMemoComposeChargeCopy, buildMemoGateCopy } from './messages-copy.js';
+import { buildMemoComposeChargeCopy, buildMemoGateCopy, displayContextLabel } from './messages-copy.js';
 
 import { REPORT_REASONS } from './messages-copy.js';
 
@@ -177,9 +177,7 @@ export function showComposeModal(opts) {
 
         <h2 id="msg-compose-title" class="msg-compose__title" data-drag-handle>첫 메모 보내기</h2>
 
-        <p class="msg-compose__target">대상: <strong>${esc(opts.targetName)}</strong> · ${esc(opts.contextLabel)}</p>
-
-        <p class="msg-compose__badge"><span class="msg-badge">${esc(opts.scopeBadge)}</span> ${esc(opts.scopeHint)}</p>
+        <p class="msg-compose__target">대상: <strong>${esc(opts.targetName)}</strong> · ${esc(displayContextLabel(opts.contextLabel))}</p>
 
         ${chargeNote}
 

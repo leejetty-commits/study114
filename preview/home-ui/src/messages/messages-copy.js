@@ -45,12 +45,20 @@ function formatMemoExpiry(iso) {
   return d.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-/** §3 공개 범위 배지 */
+/** §3 공개 범위 배지. 저장용. 목록·대화·쓰기 창에는 그리지 않는다. */
 export const SCOPE_BADGE_LABELS = {
   structuredOnly: '구조화 항목만',
   structuredPlusPaid: '구조화 항목 + 유료 전용 요청문',
   publicProfile: '공개 프로필',
 };
+
+/** 저장된 context_label을 화면 문구로만 바꾼다. */
+export function displayContextLabel(label) {
+  const text = String(label || '');
+  if (text === '등록') return '학생 등록글';
+  if (text === '상세') return '프로필';
+  return text;
+}
 
 /** §4 빈 상태 — 정본: empty-state-copy.js `getMessagesEmptyCopy` */
 export const FREE_PROVIDER_INBOX_COPY = {
