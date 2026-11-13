@@ -67,6 +67,8 @@ const cssFiles = [
   'preview/home-ui/src/styles/home-right-rail.css',
   'preview/search-ui/src/styles/search.css',
   'preview/home-ui/src/styles/design-system.css',
+  'preview/home-ui/src/styles/home-listings-headings.css',
+  'preview/home-ui/src/styles/home-listings-cards.css',
   'preview/home-ui/src/styles/home-listings.css',
   'preview/home-ui/src/styles/product-chrome.css',
   'preview/home-ui/src/styles/mypage-ops-shell.css',

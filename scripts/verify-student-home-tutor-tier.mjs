@@ -23,7 +23,7 @@ function ok(name, cond, detail = '') {
   }
 }
 
-const listings = read('preview/home-ui/src/styles/home-listings.css').replace(/\r\n/g, '\n');
+const listings = ['preview/home-ui/src/styles/home-listings-headings.css', 'preview/home-ui/src/styles/home-listings-cards.css', 'preview/home-ui/src/styles/home-listings.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '').replace(/\r\n/g, '\n');
 const homeCss = read('preview/home-ui/src/styles/home.css');
 const searchCss = read('preview/search-ui/src/styles/search.css');
 const visily = read('preview/search-ui/src/styles/search-visily.css');

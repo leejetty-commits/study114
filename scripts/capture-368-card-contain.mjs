@@ -13,7 +13,7 @@ const root = path.join(__dirname, '..');
 const outDir = path.join(root, 'docs/worklog/2026/11/shots-368-card-contain');
 fs.mkdirSync(outDir, { recursive: true });
 
-const listingsCss = fs.readFileSync(path.join(root, 'preview/home-ui/src/styles/home-listings.css'), 'utf8');
+const listingsCss = ['home-listings-headings.css', 'home-listings-cards.css', 'home-listings.css'].map((name) => fs.readFileSync(path.join(root, 'preview/home-ui/src/styles', name), 'utf8')).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const myshopCss = fs.readFileSync(path.join(root, 'preview/home-ui/src/styles/myshop.css'), 'utf8');
 
 /* 기존 368 픽스처 — 가로(663×380)·세로(portrait) 비율이 칸과 다름 */

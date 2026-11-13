@@ -108,7 +108,7 @@ ok(
   listingImage({ image_path_prime: '/p.jpg', image_path_basic_360: '/b.jpg' }, 'pick') === '/p.jpg',
 );
 
-const css = readFileSync(join(ROOT, 'preview/home-ui/src/styles/home-listings.css'), 'utf8').replace(/\r\n/g, '\n');
+const css = ['home-listings-headings.css', 'home-listings-cards.css', 'home-listings.css'].map((name) => readFileSync(join(ROOT, 'preview/home-ui/src/styles', name), 'utf8')).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '').replace(/\r\n/g, '\n');
 ok('카드 expo-media contain', /\.expo-media img \{[^}]*object-fit:\s*contain/.test(css));
 ok('상세 흐림 ::before 없음', !/\.p24-dl \.p24-fit-photo:not\(\.p24-fit-photo--empty\)::before/.test(css));
 
