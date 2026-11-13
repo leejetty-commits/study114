@@ -43,9 +43,45 @@ origin 브랜치 `docs/realtime-quickmatch-spec-2026-11-13`의 `docs/worklog/gro
 - `preview/home-ui`에서 `npm run build` 성공.
 - `verify-tutor-mypage-route-integrity` 통과. 퀵매칭 메뉴는 계정설정 바로 위, 학생 메뉴에는 없음.
 - `mypage-quick-match.css` 중괄호 깊이 0.
-- 이 환경에 `php` CLI가 없어 `npm run verify:php-syntax`는 실행하지 못했다. 미실행을 성공으로 보지 않는다.
+- PHP 문법: 우동공과3이 변경 PHP 15개를 PHP 8.3으로 검사. 모두 `No syntax errors`.
 - 089는 실행하지 않았다. 로그인된 마이페이지와 설정 API는 로컬 PHP가 없어 브라우저로 확인하지 못했다.
 - 머지하지 않음.
+
+## [최종검수 패키지 — 실시간 퀵매칭 0단계]
+
+```
+[최종검수 패키지 — 실시간 퀵매칭 0단계]
+브랜치 / 커밋: work/quick-match-0-common / 6e96eeff
+PR: https://github.com/leejetty-commits/study114/pull/208 (머지 안 함)
+변경 파일: git diff --stat origin/main...6e96eeff
+  29 files, +1469 / -23
+  sql/schema/089_quick_match_foundation.sql (+127) 와 rollback (+72)
+  src/QuickMatch/* 5개 (Dispatcher 370, Settings 236, Schema, PrimeGate, HttpException)
+  public/api/quick-match/settings.php
+  기존 훅: BasicRegister, StudentHub, StudyRoomRegister, Messages, Reviews, ProviderStatus
+  화면: 메뉴·설정 틀·쪽지/후기 탭·quick-match CSS
+  docs/worklog/2026/11/2026-11-14-quick-match-0.md
+diff 요약:
+  - 089: 나이대 3칸, quick_match_prefs, thread_origin, 운영 기록표 3개. 멱등. 실행은 종현 phpMyAdmin.
+  - 메뉴는 계정설정 바로 위. 프라임만 황금색. prime_active는 기존 상태 응답에만 추가.
+  - 설정 API는 필수 조건을 400으로 거절. 비프라임 POST는 403. 첫 저장부터 서울 시각 7일.
+  - 쪽지·후기 탭 일반/실시간 퀵매칭. 학생은 공급자 메시지가 없는 퀵매칭 쪽지를 보지 않음.
+  - 퀵매칭 후기는 공급자 메시지 1개 이상일 때만. 일반 후기 게이트는 그대로.
+  - MATCHERS_READY=false. 유형별 매칭 전에는 쪽지와 발송 기록을 만들지 않음.
+테스트: preview/home-ui npm run build 성공. verify-tutor-mypage-route-integrity 통과.
+PHP 문법: 우동공과3, 변경 PHP 15개 모두 No syntax errors (PHP 8.3).
+CSS: mypage-quick-match.css 중괄호 깊이 0.
+브라우저: 로그인 화면·설정 API는 로컬 PHP가 없어 확인하지 못함.
+운영 SQL: 089 미실행.
+미해결·종현 결정 필요:
+  - E-3 성별·강의스타일 위치 (상세에 그대로)
+  - E-4 스위치 문구 (0단계에 스위치 없음)
+  - E-5 교습비 단위 (학생·과외쌤은 원, 화면은 천원. 공부방 monthly_fee_manwon은 문자열이고 빈 값 대체는 price_amount/1000. 비교 규칙 없음)
+  - E-9 학생 카드 하루 5건 (미구현)
+  - E-10 동의 문구 (과외쌤 문장 유지)
+  - E-11 학교명 (쪽지에 넣지 않음. 추가 결정 없음)
+  - E-6은 결정됨: 공부방 수업료가 비면 그 조건만 건너뜀. 비교는 2단계.
+```
 
 ## 배포 전 사용자 할 일
 
