@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Paid\PaidCheckoutGate;
 use Study114\Paid\Pg\PortOneWebhookVerifier;
 use Study114\Paid\ProviderCheckoutService;
 
@@ -18,6 +19,16 @@ header('Content-Type: application/json; charset=utf-8');
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     http_response_code(405);
     echo json_encode(['ok' => false, 'error' => 'method_not_allowed'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if (!PaidCheckoutGate::paymentsEnabled()) {
+    http_response_code(403);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'payment_not_available',
+        'message' => PaidCheckoutGate::CLOSED_MESSAGE,
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 

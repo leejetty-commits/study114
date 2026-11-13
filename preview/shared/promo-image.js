@@ -1,6 +1,7 @@
 /**
  * 홍보사진 — 원본 1장 업로드 후 서버가 Prime(16:9)·Basic(1:1) 파생본을 만든다.
- * 클라이언트는 형식·용량·최소 크기 검증과 초점(크롭) 1회 조정만 담당한다.
+ * 클라이언트는 형식·용량 검증과 초점(크롭) 1회 조정만 담당한다.
+ * 작아도 거절하지 않는다 — 서버가 키운다. 픽셀 숫자는 사용자에게 보여 주지 않는다.
  */
 
 import { bindDraggableDialog } from './draggable-dialog.js';
@@ -9,11 +10,16 @@ export const PROMO_IMAGE_SPEC = {
   accept: 'image/jpeg,image/png,image/webp',
   acceptExt: ['jpg', 'jpeg', 'png', 'webp'],
   maxBytes: 4 * 1024 * 1024,
+  /** 업로드 전 브라우저 축소 긴 변 상한 */
+  clientLongEdge: 2560,
+  /** 소프트 안내 기준(거절 아님). 서버도 같은 기준으로 soft_small 판정. */
   minWidth: 800,
   minHeight: 600,
   maxCount: 5,
-  recommended: '1600×1200 이상',
+  recommended: '또렷한 사진',
 };
+
+export const PROMO_SOFT_SMALL_HINT = '작은 사진은 확대되어 화질이 좋지 않을 수 있어요. 그래도 올릴 수 있어요.';
 
 function extOf(name) {
   const m = String(name || '')
@@ -47,25 +53,109 @@ export function readImageSize(file) {
 /**
  * @param {File} file
  * @returns {Promise<string>} 오류 메시지. 통과면 빈 문자열.
+ * 용량 초과는 거절하지 않는다 — shrinkPromoImageForUpload로 줄인 뒤 올린다.
  */
 export async function validatePromoImageFile(file) {
   if (!file) return '파일을 선택해 주세요.';
   const ext = extOf(file.name);
-  const mimeOk = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
+  if (ext === 'heic' || ext === 'heif' || String(file.type || '').includes('heic') || String(file.type || '').includes('heif')) {
+    return '이 형식은 아직 지원하지 않아요. JPG나 PNG로 바꿔 올려 주세요.';
+  }
+  const mimeOk =
+    !file.type || ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'].includes(file.type);
   const extOk = PROMO_IMAGE_SPEC.acceptExt.includes(ext);
   if (!mimeOk && !extOk) {
-    return 'JPG, PNG, WebP 파일만 올릴 수 있습니다.';
-  }
-  if (file.size > PROMO_IMAGE_SPEC.maxBytes) {
-    return '파일 용량은 4MB 이하여야 합니다.';
+    return 'JPG, PNG, WebP 파일만 올릴 수 있어요.';
   }
   try {
     const { width, height } = await readImageSize(file);
-    if (width < PROMO_IMAGE_SPEC.minWidth || height < PROMO_IMAGE_SPEC.minHeight) {
-      return `최소 ${PROMO_IMAGE_SPEC.minWidth}×${PROMO_IMAGE_SPEC.minHeight} 픽셀 이상이어야 합니다. (현재 ${width}×${height})`;
+    if (width < 1 || height < 1) {
+      return '이미지를 확인할 수 없어요.';
     }
   } catch (err) {
-    return err instanceof Error ? err.message : '이미지를 확인할 수 없습니다.';
+    return err instanceof Error ? err.message : '이미지를 확인할 수 없어요.';
+  }
+  return '';
+}
+
+/**
+ * 긴 변 clientLongEdge·용량 maxBytes 이하로 브라우저에서 줄인다(JPEG/WebP).
+ * 이미 작으면 원본 File을 그대로 돌려준다.
+ * @param {File} file
+ * @returns {Promise<File>}
+ */
+export async function shrinkPromoImageForUpload(file) {
+  const maxEdge = PROMO_IMAGE_SPEC.clientLongEdge;
+  const maxBytes = PROMO_IMAGE_SPEC.maxBytes;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('이미지를 읽을 수 없어요.'));
+      el.src = url;
+    });
+    const sw = img.naturalWidth || img.width;
+    const sh = img.naturalHeight || img.height;
+    const long = Math.max(sw, sh);
+    const needResize = long > maxEdge || file.size > maxBytes;
+    if (!needResize) {
+      return file;
+    }
+    const scale = long > maxEdge ? maxEdge / long : 1;
+    const tw = Math.max(1, Math.round(sw * scale));
+    const th = Math.max(1, Math.round(sh * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = tw;
+    canvas.height = th;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('이미지 캔버스를 만들 수 없어요.');
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, tw, th);
+
+    const preferWebp = String(file.type || '').includes('webp') || extOf(file.name) === 'webp';
+    const mime = preferWebp && typeof canvas.toBlob === 'function' ? 'image/webp' : 'image/jpeg';
+    const baseName = (file.name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+    const outName = `${baseName}.${mime === 'image/webp' ? 'webp' : 'jpg'}`;
+
+    let quality = 0.86;
+    /** @type {Blob|null} */
+    let blob = null;
+    for (let i = 0; i < 8; i++) {
+      blob = await new Promise((resolve) => {
+        canvas.toBlob((b) => resolve(b), mime, quality);
+      });
+      if (!blob) break;
+      if (blob.size <= maxBytes || quality <= 0.45) break;
+      quality = Math.max(0.45, quality - 0.1);
+    }
+    if (!blob) {
+      const dataUrl = canvas.toDataURL(mime, quality);
+      const bin = atob(dataUrl.split(',')[1] || '');
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      blob = new Blob([arr], { type: mime });
+    }
+    return new File([blob], outName, { type: mime, lastModified: Date.now() });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
+ * 작아도 업로드는 통과. 소프트 안내 문구만 돌려준다(픽셀 숫자 없음).
+ * @param {File} file
+ * @returns {Promise<string>}
+ */
+export async function softHintPromoImageFile(file) {
+  try {
+    const { width, height } = await readImageSize(file);
+    if (width < PROMO_IMAGE_SPEC.minWidth || height < PROMO_IMAGE_SPEC.minHeight) {
+      return PROMO_SOFT_SMALL_HINT;
+    }
+  } catch {
+    return '';
   }
   return '';
 }
@@ -153,7 +243,7 @@ export function openPromoCropDialog(host, opts) {
 }
 
 /**
- * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number, caption?: string }} input
+ * @param {{ studyRoomId: number, file: File, cropX: number, cropY: number, imageType?: string, sortOrder?: number, caption?: string, replaceImageId?: number }} input
  */
 export async function uploadPromoImage(input) {
   const fd = new FormData();
@@ -164,6 +254,7 @@ export async function uploadPromoImage(input) {
   fd.append('image_type', input.imageType || 'cover');
   if (input.sortOrder) fd.append('sort_order', String(input.sortOrder));
   if (input.caption) fd.append('caption', String(input.caption).slice(0, 80));
+  if (input.replaceImageId) fd.append('replace_image_id', String(input.replaceImageId));
 
   const res = await fetch('/api/study-room/promo-image.php', {
     method: 'POST',

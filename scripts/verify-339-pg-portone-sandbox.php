@@ -525,6 +525,7 @@ if ($userId > 0 && $hasPay) {
             'portone_test',
             $dupPay,
         );
+        putenv('STUDY114_PAYMENTS_ENABLED=1');
         putenv('STUDY114_PAID_MOCK_COMPLETE=1');
         $ticketsDup = new ProviderTicketRepository($pdo);
         $checkoutSvc = new ProviderCheckoutService(

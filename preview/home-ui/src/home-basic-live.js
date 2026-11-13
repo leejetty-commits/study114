@@ -66,7 +66,10 @@ export function studyRoomSearchCardFields(item) {
     detail_completion_status: item.detail_completion_status || '',
     image_path: item.image_path || item.image_path_basic || '',
     image_path_basic: item.image_path_basic || '',
+    image_path_basic_360: item.image_path_basic_360 || '',
+    image_path_basic_720: item.image_path_basic_720 || '',
     image_path_prime: item.image_path_prime || '',
+    image_path_fit: item.image_path_fit || '',
   };
 }
 
@@ -134,7 +137,10 @@ export function tutorSearchCardFields(item) {
     teaching_style_badges: Array.isArray(item.teaching_style_badges) ? item.teaching_style_badges : [],
     image_path: item.image_path || item.image_path_basic || '',
     image_path_basic: item.image_path_basic || '',
+    image_path_basic_360: item.image_path_basic_360 || '',
+    image_path_basic_720: item.image_path_basic_720 || '',
     image_path_prime: item.image_path_prime || '',
+    image_path_fit: item.image_path_fit || '',
   };
 }
 

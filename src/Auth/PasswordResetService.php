@@ -74,7 +74,7 @@ final class PasswordResetService
         $supportUrl = MemberMailTemplate::supportUrl((string) ($this->config['home_ui'] ?? ''));
 
         if ($socialOnly) {
-            $this->tokens->create($userId, 'password_reset', (int) $this->config['password_reset_ttl_minutes']);
+            // 소셜 전용 안내는 재설정 링크가 없으므로 토큰을 만들지 않는다.
             $mail = PasswordResetMailTemplate::buildSocialOnly(
                 $providerLabels,
                 $role,

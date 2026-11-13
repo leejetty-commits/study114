@@ -18,9 +18,12 @@ const LESSON_TYPE_LABELS = {
 /** @param {import('./store.js').StudentRecord} s */
 export function studentToExposureRow(s) {
   const places = Array.isArray(s.lesson_places) ? s.lesson_places : [];
+  const fullName = s.student_name || s.public_display_name || '';
   return {
     id: s.id,
-    public_display_name: s.public_display_name,
+    student_name: s.student_name || '',
+    // 마이페이지 카드 미리보기 전용. 홈·찾기 카드는 이 함수를 쓰지 않고, 가린 제목만 받는다.
+    public_display_name: fullName,
     gender: s.gender,
     grade_level: s.grade_level,
     subject_label: s.subject_label || '—',

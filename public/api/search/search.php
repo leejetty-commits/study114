@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\AuthSession;
 use Study114\Paid\StudentRequestTextAccess;
 use Study114\Search\SearchService;
+use Study114\Visibility\TestOwnerVisibility;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -55,6 +56,9 @@ try {
             $authUser = $auth;
         }
     }
+
+    TestOwnerVisibility::reset();
+    TestOwnerVisibility::bindViewer($authUser);
 
     $service = new SearchService();
 

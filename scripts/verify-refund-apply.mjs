@@ -91,7 +91,9 @@ ok('F2 fetchRefundEligibility', paidApi.includes('fetchRefundEligibility'));
 ok('F3 submitRefund', paidApi.includes('submitRefund'));
 ok('F4 withdrawRefund', paidApi.includes('withdrawRefund'));
 
-const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
+const screens = exists('preview/home-ui/src/plans/screens.js')
+  ? ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n')
+  : '';
 ok('F5 history 탭 UI', screens.includes('data-history-tab'));
 ok('F6 v3 셀 토글', screens.includes('data-v3-cell'));
 ok('F7 환불 신청 버튼', screens.includes('data-refund-submit'));

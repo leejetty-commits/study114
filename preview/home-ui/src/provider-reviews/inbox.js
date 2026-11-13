@@ -47,6 +47,7 @@ export function parseReviewsPath(path) {
       page,
       providerType: providerType || undefined,
       providerId: providerId || undefined,
+      origin: params.get('origin') === 'quick_match' ? 'quick_match' : 'general',
     };
   }
   return null;
@@ -129,9 +130,20 @@ function providerDisplayName(type, id) {
   return providerKindLabel(type);
 }
 
+function reviewOriginTabs(active) {
+  const general = '/mypage/messages/reviews?origin=general';
+  const quick = '/mypage/messages/reviews?origin=quick_match';
+  return `<div class="qm-origin-tabs" role="tablist" aria-label="후기 구분">
+    <a href="#${general}" class="qm-origin-tabs__tab${active === 'general' ? ' is-active' : ''}">일반</a>
+    <a href="#${quick}" class="qm-origin-tabs__tab${active === 'quick_match' ? ' is-active' : ''}">실시간 퀵매칭</a>
+  </div>`;
+}
+
 export function renderReviewInboxPlaceholder() {
+  const origin = reviewsNavFromLocation().origin === 'quick_match' ? 'quick_match' : 'general';
   return `
     <section class="review-inbox mp-card" data-review-inbox data-mode="list" data-lane="all">
+      ${reviewOriginTabs(origin)}
       <div data-review-inbox-body><p class="review-sheet__empty mp-card__empty">불러오는 중…</p></div>
     </section>`;
 }
@@ -154,7 +166,7 @@ export async function hydrateReviewInbox(root, rerender) {
   try {
     const data = filtered
       ? await fetchReviewList(nav.providerType, nav.providerId, page)
-      : await fetchReviewInbox('all', page);
+      : await fetchReviewInbox('all', page, nav.origin === 'quick_match' ? 'quick_match' : 'general');
     const items = data.items || [];
     const archiveOpts = filtered
       ? { providerType: nav.providerType, providerId: nav.providerId }

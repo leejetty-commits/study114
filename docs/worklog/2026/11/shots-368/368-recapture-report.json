@@ -1,0 +1,86 @@
+{
+  "stamp": "mwcfp89j",
+  "report": [
+    {
+      "name": "368-mwcfp89j-cover-page-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "cba3ddbe1975",
+      "bytes": 170740
+    },
+    {
+      "name": "368-mwcfp89j-detail1-page-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "595825f70ebf",
+      "bytes": 161783
+    },
+    {
+      "name": "368-mwcfp89j-detail1-soft-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "6d3d8e5d8173",
+      "bytes": 153169
+    },
+    {
+      "name": "368-mwcfp89j-detail1-crop-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "d26d7fac0fdc",
+      "bytes": 154411
+    },
+    {
+      "name": "368-mwcfp89j-detail1-after-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "686a190b2ed8",
+      "bytes": 161759
+    },
+    {
+      "name": "368-mwcfp89j-cover-page-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "02d13c14aeae",
+      "bytes": 63127
+    },
+    {
+      "name": "368-mwcfp89j-detail1-page-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "2d9ed5f93449",
+      "bytes": 63637
+    },
+    {
+      "name": "368-mwcfp89j-detail1-soft-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "a63b44195241",
+      "bytes": 63967
+    },
+    {
+      "name": "368-mwcfp89j-detail1-crop-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "46d45b3e9606",
+      "bytes": 65135
+    },
+    {
+      "name": "368-mwcfp89j-detail1-after-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "625fbd656caa",
+      "bytes": 63616
+    }
+  ],
+  "dups": []
+}

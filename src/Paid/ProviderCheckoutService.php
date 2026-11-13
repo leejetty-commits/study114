@@ -63,6 +63,10 @@ final class ProviderCheckoutService
         array $badgeCodes = [],
         array $regionInput = [],
     ): array {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+
         $productId = trim($productId);
         $variant = trim($variant);
         if ($productId === 'picked') {
@@ -404,6 +408,9 @@ final class ProviderCheckoutService
      */
     public function completePortOneOrder(int $userId, string $orderRef, ?string $claimedPaymentId = null): array
     {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
         $order = $this->orders->getByRef($orderRef);
         if ($order === null || (int) $order['user_id'] !== $userId) {
             throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
@@ -423,6 +430,9 @@ final class ProviderCheckoutService
      */
     public function completePortOneByPaymentId(string $paymentId): ?array
     {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
         $order = $this->orders->getByPaymentId($paymentId);
         if ($order === null) {
             return null;
@@ -446,6 +456,9 @@ final class ProviderCheckoutService
      */
     public function completeOrder(int $userId, string $orderRef, bool $pgVerified = false): array
     {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
         if (!$pgVerified && !PaidCheckoutGate::mockCompleteAllowed()) {
             throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
         }

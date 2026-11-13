@@ -12,7 +12,9 @@ use Study114\Paid\AutoNewBadge;
 use Study114\Paid\PaidBadgeResolver;
 use Study114\Region\RegionGuLink;
 use Study114\Region\TutorRegionUnit;
+use Study114\Registration\StudentPublicName;
 use Study114\Tutor\TutorBasicFields;
+use Study114\Visibility\TestOwnerVisibility;
 use Study114\Visibility\WithdrawnOwnerSql;
 
 final class SearchService
@@ -193,22 +195,46 @@ final class SearchService
         $parts = [];
         if ($tutorUnitId !== null) {
             $params['guest_tutor_unit_id'] = $tutorUnitId;
-            $parts[] = 's.preferred_tutor_region_id = :guest_tutor_unit_id';
+            $params['guest_tutor_unit_extra_id'] = $tutorUnitId;
+            $parts[] = $this->studentHopeOr(
+                's.preferred_tutor_region_id = :guest_tutor_unit_id',
+                's.preferred_tutor_region_extra_id = :guest_tutor_unit_extra_id',
+                'tutor',
+            );
         }
         if ($dongIds !== []) {
             $holders = [];
+            $extraHolders = [];
             foreach (array_values($dongIds) as $i => $dongId) {
                 $key = 'guest_dong_' . $i;
+                $extraKey = 'guest_dong_extra_' . $i;
                 $params[$key] = $dongId;
+                $params[$extraKey] = $dongId;
                 $holders[] = ':' . $key;
+                $extraHolders[] = ':' . $extraKey;
             }
-            $parts[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+            $parts[] = $this->studentHopeOr(
+                's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')',
+                's.preferred_studyroom_region_extra_id IN (' . implode(', ', $extraHolders) . ')',
+                'study_room',
+            );
         }
         if ($parts === []) {
             return '1 = 0';
         }
 
         return count($parts) === 1 ? $parts[0] : '(' . implode(' OR ', $parts) . ')';
+    }
+
+    /**
+     * 본 지역 또는 같은 희망 유형의 추가 지역. 다른 유형의 추가 값은 조건에 넣지 않는다.
+     * 같은 유형의 추가 희망지역도 본 지역과 OR로 맞춘다. 유형이 다른 추가 값은 쓰지 않는다.
+     */
+    private function studentHopeOr(string $primarySql, string $extraSql, string $lessonType): string
+    {
+        $lesson = $lessonType === 'study_room' ? 'study_room' : 'tutor';
+
+        return '(' . $primarySql . ' OR (s.preferred_lesson_type = \'' . $lesson . '\' AND ' . $extraSql . '))';
     }
 
     private function countGuestStudentsAtGu(PDO $pdo, int $guId): int
@@ -636,6 +662,7 @@ final class SearchService
             "sr.profile_status <> 'hidden'",
             'sr.deleted_at IS NULL',
             WithdrawnOwnerSql::notWithdrawn('sr.user_id'),
+            TestOwnerVisibility::sql($pdo, 'sr.user_id'),
             $this->roomPromoSlot1Sql('sr'),
         ];
         if ($guestPublishedOnly) {
@@ -965,6 +992,7 @@ final class SearchService
         $where = [
             "t.profile_status <> 'hidden'",
             WithdrawnOwnerSql::notWithdrawn('t.user_id'),
+            TestOwnerVisibility::sql($pdo, 't.user_id'),
             $this->tutorSlot1Sql('t'),
             TutorBasicFields::completeSql('t'),
         ];
@@ -1231,6 +1259,7 @@ final class SearchService
             's.exposure_status = :status',
             's.deleted_at IS NULL',
             WithdrawnOwnerSql::notWithdrawn('s.guardian_user_id'),
+            TestOwnerVisibility::sql($pdo, 's.guardian_user_id'),
         ];
         $params = ['status' => 'published'];
 
@@ -1253,28 +1282,51 @@ final class SearchService
         }
         $studyroomComplexId = $this->intFilter($filters, 'preferred_studyroom_complex_id');
         if ($studyroomComplexId !== null && $lessonForRegion === 'study_room') {
-            $where[] = 's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id';
             $params['preferred_studyroom_complex_id'] = $studyroomComplexId;
+            $params['preferred_studyroom_complex_extra_id'] = $studyroomComplexId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_studyroom_complex_id = :preferred_studyroom_complex_id',
+                's.preferred_studyroom_complex_extra_id = :preferred_studyroom_complex_extra_id',
+                'study_room',
+            );
         } elseif ($studyroomRegionId !== null) {
-            $where[] = 's.preferred_studyroom_region_id = :preferred_studyroom_region_id';
             $params['preferred_studyroom_region_id'] = $studyroomRegionId;
+            $params['preferred_studyroom_region_extra_id'] = $studyroomRegionId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_studyroom_region_id = :preferred_studyroom_region_id',
+                's.preferred_studyroom_region_extra_id = :preferred_studyroom_region_extra_id',
+                'study_room',
+            );
         } elseif ($regionId !== null && $lessonForRegion === 'study_room') {
             $dongIds = RegionGuLink::dongIdsUnderGu($regionId);
             if ($dongIds === []) {
                 $where[] = '1 = 0';
             } else {
                 $holders = [];
+                $extraHolders = [];
                 foreach (array_values($dongIds) as $i => $dongId) {
                     $key = 'sr_gu_dong_' . $i;
+                    $extraKey = 'sr_gu_dong_extra_' . $i;
                     $params[$key] = $dongId;
+                    $params[$extraKey] = $dongId;
                     $holders[] = ':' . $key;
+                    $extraHolders[] = ':' . $extraKey;
                 }
                 $where[] = "s.preferred_lesson_type = 'study_room'";
-                $where[] = 's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')';
+                $where[] = $this->studentHopeOr(
+                    's.preferred_studyroom_region_id IN (' . implode(', ', $holders) . ')',
+                    's.preferred_studyroom_region_extra_id IN (' . implode(', ', $extraHolders) . ')',
+                    'study_room',
+                );
             }
         } elseif ($regionId !== null && $lessonForRegion === 'tutor') {
-            $where[] = 's.preferred_tutor_region_id = :preferred_tutor_unit_id';
             $params['preferred_tutor_unit_id'] = $regionId;
+            $params['preferred_tutor_unit_extra_id'] = $regionId;
+            $where[] = $this->studentHopeOr(
+                's.preferred_tutor_region_id = :preferred_tutor_unit_id',
+                's.preferred_tutor_region_extra_id = :preferred_tutor_unit_extra_id',
+                'tutor',
+            );
         } elseif ($regionId !== null) {
             $isGu = $this->isSelectableRegion($pdo, $regionId);
             $where[] = $this->studentGuBaseWhere(
@@ -1360,7 +1412,7 @@ final class SearchService
         $total = (int) $stmt->fetchColumn();
 
         $sql = "
-            SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.gender,
+            SELECT DISTINCT s.id, s.student_name, s.grade_level, s.gender,
                    s.lesson_format, s.student_gender_group, s.preferred_student_count_group,
                    s.preferred_fee_amount, s.preferred_studyroom_fee_amount,
                    s.preferred_lesson_type, s.lessons_per_week, s.minutes_per_lesson,
@@ -1393,7 +1445,7 @@ final class SearchService
 
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $genderLabel = self::GENDER_LABELS[$row['gender'] ?? ''] ?? '';
-            $leftTitle = $row['public_display_name'] ?: '학생';
+            $leftTitle = self::publicStudentTitle($row['student_name'] ?? null);
             $leftMeta = trim(($row['grade_level'] ?? '') . ($genderLabel !== '' ? ' · ' . $genderLabel : ''));
 
             $centerParts = [];
@@ -1483,9 +1535,17 @@ final class SearchService
         return ['tab' => 'student', 'total' => $total, 'rows' => $rows, 'items' => $items];
     }
 
+    /** 타인에게 보이는 학생 제목. 이름이 없으면 「학생」. 원문은 응답에 넣지 않는다. */
+    private static function publicStudentTitle(mixed $studentName): string
+    {
+        $masked = StudentPublicName::mask(is_string($studentName) ? $studentName : '');
+
+        return $masked !== '' ? $masked : '학생';
+    }
+
     /**
      * 프라임 과외쌤에게 쪽지로 보낼 요약만. 동의 OFF·미공개는 빠진다.
-     * student_name·연락처·실명 컬럼은 읽지 않는다.
+     * student_name 은 가리기 위해서만 읽고, 응답에는 가린 제목만 넣는다. 연락처는 읽지 않는다.
      *
      * @return array{tab: string, total: int, rows: list<array{left: string, center: string, right: string}>, items: list<array<string, mixed>>}
      */
@@ -1506,7 +1566,7 @@ final class SearchService
         $total = (int) $count->fetchColumn();
 
         $sql = "
-            SELECT DISTINCT s.id, s.public_display_name, s.grade_level, s.request_summary,
+            SELECT DISTINCT s.id, s.student_name, s.grade_level, s.request_summary,
                    s.preferred_lesson_type, s.published_at, sst.subject_name,
                    r.dong_name, r.sigungu_name
             FROM students s
@@ -1525,10 +1585,7 @@ final class SearchService
         $items = [];
         $rows = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $title = trim((string) ($row['public_display_name'] ?? ''));
-            if ($title === '') {
-                $title = '학생';
-            }
+            $title = self::publicStudentTitle($row['student_name'] ?? null);
             $region = trim((string) (($row['preferred_lesson_type'] ?? '') === 'study_room'
                 ? ($row['dong_name'] ?? '')
                 : ($row['sigungu_name'] ?? '')));

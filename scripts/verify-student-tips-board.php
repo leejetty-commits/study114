@@ -6,7 +6,7 @@ declare(strict_types=1);
  * 사이트오류-6B · 「학생 꿀팁 가이드」(info-student) 서버 검사
  * (a) ACL 표: 역할 × discover/list/detail/compose/delete/react/comment. 공급자 정보 게시판 2개 표는 그대로
  * (b) 계정 7종(게스트·학생·무료 공부방·유료 공부방·무료 과외쌤·유료 과외쌤·관리자) × 읽기·쓰기·수정·삭제 (서버 서비스 호출)
- * (c) 작성자 가리기: 3자 이상 「최진○」, 2자 「최○」, 1자 「○」. 응답 어디에도 이름 원문 없음, 학교·학년·연락처 키 없음
+ * (c) 작성자 가리기: 3자 「최*호」, 2자 「최*」, 1자 「*」, 4자 「남**수」. 응답 어디에도 이름 원문 없음, 학교·학년·연락처 키 없음
  * (d) 「응원해요」: 계정당 글마다 1회 토글, 게스트·member 불가, 고민방 반응 API·이달의 베스트 합계와 분리
  * (e) 연락처·외부 링크 차단(서버 판정, 422)
  * (e2) 사이트오류-7: 공급자 정보 게시판(info-room · info-tutor)도 같은 함수·같은 422 로 작성·수정을 막는다.
@@ -627,13 +627,13 @@ ok('delete_free_room_on_student_post_403', static fn (): bool => statusOf(static
 ok('delete_board_mismatch_403', static fn (): bool => statusOf(static fn () => boardSvc($GLOBALS['pdo'])->delete('info-room', $sp(), '', $auth['student'])) === 403);
 
 // ── (c) 작성자 가리기 ──
-ok('mask_three_chars', InfoBoardService::maskAuthorName('최진호') === '최진○');
-ok('mask_two_chars', InfoBoardService::maskAuthorName('최진') === '최○');
-ok('mask_one_char', InfoBoardService::maskAuthorName('최') === '○');
-ok('mask_four_chars_keeps_two', InfoBoardService::maskAuthorName('남궁민수') === '남궁○');
+ok('mask_three_chars', InfoBoardService::maskAuthorName('최진호') === '최*호');
+ok('mask_two_chars', InfoBoardService::maskAuthorName('최진') === '최*');
+ok('mask_one_char', InfoBoardService::maskAuthorName('최') === '*');
+ok('mask_four_chars_keeps_two', InfoBoardService::maskAuthorName('남궁민수') === '남**수');
 ok('mask_empty', InfoBoardService::maskAuthorName('  ') === '');
 $byName = [];
-foreach (['student' => '최진○', 'student2' => '김○', 'student3' => '○', 'student4' => '남궁○', 'student5' => '학생'] as $who => $label) {
+foreach (['student' => '최*호', 'student2' => '김*', 'student3' => '*', 'student4' => '남**수', 'student5' => '학생'] as $who => $label) {
     ok("mask_response_{$who}", static function () use ($who, $label, $auth, $tip, &$byName): bool {
         $saved = saveVia($auth[$who], $tip("{$who} 이름 확인", 'senior-story'));
         $byName[$who] = (string) ($saved['id'] ?? '');
@@ -669,7 +669,7 @@ ok('mask_raw_name_never_in_any_response', static function () use ($auth, $pdo): 
         }
     }
 
-    return str_contains($dump, '최진○') && !str_contains($dump, '"authorName"') && !str_contains($dump, 'student_name');
+    return str_contains($dump, '최*호') && !str_contains($dump, '"authorName"') && !str_contains($dump, 'student_name');
 });
 ok('mask_raw_name_not_stored_in_post', static function () use ($pdo): bool {
     foreach ($pdo->posts as $row) {

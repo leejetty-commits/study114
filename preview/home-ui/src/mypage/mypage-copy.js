@@ -57,6 +57,7 @@ export const ORDER_STATUS_LABELS = {
   canceled: '결제 취소',
   cancelled: '결제 취소',
   refund_requested: '진행중',
+  /* 18d PG HOLD: 실제 입금(refunded) 전에는 UI에서 이 상태를 쓰지 않음. 입금 완료 후에만 「환불 완료」 */
   refunded: '환불 완료',
 };
 
@@ -118,6 +119,7 @@ export const REFUND_STATUS_LABELS = {
   requested: '심사중',
   approved: '승인(환불 대기)',
   rejected: '거절',
+  /* 입금 완료(refunded) 전 고객 패널은 승인 단계까지만 표시(plans/screens PG HOLD) */
   refunded: '환불 완료',
   cancelled: '철회',
 };

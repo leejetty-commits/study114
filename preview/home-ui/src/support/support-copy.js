@@ -4,6 +4,7 @@
  */
 
 import { PICK_SET_SIZE_FALLBACK } from '../plans/runtime-config.js';
+import { FAQ_PAID_VS_TUTOR_FEE_REFUND } from '../refund-policy-copy.js';
 
 /** §3-1 3대 원칙 */
 export const PRINCIPLES_POSITIVE = [
@@ -124,7 +125,7 @@ export const GUIDE_ARTICLES = [
       '학생 정보는 **필요한 범위만** 보여 주세요.',
     ],
     checklist: [
-      { label: '학생 표시 범위·이름 가림', hint: '등록·수정 시 보여 주는 항목 · 표시명 확인' },
+      { label: '학생 표시 범위·이름 가림', hint: '등록·수정 시 보여 주는 항목 · 다른 사람에게는 이름 가운데가 가려짐' },
       { label: '찜·비교 후 연락', hint: '후보를 좁힌 뒤 쪽지로 공식 연락 시작' },
       { label: '공부방·과외쌤 제출자료 직접 비교', hint: '제출자료·노출 상태는 본인이 확인 — 플랫폼이 보증하지 않음' },
       { label: '선입금·고액 선불', hint: '결정 전 「선입금·전액선불 주의」 안내 · 환불 조건은 쪽지·문서로' },
@@ -336,7 +337,7 @@ export const FAQ_ITEMS = [
   {
     category: 'plans',
     q: '유료상품 환불과 과외비 환불은 같나요?',
-    a: '다릅니다. 유료상품 환불은 운영문의로 묻고, 과외비는 당사자가 정합니다.',
+    a: FAQ_PAID_VS_TUTOR_FEE_REFUND,
   },
 ];
 

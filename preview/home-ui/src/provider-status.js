@@ -15,6 +15,7 @@ import { fetchEntitlements } from './messages-api.js';
  *   metrics?: object[],
  *   days?: number,
  *   tickets?: object,
+ *   prime_active?: boolean,
  * }} ProviderStatusCache */
 
 /** @type {ProviderStatusCache|null} */
@@ -61,6 +62,7 @@ function applyProviderStatus(data) {
     metrics: data.metrics,
     days: data.days,
     tickets: data.tickets,
+    prime_active: data.prime_active === true,
   };
 
   if (cached.is_provider) {

@@ -18,7 +18,7 @@
 
 | 경로 | 내용 |
 |------|------|
-| `sql/schema/085_pg_portone_sandbox.sql` | `pg_payment_id` · 환불 cancel 메타 컬럼 추가 |
+| `sql/schema/090_pg_portone_columns.sql` | `pg_payment_id` · 환불 cancel 메타 컬럼 추가 |
 | `src/Paid/Pg/*` | PgProvider · PortOneClient · WebhookVerifier · PortOneCheckout |
 | `src/Paid/ProviderCheckoutRepository.php` | pg_provider·pg_payment_id 저장 · getByPaymentId |
 | `src/Paid/ProviderCheckoutService.php` | 어댑터 분기 create · completePortOne* |
@@ -53,7 +53,7 @@
 
 ## 배포 전 사용자 할 일
 
-- 운영 DB에 `085` **적용 금지** (파일만 PR).
+- 운영 SQL은 `090`·`091`. 종현이 phpMyAdmin에서 089 뒤에 적용. 롤백은 091 다음 090.
 - 운영 `.env` / CSP / `STUDY114_PAID_MOCK_COMPLETE` 변경 금지.
 - 로컬 Docker에만 `085`(+필요 시 `083`) 적용.
 
@@ -70,9 +70,9 @@
 
 ## 검수 보강 (2026-11-11, 승인 후)
 
-- `sql/schema/086_pg_cancel_ops_log.sql` + `PortOneCancelOpsLog` + `Connection::openIndependent` — 취소 성공 후 meta 실패·중간 실패 orphan을 TX 롤백과 분리 기록
+- `sql/schema/091_pg_cancel_ops_log.sql` + `PortOneCancelOpsLog` + `Connection::openIndependent` — 취소 성공 후 meta 실패·중간 실패 orphan을 TX 롤백과 분리 기록
 - `verify-339`: 노출 submit 배지 취소 중간 실패 → DB 롤백·ops 로그 · meta fail ops · 중복 complete 팩 COUNT=1
-- 로컬 Docker만 056·061·066·086 적용(운영 금지). `verify-339` **34/34**
+- 로컬 Docker만 056·061·066·091 적용. `verify-339` **34/34**
 - `RefundRepository` `final` 해제(메타 실패 목용)
 
 ## orphan 바깥 롤백·중복 제거 (2026-11-11)
@@ -87,7 +87,7 @@
 - 토스/포트원 CSP 도메인은 콘솔 차단 로그로 추가 조정 가능.
 - 취소 성공 후 이후 배지 취소 실패 시 PortOne orphan cancel은 운영 확인 필요(로그·`provider_pg_cancel_ops_log`).
 - 테스트카드·포트원 콘솔 캡처는 수동 확인.
-- 운영에 `086` 미적용 — 로컬 전용.
+- 운영에 `090`·`091` 미적용 — 종현이 phpMyAdmin에서 089 뒤에 적용. 롤백은 091 다음 090.
 
 ---
 

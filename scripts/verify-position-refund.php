@@ -185,6 +185,36 @@ check('P27', ($r1['breakdown'][0]['label'] ?? '') === '노출분', 'breakdown fi
 $calcSrc = file_get_contents(__DIR__ . '/../src/Paid/PositionRefundCalculator.php');
 check('P28', strpos($calcSrc, 'needs_owner_decision') === false, 'no needs_owner_decision in calculator');
 
+/* ── 356 안 A: (a) 앞 주문 + 뒤 live 연장 → 환불 차단 ── */
+$nowA = new DateTimeImmutable('2026-11-13', $tz);
+$rA = PositionRefundCalculator::calculate([
+    'paid_at' => '2026-11-03',
+    'amount_won' => 30000,
+    'variant' => '1개월',
+    'grant_mode' => 'new',
+    'segment_started_on' => '2026-11-03',
+    'segment_end_exclusive_on' => '2026-12-03',
+    'has_live_later_extension' => true,
+], $nowA);
+check('P29', $rA['refundable'] === false, '356-a 앞 환불 차단 refundable=false');
+check('P30', $rA['refund_won'] === 0, '356-a refund_won=0');
+check('P31', $rA['reason_code'] === 'has_live_later_extension', '356-a reason');
+
+/* ── 356 안 A: (b) 연장 주문(뒤 연장 없음) → 기존대로 허용 ─ */
+$nowB = new DateTimeImmutable('2026-11-13', $tz);
+$rB = PositionRefundCalculator::calculate([
+    'paid_at' => '2026-11-10',
+    'amount_won' => 30000,
+    'variant' => '1개월',
+    'grant_mode' => 'extend',
+    'segment_started_on' => '2026-12-03',
+    'segment_end_exclusive_on' => '2027-01-02',
+    'has_live_later_extension' => false,
+], $nowB);
+check('P32', $rB['refundable'] === true, '356-b 연장 환불 허용 refundable');
+check('P33', $rB['refund_won'] === 30000, '356-b 전액');
+check('P34', $rB['reason_code'] === 'before_start_full', '356-b reason');
+
 /* ── 보고 ────────────────────────────────────────────── */
 
 echo "\n=== verify-position-refund.php ===\n";

@@ -79,12 +79,20 @@ final class PhoneVerificationService
             );
         }
 
+        $pdo = Connection::get();
+        $actorEmail = $this->userEmail($pdo, $userId);
+        // 상한이면 문자 발송 전 거절(비용 방지). 허용목록 계정은 스킵.
+        try {
+            PhoneAccountLimit::assertUnderLimit($pdo, $phone, $userId, $actorEmail, false);
+        } catch (PhoneAccountLimitException $e) {
+            throw new PhoneVerificationException($e->errorCode(), $e->getMessage());
+        }
+
         $code = $this->generateCode();
         $hash = $this->hashCode($userId, $code);
         $expires = date('Y-m-d H:i:s', time() + self::CODE_TTL_SECONDS);
         $now = date('Y-m-d H:i:s');
 
-        $pdo = Connection::get();
         $stmt = $pdo->prepare(
             'UPDATE user_profiles SET
                 phone_verification_code_hash = ?,
@@ -199,6 +207,18 @@ final class PhoneVerificationService
                 updated_at = NOW()
              WHERE user_id = ?'
         )->execute([$userId]);
+    }
+
+    private function userEmail(PDO $pdo, int $userId): ?string
+    {
+        $stmt = $pdo->prepare('SELECT email FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $email = $stmt->fetchColumn();
+        if ($email === false || $email === null || trim((string) $email) === '') {
+            return null;
+        }
+
+        return (string) $email;
     }
 
     /** @return array<string, mixed>|null */

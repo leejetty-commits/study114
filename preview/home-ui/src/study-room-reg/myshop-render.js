@@ -33,23 +33,15 @@ function section(title, inner, key) {
     </section>`;
 }
 
-function cssUrl(src) {
-  const safe = String(src ?? '')
-    .replace(/\\/g, '\\\\')
-    .replace(/'/g, "\\'")
-    .replace(/[()]/g, (ch) => `\\${ch}`);
-  return `url('${safe}')`;
-}
-
 function photoCell(photo, framed) {
   if (!photo) return `<div class="shop-photo shop-photo--empty" aria-hidden="true"></div>`;
-  const blur = photo.blurSrc || photo.src;
   const cap = photo.title ? `<span class="shop-photo__cap">${esc(photo.title)}</span>` : '';
-  const img = `<img src="${esc(photo.src)}" alt="" loading="lazy" data-shop-fallback="${esc(blur)}" onerror="if(this.dataset.fb)return;this.dataset.fb='1';this.src=this.getAttribute('data-shop-fallback')||'';" />`;
+  /* 368: contain + 단색 바탕. 흐림(--shop-photo-blur) 제거 */
+  const img = `<img src="${esc(photo.src)}" alt="" loading="lazy" />`;
   if (framed) {
-    return `<button type="button" class="shop-photo shop-photo--framed" data-shop-thumb="${esc(photo.src)}" data-shop-photo-index="${esc(photo.index)}" aria-label="사진 ${esc(photo.index)} 크게 보기"><span class="shop-photo__area" style="--shop-photo-blur:${esc(cssUrl(blur))}">${img}${cap}</span></button>`;
+    return `<button type="button" class="shop-photo shop-photo--framed" data-shop-thumb="${esc(photo.src)}" data-shop-photo-index="${esc(photo.index)}" aria-label="사진 ${esc(photo.index)} 크게 보기"><span class="shop-photo__area">${img}${cap}</span></button>`;
   }
-  return `<button type="button" class="shop-photo" data-shop-thumb="${esc(photo.src)}" data-shop-photo-index="${esc(photo.index)}" aria-label="사진 ${esc(photo.index)} 크게 보기" style="--shop-photo-blur:${esc(cssUrl(blur))}">${img}${cap}</button>`;
+  return `<button type="button" class="shop-photo" data-shop-thumb="${esc(photo.src)}" data-shop-photo-index="${esc(photo.index)}" aria-label="사진 ${esc(photo.index)} 크게 보기">${img}${cap}</button>`;
 }
 
 /** @param {import('./shop-view-model.js').ShopViewModel} vm */

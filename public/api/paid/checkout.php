@@ -18,8 +18,16 @@ PaidApi::run(static function (): void {
     $userId = (int) $auth['user_id'];
     $method = PaidApi::method();
 
+    if ($method === 'GET') {
+        PaidApi::ok(['payments_enabled' => PaidCheckoutGate::paymentsEnabled()]);
+    }
+
     if ($method !== 'POST') {
         PaidApi::fail(405, 'method_not_allowed', 'POST만 허용됩니다.');
+    }
+
+    if (!PaidCheckoutGate::paymentsEnabled()) {
+        PaidApi::fail(403, 'payment_not_available', PaidCheckoutGate::CLOSED_MESSAGE);
     }
 
     $input = PaidApi::readJson();

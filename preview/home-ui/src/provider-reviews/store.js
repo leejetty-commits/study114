@@ -644,7 +644,7 @@ function localAllInbox(userId, nav, page) {
   };
 }
 
-export async function fetchReviewInbox(lane = '', page = 1) {
+export async function fetchReviewInbox(lane = '', page = 1, origin = '') {
   if (!apiMode()) {
     const auth = getAuthUser();
     const role = auth?.role_type || '';
@@ -714,6 +714,7 @@ export async function fetchReviewInbox(lane = '', page = 1) {
     };
   }
   const qs = new URLSearchParams({ action: 'inbox', lane, page: String(page), limit: String(REVIEW_POLICY.pageSize) });
+  if (origin === 'general' || origin === 'quick_match') qs.set('origin', origin);
   const res = await fetch(`${API}?${qs}`, { credentials: 'include' });
   const data = await res.json();
   if (!res.ok || data.ok === false) throw new Error(data.message || 'load failed');

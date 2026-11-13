@@ -72,7 +72,7 @@ assert(
   'school bundle label',
 );
 
-const screens = read('preview/home-ui/src/plans/screens.js');
+const screens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const eligibilitySrc = screens.slice(screens.indexOf('export function getEligibility'), screens.indexOf('function renderPositionCard'));
 assert(!eligibilitySrc.includes('성과 불이익'), 'eligibility: old tutor comment gone');
 assert(!eligibilitySrc.includes('expanded_complete'), 'eligibility: no expanded_complete');

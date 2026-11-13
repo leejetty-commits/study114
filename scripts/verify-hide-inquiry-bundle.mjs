@@ -484,13 +484,18 @@ const planReason = studyRoomRegionPurchaseState(
   { has_scope_id: true },
   { room: { profile_status: 'hidden' }, productCode: 'prime' },
 ).reason;
-const plansSrc = read('preview/home-ui/src/plans/screens.js');
+const plansSrc = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const blob = `${ctas}\n${regHtml}\n${planReason}\n${plansSrc}`;
 assert('(g) 다시 켜·해제 후·공개 신청 0', !blob.includes('다시 켜') && !blob.includes('해제 후') && !blob.includes('공개 신청'));
 assert('(g) plans 문구', planReason === '숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.' && plansSrc.includes(planReason));
 
-const bind = fnBody(read('preview/home-ui/src/admin/a28-screens-bind.js'), 'bindTicketsScreen');
-const reload = fnBody(read('preview/home-ui/src/admin/a28-screens-bind.js'), 'reloadTicketAdmin');
+const bindSrc = [
+  'preview/home-ui/src/admin/a28-screens-bind-members.js',
+  'preview/home-ui/src/admin/a28-screens-bind-content.js',
+  'preview/home-ui/src/admin/a28-screens-bind.js',
+].map((rel) => read(rel)).join('\n');
+const bind = fnBody(bindSrc, 'bindTicketsScreen');
+const reload = fnBody(bindSrc, 'reloadTicketAdmin');
 const render = fnBody(read('preview/home-ui/src/admin/a28-screens.js'), 'renderTicketsAdmin');
 assert('(l) 필터에 location.hash·navigate 호출 0', !bind.includes('location.hash') && !bind.includes('navigate(') && !reload.includes('location.hash'));
 assert('(l) 관리자 목록이 ticketsCache를 쓰지 않음', !bind.includes('ticketsCache') && !render.includes('ticketsCache') && !reload.includes('ticketsCache'));

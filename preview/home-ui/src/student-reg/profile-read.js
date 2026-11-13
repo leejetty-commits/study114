@@ -36,6 +36,16 @@ function minutesLabel(student) {
   return lessonDurationLabel(student?.minutes_per_lesson);
 }
 
+function extraHopeLabel(student) {
+  if (!student || typeof student !== 'object') return '';
+  if (student.preferred_lesson_type === 'study_room') {
+    const complex = String(student.preferred_studyroom_complex_extra_label || '').trim();
+    if (student.preferred_studyroom_region_extra_basis === 'complex' && complex) return complex;
+    return String(student.preferred_studyroom_region_extra_label || '').trim();
+  }
+  return String(student.preferred_tutor_region_extra_label || '').trim();
+}
+
 function lessonShapeLabel(student) {
   const format = LESSON_FORMAT_LABELS[student?.lesson_format] || '';
   const target = display(labelLessonTarget(student));
@@ -54,7 +64,7 @@ export function buildStudentProfileReadSections(student) {
       title: '기본정보',
       editSection: 'basic',
       rows: [
-        { label: '표시명', value: display(s.public_display_name) },
+        { label: '학생 이름', value: display(s.student_name) },
         { label: '희망 유형', value: LESSON_TYPE_LABELS[s.preferred_lesson_type] || '' },
         { label: '희망지역', value: display(primaryHopeRegionLabel(s) || s.region_label) },
         { label: '과목', value: display(s.subject_label) },
@@ -69,7 +79,7 @@ export function buildStudentProfileReadSections(student) {
       title: '상세정보',
       editSection: 'detail',
       rows: [
-        { label: '희망지역 추가값', value: display(s.preferred_region_note) },
+        { label: '희망지역 추가', value: display(extraHopeLabel(s)) },
         { label: '희망 수업장소', value: display(labelPlaces(s.lesson_places)) },
         { label: '주 회수', value: weeklyLabel(s) },
         { label: '1회 수업시간', value: minutesLabel(s) },
@@ -91,7 +101,7 @@ export const STUDENT_PROFILE_LEAD_COPY =
  * @param {string} [cardPreviewHtml]
  */
 export function renderStudentProfileRead(student, cardPreviewHtml = '') {
-  const name = display(student?.public_display_name) || '학생 프로필';
+  const name = display(student?.student_name) || '학생 프로필';
   const basicHref = studentSectionPath(student.id, 'basic');
   const detailHref = studentSectionPath(student.id, 'detail');
   const sections = buildStudentProfileReadSections(student)

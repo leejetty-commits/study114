@@ -76,6 +76,12 @@ export function resolvePeriodDuration(option) {
   if ((typeRaw === 'day' || typeRaw === 'month') && valueRaw > 0) {
     return { type: typeRaw, value: valueRaw };
   }
+  // 카탈로그가 duration_* 없이 label/api_variant만 줄 때(30일·90일·30d·90d)
+  const text = String(option?.label || option?.apiVariant || option?.period || '').trim();
+  const dayMatch = text.match(/^(\d+)\s*일$/) || text.match(/^(\d+)\s*d(?:ays?)?$/i);
+  if (dayMatch) {
+    return { type: 'day', value: Number(dayMatch[1]) };
+  }
   const key = periodKey(option);
   if (key === '2주') return { type: 'day', value: 14 };
   const months = { '1개월': 1, '2개월': 2, '3개월': 3, '6개월': 6 };

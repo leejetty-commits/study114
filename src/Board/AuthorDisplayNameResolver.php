@@ -100,7 +100,7 @@ final class AuthorDisplayNameResolver
     private function fromStudent(int $userId): string
     {
         $stmt = $this->pdo->prepare(
-            'SELECT public_display_name FROM students WHERE guardian_user_id = ? ORDER BY id ASC LIMIT 1'
+            'SELECT student_name FROM students WHERE guardian_user_id = ? ORDER BY id ASC LIMIT 1'
         );
         $stmt->execute([$userId]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -108,13 +108,13 @@ final class AuthorDisplayNameResolver
             return '';
         }
 
-        $publicName = isset($row['public_display_name']) && is_string($row['public_display_name'])
-            ? trim($row['public_display_name'])
+        $studentName = isset($row['student_name']) && is_string($row['student_name'])
+            ? trim($row['student_name'])
             : '';
-        if ($publicName !== '') {
-            return $publicName;
+        if ($studentName === '') {
+            return self::STUDENT_FALLBACK_NAME;
         }
 
-        return self::STUDENT_FALLBACK_NAME;
+        return \Study114\Registration\StudentPublicName::mask($studentName);
     }
 }

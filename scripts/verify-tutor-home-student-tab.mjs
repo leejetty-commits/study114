@@ -36,7 +36,11 @@ function ok(name, cond, detail = '') {
 
 const seedSrc = read('preview/home-ui/src/tutor-home-seed.js');
 const tutorScreenSrc = read('preview/home-ui/src/screens/tutor.js');
-const surfaceSrc = read('preview/search-ui/src/search-find-surface.js');
+const surfaceSrc = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 const feedSrc = read('preview/search-ui/src/search-region-feed.js');
 const tierSrc = read('preview/search-ui/src/search-tier-render.js');
 const roomSeedSrc = read('preview/home-ui/src/study-room-home-seed.js');
@@ -88,7 +92,7 @@ ok(
 ok(
   '서버: preferred_lesson_type=tutor 면 preferred_region_id = 과외 단위 id → preferred_tutor_region_id 그대로 비교',
   /\$regionId = \$this->studentRegionId\(\$pdo, \$filters, 'preferred_region_id', \$lessonForRegion\)/.test(searchPhp) &&
-    /\$regionId !== null && \$lessonForRegion === 'tutor'\) \{\s*\$where\[\] = 's\.preferred_tutor_region_id = :preferred_tutor_unit_id'/.test(searchPhp) &&
+    /\$regionId !== null && \$lessonForRegion === 'tutor'\) \{\s*\$params\['preferred_tutor_unit_id'\] = \$regionId;\s*\$params\['preferred_tutor_unit_extra_id'\] = \$regionId;\s*\$where\[\] = \$this->studentHopeOr\(\s*'s\.preferred_tutor_region_id = :preferred_tutor_unit_id',\s*'s\.preferred_tutor_region_extra_id = :preferred_tutor_unit_extra_id',\s*'tutor',\s*\)/.test(searchPhp) &&
     /return \$this->tutorUnitRegionId\(\$pdo, \$filters, \$key\)/.test(searchPhp),
 );
 ok(

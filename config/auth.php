@@ -14,8 +14,10 @@ return [
     'auth_ui'                    => rtrim($authUi, '/'),
     'home_ui'                    => rtrim($homeUi, '/'),
     'api_base'                   => rtrim($apiBase, '/'),
-    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영 From: 우동공과 <no-reply@study114.net> */
+    /** 닷홈: SetEnv STUDY114_MAIL_FROM. 운영 From: 우동공과 고객센터 <no-reply@study114.net> */
     'mail_from'                  => study114_env('STUDY114_MAIL_FROM', 'no-reply@study114.local'),
+    /** 발신자 표시이름. 운영: 「우동공과 고객센터」. 미설정 시 기본값 사용. */
+    'mail_from_name'             => study114_env('STUDY114_MAIL_FROM_NAME', '우동공과 고객센터'),
     /**
      * resend | fake | disabled
      * smtp / php_mail / mail 은 허용하지 않음 (fail-closed).
@@ -38,4 +40,10 @@ return [
     'phone_otp_pepper'                  => study114_env('STUDY114_PHONE_OTP_PEPPER', 'study114-phone-otp-dev'),
     /** 테스트·스테이징: STUDY114_MAIL_LOG_PATH 로 분리 가능 */
     'mail_log_path'              => study114_env('STUDY114_MAIL_LOG_PATH', $root . '/storage/logs/mail.log'),
+    /**
+     * 테스트 계정 허용목록 (쉼표 구분 정확한 이메일, 소문자 비교).
+     * 357 공개 목록·검색에서 이 계정 주인 카드를 일반/비회원에게 숨긴다.
+     * 값은 운영 SetEnv/Secrets에만 — 코드·문서에 실이메일 하드코딩 금지.
+     */
+    'test_account_emails'        => study114_env('STUDY114_TEST_ACCOUNT_EMAILS', ''),
 ];

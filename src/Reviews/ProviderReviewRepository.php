@@ -383,6 +383,53 @@ final class ProviderReviewRepository
         return (bool) $stmt->fetchColumn();
     }
 
+    /**
+     * 퀵매칭 쪽지로 후기를 쓸 수 있는지.
+     * 공급자가 메시지를 1개 이상 보낸 퀵매칭 스레드가 있을 때만 true.
+     * 일반 스레드 게이트는 바꾸지 않는다. 둘 다 있으면 퀵매칭으로 본다.
+     */
+    public function isQuickMatchReview(string $providerType, int $providerId, int $authorUserId): bool
+    {
+        if ($authorUserId < 1 || $providerId < 1 || !$this->hasThreadOriginColumn()) {
+            return false;
+        }
+        $ownerId = $this->getProviderOwnerUserId($providerType, $providerId);
+        if ($ownerId === null || $ownerId === $authorUserId) {
+            return false;
+        }
+        $low = min($ownerId, $authorUserId);
+        $high = max($ownerId, $authorUserId);
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM message_threads t
+             WHERE t.thread_origin = \'quick_match\'
+               AND t.participant_low_user_id = ? AND t.participant_high_user_id = ?
+               AND EXISTS (
+                 SELECT 1 FROM messages m
+                 WHERE m.thread_id = t.id AND m.sender_user_id = ?
+               )
+             LIMIT 1'
+        );
+        $stmt->execute([$low, $high, $ownerId]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
+    private function hasThreadOriginColumn(): bool
+    {
+        static $ready = null;
+        if ($ready !== null) {
+            return $ready;
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ? LIMIT 1'
+        );
+        $stmt->execute(['message_threads', 'thread_origin']);
+        $ready = (bool) $stmt->fetchColumn();
+
+        return $ready;
+    }
+
     /** @return list<array<string, mixed>> */
     public function listReceivedByOwner(int $ownerUserId, string $providerType, int $limit = 10, int $offset = 0): array
     {

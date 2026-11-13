@@ -47,8 +47,15 @@ final class MessagesService
     {
         $this->assertSignupComplete($userId);
         $rows = $this->repo->listThreadsForUser($userId);
+        $out = [];
+        foreach ($rows as $row) {
+            if ($this->hideEmptyQuickMatchFromStudent($row, $userId)) {
+                continue;
+            }
+            $out[] = $this->mapThreadSummary($row, $userId);
+        }
 
-        return array_map(fn (array $row) => $this->mapThreadSummary($row, $userId), $rows);
+        return $out;
     }
 
     /** @return array<string, mixed>|null */
@@ -56,7 +63,7 @@ final class MessagesService
     {
         $this->assertSignupComplete($userId);
         $row = $this->repo->getThreadRow($threadId, $userId);
-        if ($row === null) {
+        if ($row === null || $this->hideEmptyQuickMatchFromStudent($row, $userId)) {
             return null;
         }
         $messages = $this->repo->listMessages($threadId);
@@ -438,6 +445,19 @@ final class MessagesService
         }
     }
 
+    /** 학생이 공급자 메시지가 없는 퀵매칭 스레드를 목록·상세에서 보지 않게 한다. */
+    private function hideEmptyQuickMatchFromStudent(array $row, int $userId): bool
+    {
+        if ((string) ($row['thread_origin'] ?? 'general') !== 'quick_match') {
+            return false;
+        }
+        if ((int) ($row['initiated_by_user_id'] ?? 0) === $userId) {
+            return false;
+        }
+
+        return !$this->repo->threadHasPeerMessage((int) $row['id'], $userId);
+    }
+
     private function assertThreadAccess(int $userId, int $threadId): void
     {
         if ($this->repo->getThreadRow($threadId, $userId) === null) {
@@ -479,6 +499,7 @@ final class MessagesService
 
         return [
             'id'                  => (int) $row['id'],
+            'threadOrigin'        => (string) ($row['thread_origin'] ?? 'general') === 'quick_match' ? 'quick_match' : 'general',
             'contextKind'         => (string) $row['context_kind'],
             'contextId'           => (int) $row['context_id'],
             'contextLabel'        => (string) $row['context_label'],

@@ -5,9 +5,11 @@ import {
 } from '../lifecycle-copy.js';
 import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
+import { bindQuickMatchScreen, renderQuickMatchScreen } from './quick-match-screen.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
 import { bindWithdrawReasonChoices, readWithdrawReason, renderWithdrawReasonChoices } from '../withdraw-reason-ui.js';
+import { WITHDRAW_REFUND_HINT } from '../refund-policy-copy.js';
 import {
   getPreviewProfile,
   getSubmissionDocs,
@@ -85,6 +87,7 @@ import { parsePlansQuery } from '../plans/router.js';
 import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
 import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
+import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
 import { openKakaoPostcode } from '../../../shared/kakao-postcode.js';
 import {
@@ -219,6 +222,7 @@ export function renderMypageScreen(path) {
   ) {
     return renderSubmissionRetired();
   }
+  if (path === '/mypage/quick-match') return renderQuickMatchScreen();
   if (path === '/mypage/account') return renderAccount(r, profile);
   const dest = getDefaultMypagePath(r);
   if (dest && dest !== path) return renderMypageScreen(dest);
@@ -1184,15 +1188,30 @@ function renderAccount(role, profile) {
           <form data-form="change-password" class="account-form" autocomplete="off">
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-current">현재 비밀번호</label>
-              <input class="form-input" type="password" id="mypage-pw-current" name="current_password" autocomplete="current-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-current',
+                name: 'current_password',
+                autocomplete: 'current-password',
+                placeholder: '현재 비밀번호',
+              })}
             </div>
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-new">새 비밀번호</label>
-              <input class="form-input" type="password" id="mypage-pw-new" name="password" autocomplete="new-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-new',
+                name: 'password',
+                autocomplete: 'new-password',
+                placeholder: '새 비밀번호',
+              })}
             </div>
             <div class="form-group">
               <label class="form-label form-label--required" for="mypage-pw-confirm">새 비밀번호 확인</label>
-              <input class="form-input" type="password" id="mypage-pw-confirm" name="password_confirm" autocomplete="new-password" required />
+              ${renderPasswordField({
+                id: 'mypage-pw-confirm',
+                name: 'password_confirm',
+                autocomplete: 'new-password',
+                placeholder: '새 비밀번호 확인',
+              })}
             </div>
             <p class="form-hint">${esc(PASSWORD_RULE_HINT)}</p>
             <p class="form-error" data-pw-change-error hidden role="alert"></p>
@@ -1222,7 +1241,7 @@ function renderAccount(role, profile) {
             <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
             <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
             <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
-            <li>환불은 결제 후 7일 이내 · 사용 구간별 환불표(서버 정본)에 따라 처리됩니다.</li>
+            <li>${esc(WITHDRAW_REFUND_HINT)}</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
             ${renderWithdrawReasonChoices(role === 'parent' ? 'student' : role, {
@@ -1261,6 +1280,7 @@ function escAttr(s) {
  * @param {HTMLElement} root
  */
 function bindPasswordChangeEvents(root) {
+  bindPasswordToggles(root);
   const panel = root.querySelector('[data-password-change]');
   const form = root.querySelector('[data-form="change-password"]');
   const errorEl = root.querySelector('[data-pw-change-error]');
@@ -1796,7 +1816,7 @@ function bindPrimeMatchConsentEvents(root) {
         .map((student) => {
           const id = Number(student.id);
           const on = Number(student.prime_match_opt_in) === 1;
-          const name = String(student.public_display_name || '').trim();
+          const name = String(student.student_name || '').trim();
           const nameHtml =
             students.length > 1 && name ? `<p class="account-meta__hint">${esc(name)}</p>` : '';
           return `${nameHtml}<label class="account-check">
@@ -1843,6 +1863,7 @@ function bindPrimeMatchConsentEvents(root) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
+  bindQuickMatchScreen(root);
   const path = getMypagePath();
   if (path === '/mypage/account') {
     const role = sessionMypageRole();

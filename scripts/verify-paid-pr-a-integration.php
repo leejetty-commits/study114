@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
+putenv('STUDY114_PAYMENTS_ENABLED=1');
+
 use Study114\Database\Connection;
 use Study114\Paid\PaidCatalog;
 use Study114\Paid\ProviderCheckoutService;

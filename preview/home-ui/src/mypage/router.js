@@ -31,7 +31,7 @@ import { tutorHubPath, BASE as TUTOR_REG_BASE } from '../tutor-reg/router.js';
 
 /** 15장 P15-xx — 논리 화면 ID · hash 경로 (부록 A, 미확정) */
 
-/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P17-07'|'P18-04'|'P18-05'|'P25-S10'|'P23-04'} MypageScreenId */
+/** @typedef {'P15-01'|'P15-02'|'P15-03'|'P15-04'|'P15-05'|'P15-06'|'P15-07'|'P15-08'|'P15-09'|'P15-10'|'P15-11'|'P15-QM'|'P17-07'|'P18-04'|'P18-05'|'P25-S10'|'P23-04'} MypageScreenId */
 
 /**
  * @typedef {object} MypageNavItem
@@ -54,7 +54,7 @@ export const CONTACT_HISTORY_PATH = '/mypage/contact';
 
 /**
  * 공부방·과외쌤 좌측 메뉴 순서:
- * 내 등록 → 쪽지·후기함 → 최근열람 → 관심 학생 → 찜한 공부방·과외쌤 → 내 문의 내역 → 구매이력 → 계정설정
+ * 내 등록 → 쪽지·후기함 → 최근열람 → 관심 학생 → 찜한 공부방·과외쌤 → 내 문의 내역 → 구매이력 → 실시간 퀵매칭 → 계정설정
  * 학생(parent) 순서: 내 등록 → 쪽지·후기함 → 최근열람 → 찜·비교 → 내 문의 내역 → 계정설정 (PARENT_NAV_PATHS).
  * @type {MypageNavItem[]}
  */
@@ -87,6 +87,14 @@ export const MYPAGE_NAV = [
     emphasis: ['study_room', 'tutor'],
     roles: ['study_room', 'tutor'],
   },
+  {
+    path: '/mypage/quick-match',
+    label: '실시간 퀵매칭 서비스',
+    labelLines: ['실시간 퀵매칭', '서비스'],
+    icon: 'event',
+    screenId: 'P15-QM',
+    roles: ['study_room', 'tutor'],
+  },
   { path: '/mypage/account', label: '계정설정', icon: '⚙\uFE0E', screenId: 'P15-11' },
 ];
 
@@ -109,6 +117,7 @@ export const MYPAGE_PATH_TO_SCREEN = {
   '/mypage/submission-board': 'P23-04',
   '/mypage/verification': 'P15-10',
   '/mypage/account': 'P15-11',
+  '/mypage/quick-match': 'P15-QM',
 };
 
 /** @deprecated 구 라우트 — P15-10 제출자료 상태 · 329b 결제내역→구매이력 */
@@ -151,6 +160,7 @@ export function isParentLockedMypagePath(path) {
   if (p === '/mypage/home' || p === '/mypage/registrations') return true;
   if (p === '/mypage/student-review' || p.startsWith('/mypage/student-review/')) return true;
   if (p === '/mypage/plans' || p.startsWith('/mypage/plans/')) return true;
+  if (p === '/mypage/quick-match') return true;
   if (p === '/mypage/submission-docs' || p === '/mypage/verification') return true;
   if (p === '/mypage/submission-board' || p.startsWith('/mypage/submission-board/')) return true;
   return false;
@@ -251,6 +261,7 @@ export function screenTitle(screenId, path, role) {
     'P23-04a': '제출 작성',
     'P23-04b': '제출 상세',
     'P15-11': '계정설정',
+    'P15-QM': '실시간 퀵매칭 서비스',
     'P25-S10': '관심 학생',
   };
   return map[screenId] || '마이페이지';

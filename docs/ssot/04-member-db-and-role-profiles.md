@@ -114,7 +114,7 @@
 | 구분 | 저장 |
 |------|------|
 | 회원 집 주소 | `user_profiles` (address_* · default_region/complex) |
-| 자녀 희망 지역 | `preferred_studyroom_region/complex` · `preferred_tutor_region` · `preferred_region_note` |
+| 자녀 희망 지역 | 본 지역 `preferred_studyroom_region/complex` · `preferred_tutor_region`. 희망지역 추가는 같은 구조의 `*_extra` 1개(선택). `preferred_region_note` 는 옛 글이라 화면·찾기에 쓰지 않는다 |
 | 공부방·과외 활동 지역 | 5장 · tutors (역할별 상세) |
 
 ---
@@ -171,7 +171,11 @@
 | preferred_studyroom_region_id | BIGINT UNSIGNED | YES | FK → regions (동) |
 | preferred_studyroom_complex_id | BIGINT UNSIGNED | YES | FK → complexes |
 | preferred_tutor_region_id | BIGINT UNSIGNED | YES | FK → regions (시) |
-| preferred_region_note | VARCHAR(255) | YES | 지역 보충 |
+| preferred_tutor_region_extra_id | BIGINT UNSIGNED | YES | 희망지역 추가(과외 시·군). FK → regions |
+| preferred_studyroom_region_extra_id | BIGINT UNSIGNED | YES | 희망지역 추가(공부방 동). FK → regions |
+| preferred_studyroom_complex_extra_id | BIGINT UNSIGNED | YES | 희망지역 추가(공부방 단지). FK → complexes |
+| preferred_studyroom_region_extra_basis | ENUM('dong','complex') | YES | 희망지역 추가 기준 |
+| preferred_region_note | VARCHAR(255) | YES | 옛 자유글. 컬럼은 유지. 화면·찾기·추가 지역으로 쓰지 않음 |
 | preferred_tutor_gender | ENUM('male','female','any') | YES | |
 | preferred_student_count_group | ENUM | YES | `solo`·`two`·`three`·`four_plus` — UI **희망 수업인원** |
 | preferred_fee_amount | INT UNSIGNED | YES | 수업예산(과외) |
@@ -225,7 +229,7 @@
 | 희망교습형태 | `preferred_lesson_type` |
 | 학생성별 | `gender` |
 | 학교급/학년 | `grade_level` |
-| 희망지역 | studyroom/tutor region + `preferred_region_note` |
+| 희망지역 | 본 지역 studyroom/tutor region. 희망지역 추가는 상세의 `*_extra` 1개(선택, 완료 판정 제외) |
 | 희망과목 | `student_subject_targets` |
 | 희망 수업장소 | `student_preferred_lesson_places` |
 | 희망 수업인원 | `preferred_student_count_group` (화면 용어 · DB code 동일) |

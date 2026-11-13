@@ -39,7 +39,11 @@ const SRC = {
   guestScreen: read('preview/home-ui/src/screens/guest.js'),
   exposure: read('preview/home-ui/src/exposure-render.js'),
   searchMap: read('preview/search-ui/src/search-map.js'),
-  findSurface: read('preview/search-ui/src/search-find-surface.js'),
+  findSurface: [
+    read('preview/search-ui/src/search-find-place.js'),
+    read('preview/search-ui/src/search-find-region.js'),
+    read('preview/search-ui/src/search-find-surface.js'),
+  ].join('\n'),
   tierRender: read('preview/search-ui/src/search-tier-render.js'),
   searchPage: read('preview/search-ui/src/screens/search-page.js'),
   mapper: read('preview/search-ui/src/search-exposure-mapper.js'),

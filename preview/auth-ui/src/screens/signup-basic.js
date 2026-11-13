@@ -77,7 +77,7 @@ function dbField(name) {
 
 /** 서버 src/Registration/StudentBasicCompleteness.php LABELS 와 같은 문구·순서. 한 줄 요청문은 선택. */
 const STUDENT_BASIC_LABELS = {
-  public_display_name: '표시명',
+  student_name: '학생 이름',
   grade_level: '학교급·학년',
   preferred_lesson_type: '희망 유형',
   preferred_region: '희망지역',
@@ -89,7 +89,7 @@ const STUDENT_BASIC_LABELS = {
 
 /** 칸 아래 안내. 희망지역 문구는 제출 검사 문장을 그대로 쓴다. */
 const STUDENT_FIELD_ERRORS = {
-  public_display_name: '표시명을 입력해 주세요.',
+  student_name: '학생 이름을 입력해 주세요.',
   grade_level: '학교급·학년을 선택해 주세요.',
   preferred_lesson_type: '희망 유형을 선택해 주세요.',
   subject: '희망과목을 선택해 주세요.',
@@ -99,7 +99,7 @@ const STUDENT_FIELD_ERRORS = {
 };
 
 const STUDENT_ISSUE_ORDER = [
-  'public_display_name',
+  'student_name',
   'grade_level',
   'preferred_lesson_type',
   'preferred_region',
@@ -120,7 +120,7 @@ function studentBasicMissingKeys(data) {
   const format = text(data.lesson_format);
   const budget = text(hope === 'study_room' ? data.preferred_studyroom_fee_amount : data.preferred_fee_amount);
   const ok = {
-    public_display_name: text(data.public_display_name) !== '',
+    student_name: text(data.student_name) !== '',
     grade_level: text(data.grade_level) !== '' || data.school_level === 'preschool',
     preferred_lesson_type: hope === 'tutor' || hope === 'study_room',
     subject: text(data.subject_names) !== '',
@@ -254,7 +254,7 @@ function focusStudentField(form, key) {
   const note = visibleStudentErrorNotes(form, key)[0];
   const field = note?.closest('.student-basic__field') || form;
   let el = null;
-  if (key === 'public_display_name') el = field.querySelector('#public_display_name');
+  if (key === 'student_name') el = field.querySelector('#student_name');
   else if (key === 'grade_level') el = field.querySelector('#school_level');
   else if (key === 'preferred_lesson_type') el = field.querySelector('input[name="preferred_lesson_type"]');
   else if (key === 'subject') el = field.querySelector('#subject_names');
@@ -326,7 +326,7 @@ function renderMainSubjectOne(selected = '') {
 function renderStudentBasic() {
   const d = signupState.basicRegister?.student || {};
   const hope = d.preferred_lesson_type || 'tutor';
-  const displayName = d.public_display_name || d.student_name || '';
+  const studentName = d.student_name || '';
   const lessonFormat = d.lesson_format || '';
   const count = lessonFormat === 'one_on_one' ? 'solo' : d.preferred_student_count_group || '';
   const tutorUnits = getCityUnits(signupState.tutorUnits || []);
@@ -334,10 +334,10 @@ function renderStudentBasic() {
   return `
     <form data-form="basic-student" class="basic-register student-basic" autocomplete="off">
       <div class="student-basic__field">
-        <label class="form-label form-label--required" for="public_display_name">표시명</label>
-        <input class="form-input" id="public_display_name" name="public_display_name" value="${esc(displayName)}" maxlength="40" autocomplete="off" />
+        <label class="form-label form-label--required" for="student_name">학생 이름</label>
+        <input class="form-input" id="student_name" name="student_name" value="${esc(studentName)}" maxlength="50" autocomplete="name" />
         <p class="form-hint">${AUTH_WELCOME_COPY.basicDisplayNameHint}</p>
-        ${studentFieldErrorHtml('public_display_name')}
+        ${studentFieldErrorHtml('student_name')}
       </div>
       <div class="student-basic__field" data-school-grade-pair>
         <label class="form-label form-label--required" for="school_level">학교급</label>
@@ -514,15 +514,15 @@ function renderTutorBasic() {
               ${renderMainSubjectOne(d.main_subjects?.[0] || d.main_subject_note || '')}
               <p class="form-note form-note--error" data-field-error="main_subject" hidden></p>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="preferred_fee_amount">월 과외비 (천원)</label>
               <input class="form-input" id="preferred_fee_amount" name="preferred_fee_amount" type="number" min="1" step="1" inputmode="numeric" value="${esc(wonToCheonwonInput(d.preferred_fee_amount))}" required />
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="lessons_per_week">주 회수</label>
               <select class="form-input" id="lessons_per_week" name="lessons_per_week" required>${optionsHtml(lessonWeeklyOptions(d.lessons_per_week), lessonWeeklySelectValue(d.lessons_per_week))}</select>
             </div>
-            <div class="form-group">
+            <div class="form-group form-group--full">
               <label class="form-label" for="minutes_per_lesson">1회 수업시간</label>
               <select class="form-input" id="minutes_per_lesson" name="minutes_per_lesson" required>${optionsHtml(lessonDurationOptions(d.minutes_per_lesson), lessonDurationSelectValue(d.minutes_per_lesson))}</select>
             </div>
@@ -935,10 +935,9 @@ export function bindSignupBasicEvents(root) {
       data.main_subjects = [data.main_subject_note];
       data.region_basis = data.region_basis_type;
     } else if (role === 'student') {
-      const displayName = String(data.public_display_name || '').trim();
-      if (displayName) {
-        data.public_display_name = displayName;
-        data.student_name = displayName;
+      const studentName = String(data.student_name || '').trim();
+      if (studentName) {
+        data.student_name = studentName;
       }
       form.dataset.studentBasicTried = '1';
       const issues = collectStudentIssues(form, data);

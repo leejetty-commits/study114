@@ -10,6 +10,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
+putenv('STUDY114_PAYMENTS_ENABLED=1');
 putenv('STUDY114_PAID_MOCK_COMPLETE=1');
 
 use Study114\Paid\ProviderCheckoutService;
@@ -302,7 +303,9 @@ $root = dirname(__DIR__);
 $checkoutSrc = (string) file_get_contents($root . '/src/Paid/ProviderCheckoutService.php');
 $ticketSrc = (string) file_get_contents($root . '/src/Paid/ProviderTicketRepository.php');
 $scopeSrc = (string) file_get_contents($root . '/src/Paid/PrimeRegionScope.php');
-$screens = (string) file_get_contents($root . '/preview/home-ui/src/plans/screens.js');
+$screens = (string) file_get_contents($root . '/preview/home-ui/src/plans/screens-status.js')
+    . (string) file_get_contents($root . '/preview/home-ui/src/plans/screens-orders.js')
+    . (string) file_get_contents($root . '/preview/home-ui/src/plans/screens.js');
 $waitlistApi = (string) file_get_contents($root . '/public/api/paid/waitlist.php');
 
 ok(

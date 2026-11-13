@@ -117,7 +117,7 @@ export function renderPlans() {
   );
 
   if (!isCatalogReady() || !hasRoleProducts) {
-    const err = getCatalogError() || '서버 카탈로그를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.';
+    const err = getCatalogError() || '상품 정보를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.';
     const body = renderCatalogUnavailable(err);
     return renderPlansShell(path, body, { role, isGuest: false });
   }
