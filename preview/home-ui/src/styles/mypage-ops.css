@@ -515,6 +515,46 @@
   line-height: 1.5;
 }
 
+/* ── 구매이력 버튼 안내 (2026-11-15) ── */
+.plans-hist-guide {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.plans-hist-guide__title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.plans-hist-guide__list {
+  margin: 0;
+}
+.plans-hist-guide__list > div {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  column-gap: 0.6rem;
+  margin: 0 0 0.35rem;
+}
+.plans-hist-guide__list dt,
+.plans-hist-guide__list dd {
+  margin: 0;
+}
+.plans-hist-guide__list dt {
+  font-weight: 700;
+}
+.plans-hist-guide__note {
+  margin: 8px 0 0;
+}
+@media (max-width: 480px) {
+  .plans-hist-guide__list > div {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── 쪽지·후기함 (마이페이지 안만. 바깥 후기 시트 .review-sheet는 그대로) ── */
 .mypage-content .msg-hub {
   margin: 0 0 var(--space-6);
