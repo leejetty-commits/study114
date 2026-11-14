@@ -5,6 +5,14 @@
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
+const SOFT_ERROR_HEADER = { 'X-Study114-Soft-Error': '1' };
+
+function apiFetch(url, init = {}) {
+  return fetch(url, {
+    ...init,
+    headers: { ...SOFT_ERROR_HEADER, ...(init.headers || {}) },
+  });
+}
 
 export const MESSAGES_ENDPOINTS = {
   threads: '/api/messages/threads.php',
@@ -31,7 +39,7 @@ function postForm(payload, files) {
   const fd = new FormData();
   appendPayloadToForm(fd, payload);
   files.forEach((file) => fd.append('files[]', file));
-  return fetch(MESSAGES_ENDPOINTS.threads, {
+  return apiFetch(MESSAGES_ENDPOINTS.threads, {
     method: 'POST',
     ...CREDENTIALS,
     body: fd,
@@ -43,25 +51,25 @@ async function parseJson(res) {
   if (!res.ok || data.ok === false) {
     const err = new Error(data.message || `HTTP ${res.status}`);
     err.code = data.error;
-    err.status = res.status;
+    err.status = data.http_status ?? res.status;
     throw err;
   }
   return data;
 }
 
 export async function listThreads() {
-  const res = await fetch(MESSAGES_ENDPOINTS.threads, { ...CREDENTIALS });
+  const res = await apiFetch(MESSAGES_ENDPOINTS.threads, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 export async function getThread(threadId) {
   const qs = `?thread_id=${threadId}`;
-  const res = await fetch(`${MESSAGES_ENDPOINTS.threads}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${MESSAGES_ENDPOINTS.threads}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 export async function getSummaryCounts() {
-  const res = await fetch(`${MESSAGES_ENDPOINTS.threads}?counts=1`, { ...CREDENTIALS });
+  const res = await apiFetch(`${MESSAGES_ENDPOINTS.threads}?counts=1`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -73,7 +81,7 @@ export async function getSummaryCounts() {
 export async function composeMessage(payload, files = []) {
   const res = files.length
     ? await postForm({ action: 'compose', ...payload }, files)
-    : await fetch(MESSAGES_ENDPOINTS.threads, {
+    : await apiFetch(MESSAGES_ENDPOINTS.threads, {
         method: 'POST',
         headers: JSON_HEADERS,
         ...CREDENTIALS,
@@ -85,7 +93,7 @@ export async function composeMessage(payload, files = []) {
 export async function replyMessage(threadId, body, files = []) {
   const res = files.length
     ? await postForm({ action: 'reply', thread_id: threadId, body }, files)
-    : await fetch(MESSAGES_ENDPOINTS.threads, {
+    : await apiFetch(MESSAGES_ENDPOINTS.threads, {
         method: 'POST',
         headers: JSON_HEADERS,
         ...CREDENTIALS,
@@ -95,7 +103,7 @@ export async function replyMessage(threadId, body, files = []) {
 }
 
 export async function markThreadReadApi(threadId) {
-  const res = await fetch(MESSAGES_ENDPOINTS.threads, {
+  const res = await apiFetch(MESSAGES_ENDPOINTS.threads, {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -105,12 +113,12 @@ export async function markThreadReadApi(threadId) {
 }
 
 export async function fetchEntitlements() {
-  const res = await fetch(MESSAGES_ENDPOINTS.entitlements, { ...CREDENTIALS });
+  const res = await apiFetch(MESSAGES_ENDPOINTS.entitlements, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 export async function patchThreadAction(threadId, action, extra = {}) {
-  const res = await fetch(MESSAGES_ENDPOINTS.threads, {
+  const res = await apiFetch(MESSAGES_ENDPOINTS.threads, {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,

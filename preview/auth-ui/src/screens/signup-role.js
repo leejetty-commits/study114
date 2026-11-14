@@ -166,14 +166,15 @@ export function bindSignupRoleEvents(root) {
       const payload = { ...draft, role: selected };
       const res = await fetch('/api/auth/signup.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Study114-Soft-Error': '1' },
         credentials: 'include',
         body: JSON.stringify(payload),
       });
       const data = parseApiJson(await res.text());
+      const status = data.http_status ?? res.status;
 
       if (!res.ok || !data.ok) {
-        const msg = friendlySignupError(data, res.status);
+        const msg = friendlySignupError(data, status);
         showRoleError(root, msg);
         submitBtn.disabled = false;
         submitBtn.textContent = '계정 만들기';

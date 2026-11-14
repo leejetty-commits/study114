@@ -70,20 +70,18 @@ try {
     ], JSON_UNESCAPED_UNICODE);
 } catch (\Study114\Auth\PhoneAccountLimitException $e) {
     // 기존 가입 검증과 같이 422 (프론트 공통 오류 표시 경로)
-    http_response_code(422);
-    echo json_encode([
+    study114_json_error(422, [
         'ok'      => false,
         'error'   => $e->errorCode(),
         'message' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 } catch (InvalidArgumentException $e) {
     error_log('[signup] validation: ' . $e->getMessage());
-    http_response_code(422);
-    echo json_encode([
+    study114_json_error(422, [
         'ok'      => false,
         'error'   => 'validation',
         'message' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
+    ]);
 } catch (Throwable $e) {
     error_log('[signup] error: ' . $e->getMessage());
     http_response_code(500);

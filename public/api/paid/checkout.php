@@ -55,7 +55,7 @@ PaidApi::run(static function (): void {
                 PaidApi::fail(422, 'payment_verify_failed', $e->getMessage());
             } catch (Throwable $e) {
                 error_log('[portone] complete failed order_ref=' . $orderRef . ' err=' . $e->getMessage());
-                PaidApi::fail(502, 'payment_verify_failed', '결제 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+                PaidApi::fail(502, 'payment_verify_failed', '결제 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.', [], true);
             }
         }
 

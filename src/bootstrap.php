@@ -252,6 +252,30 @@ function study114_send_cors_headers(bool $credentials = true): void
 }
 
 /**
+ * 닷홈이 4xx JSON 본문을 HTML로 바꾸는 것을 피한다.
+ * 요청 헤더 X-Study114-Soft-Error: 1 이고 4xx일 때만 HTTP 200 + http_status.
+ * 헤더가 없으면 원래 상태코드. 5xx는 $allow5xx일 때만(결제 확인 502 고정 문구).
+ * Content-Type은 호출한 쪽이 이미 보낸다.
+ *
+ * @param array<string, mixed> $body
+ */
+function study114_json_error(int $status, array $body, bool $allow5xx = false): never
+{
+    $wantsSoft = (string) ($_SERVER['HTTP_X_STUDY114_SOFT_ERROR'] ?? '') === '1';
+    $is4xx = $status >= 400 && $status < 500;
+    $is5xx = $status >= 500 && $status < 600;
+    if ($wantsSoft && ($is4xx || ($allow5xx && $is5xx))) {
+        http_response_code(200);
+        $body['http_status'] = $status;
+        header('X-Study114-Status: ' . $status);
+    } else {
+        http_response_code($status);
+    }
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+/**
  * 닷홈 공유 /tmp 는 다른 사이트의 session.gc_maxlifetime(보통 20~24분)으로 파일이 지워진다.
  * 우리 수명(7일)을 쓰려면 전용 디렉터리가 필요하다.
  */

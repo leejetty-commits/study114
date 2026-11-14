@@ -35,14 +35,16 @@ function ensureOverlay() {
     try {
       const res = await fetch('/api/auth/email/send-verification.php', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Study114-Soft-Error': '1' },
         credentials: 'include',
         body: '{}',
       });
       const data = await res.json().catch(() => ({}));
+      const httpStatus = data.http_status ?? res.status;
       if (status) {
         status.hidden = false;
-        status.textContent = data.message || (data.ok ? '인증 메일을 보냈습니다.' : '발송에 실패했습니다.');
+        const ok = data.ok === true && httpStatus < 400;
+        status.textContent = data.message || (ok ? '인증 메일을 보냈습니다.' : '발송에 실패했습니다.');
       }
     } catch {
       if (status) {
