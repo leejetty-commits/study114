@@ -46,6 +46,12 @@
 - `docs/worklog/2026/11/h1-history-390.png` — 배지 `결제 취소됨`과 안내 문장 전체.
 - `docs/worklog/2026/11/h1-history-1280.png` — 같은 견본. 캡처 프레임이 카드 오른쪽을 잘라 문장 끝이 프레임 밖에 있다. CSS는 바꾸지 않았다.
 
+## 보완
+
+- GET_LOCK 5초 실패는 `PaidLockBusyException`이다. 자동취소 조건에서 빼 두어 주문은 그대로 두고 다시 시도한다.
+- 취소 직전에 `fulfillment_status=succeeded` 인 주문은 노출권을 포함해 취소하지 않는다. 묶음권은 기존처럼 이 주문 팩이 있으면 취소하지 않는다.
+- 검증 9·10: 11 PASS / 0 FAIL.
+
 ## 발견 목록
 
 - `verify-refund-apply.mjs` 109 passed, 2 failed. K3, N10. 기존.

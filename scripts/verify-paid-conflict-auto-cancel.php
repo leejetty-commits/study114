@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
 use Study114\Paid\PaidConflictException;
+use Study114\Paid\PaidLockBusyException;
 use Study114\Paid\Pg\PortOneApi;
 use Study114\Paid\Pg\PortOneCheckout;
 use Study114\Paid\ProviderCheckoutService;
@@ -38,6 +39,8 @@ function check(string $name, bool $ok, string $detail = ''): void
 
 final class H1ProbePdo extends PDO
 {
+    public bool $failLock = false;
+
     public function __construct()
     {
         parent::__construct('sqlite::memory:');
@@ -69,7 +72,8 @@ final class H1ProbePdo extends PDO
 
             return 'SELECT 1 WHERE ' . implode(' AND ', $conds);
         }
-        $sql = preg_replace('/GET_LOCK\s*\(\s*\?\s*,\s*\d+\s*\)/i', '(CASE WHEN ? IS NOT NULL THEN 1 ELSE 0 END)', $sql) ?? $sql;
+        $lockResult = $this->failLock ? '0' : '1';
+        $sql = preg_replace('/GET_LOCK\s*\(\s*\?\s*,\s*\d+\s*\)/i', '(CASE WHEN ? IS NOT NULL THEN ' . $lockResult . ' ELSE 0 END)', $sql) ?? $sql;
         $sql = preg_replace('/RELEASE_LOCK\s*\(\s*\?\s*\)/i', '(CASE WHEN ? IS NOT NULL THEN 1 ELSE 0 END)', $sql) ?? $sql;
         $sql = preg_replace('/\s+FOR\s+UPDATE\b/i', '', $sql) ?? $sql;
         $sql = preg_replace('/\bNOW\s*\(\s*\)/i', "datetime('now')", $sql) ?? $sql;
@@ -498,6 +502,67 @@ if ($refs === $expect && $keepsMysqlEscape) {
         'sqlite keeps MySQL LIKE escape; driver does not treat backslash as escape',
     );
 }
+
+// 9. GET_LOCK 대기는 자동취소하지 않는다.
+$lockCancels = $fake->cancels;
+$pdo->failLock = true;
+$fake->amounts['pay_h1_lock'] = 2250;
+insertPack($pdo, 16, 160, 'h1-lock-existing');
+insertOrder($pdo, 16, 'h1-lock', 'pay_h1_lock', 'pending', 'portone_test', 160);
+$lockBusy = null;
+try {
+    $service->completePortOneOrder(16, 'h1-lock', 'pay_h1_lock');
+} catch (PaidLockBusyException $e) {
+    $lockBusy = $e;
+} catch (Throwable $e) {
+    $lockBusy = $e;
+}
+$pdo->failLock = false;
+check(
+    '9 lock busy does not auto-cancel',
+    $lockBusy instanceof PaidLockBusyException
+        && !$lockBusy instanceof PaidConflictException
+        && orderStatus($pdo, 'h1-lock') === 'pending'
+        && $fake->cancels === $lockCancels,
+    'status=' . orderStatus($pdo, 'h1-lock') . ' cancels_delta=' . ($fake->cancels - $lockCancels),
+);
+
+// 10. 이미 지급된 노출권은 취소 직전 확인에서 빼 둔다.
+$posCancels = $fake->cancels;
+$fake->amounts['pay_h1_pos'] = 10000;
+insertOrder(
+    $pdo,
+    15,
+    'h1-pos-done',
+    'pay_h1_pos',
+    'paid',
+    'portone_test',
+    150,
+    'study_room',
+    'prime',
+    '30일',
+    'position',
+    10000,
+    null,
+    'succeeded',
+    null,
+    '2026-11-01 00:00:00',
+);
+$done = $service->completePortOneOrder(15, 'h1-pos-done', 'pay_h1_pos');
+$againCancel = new ReflectionMethod(ProviderCheckoutService::class, 'autoCancelAfterPaidConflict');
+$guarded = $againCancel->invoke($service, 'h1-pos-done', 'prime_full');
+check(
+    '10 fulfilled position is not cancelled',
+    ($done['fulfilled'] ?? false) === true
+        && ($done['auto_cancelled'] ?? false) === false
+        && is_array($guarded)
+        && ($guarded['auto_cancelled'] ?? false) === false
+        && ($guarded['fulfilled'] ?? false) === true
+        && ($guarded['status'] ?? '') === 'paid'
+        && orderStatus($pdo, 'h1-pos-done') === 'paid'
+        && $fake->cancels === $posCancels,
+    'status=' . orderStatus($pdo, 'h1-pos-done') . ' cancels_delta=' . ($fake->cancels - $posCancels),
+);
 
 echo "RESULT pass={$passed} fail={$failed}\n";
 exit($failed > 0 ? 1 : 0);

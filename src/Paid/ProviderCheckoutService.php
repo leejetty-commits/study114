@@ -682,7 +682,10 @@ final class ProviderCheckoutService
                     $this->recordImmediateFailure($orderRef, $e);
                 }
             }
-            if ($e instanceof PaidConflictException && $pgVerified && $this->orderUsesPortOne($orderRef)) {
+            if (!$e instanceof PaidLockBusyException
+                && $e instanceof PaidConflictException
+                && $pgVerified
+                && $this->orderUsesPortOne($orderRef)) {
                 $this->releaseHeldMemoLock($lockKey);
                 $lockKey = null;
 
@@ -1169,10 +1172,12 @@ final class ProviderCheckoutService
             }
             $isPack = (string) ($locked['product_kind'] ?? '') === 'count'
                 && MemoTicketPolicy::isPaidPackVariant((string) ($locked['variant_label'] ?? ''));
-            if ($isPack && $this->tickets->packExistsForOrderRef($orderRef)) {
+            $alreadyGranted = (string) ($locked['fulfillment_status'] ?? '') === 'succeeded'
+                || ($isPack && $this->tickets->packExistsForOrderRef($orderRef));
+            if ($alreadyGranted) {
                 $this->pdo->rollBack();
 
-                return $this->buildCompletePayload($locked, $status === 'paid');
+                return $this->buildCompletePayload($locked, true);
             }
 
             $paymentId = trim((string) ($locked['pg_payment_id'] ?? ''));
@@ -1388,7 +1393,7 @@ final class ProviderCheckoutService
         $stmt->execute([$key]);
         $got = $stmt->fetchColumn();
         if ($got === false || $got === null || (int) $got !== 1) {
-            throw new PaidConflictException('쪽지권 구매가 진행 중입니다. 잠시 후 다시 시도해 주세요.');
+            throw new PaidLockBusyException('쪽지권 구매가 진행 중입니다. 잠시 후 다시 시도해 주세요.');
         }
     }
 
