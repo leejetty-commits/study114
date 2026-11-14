@@ -137,7 +137,7 @@ export function renderSupportScreen(path) {
         window.location.replace(`#${CONTACT_HISTORY_PATH}`);
       }
     });
-    return `<p class="section-lead">마이페이지의 내 문의 내역으로 이동합니다.</p>`;
+    return `<p class="section-lead section-lead--plain">마이페이지의 내 문의 내역으로 이동합니다.</p>`;
   }
 
   if (path.startsWith('/support/policies')) {
@@ -260,7 +260,7 @@ function renderFaqSection(path) {
     </div>
     <p class="section-lead">${esc(sourceNote)} 제목을 누르면 답이 펼쳐집니다. 운영문의와 쪽지는 다른 채널입니다.</p>
     <div class="tab-pills" role="tablist" aria-label="자주 묻는 질문">${tabs}</div>
-    <div class="faq-list" data-support-faq>${items || '<p class="section-lead">등록된 질문이 없습니다.</p>'}</div>
+    <div class="faq-list" data-support-faq>${items || '<p class="section-lead section-lead--plain">등록된 질문이 없습니다.</p>'}</div>
     <aside class="tip-card">
       <h3>답이 없나요?</h3>
       <p>FAQ에 없는 내용은 운영문의에서 남겨 주세요. 운영문의는 쪽지와 다른 채널입니다.</p>
@@ -308,7 +308,7 @@ function renderNoticeSection() {
         </div>`,
               )
               .join('')
-          : '<p class="section-lead" style="padding:16px">등록된 공지가 없습니다.</p>'
+          : '<p class="section-lead section-lead--plain" style="padding:16px">등록된 공지가 없습니다.</p>'
       }
     </div>
     ${renderAdminFooterLink()}`;
