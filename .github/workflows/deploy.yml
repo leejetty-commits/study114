@@ -120,6 +120,9 @@ jobs:
           PORTONE_CHANNEL_KEY: ${{ secrets.PORTONE_CHANNEL_KEY }}
           PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
           PORTONE_WEBHOOK_SECRET: ${{ secrets.PORTONE_WEBHOOK_SECRET }}
+          PORTONE_IDENTITY_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_CHANNEL_KEY }}
+          PORTONE_IDENTITY_TEST_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_TEST_CHANNEL_KEY }}
+          STUDY114_IDENTITY_CI_PEPPER: ${{ secrets.STUDY114_IDENTITY_CI_PEPPER }}
           PG_PROVIDER: ${{ vars.PG_PROVIDER }}
           STUDY114_PAYMENTS_ENABLED: ${{ vars.STUDY114_PAYMENTS_ENABLED }}
         shell: bash
@@ -137,6 +140,19 @@ jobs:
           if [ "$missing" != "0" ]; then
             echo "::error::필수 시크릿 미설정 — 배포 중단 (placeholder .htaccess 업로드 방지)"
             exit 1
+          fi
+          # 365 본인인증 Secrets: 없으면 경고만. 빈 값 주입 → 앱은 fail-closed(쪽지 ON 불가, 사이트 정상)
+          identity_soft="PORTONE_STORE_ID PORTONE_API_SECRET PORTONE_IDENTITY_CHANNEL_KEY PORTONE_IDENTITY_TEST_CHANNEL_KEY STUDY114_IDENTITY_CI_PEPPER"
+          identity_missing=0
+          for v in $identity_soft; do
+            if [ -z "${!v:-}" ]; then
+              echo "::warning::GitHub secret $v 미설정 — 본인인증 fail-closed (쪽지 켜기 불가, 배포는 계속)"
+              identity_missing=1
+              printf -v "$v" '%s' ""
+            fi
+          done
+          if [ "$identity_missing" != "0" ]; then
+            echo "::warning::365 identity Secrets 일부/전부 없음 — 인증 기능 비활성으로 배포"
           fi
           # Resend: 빈 값·placeholder 형식 거부 (값은 출력하지 않음)
           case "${STUDY114_RESEND_API_KEY}" in
@@ -160,7 +176,7 @@ jobs:
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
           fi
           data="$(cat "$htaccess")"
-          for v in $required STUDY114_MAIL_PROBE_KEY; do
+          for v in $required STUDY114_MAIL_PROBE_KEY PORTONE_IDENTITY_CHANNEL_KEY PORTONE_IDENTITY_TEST_CHANNEL_KEY STUDY114_IDENTITY_CI_PEPPER; do
             token="__${v}__"
             repl="${!v}"
             case "$data" in
@@ -205,7 +221,7 @@ jobs:
             data="${data//"$token"/"$repl"}"
           done
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__PORTONE_\|__PG_PROVIDER__\|__STUDY114_PAYMENTS_ENABLED__\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__\|__STUDY114_TEST_ACCOUNT_EMAILS__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__PORTONE_\|__PG_PROVIDER__\|__STUDY114_PAYMENTS_ENABLED__\|__STUDY114_IDENTITY_CI_PEPPER__\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__\|__STUDY114_TEST_ACCOUNT_EMAILS__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
@@ -219,7 +235,7 @@ jobs:
           else
             echo "STUDY114_PAYMENTS_ENABLED 설정됨 (값은 출력하지 않음)."
           fi
-          echo "OAuth/Resend/Cron/Storage/TestAllowlist/결제 SetEnv 주입 완료 (값은 출력하지 않음)."
+          echo "OAuth/Resend/Cron/Storage/TestAllowlist/결제/본인인증 SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh

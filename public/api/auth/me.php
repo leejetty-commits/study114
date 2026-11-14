@@ -101,6 +101,7 @@ $oauthProviderLabels = [];
 $needsAccountContact = false;
 $phoneVerified = false;
 $needsBasicRegister = false;
+$identityStatus = ['verified' => false, 'verified_at' => null, 'name_masked' => null];
 try {
     $oauthRolePending = ($user['role_type'] === 'admin')
         ? false
@@ -119,6 +120,8 @@ try {
             (string) ($user['role_type'] ?? '')
         );
     }
+    $identityStatus = (new \Study114\Auth\IdentityVerificationService())
+        ->publicStatus((int) $user['user_id']);
 } catch (Throwable $e) {
     error_log('[me] auth flags: ' . $e->getMessage());
 }
@@ -152,6 +155,8 @@ $me = [
     'oauth_provider_labels' => $oauthProviderLabels,
     'needs_account_contact' => $needsAccountContact,
     'phone_verified' => $phoneVerified,
+    'identity_verified' => (bool) ($identityStatus['verified'] ?? false),
+    'identity_verified_at' => $identityStatus['verified_at'] ?? null,
     'needs_basic_register' => $needsBasicRegister,
     'student_branch' => $studentBranch,
 ];

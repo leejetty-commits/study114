@@ -1,0 +1,99 @@
+{
+  "complement2_unverified": {
+    "cards": [
+      {
+        "w": 736,
+        "h": 229,
+        "left": 248,
+        "top": 544
+      },
+      {
+        "w": 736,
+        "h": 387,
+        "left": 248,
+        "top": 789
+      }
+    ],
+    "status": {
+      "w": 736,
+      "h": 229,
+      "left": 248
+    },
+    "onDisabled": {
+      "w": 189,
+      "h": 58,
+      "left": 273
+    },
+    "saveW": 120,
+    "gate": {
+      "w": 686,
+      "h": 100,
+      "left": 273
+    },
+    "disabledClass": true,
+    "toast": false,
+    "receivingOn": false
+  },
+  "complement2_success": {
+    "cards": [
+      {
+        "w": 736,
+        "h": 177,
+        "left": 248,
+        "top": 544
+      },
+      {
+        "w": 736,
+        "h": 245,
+        "left": 248,
+        "top": 737
+      }
+    ],
+    "status": {
+      "w": 736,
+      "h": 177,
+      "left": 248
+    },
+    "onDisabled": null,
+    "saveW": 120,
+    "gate": {
+      "w": 686,
+      "h": 48,
+      "left": 273
+    },
+    "disabledClass": false,
+    "toast": true,
+    "receivingOn": true
+  },
+  "prev_before": {
+    "cards": [
+      {
+        "w": 736,
+        "h": 113,
+        "left": 248
+      },
+      {
+        "w": 736,
+        "h": 387,
+        "left": 248
+      }
+    ],
+    "saveW": 120,
+    "choiceCount": 2
+  },
+  "main_has_disabled": false,
+  "branch_has_disabled": true,
+  "delta": {
+    "status_height_unverified_vs_success": 52,
+    "gate_height_added": 100,
+    "saveW_unverified": 120,
+    "saveW_success": 120,
+    "saveW_delta": 0,
+    "card0_w_unverified": 736,
+    "card0_w_success": 736,
+    "card0_w_delta": 0,
+    "disabled_present": true,
+    "toast_on_success": true,
+    "receiving_on_after_success": true
+  }
+}

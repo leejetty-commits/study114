@@ -4,6 +4,8 @@
 
 import { P21_INQUIRY_COPY, P21_INQUIRY_OFF_REASONS } from './inquiries-copy.js';
 import { tutorInquiryPrefFromStatus, tutorInquiryStoredLine, normalizeTutorInquiryStatus } from './inquiries-pref.js';
+import { getAuthUser } from '../auth-session.js';
+import { renderProviderIdentityGate } from '../provider-identity-gate.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -32,11 +34,17 @@ export function renderTutorInquiries(tutor) {
   const pref = tutorInquiryPrefFromStatus(status);
   const badge = pref.receiving ? P21_INQUIRY_COPY.badgeReceiving : P21_INQUIRY_COPY.badgeClosed;
   const stored = tutorInquiryStoredLine(status);
+  const auth = getAuthUser();
+  const identityVerified = Boolean(auth?.identity_verified);
+  const identityGate = renderProviderIdentityGate({
+    verified: identityVerified,
+    verified_at: auth?.identity_verified_at ?? null,
+  });
 
   const reasonLabels = P21_INQUIRY_OFF_REASONS.map((o) => o.label).join(' / ');
 
   return `
-    <div class="p21-inq" data-p21-inquiries data-p21-tutor-id="${esc(tutor.id)}" data-inquiry-status="${esc(status)}" data-inquiry-receiving="${pref.receiving ? '1' : '0'}">
+    <div class="p21-inq" data-p21-inquiries data-p21-tutor-id="${esc(tutor.id)}" data-inquiry-status="${esc(status)}" data-inquiry-receiving="${pref.receiving ? '1' : '0'}" data-identity-verified="${identityVerified ? '1' : '0'}">
       <p class="p21-inq__lead">${esc(P21_INQUIRY_COPY.pageLead)}</p>
 
       <section class="p21-inq-block p21-inq-block--status p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.currentStatusHeading)}">
@@ -45,6 +53,7 @@ export function renderTutorInquiries(tutor) {
           <p class="p21-inq-block__hint" data-p21-inquiry-stored>${esc(stored)}</p>
           <span class="p21-inq-badge p21-inq-badge--${pref.receiving ? 'on' : 'off'}">${esc(badge)}</span>
         </div>
+        ${identityGate}
       </section>
 
       <section class="p21-inq-block p21-inq-block--edit p20-inq-card" aria-label="${esc(P21_INQUIRY_COPY.editHeading)}">
@@ -52,8 +61,8 @@ export function renderTutorInquiries(tutor) {
         <div class="p20-inq-edit-grid">
           <div class="p20-inq-edit-main">
             <div class="p21-inq-choices" role="radiogroup" aria-label="${esc(P21_INQUIRY_COPY.editHeading)}">
-              <label class="p21-inq-choice${pref.receiving ? ' is-selected' : ''}">
-                <input type="radio" name="p21_inquiry_receiving" value="1" data-p21-inquiry-receiving ${pref.receiving ? 'checked' : ''} />
+              <label class="p21-inq-choice${pref.receiving ? ' is-selected' : ''}${identityVerified ? '' : ' is-disabled'}">
+                <input type="radio" name="p21_inquiry_receiving" value="1" data-p21-inquiry-receiving ${pref.receiving ? 'checked' : ''} ${identityVerified ? '' : 'disabled'} />
                 <span>${esc(P21_INQUIRY_COPY.receiving)}</span>
               </label>
               <label class="p21-inq-choice${!pref.receiving ? ' is-selected' : ''}">

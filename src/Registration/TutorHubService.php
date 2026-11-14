@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use InvalidArgumentException;
+use Study114\Auth\IdentityVerificationService;
 use Study114\Database\Connection;
 
 /** 21장 P21 — tutors 허브 API */
 final class TutorHubService
 {
     private TutorHubRepository $repo;
+    private IdentityVerificationService $identity;
 
-    public function __construct(?TutorHubRepository $repo = null)
+    public function __construct(?TutorHubRepository $repo = null, ?IdentityVerificationService $identity = null)
     {
         $this->repo = $repo ?? new TutorHubRepository(Connection::get());
+        $this->identity = $identity ?? new IdentityVerificationService();
     }
 
     /** @return list<array<string, mixed>> */
@@ -53,6 +56,12 @@ final class TutorHubService
         $status = (string) ($input['inquiry_status'] ?? '');
         if (!in_array($status, ['open', 'paused', 'not_accepting'], true)) {
             throw new InvalidArgumentException('inquiry_status: open | paused | not_accepting');
+        }
+        if ($status === 'open') {
+            $this->identity->assertProviderVerifiedForInquiryOpen([
+                'user_id' => $userId,
+                'role_type' => 'tutor',
+            ]);
         }
         $this->repo->setInquiryStatus($tutorId, $status);
 

@@ -7,6 +7,11 @@ import { P21_INQUIRY_COPY } from './inquiries-copy.js';
 import { tutorInquiryStatusFromPref } from './inquiries-pref.js';
 import { setTutorInquiryStatus } from './store.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { getAuthUser } from '../auth-session.js';
+import {
+  bindProviderIdentityGate,
+  lockInquiryReceivingUntilVerified,
+} from '../provider-identity-gate.js';
 
 function selectedReceiving(page) {
   const el = page.querySelector('input[name="p21_inquiry_receiving"]:checked');
@@ -62,6 +67,36 @@ export function bindTutorInquiriesEvents(root, rerender) {
   const page = root.querySelector('[data-p21-inquiries]');
   if (!page) return;
 
+  const verified = page.dataset.identityVerified === '1' || Boolean(getAuthUser()?.identity_verified);
+  lockInquiryReceivingUntilVerified(page, verified);
+  bindProviderIdentityGate(page, {
+    onVerified: async (status) => {
+      const user = getAuthUser();
+      if (user) {
+        user.identity_verified = true;
+        user.identity_verified_at = status?.verified_at ?? new Date().toISOString();
+      }
+      const on = page.querySelector('input[name="p21_inquiry_receiving"][value="1"]');
+      if (on instanceof HTMLInputElement) {
+        on.disabled = false;
+        on.checked = true;
+        on.closest('label')?.classList.remove('is-disabled');
+      }
+      const off = page.querySelector('input[name="p21_inquiry_receiving"][value="0"]');
+      if (off instanceof HTMLInputElement) off.checked = false;
+      syncReasonState(page);
+      const id = Number(page.dataset.p21TutorId);
+      if (id) {
+        try {
+          await setTutorInquiryStatus(id, 'open');
+        } catch (err) {
+          console.warn('[p21-identity-auto-open]', err);
+        }
+      }
+      rerender();
+    },
+  });
+
   page.querySelectorAll('[data-p21-inquiry-receiving]').forEach((input) => {
     input.addEventListener('change', () => syncReasonState(page));
   });
@@ -73,6 +108,10 @@ export function bindTutorInquiriesEvents(root, rerender) {
     const id = Number(page.dataset.p21TutorId);
     if (!id) return;
     const receiving = selectedReceiving(page);
+    if (receiving && !(getAuthUser()?.identity_verified || page.dataset.identityVerified === '1')) {
+      void s114Alert('쪽지를 받으려면 본인인증이 한 번 필요해요');
+      return;
+    }
     const reason = selectedReason(page);
     if (!receiving && (!hasClosedReason(page) || !reason)) {
       void s114Alert(P21_INQUIRY_COPY.offReasonRequired);
@@ -93,6 +132,11 @@ export function bindTutorInquiriesEvents(root, rerender) {
         console.warn('[p21-inquiries]', err);
         if (err?.code === 'schema_missing') {
           void s114Alert(P21_INQUIRY_COPY.schemaMissing);
+          rerender();
+          return;
+        }
+        if (err?.code === 'identity_required') {
+          void s114Alert('쪽지를 받으려면 본인인증이 한 번 필요해요');
           rerender();
           return;
         }

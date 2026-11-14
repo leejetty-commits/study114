@@ -1,0 +1,74 @@
+/* 365 — 쪽지설정 본인인증. 현재상태 카드 안 인셋 블록 */
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity[data-verified='1'] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-color: #bbf7d0;
+  background: #ecfdf3;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__lead {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #334155;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__badge {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #15803d;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__error {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #b91c1c;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__error.is-hidden {
+  display: none;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__btn {
+  min-height: 40px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.p365-identity-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 1400;
+  max-width: min(90vw, 360px);
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #1c1917;
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+@media (max-width: 390px) {
+  :is([data-p20-inquiries], [data-p21-inquiries]) .p365-identity__btn {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}

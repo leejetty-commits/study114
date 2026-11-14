@@ -27,13 +27,13 @@ export default defineConfig({
     strictPort: true,
     host: '127.0.0.1',
     open: false,
-    // 339: 로컬 Vite에만 포트원·토스 테스트 도메인 (운영 CSP/CF는 변경 없음)
+    // 로컬 Vite만. 결제(토스)와 본인인증(KG이니시스) 호스트를 같이 둔다. 운영 CSP는 바꾸지 않는다.
     headers: {
       'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com",
-        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://*.tosspayments.com https://cdn.portone.io",
-        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
+        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://cdn.portone.io https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
+        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
         "img-src 'self' data: blob: https:",
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self' data:",
@@ -56,9 +56,9 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com",
-        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://*.tosspayments.com https://cdn.portone.io",
-        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
+        "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://cdn.portone.io https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
+        "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com https://sa.inicis.com https://*.inicis.com",
         "img-src 'self' data: blob: https:",
         "style-src 'self' 'unsafe-inline'",
         "font-src 'self' data:",

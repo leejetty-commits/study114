@@ -39,6 +39,7 @@
     "verify:member-mail-schedule": "php scripts/verify-member-mail-schedule.php",
     "verify:member-mail-admin": "php scripts/verify-member-mail-admin.php",
     "verify:withdraw-reason": "php scripts/verify-withdraw-reason.php",
+    "verify:identity-inquiry-gate": "php scripts/verify-identity-inquiry-gate.php",
     "verify:soft-error": "php scripts/verify-soft-error.php",
     "verify:paid-conflict-auto-cancel": "php scripts/verify-paid-conflict-auto-cancel.php",
     "verify:cur-006-email-verify-gate": "vite-node scripts/verify-cur-006-email-verify-gate.mjs",

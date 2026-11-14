@@ -295,16 +295,26 @@ function study114_session_save_path(): ?string
 }
 
 /**
- * 로컬·개발에서만 루트 .env의 PG_·PORTONE_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
+ * 로컬·개발에서만 루트 .env의 PG_·PORTONE_·STUDY114_IDENTITY_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
  * study114_env('STUDY114_APP_ENV')===production 이면 실행하지 않는다. 값은 로그하지 않는다.
+ * 워크트리에서는 저장소 루트 .env도 본다.
  */
 function study114_load_dotenv_local(): void
 {
     if (strtolower(study114_env('STUDY114_APP_ENV', 'local')) === 'production') {
         return;
     }
-    $path = dirname(__DIR__) . '/.env';
-    if (!is_file($path) || !is_readable($path)) {
+    $path = null;
+    foreach ([
+        dirname(__DIR__) . '/.env',
+        dirname(__DIR__, 3) . '/.env',
+    ] as $candidate) {
+        if (is_file($candidate) && is_readable($candidate)) {
+            $path = $candidate;
+            break;
+        }
+    }
+    if ($path === null) {
         return;
     }
     $lines = file($path, FILE_IGNORE_NEW_LINES);
@@ -321,10 +331,10 @@ function study114_load_dotenv_local(): void
         }
         [$key, $value] = explode('=', $line, 2);
         $key = trim($key);
-        if ($key === '' || (!str_starts_with($key, 'PG_') && !str_starts_with($key, 'PORTONE_'))) {
-            continue;
-        }
-        if (!preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+        $allowed = str_starts_with($key, 'PORTONE_')
+            || str_starts_with($key, 'PG_')
+            || str_starts_with($key, 'STUDY114_IDENTITY_');
+        if ($key === '' || !$allowed || !preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
             continue;
         }
         $existing = getenv($key);

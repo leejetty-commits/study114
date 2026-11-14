@@ -1,0 +1,7 @@
+login_http=200 login_ok=true
+me_status=200 authenticated=true identity_verified=false
+gate_button=true
+clicked_identity_start
+pages_open=2
+frames_external=0
+STOP: PortOne/Inicis UI appeared — human must finish identity in provider UI

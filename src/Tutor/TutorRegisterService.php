@@ -395,9 +395,9 @@ final class TutorRegisterService
 
         $stmt = $pdo->prepare(
 
-            'INSERT INTO tutors (user_id, tutor_display_name, profile_status, detail_completion_status)
+            'INSERT INTO tutors (user_id, tutor_display_name, profile_status, detail_completion_status, inquiry_status)
 
-             VALUES (?, ?, "draft", "basic_only")'
+             VALUES (?, ?, "draft", "basic_only", "paused")'
 
         );
 

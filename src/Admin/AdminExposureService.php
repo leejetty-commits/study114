@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Study114\Admin;
 
 use InvalidArgumentException;
+use Study114\Auth\IdentityVerificationException;
+use Study114\Auth\IdentityVerificationService;
 use Study114\Board\BoardPostRepository;
 use Study114\Database\Connection;
 use Study114\Paid\ProviderReminderRepository;
@@ -156,6 +158,17 @@ final class AdminExposureService
       } elseif ($action === 'inquiry_status') {
           if ($inquiryStatus === '' || !in_array($inquiryStatus, self::INQUIRY_STATUSES, true)) {
               throw new InvalidArgumentException('inquiry_status가 올바르지 않습니다.');
+          }
+          if ($inquiryStatus === 'open') {
+              $ownerId = (int) ($existing['ownerUserId'] ?? $existing['user_id'] ?? $existing['owner_user_id'] ?? 0);
+              try {
+                  (new IdentityVerificationService())->assertProviderVerifiedForInquiryOpen([
+                      'user_id' => $ownerId,
+                      'role_type' => 'study_room_owner',
+                  ]);
+              } catch (IdentityVerificationException $e) {
+                  throw new InvalidArgumentException($e->getMessage());
+              }
           }
           $this->studyRooms->setInquiryStatus($roomId, $inquiryStatus);
       }

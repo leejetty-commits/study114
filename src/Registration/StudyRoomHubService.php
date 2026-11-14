@@ -5,16 +5,19 @@ declare(strict_types=1);
 namespace Study114\Registration;
 
 use InvalidArgumentException;
+use Study114\Auth\IdentityVerificationService;
 use Study114\Database\Connection;
 
 /** 20장 P20 — study_rooms 허브 API */
 final class StudyRoomHubService
 {
     private StudyRoomHubRepository $repo;
+    private IdentityVerificationService $identity;
 
-    public function __construct(?StudyRoomHubRepository $repo = null)
+    public function __construct(?StudyRoomHubRepository $repo = null, ?IdentityVerificationService $identity = null)
     {
         $this->repo = $repo ?? new StudyRoomHubRepository(Connection::get());
+        $this->identity = $identity ?? new IdentityVerificationService();
     }
 
     /** @return list<array<string, mixed>> */
@@ -54,6 +57,12 @@ final class StudyRoomHubService
         $operatorStatuses = ['open', 'paused', 'capacity_full'];
         if (!in_array($status, $operatorStatuses, true)) {
             throw new InvalidArgumentException('inquiry_status: open | paused | capacity_full');
+        }
+        if ($status === 'open') {
+            $this->identity->assertProviderVerifiedForInquiryOpen([
+                'user_id' => $userId,
+                'role_type' => 'study_room_owner',
+            ]);
         }
         $this->repo->setInquiryStatus($roomId, $status);
 

@@ -59,14 +59,16 @@ final class StudyRoomPublicReadService
         $ownerSql = WithdrawnOwnerSql::notWithdrawn('sr.user_id');
         $publishedSql = $guestPublishedOnly ? " AND sr.profile_status = 'published'" : '';
         $stmt = $this->pdo->prepare(
-            "SELECT sr.id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
+            "SELECT sr.id, sr.user_id, sr.study_room_name, sr.slogan, sr.intro_short, sr.intro_long,
                     sr.main_subject_note, sr.feature_1, sr.feature_2, sr.feature_3,
                     sr.teaching_style, sr.lesson_place_type, sr.capacity_per_time,
                     sr.lesson_operation_type, sr.price_amount, sr.facility_note,
-                    sr.inquiry_status, sr.profile_status, sr.price_description
+                    " . \Study114\Auth\IdentityVerificationService::inquiryStatusSelectSql('sr') . " AS inquiry_status,
+                    sr.profile_status, sr.price_description
                     {$extraSql},
                     r.dong_name, r.sigungu_name, c.name AS complex_name
                FROM study_rooms sr
+               LEFT JOIN user_profiles up_id ON up_id.user_id = sr.user_id
                LEFT JOIN regions r ON sr.region_id = r.id
                LEFT JOIN complexes c ON sr.complex_id = c.id
               WHERE sr.id = ?
@@ -174,7 +176,7 @@ final class StudyRoomPublicReadService
             'instagram_url'                   => (string) ($row['instagram_url'] ?? ''),
             'tiktok_url'                      => (string) ($row['tiktok_url'] ?? ''),
             'naver_clip_url'                  => (string) ($row['naver_clip_url'] ?? ''),
-            'inquiry_status'                  => (string) ($row['inquiry_status'] ?? ''),
+            'inquiry_status'                  => (string) ($row['inquiry_status'] ?? 'paused'),
             'profile_status'                  => (string) ($row['profile_status'] ?? ''),
             'latitude'                        => $includePreciseCoordinates && $row['latitude'] !== null ? (float) $row['latitude'] : null,
             'longitude'                       => $includePreciseCoordinates && $row['longitude'] !== null ? (float) $row['longitude'] : null,

@@ -104,6 +104,20 @@
   color: #1c1917;
 }
 
+:is([data-p20-inquiries], [data-p21-inquiries]) .p21-inq-choice.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f5f5f4;
+  border-color: #e7e5e4;
+  color: #78716c;
+}
+
+:is([data-p20-inquiries], [data-p21-inquiries]) .p21-inq-choice.is-disabled.is-selected {
+  border-color: #d6d3d1;
+  background: #f5f5f4;
+  color: #78716c;
+}
+
 :is([data-p20-inquiries], [data-p21-inquiries]) .p21-inq-choice input,
 :is([data-p20-inquiries], [data-p21-inquiries]) .p21-inq-reason input {
   flex: 0 0 18px;
