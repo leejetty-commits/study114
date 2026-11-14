@@ -1,84 +1,53 @@
 -- =============================================================================
--- 088 rollback
--- 1) _088_backup_* 목록으로 inquiry_status 를 open 으로 복구
--- 2) identity 컬럼·인덱스 DROP
--- 3) 백업 테이블 DROP
--- Actions는 실행하지 않는다.
+-- 088 rollback — 닷홈 phpMyAdmin 평문
+-- information_schema·PREPARE 없음. 088을 적용한 DB에서 한 번만 실행한다.
+-- 순서: 백업표로 inquiry_status 복구 → 기본값 MODIFY 원복 → UNIQUE 2개 DROP
+--       → 5칸 DROP → 백업표 DROP
+-- 복구는 백업된 행 중 아직 paused 인 것만 inquiry_status_was 로 되돌린다.
+-- 088 이후 다른 값으로 바꾼 행은 그대로 둔다. 원래 paused 였던 행은 백업에 없다.
+-- Actions는 실행하지 않는다. 다시 실행하면 인덱스·컬럼이 없어 실패한다.
 -- =============================================================================
 
 USE study114;
 
 SET NAMES utf8mb4;
 
--- ---------------------------------------------------------------------------
--- 1) 백업 목록으로 open 복구 (백업 테이블이 있을 때만)
--- ---------------------------------------------------------------------------
-SET @bs := (
-  SELECT COUNT(*) FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '_088_backup_study_rooms_inquiry'
-);
-SET @us := IF(@bs > 0,
-  'UPDATE study_rooms sr
-      INNER JOIN _088_backup_study_rooms_inquiry b ON b.id = sr.id
-       SET sr.inquiry_status = b.inquiry_status_was
-     WHERE sr.inquiry_status = ''paused''',
-  'SELECT ''088 rollback: study_rooms backup table missing — inquiry not restored'' AS migration_note');
-PREPARE pus FROM @us; EXECUTE pus; DEALLOCATE PREPARE pus;
+-- 1) 백업표 기준 inquiry_status 복구
+UPDATE study_rooms sr
+  INNER JOIN _088_backup_study_rooms_inquiry b ON b.id = sr.id
+   SET sr.inquiry_status = b.inquiry_status_was
+ WHERE sr.inquiry_status = 'paused';
 
-SET @bt := (
-  SELECT COUNT(*) FROM information_schema.TABLES
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '_088_backup_tutors_inquiry'
-);
-SET @ut := IF(@bt > 0,
-  'UPDATE tutors t
-      INNER JOIN _088_backup_tutors_inquiry b ON b.id = t.id
-       SET t.inquiry_status = b.inquiry_status_was
-     WHERE t.inquiry_status = ''paused''',
-  'SELECT ''088 rollback: tutors backup table missing — inquiry not restored'' AS migration_note');
-PREPARE put FROM @ut; EXECUTE put; DEALLOCATE PREPARE put;
+UPDATE tutors t
+  INNER JOIN _088_backup_tutors_inquiry b ON b.id = t.id
+   SET t.inquiry_status = b.inquiry_status_was
+ WHERE t.inquiry_status = 'paused';
 
--- ---------------------------------------------------------------------------
--- 2) identity 인덱스·컬럼 DROP
--- ---------------------------------------------------------------------------
-SET @txu := (
-  SELECT COUNT(*) FROM information_schema.STATISTICS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_profiles'
-    AND INDEX_NAME = 'uq_user_profiles_identity_tx_id'
-);
-SET @dtx := IF(@txu > 0,
-  'ALTER TABLE user_profiles DROP INDEX uq_user_profiles_identity_tx_id',
-  'SELECT 1');
-PREPARE pdtx FROM @dtx; EXECUTE pdtx; DEALLOCATE PREPARE pdtx;
+-- 2) 기본값 원복 (067 공부방 open · 079 과외쌤 open)
+ALTER TABLE study_rooms
+  MODIFY COLUMN inquiry_status ENUM('open', 'paused', 'capacity_full', 'waiting_only')
+    NOT NULL DEFAULT 'open'
+    COMMENT '쪽지 수신 상태 (공개와 독립)';
 
-SET @ciu := (
-  SELECT COUNT(*) FROM information_schema.STATISTICS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_profiles'
-    AND INDEX_NAME = 'uq_user_profiles_identity_ci_hash'
-);
-SET @dci := IF(@ciu > 0,
-  'ALTER TABLE user_profiles DROP INDEX uq_user_profiles_identity_ci_hash',
-  'SELECT 1');
-PREPARE pdci FROM @dci; EXECUTE pdci; DEALLOCATE PREPARE pdci;
+ALTER TABLE tutors
+  MODIFY COLUMN inquiry_status ENUM('open','paused','not_accepting') NOT NULL DEFAULT 'open'
+  COMMENT '과외쌤 쪽지 수신: open=받는 중(기본), paused=잠시 쉼(일시 중단), not_accepting=신규 학생 안 받음(신규 모집 닫힘)';
 
-SET @c1 := (
-  SELECT COUNT(*) FROM information_schema.COLUMNS
-  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'user_profiles'
-    AND COLUMN_NAME = 'identity_ci_hash'
-);
-SET @drop := IF(@c1 > 0,
-  'ALTER TABLE user_profiles
-     DROP COLUMN identity_name,
-     DROP COLUMN identity_tx_id,
-     DROP COLUMN identity_provider,
-     DROP COLUMN identity_verified_at,
-     DROP COLUMN identity_ci_hash',
-  'SELECT 1');
-PREPARE pdrop FROM @drop; EXECUTE pdrop; DEALLOCATE PREPARE pdrop;
+-- 3) UNIQUE 2개 DROP
+ALTER TABLE user_profiles
+  DROP INDEX uq_user_profiles_identity_ci_hash,
+  DROP INDEX uq_user_profiles_identity_tx_id;
 
--- ---------------------------------------------------------------------------
--- 3) 백업 테이블 정리
--- ---------------------------------------------------------------------------
-DROP TABLE IF EXISTS _088_backup_study_rooms_inquiry;
-DROP TABLE IF EXISTS _088_backup_tutors_inquiry;
+-- 4) 5칸 DROP
+ALTER TABLE user_profiles
+  DROP COLUMN identity_name,
+  DROP COLUMN identity_tx_id,
+  DROP COLUMN identity_provider,
+  DROP COLUMN identity_verified_at,
+  DROP COLUMN identity_ci_hash;
 
-SELECT '088 rollback: inquiry restored from backup (if present); identity columns dropped' AS migration_note;
+-- 5) 백업표 DROP
+DROP TABLE _088_backup_study_rooms_inquiry;
+DROP TABLE _088_backup_tutors_inquiry;
+
+SELECT '088 rollback: inquiry restored from backup; defaults open; identity columns dropped' AS migration_note;
