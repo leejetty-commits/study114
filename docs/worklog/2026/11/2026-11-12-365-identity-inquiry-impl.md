@@ -23,8 +23,8 @@
 ## 구현 요약
 
 ### DB
-- `sql/schema/088_provider_identity_verification.sql` — `user_profiles` 5칸 + UNIQUE(`identity_ci_hash`)
-- 로컬 Docker `study114_dev` 적용 완료 (Actions는 SQL 미실행)
+- `sql/schema/088_provider_identity_verification.sql` — `user_profiles` 5칸 + UNIQUE 2개(`identity_ci_hash`, `identity_tx_id`)를 ALTER 한 번. `information_schema`·`PREPARE` 없음
+- 로컬 Docker 새 DB `study114_088check`에 평문 088 적용 1회 (Actions는 SQL 미실행)
 
 ### 서버
 - `IdentityVerificationService` · `PortOneIdentityClient` · `IdentityVerificationException`
@@ -104,7 +104,49 @@
 
 ## 운영 배포 전 할 일 (사용자)
 
-1. 운영 phpMyAdmin에 **088** 적용
+1. 운영 phpMyAdmin에 **088** 적용. 닷홈은 `information_schema`가 빈 결과라, 파일은 평문 ALTER 한 번이다. 아래 확인을 먼저 하고, `identity%`가 0행일 때만 실행한다. 다시 실행하면 컬럼 중복으로 실패한다.
+
+실행 전:
+
+```sql
+SHOW COLUMNS FROM user_profiles LIKE 'identity%';
+```
+
+0행이어야 한다.
+
+적용 후 (`identity%` 5행, UNIQUE 2개, 기본값 `paused`, 미인증 open 잔여 0):
+
+```sql
+SHOW COLUMNS FROM user_profiles LIKE 'identity%';
+SHOW INDEX FROM user_profiles WHERE Key_name IN (
+  'uq_user_profiles_identity_ci_hash',
+  'uq_user_profiles_identity_tx_id'
+);
+SHOW COLUMNS FROM study_rooms LIKE 'inquiry_status';
+SHOW COLUMNS FROM tutors LIKE 'inquiry_status';
+SELECT COUNT(*) AS study_rooms_backed_up FROM _088_backup_study_rooms_inquiry;
+SELECT COUNT(*) AS tutors_backed_up FROM _088_backup_tutors_inquiry;
+SELECT COUNT(*) AS study_rooms_open_unverified
+  FROM study_rooms sr
+  LEFT JOIN user_profiles up ON up.user_id = sr.user_id
+ WHERE sr.inquiry_status = 'open'
+   AND (
+     up.user_id IS NULL
+     OR up.identity_verified_at IS NULL
+     OR NULLIF(TRIM(up.identity_ci_hash), '') IS NULL
+     OR NULLIF(TRIM(up.identity_tx_id), '') IS NULL
+   );
+SELECT COUNT(*) AS tutors_open_unverified
+  FROM tutors t
+  LEFT JOIN user_profiles up ON up.user_id = t.user_id
+ WHERE t.inquiry_status = 'open'
+   AND (
+     up.user_id IS NULL
+     OR up.identity_verified_at IS NULL
+     OR NULLIF(TRIM(up.identity_ci_hash), '') IS NULL
+     OR NULLIF(TRIM(up.identity_tx_id), '') IS NULL
+   );
+```
 2. GitHub Secrets: `PORTONE_STORE_ID` · `PORTONE_API_SECRET` · `PORTONE_IDENTITY_CHANNEL_KEY`(실채널) · `PORTONE_IDENTITY_TEST_CHANNEL_KEY`(허용목록=샌드박스) · `STUDY114_IDENTITY_CI_PEPPER`(32자+ 난수). 미설정 시 배포는 되고 인증만 fail-closed
 3. CF CSP Enforce에 추가 (실측 위반 우선, 예상):
    - `script-src`: `https://cdn.portone.io` `https://*.portone.io` `https://sa.inicis.com` `https://*.inicis.com`
