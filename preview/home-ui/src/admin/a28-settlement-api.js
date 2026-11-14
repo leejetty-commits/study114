@@ -1,3 +1,5 @@
+import { adminFetch, adminHttpStatus } from './admin-fetch.js';
+
 const CREDENTIALS = { credentials: 'include' };
 
 async function readJson(res) {
@@ -5,7 +7,7 @@ async function readJson(res) {
   if (!res.ok || !data.ok) {
     const err = new Error(data.message || 'admin api error');
     err.code = data.error || '';
-    err.status = res.status;
+    err.status = adminHttpStatus(res, data);
     throw err;
   }
   return data;
@@ -16,7 +18,7 @@ export async function fetchSettlementReport(period, date = '') {
   const params = new URLSearchParams();
   params.set('period', period);
   if (date) params.set('date', date);
-  const res = await fetch(`/api/admin/settlement-report.php?${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/settlement-report.php?${params}`, CREDENTIALS);
   return readJson(res);
 }
 
@@ -27,6 +29,6 @@ export async function fetchSettlementLines(period, date, line, page = 1) {
   params.set('date', date);
   params.set('line', line);
   params.set('page', String(page));
-  const res = await fetch(`/api/admin/settlement-lines.php?${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/settlement-lines.php?${params}`, CREDENTIALS);
   return readJson(res);
 }

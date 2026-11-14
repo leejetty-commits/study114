@@ -1,3 +1,5 @@
+import { adminFetch, adminHttpStatus } from './admin-fetch.js';
+
 /**
  * 사이트 기본 — 서버 site_settings가 원본.
  * sessionStorage는 마지막 성공 응답의 읽기 캐시만 둔다.
@@ -212,11 +214,10 @@ function applyPublicPayload(data) {
   publicSettled = true;
 }
 
-async function readApiError(res) {
-  const data = await res.json().catch(() => ({}));
+function readApiError(res, data) {
   const message = String(data?.message || '').trim();
   if (message) return message;
-  if (res.status === 403) return '최고관리자만 사이트 기본을 저장할 수 있습니다.';
+  if (adminHttpStatus(res, data) === 403) return '최고관리자만 사이트 기본을 저장할 수 있습니다.';
   return '사이트 기본을 저장하지 못했습니다.';
 }
 
@@ -231,10 +232,10 @@ export function getSettingsError() {
 export function ensureAdminSettings() {
   if (adminReady) return Promise.resolve();
   if (!adminInflight) {
-    adminInflight = fetch('/api/admin/site-settings.php', { credentials: 'include' })
+    adminInflight = adminFetch('/api/admin/site-settings.php')
       .then(async (res) => {
-        if (!res.ok) throw new Error(await readApiError(res));
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data?.ok === false) throw new Error(readApiError(res, data));
         if (!data?.ok || !data.settings) throw new Error(data?.message || '사이트 기본을 읽지 못했습니다.');
         cacheAdmin(data.settings, data.logs);
       })
@@ -287,18 +288,17 @@ export function getSiteSettings() {
 
 /** @param {Record<string, unknown>} patch */
 export async function saveSiteSettings(patch) {
-  const res = await fetch('/api/admin/site-settings.php', {
+  const res = await adminFetch('/api/admin/site-settings.php', {
     method: 'PUT',
-    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) {
-    const message = await readApiError(res);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data?.ok === false) {
+    const message = readApiError(res, data);
     adminError = message;
     throw new Error(message);
   }
-  const data = await res.json().catch(() => ({}));
   if (!data?.ok || !data.settings) {
     const message = String(data?.message || '사이트 기본을 저장하지 못했습니다.');
     adminError = message;

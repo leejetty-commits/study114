@@ -1,3 +1,5 @@
+import { adminFetch } from './admin-fetch.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
@@ -12,13 +14,13 @@ async function readJson(res) {
 /** @param {string} [status] */
 export async function fetchSubmissionQueue(status = 'submitted') {
   const params = new URLSearchParams({ status });
-  const res = await fetch(`/api/admin/submission-queue.php?${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/submission-queue.php?${params}`, CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {Record<string, unknown>} input */
 export async function patchSubmissionQueueAction(input) {
-  const res = await fetch('/api/admin/submission-queue.php', {
+  const res = await adminFetch('/api/admin/submission-queue.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -29,20 +31,20 @@ export async function patchSubmissionQueueAction(input) {
 
 /** @param {number} [limit] */
 export async function fetchOperationLogs(limit = 50) {
-  const res = await fetch(`/api/admin/operation-logs.php?limit=${limit}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/operation-logs.php?limit=${limit}`, CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {string} [status] */
 export async function fetchAdminReports(status = '') {
   const params = status ? `?status=${encodeURIComponent(status)}` : '';
-  const res = await fetch(`/api/admin/reports.php${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/reports.php${params}`, CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {Record<string, unknown>} input */
 export async function patchAdminReport(input) {
-  const res = await fetch('/api/admin/reports.php', {
+  const res = await adminFetch('/api/admin/reports.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -58,7 +60,7 @@ export async function fetchExposureTargets(targetType = 'study_room', status = '
   if (status) params.set('status', status);
   if (userId) params.set('user_id', String(userId));
   const qs = params.toString();
-  const res = await fetch(`/api/admin/exposure.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/exposure.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
   return readJson(res);
 }
 
@@ -67,7 +69,7 @@ export async function fetchCommerceOverview(limit = 50, userId = '') {
   const params = new URLSearchParams();
   params.set('limit', String(limit));
   if (userId) params.set('user_id', String(userId));
-  const res = await fetch(`/api/admin/commerce.php?${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/commerce.php?${params}`, CREDENTIALS);
   return readJson(res);
 }
 
@@ -81,19 +83,19 @@ export async function fetchAdminMembers(filters = {}) {
   if (filters.role_type) params.set('role_type', filters.role_type);
   if (filters.limit) params.set('limit', String(filters.limit));
   const qs = params.toString();
-  const res = await fetch(`/api/admin/members.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/members.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {number} id */
 export async function fetchAdminMemberDetail(id) {
-  const res = await fetch(`/api/admin/members.php?id=${id}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/members.php?id=${id}`, CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {Record<string, unknown>} input */
 export async function patchAdminMember(input) {
-  const res = await fetch('/api/admin/members.php', {
+  const res = await adminFetch('/api/admin/members.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -104,7 +106,7 @@ export async function patchAdminMember(input) {
 
 /** @param {Record<string, unknown>} input */
 export async function patchCommerceCorrection(input) {
-  const res = await fetch('/api/admin/commerce.php', {
+  const res = await adminFetch('/api/admin/commerce.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -115,7 +117,7 @@ export async function patchCommerceCorrection(input) {
 
 /** @param {Record<string, unknown>} input */
 export async function patchExposureCorrection(input) {
-  const res = await fetch('/api/admin/exposure.php', {
+  const res = await adminFetch('/api/admin/exposure.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -125,18 +127,18 @@ export async function patchExposureCorrection(input) {
 }
 
 export async function fetchAdminSession() {
-  const res = await fetch('/api/admin/session.php', CREDENTIALS);
+  const res = await adminFetch('/api/admin/session.php', CREDENTIALS);
   return readJson(res);
 }
 
 export async function fetchAdminOperators() {
-  const res = await fetch('/api/admin/operators.php', CREDENTIALS);
+  const res = await adminFetch('/api/admin/operators.php', CREDENTIALS);
   return readJson(res);
 }
 
 /** @param {Record<string, unknown>} input */
 export async function createAdminOperator(input) {
-  const res = await fetch('/api/admin/operators.php', {
+  const res = await adminFetch('/api/admin/operators.php', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -147,7 +149,7 @@ export async function createAdminOperator(input) {
 
 /** @param {Record<string, unknown>} input */
 export async function patchAdminOperator(input) {
-  const res = await fetch('/api/admin/operators.php', {
+  const res = await adminFetch('/api/admin/operators.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -159,7 +161,7 @@ export async function patchAdminOperator(input) {
 /** @param {Record<string, unknown>} input */
 /** @param {{ user_id: number, confirmEmail: string }} input */
 export async function deleteAdminMember(input) {
-  const res = await fetch('/api/admin/members.php?action=delete', {
+  const res = await adminFetch('/api/admin/members.php?action=delete', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -170,7 +172,7 @@ export async function deleteAdminMember(input) {
 
 /** @param {{ ids: number[], confirmPhrase: string }} input */
 export async function bulkDeleteAdminMembers(input) {
-  const res = await fetch('/api/admin/members-bulk-delete.php', {
+  const res = await adminFetch('/api/admin/members-bulk-delete.php', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -180,7 +182,7 @@ export async function bulkDeleteAdminMembers(input) {
 }
 
 export async function resetAdminOperatorPassword(input) {
-  const res = await fetch('/api/admin/operators.php?action=reset_password', {
+  const res = await adminFetch('/api/admin/operators.php?action=reset_password', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,

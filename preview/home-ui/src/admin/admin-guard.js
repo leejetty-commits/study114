@@ -88,6 +88,50 @@ export function renderAdminRoleBadge() {
   return `<span class="admin-role-badge ${cls}">${esc(label)}</span>`;
 }
 
+const CONSOLE_SPECIALS = '!@#$%^&*?';
+
+export function consolePasswordShapeOk(password) {
+  const value = String(password ?? '');
+  if (value.length !== 6) return false;
+  let upper = 0;
+  let lower = 0;
+  let digit = 0;
+  let special = 0;
+  for (const ch of value) {
+    if (ch >= 'A' && ch <= 'Z') upper += 1;
+    else if (ch >= 'a' && ch <= 'z') lower += 1;
+    else if (ch >= '0' && ch <= '9') digit += 1;
+    else if (CONSOLE_SPECIALS.includes(ch)) special += 1;
+    else return false;
+  }
+  return upper === 1 && lower === 1 && digit === 2 && special === 2;
+}
+
+/** 콘솔 2차 비밀번호 게이트. 입력값은 비워 둔다. */
+export function renderConsoleUnlockGate(message = '') {
+  const text = message
+    ? `<p class="admin-console-unlock__message" data-console-unlock-message>${esc(message)}</p>`
+    : '<p class="admin-console-unlock__message" data-console-unlock-message hidden></p>';
+  return `
+    <section class="admin-state admin-console-unlock">
+      <h2>운영 콘솔 잠금</h2>
+      <p>콘솔에 들어가려면 2차 비밀번호 6자가 필요해요. (영문 대문자 1 · 소문자 1 · 숫자 2 · 특수문자 2)</p>
+      ${text}
+      <form class="admin-console-unlock-form" data-form="admin-console-unlock" autocomplete="off">
+        <label>2차 비밀번호
+          <input type="password" name="password" maxlength="6" autocomplete="current-password" />
+        </label>
+        <p class="admin-console-unlock__error" data-console-unlock-error hidden></p>
+        <button type="submit" class="btn btn--primary">잠금 해제</button>
+      </form>
+    </section>`;
+}
+
+export function needsConsoleUnlock() {
+  const user = getAuthUser();
+  return Boolean(isAdminUser() && user?.console_unlocked !== true);
+}
+
 /** 임시 비밀번호 강제 변경 */
 export function renderMustChangePasswordGate() {
   return `

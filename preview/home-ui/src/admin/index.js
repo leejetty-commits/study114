@@ -1,5 +1,6 @@
 import { getAdminPath } from '../state.js';
 import { initAuthSession, isAdminUser } from '../auth-session.js';
+import { adminFetch, adminHttpStatus } from './admin-fetch.js';
 import { normalizeAdminPath } from './router.js';
 import { renderAdminShell, renderAdminDeniedFrame, bindAdminShellEvents } from './shell.js';
 import { renderA28Screen, bindA28ScreenEvents } from './a28-screens.js';
@@ -9,6 +10,9 @@ import {
   renderNonAdminDenied,
   mustChangeAdminPassword,
   renderMustChangePasswordGate,
+  needsConsoleUnlock,
+  renderConsoleUnlockGate,
+  consolePasswordShapeOk,
 } from './admin-guard.js';
 
 export function renderAdminDenied() {
@@ -21,6 +25,9 @@ export function renderAdmin() {
   const normalized = normalizeAdminPath(path) || '/admin';
   if (mustChangeAdminPassword()) {
     return renderAdminShell(path, renderMustChangePasswordGate());
+  }
+  if (needsConsoleUnlock()) {
+    return renderAdminDeniedFrame(renderConsoleUnlockGate());
   }
   const bodyHtml = canAccessAdminPath(normalized)
     ? renderA28Screen(path)
@@ -71,7 +78,82 @@ export function bindAdminEvents(root, rerender) {
     return;
   }
 
+  const unlockForm = root.querySelector('[data-form="admin-console-unlock"]');
+  if (unlockForm instanceof HTMLFormElement) {
+    bindConsoleUnlock(root, unlockForm, rerender);
+    return;
+  }
+
   bindA28ScreenEvents(root, path, rerender);
+}
+
+/** @param {HTMLElement} root @param {HTMLFormElement} form @param {() => void} rerender */
+function bindConsoleUnlock(root, form, rerender) {
+  const messageEl = root.querySelector('[data-console-unlock-message]');
+  const errorEl = root.querySelector('[data-console-unlock-error]');
+  const button = form.querySelector('button[type="submit"]');
+  const input = form.querySelector('input[name="password"]');
+
+  const showMessage = (text) => {
+    if (!(messageEl instanceof HTMLElement)) return;
+    messageEl.hidden = !text;
+    messageEl.textContent = text || '';
+  };
+  const showError = (text) => {
+    if (!(errorEl instanceof HTMLElement)) return;
+    errorEl.hidden = !text;
+    errorEl.textContent = text || '';
+  };
+
+  adminFetch('/api/admin/console-unlock.php')
+    .then((res) => res.json().catch(() => ({})).then((data) => ({ res, data })))
+    .then(({ res, data }) => {
+      const status = adminHttpStatus(res, data);
+      if (status === 401 || data.error === 'forbidden') return;
+      const message = String(data.message || '');
+      showMessage(message);
+      if (data.locked || data.configured === false) {
+        if (input instanceof HTMLInputElement) input.disabled = true;
+        if (button instanceof HTMLButtonElement) button.disabled = true;
+      }
+    })
+    .catch(() => {
+      showError('잠금 상태를 확인하지 못했어요.');
+    });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showError('');
+    const password = input instanceof HTMLInputElement ? input.value : '';
+    if (!consolePasswordShapeOk(password)) {
+      showError('2차 비밀번호는 6자(영문 대문자 1, 소문자 1, 숫자 2, 특수문자 2)여야 해요.');
+      if (input instanceof HTMLInputElement) input.value = '';
+      return;
+    }
+    try {
+      const res = await adminFetch('/api/admin/console-unlock.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (input instanceof HTMLInputElement) input.value = '';
+      if (!data.ok) {
+        showError(String(data.message || '잠금 해제에 실패했어요.'));
+        if (data.error === 'console_locked' || data.error === 'console_password_unset') {
+          showMessage(String(data.message || ''));
+          if (input instanceof HTMLInputElement) input.disabled = true;
+          if (button instanceof HTMLButtonElement) button.disabled = true;
+        }
+        return;
+      }
+      await initAuthSession(false);
+      rerender();
+    } catch {
+      if (input instanceof HTMLInputElement) input.value = '';
+      showError('잠금 해제에 실패했어요.');
+    }
+  });
 }
 
 export { getDefaultAdminPath } from './router.js';

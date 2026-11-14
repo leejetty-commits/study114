@@ -1,3 +1,5 @@
+import { adminFetch } from './admin-fetch.js';
+
 const CREDENTIALS = { credentials: 'include' };
 
 async function readJson(res) {
@@ -19,7 +21,7 @@ export async function fetchRegistrationList(query = {}) {
   if (query.region) params.set('region', query.region);
   params.set('page', String(query.page || 1));
   params.set('perPage', String(query.perPage || 50));
-  const res = await fetch(`/api/admin/registrations.php?${params}`, {
+  const res = await adminFetch(`/api/admin/registrations.php?${params}`, {
     method: 'GET',
     ...CREDENTIALS,
   });
