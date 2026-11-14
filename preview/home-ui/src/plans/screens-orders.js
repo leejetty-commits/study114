@@ -252,6 +252,17 @@ function isCountProduct(r) {
  */
 function resolveV3Cells(r) {
   const status = r.status || '';
+  if (status === 'cancelled' || status === 'canceled') {
+    return {
+      detail: r.source === 'api',
+      refund: false,
+      progress: false,
+      ended: false,
+      expired: false,
+      statusBadge: '결제 취소됨',
+      statusClass: 'plans-hist-row__st--no',
+    };
+  }
   const kind = r.productKind || r.product_kind || '';
   const isFromApi = r.source === 'api';
   const remaining = typeof r.remaining === 'number' ? r.remaining : null;
@@ -355,6 +366,10 @@ function renderV3Panel(r, cell) {
 }
 
 function renderV3DetailPanel(r) {
+  const status = r.status || '';
+  if (status === 'cancelled' || status === 'canceled') {
+    return `<div class="plans-hist-row__panel-inner"><p>선택한 상품을 지금 지급할 수 없어 결제를 자동으로 취소했어요. 카드사에 따라 환불까지 3~5영업일 걸릴 수 있어요.</p></div>`;
+  }
   const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
   const amount = formatKrw(r.amountKrw);
   const dateText = esc(String(r.paidAt || '').slice(0, 10));

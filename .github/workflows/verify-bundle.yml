@@ -110,6 +110,10 @@ jobs:
         if: ${{ !cancelled() }}
         run: php scripts/verify-soft-error.php
 
+      - name: Paid conflict auto cancel
+        if: ${{ !cancelled() }}
+        run: php scripts/verify-paid-conflict-auto-cancel.php
+
       - name: Legacy auth closed
         if: ${{ !cancelled() }}
         run: node scripts/verify-legacy-auth-closed.mjs

@@ -480,7 +480,9 @@ ok(
 );
 ok(
   'history_lists_paid_and_after_only',
-  repo.includes("AND status IN ('paid', 'refund_requested', 'refunded')"),
+  repo.includes("status IN ('paid', 'refund_requested', 'refunded')") &&
+    repo.includes("status = 'cancelled' AND fulfillment_status = 'failed'") &&
+    repo.includes("LIKE 'auto\\\\_cancelled:%'"),
 );
 const sql061 = read('sql/schema/061_payment_catalog_snapshot.sql');
 ok('sql061_is_sql_not_php', !sql061.trimStart().startsWith('<?php') && sql061.includes('catalog_version'));
