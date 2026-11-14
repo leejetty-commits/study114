@@ -602,3 +602,31 @@
   :is(.guide-app, .concern-app, .support-app) .help-link { min-height: 52px; }
   :is(.guide-app, .concern-app, .support-app) .nav-select { min-height: 44px; font-size: 15px; }
 }
+
+/* 안내글 글머리 (2026-11-15) — 이용안내·고객센터 본문 문단 */
+:is(.guide-app, .support-app) {
+  --s114-bullet-size: 4px;
+  --s114-bullet-color: var(--uds-muted, #9ca3af);
+}
+:is(.guide-frame__body, .sup-frame__body) > p.section-lead:not(.section-lead--plain),
+.guide-app .guide-frame__body > p:not([class]),
+.support-app .faq-item__a > p,
+.guide-app .guide-faq-item__a-body,
+.support-app .doc-section > p {
+  position: relative;
+  padding-left: 0.9em;
+}
+:is(.guide-frame__body, .sup-frame__body) > p.section-lead:not(.section-lead--plain)::before,
+.guide-app .guide-frame__body > p:not([class])::before,
+.support-app .faq-item__a > p::before,
+.guide-app .guide-faq-item__a-body::before,
+.support-app .doc-section > p::before {
+  content: "";
+  position: absolute;
+  left: 0.15em;
+  top: 0.72em;
+  width: var(--s114-bullet-size);
+  height: var(--s114-bullet-size);
+  background: var(--s114-bullet-color);
+  border-radius: 1px;
+}

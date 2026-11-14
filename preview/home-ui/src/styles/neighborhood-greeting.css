@@ -150,6 +150,23 @@
   list-style: none;
 }
 
+.ng-feed__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.4rem;
+  align-items: start;
+}
+
+.ng-feed__content {
+  min-width: 0;
+}
+
+.ng-feed__item .ng-feed__name {
+  display: block;
+  padding: 0;
+  text-align: left;
+}
+
 .ng-feed__who {
   display: flex;
   gap: 0.4rem;
@@ -175,7 +192,7 @@
 }
 
 .ng-feed__body {
-  margin: 0;
+  margin: 0.2rem 0 0;
   font-size: 0.875rem;
   line-height: 1.45;
   white-space: pre-wrap;

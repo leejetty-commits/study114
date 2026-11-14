@@ -173,6 +173,21 @@ export const HISTORY_EMPTY_COPY = {
   },
 };
 
+/** 구매이력 행 버튼 안내 — 문구는 화면과 글자 단위로 같아야 한다 */
+export const HISTORY_GUIDE_COPY = {
+  aria: '버튼 안내',
+  title: '버튼 안내',
+  detailLabel: '내역',
+  detail: '결제한 상품과 금액, 결제일을 볼 수 있어요. 쪽지권은 사용한 횟수와 남은 횟수도 함께 나와요. 환불할 수 있는 상품이면 여기서 환불 신청을 할 수 있어요.',
+  progressLabel: '진행상황',
+  progress: '환불을 신청하면 「신청 → 검토 중 → 승인 → 환불 완료」 중 어디까지 왔는지 보여 드려요. 환불이 끝나기 전에는 신청을 철회할 수 있고, 반려되면 그 이유도 여기서 볼 수 있어요.',
+  endedLabel: '종료',
+  ended: '쪽지권을 모두 사용해서 남은 횟수가 0회가 된 상품이에요.',
+  expiredLabel: '소멸',
+  expired: '사용기한이 지나 끝난 상품이에요. 남은 횟수가 있었다면 함께 사라지고, 환불되지 않아요.',
+  note: '흐리게 보이는 버튼은 지금 그 상품에 해당하지 않는다는 뜻이에요.',
+};
+
 export const HOME_STATS_NOTE = '내 상태는 활동에 따라 달라져요.';
 
 export const WISHLIST_NOTE = '찜한 공부방·과외쌤을 모아 보고, 비교에도 담을 수 있어요.';

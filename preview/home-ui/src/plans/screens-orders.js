@@ -19,7 +19,7 @@ import {
   orderStatusLabel,
   invalidateHistoryCache,
 } from './history-mock.js';
-import { REFUND_REASON_CHOICES, REFUND_COPY, HISTORY_EMPTY_COPY } from '../mypage/mypage-copy.js';
+import { REFUND_REASON_CHOICES, REFUND_COPY, HISTORY_EMPTY_COPY, HISTORY_GUIDE_COPY } from '../mypage/mypage-copy.js';
 import {
   MEMO_TICKET_REFUND_SHORT,
   POSITION_REFUND_SHORT,
@@ -195,7 +195,24 @@ export function renderPlansHistory() {
       <div class="plans-history-layout" role="tabpanel">
         ${listHtml}
       </div>
+      ${renderHistGuide()}
     </section>`;
+}
+
+/** 행 버튼 네 개의 뜻. 학생·게스트 분기에는 이 함수까지 오지 않는다. */
+function renderHistGuide() {
+  const g = HISTORY_GUIDE_COPY;
+  return `
+    <div class="plans-hist-guide" aria-label="${esc(g.aria)}">
+      <p class="plans-hist-guide__title">${esc(g.title)}</p>
+      <dl class="plans-hist-guide__list">
+        <div><dt>${esc(g.detailLabel)}</dt><dd>${esc(g.detail)}</dd></div>
+        <div><dt>${esc(g.progressLabel)}</dt><dd>${esc(g.progress)}</dd></div>
+        <div><dt>${esc(g.endedLabel)}</dt><dd>${esc(g.ended)}</dd></div>
+        <div><dt>${esc(g.expiredLabel)}</dt><dd>${esc(g.expired)}</dd></div>
+      </dl>
+      <p class="plans-hist-guide__note">${esc(g.note)}</p>
+    </div>`;
 }
 
 /** 330: 탭별 빈 상태 — 예시 1행 + 안내 */

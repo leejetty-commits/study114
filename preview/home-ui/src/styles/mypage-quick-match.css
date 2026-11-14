@@ -4,12 +4,18 @@
 .mypage-nav__link.is-qm.is-muted {
   color: #9a948a;
 }
+.mypage-nav__link.is-qm {
+  grid-template-columns: auto minmax(0, 1fr);
+}
 .qm-nav__event {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2.4rem;
-  margin-right: 0.35rem;
+  min-width: 0;
+  margin-right: 0;
+  align-self: start;
+  margin-top: 0.1em;
+  white-space: nowrap;
   padding: 0.05rem 0.28rem;
   border-radius: 4px;
   font-size: 10px;

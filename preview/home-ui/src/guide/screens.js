@@ -53,7 +53,7 @@ function renderGuideArticle(path) {
   if (!post) {
     return `
       ${sectionHead('안내 글', '글을 찾지 못했습니다')}
-      <p class="section-lead">이 주소의 안내 글이 없습니다.</p>
+      <p class="section-lead section-lead--plain">이 주소의 안내 글이 없습니다.</p>
       ${hashLink('/guide', 'btn btn--secondary', '이용안내 홈')}`;
   }
   const checks = (post.checklist || [])
