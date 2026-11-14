@@ -68,6 +68,7 @@
     "verify:card-badge-layout": "cd preview/home-ui && vite-node ../../scripts/verify-card-badge-layout.mjs",
     "verify:prime-contain-blur": "php scripts/verify-prime-contain-blur.php",
     "verify:photo-exif-nocrop": "php scripts/verify-photo-exif-nocrop.php",
+    "verify:legacy-auth-closed": "node scripts/verify-legacy-auth-closed.mjs",
     "verify:php-syntax": "bash scripts/php-syntax-check.sh"
   },
   "devDependencies": {
