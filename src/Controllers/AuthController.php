@@ -10,7 +10,6 @@ use Study114\Auth\BasicRegisterService;
 use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
 use Study114\Auth\EmailVerificationService;
-use Study114\Auth\LoginService;
 use Study114\Auth\ProfileGenderSync;
 use Study114\Auth\SignupService;
 use Study114\Core\Flash;
@@ -28,31 +27,6 @@ final class AuthController
             'errors' => Flash::pullErrors(),
             'old'    => Flash::get('old', []),
         ]);
-    }
-
-    public function loginSubmit(): void
-    {
-        $email = (string) ($_POST['email'] ?? '');
-        $password = (string) ($_POST['password'] ?? '');
-
-        try {
-            $user = (new LoginService())->attempt($email, $password);
-            AuthSession::login($user['user_id'], $user['email'], $user['role_type'], $user['name']);
-            if (!(new EmailVerificationGate())->isVerified((int) $user['user_id'])) {
-                $this->redirectAuthHash('/signup/verify-email');
-            }
-            $this->redirectHomeUi();
-        } catch (InvalidArgumentException $e) {
-            Flash::set('errors', [$e->getMessage()]);
-            Flash::set('old', ['email' => $email]);
-            study114_redirect('/auth/login');
-        }
-    }
-
-    public function logout(): void
-    {
-        AuthSession::logout();
-        study114_redirect('/auth/login');
     }
 
     public function signupTermsForm(): void
