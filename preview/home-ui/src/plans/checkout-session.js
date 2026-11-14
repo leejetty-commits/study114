@@ -41,7 +41,8 @@ const RESULT_KEY = 'study114-plans-result';
 
 /**
  * @typedef {object} PlansResultState
- * @property {'success'|'failed'|'canceled'|'pending'} status
+ * @property {'success'|'failed'|'canceled'|'cancelled'|'pending'} status
+ * @property {boolean} [auto_cancelled]
  * @property {string} [orderRef]
  * @property {string} [message]
  * @property {string} [productName]
