@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\AuthSession;
 use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
+use Study114\Media\PromoImageException;
 use Study114\Media\PromoImageSpec;
 use Study114\Media\TutorProfileImageService;
 
@@ -146,17 +147,31 @@ try {
     }
 
     throw new InvalidArgumentException('알 수 없는 동작입니다.');
+} catch (PromoImageException $e) {
+    $code = $e->errorCode();
+    error_log('[tutor-profile-image] ' . $code . ' ' . $e->getMessage());
+    tutor_profile_image_json([
+        'ok' => false,
+        'error' => $code,
+        'message' => $e->getMessage(),
+    ], in_array($code, ['too_large', 'bad_type'], true) ? 400 : 500);
 } catch (InvalidArgumentException $e) {
+    error_log('[tutor-profile-image] validation ' . $e->getMessage());
     tutor_profile_image_json([
         'ok' => false,
         'error' => 'validation',
         'message' => $e->getMessage(),
     ], 400);
 } catch (Throwable $e) {
-    error_log('[tutor-profile-image] ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+    $code = (str_contains($e->getMessage(), 'undefined function') && str_contains($e->getMessage(), 'image'))
+        ? 'gd_missing'
+        : 'server_error';
+    error_log('[tutor-profile-image] ' . $code . ' ' . $e->getMessage() . "\n" . $e->getTraceAsString());
     tutor_profile_image_json([
         'ok' => false,
-        'error' => 'server',
-        'message' => '사진 처리 중 오류: ' . $e->getMessage(),
+        'error' => $code,
+        'message' => $code === 'gd_missing'
+            ? '지금은 사진을 처리할 수 없어요. 잠시 후 다시 시도해 주세요.'
+            : '사진을 처리하지 못했어요. 다시 시도해 주세요.',
     ], 500);
 }

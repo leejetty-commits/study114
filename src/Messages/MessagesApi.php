@@ -113,11 +113,13 @@ final class MessagesApi
             self::fail(403, 'paid_gate', $e->getMessage());
         } catch (\Study114\Auth\EmailVerificationRequiredException $e) {
             self::fail(403, 'email_verify_required', $e->getMessage());
+        } catch (\Study114\Media\PromoImageException $e) {
+            self::fail(422, $e->errorCode(), $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {
             error_log('[messages] ' . $e->getMessage());
-            self::fail(500, 'server_error', $e->getMessage());
+            self::fail(500, 'server_error', '처리를 완료하지 못했어요. 잠시 후 다시 시도해 주세요.');
         }
     }
 
@@ -130,12 +132,10 @@ final class MessagesApi
 
     public static function fail(int $status, string $error, string $message): never
     {
-        http_response_code($status);
-        echo json_encode([
+        study114_json_error($status, [
             'ok'      => false,
             'error'   => $error,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        ]);
     }
 }

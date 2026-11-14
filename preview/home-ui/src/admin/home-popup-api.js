@@ -1,3 +1,5 @@
+import { adminFetch } from './admin-fetch.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
@@ -35,7 +37,7 @@ export function peekHomePopups() {
 }
 
 export async function listHomePopups() {
-  const res = await fetch('/api/admin/home-popups.php', CREDENTIALS);
+  const res = await adminFetch('/api/admin/home-popups.php', CREDENTIALS);
   const data = await readJson(res);
   rows = Array.isArray(data.popups) ? data.popups : [];
   loadError = '';
@@ -60,14 +62,14 @@ export function ensureHomePopups() {
 
 /** @param {string} id */
 export async function getHomePopup(id) {
-  const res = await fetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, CREDENTIALS);
+  const res = await adminFetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, CREDENTIALS);
   const data = await readJson(res);
   return data.popup;
 }
 
 /** @param {Record<string, unknown>} row */
 export async function saveHomePopup(row) {
-  const res = await fetch('/api/admin/home-popups.php', {
+  const res = await adminFetch('/api/admin/home-popups.php', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -80,7 +82,7 @@ export async function saveHomePopup(row) {
 
 /** @param {string} id */
 export async function deleteHomePopup(id) {
-  const res = await fetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, {
+  const res = await adminFetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
     ...CREDENTIALS,
   });

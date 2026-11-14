@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/src/bootstrap.php';
 
+putenv('STUDY114_PAYMENTS_ENABLED=1');
+
 use Study114\Database\Connection;
 use Study114\Paid\PaidCatalog;
 use Study114\Paid\ProviderCheckoutService;
@@ -204,7 +206,20 @@ if ($phase === 'pre061') {
 
     $history = $svc->listOrders($userId, 20);
     $refs = array_column($history['orders'], 'order_ref');
-    check('history_lists_created', in_array($created['order_ref'], $refs, true));
+    check('history_hides_pending', !in_array($created['order_ref'], $refs, true));
+
+    $setStatus = $pdo->prepare('UPDATE provider_payment_orders SET status = ? WHERE order_ref = ?');
+    $setStatus->execute(['failed', $created['order_ref']]);
+    $hidden = array_column($svc->listOrders($userId, 20)['orders'], 'order_ref');
+    check('history_hides_failed', !in_array($created['order_ref'], $hidden, true));
+    $setStatus->execute(['cancelled', $created['order_ref']]);
+    $hidden = array_column($svc->listOrders($userId, 20)['orders'], 'order_ref');
+    check('history_hides_cancelled', !in_array($created['order_ref'], $hidden, true));
+
+    $setStatus->execute(['paid', $created['order_ref']]);
+    $history = $svc->listOrders($userId, 20);
+    $refs = array_column($history['orders'], 'order_ref');
+    check('history_lists_paid', in_array($created['order_ref'], $refs, true));
     $memoRow = null;
     foreach ($history['orders'] as $o) {
         if ($o['order_ref'] === $created['order_ref']) {

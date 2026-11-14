@@ -27,9 +27,7 @@ study114_send_cors_headers();
 
 $user = AuthSession::user();
 if ($user === null) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    study114_json_error(401, ['ok' => false, 'message' => '로그인이 필요합니다.']);
 }
 
 try {
@@ -48,8 +46,7 @@ try {
                     : '확인 메일을 보내지 못했습니다. 잠시 후 다시 시도해 주세요.')),
     ], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    study114_json_error(422, ['ok' => false, 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
     error_log('[email/send-verification] ' . $e->getMessage());
     http_response_code(500);

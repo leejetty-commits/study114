@@ -23,7 +23,7 @@ function ok(name, cond, detail = '') {
 
 const checkout = read('public/api/paid/checkout.php');
 const service = read('src/Paid/ProviderCheckoutService.php');
-const screens = read('preview/home-ui/src/plans/screens.js');
+const screens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const paidApi = read('preview/home-ui/src/paid-api.js');
 const htaccess = read('public/.htaccess');
 const gate = read('src/Paid/PaidCheckoutGate.php');
@@ -62,7 +62,7 @@ ok(
   fulfillComment.includes('PaidCheckoutGate::mockCompleteAllowed()'),
 );
 
-const notice = '결제 기능을 준비하고 있어요. 곧 열릴 예정이에요';
+const notice = '결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.';
 const unavailableStart = screens.indexOf("result.status === 'unavailable'");
 const unavailableEnd = screens.indexOf('const ok = result.status', unavailableStart);
 const unavailable = unavailableStart >= 0 ? screens.slice(unavailableStart, unavailableEnd) : '';
@@ -87,6 +87,28 @@ ok(
   completeClient.includes("err.code === 'payment_not_available'") && completeClient.includes("err.code = 'payment_not_available'"),
 );
 ok('htaccess_has_no_flag', !htaccess.includes('STUDY114_PAID_MOCK_COMPLETE'));
+const paymentsFnStart = gate.indexOf('function paymentsEnabled');
+const paymentsFn = gate.slice(paymentsFnStart, gate.indexOf('}', paymentsFnStart) + 1);
+ok(
+  'payments_gate_reads_getenv_only',
+  paymentsFn.includes("getenv('STUDY114_PAYMENTS_ENABLED') === '1'") &&
+    !paymentsFn.includes('$_ENV') &&
+    !paymentsFn.includes('$_SERVER') &&
+    !paymentsFn.includes('study114_env'),
+);
+ok(
+  'checkout_blocks_when_payments_disabled',
+  checkout.includes('PaidCheckoutGate::paymentsEnabled()') &&
+    checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('createOrder(') &&
+    checkout.indexOf('PaidCheckoutGate::paymentsEnabled()') < checkout.indexOf('completePortOneOrder('),
+);
+ok(
+  'htaccess_payments_placeholder_only',
+  htaccess.includes('SetEnv STUDY114_PAYMENTS_ENABLED __STUDY114_PAYMENTS_ENABLED__') &&
+    htaccess.includes('SetEnv PG_PROVIDER __PG_PROVIDER__') &&
+    !/SetEnv STUDY114_PAYMENTS_ENABLED\s+(?!__STUDY114_PAYMENTS_ENABLED__)(\S+)/.test(htaccess) &&
+    !/SetEnv PG_PROVIDER\s+(?!__PG_PROVIDER__)(\S+)/.test(htaccess),
+);
 
 if (failed > 0) {
   console.error(`\n${failed} failed`);

@@ -9,21 +9,28 @@ use PDO;
 use Study114\Database\Connection;
 use Study114\Mail\MemberLifecycleMailer;
 use Study114\Messages\MessagesRepository;
+use Study114\Paid\Pg\PgProvider;
+use Study114\Paid\Pg\PortOneCancelOpsLog;
+use Study114\Paid\Pg\PortOneCheckout;
 
 /**
- * 18d — dev mock PG · 주문 → 티켓/포지션/유료배지 지급
+ * 18d — 주문 → 티켓/포지션/유료배지 지급
  *
  * PR-A: 금액·SKU·기간은 PaidCatalog 서버 재계산. 클라이언트 금액 무시.
- * PG는 계속 dev_mock.
+ * PG: PgProvider 선택(기본 dev_mock). portone_test는 어댑터로만 추가.
  *
  * @see docs/internal/59-account-context-separation-lock.md
  */
 final class ProviderCheckoutService
 {
+    /** 고객에게 그대로 보여 주는 자동취소 안내. 문구를 줄이거나 바꾸지 않는다. */
+    public const AUTO_CANCEL_CUSTOMER_MESSAGE = '선택한 상품을 지금 지급할 수 없어 결제를 자동으로 취소했어요. 카드사에 따라 환불까지 3~5영업일 걸릴 수 있어요.';
+
     private ProviderCheckoutRepository $orders;
     private ProviderTicketRepository $tickets;
     private PaidBadgeRepository $badges;
     private ImmediateMemoRepository $immediate;
+    private PortOneCheckout $portOne;
     private PDO $pdo;
 
     public function __construct(
@@ -33,12 +40,14 @@ final class ProviderCheckoutService
         ?PDO $pdo = null,
         ?ImmediateMemoRepository $immediate = null,
         private ?MemberLifecycleMailer $lifecycleMail = null,
+        ?PortOneCheckout $portOne = null,
     ) {
         $this->pdo = $pdo ?? Connection::get();
         $this->orders = $orders ?? new ProviderCheckoutRepository($this->pdo);
         $this->tickets = $tickets ?? new ProviderTicketRepository($this->pdo);
         $this->badges = $badges ?? new PaidBadgeRepository($this->pdo);
         $this->immediate = $immediate ?? new ImmediateMemoRepository($this->pdo);
+        $this->portOne = $portOne ?? new PortOneCheckout();
     }
 
     /**
@@ -58,6 +67,10 @@ final class ProviderCheckoutService
         array $badgeCodes = [],
         array $regionInput = [],
     ): array {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+
         $productId = trim($productId);
         $variant = trim($variant);
         if ($productId === 'picked') {
@@ -212,6 +225,10 @@ final class ProviderCheckoutService
         $this->assertTierFieldsForOrder($kind, $productId, $providerType, $providerId);
 
         $orderRef = 'dev-' . bin2hex(random_bytes(8));
+        $pgProvider = PgProvider::id();
+        $pgPaymentId = PgProvider::usesPortOne($pgProvider)
+            ? PortOneCheckout::makePaymentId($orderRef)
+            : null;
         $this->orders->insertPending(
             $userId,
             $orderRef,
@@ -225,6 +242,8 @@ final class ProviderCheckoutService
             $listPriceWon,
             $discountWon,
             $snapshot,
+            $pgProvider,
+            $pgPaymentId,
         );
 
         if ($kind === 'count' && MemoTicketPolicy::isImmediateVariant($variant) && $providerType !== null && $providerId !== null) {
@@ -240,7 +259,7 @@ final class ProviderCheckoutService
             ]);
         }
 
-        return [
+        $payload = [
             'order_ref' => $orderRef,
             'amount_won' => $amountWon,
             'list_price_krw' => $listPriceWon,
@@ -256,7 +275,7 @@ final class ProviderCheckoutService
             'product_kind' => $kind,
             'provider_type' => $providerType,
             'provider_id' => $providerId,
-            'pg_provider' => 'dev_mock',
+            'pg_provider' => $pgProvider,
             'price_snapshot' => $snapshot,
             'badge_codes' => $normalizedBadges,
             'badge_sale_krw' => $badgeSale,
@@ -268,6 +287,18 @@ final class ProviderCheckoutService
             'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
             'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
         ];
+
+        if ($pgPaymentId !== null) {
+            $cfg = PortOneCheckout::publicConfig();
+            $payload['payment_id'] = $pgPaymentId;
+            $payload['store_id'] = $cfg['store_id'];
+            $payload['channel_key'] = $cfg['channel_key'];
+            $payload['order_name'] = PortOneCheckout::orderName($productId, $variant);
+            $payload['currency'] = 'CURRENCY_KRW';
+            $payload['pay_method'] = 'CARD';
+        }
+
+        return $payload;
     }
 
     /**
@@ -350,13 +381,22 @@ final class ProviderCheckoutService
     public function listOrders(int $userId, int $limit = 50): array
     {
         $rows = $this->orders->listByUser($userId, $limit);
+        $countRefs = [];
+        foreach ($rows as $row) {
+            if ((string) ($row['product_kind'] ?? '') === 'count') {
+                $countRefs[] = (string) ($row['order_ref'] ?? '');
+            }
+        }
+        $memoRemaining = $this->tickets->memoRemainingByOrderRefs($countRefs);
         $orders = [];
         foreach ($rows as $row) {
+            $orderRef = (string) ($row['order_ref'] ?? '');
             $orders[] = [
-                'order_ref' => (string) ($row['order_ref'] ?? ''),
+                'order_ref' => $orderRef,
                 'product_id' => (string) ($row['product_id'] ?? ''),
                 'variant_label' => (string) ($row['variant_label'] ?? ''),
                 'product_kind' => (string) ($row['product_kind'] ?? ''),
+                'memo_remaining' => array_key_exists($orderRef, $memoRemaining) ? $memoRemaining[$orderRef] : null,
                 'provider_type' => isset($row['provider_type']) ? (string) $row['provider_type'] : null,
                 'provider_id' => isset($row['provider_id']) ? (int) $row['provider_id'] : null,
                 'amount_won' => (int) ($row['amount_won'] ?? 0),
@@ -373,10 +413,74 @@ final class ProviderCheckoutService
         return ['orders' => $orders];
     }
 
-    /** @return array<string, mixed> */
-    public function completeOrder(int $userId, string $orderRef): array
+    /**
+     * 339 — 포트원 결제 확정: 단건 조회(PAID·금액·통화) 후 기존 complete/fulfill.
+     * 같은 paymentId/order_ref 중복 호출은 completeOrder 멱등으로 1회만 지급.
+     *
+     * @return array<string, mixed>
+     */
+    public function completePortOneOrder(int $userId, string $orderRef, ?string $claimedPaymentId = null): array
     {
-        if (!PaidCheckoutGate::mockCompleteAllowed()) {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+        $order = $this->orders->getByRef($orderRef);
+        if ($order === null || (int) $order['user_id'] !== $userId) {
+            throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
+        }
+        if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+            throw new InvalidArgumentException('포트원 주문이 아닙니다.');
+        }
+        $replay = $this->autoCancelledReplay($order);
+        if ($replay !== null) {
+            return $replay;
+        }
+        $this->portOne->assertPaidMatchesOrder($order, $claimedPaymentId);
+
+        return $this->completeOrder($userId, $orderRef, true);
+    }
+
+    /**
+     * 웹훅용: paymentId로 주문 찾아 동일 검증·완료 경로.
+     *
+     * @return array<string, mixed>|null 주문 없으면 null
+     */
+    public function completePortOneByPaymentId(string $paymentId): ?array
+    {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+        $order = $this->orders->getByPaymentId($paymentId);
+        if ($order === null) {
+            return null;
+        }
+        if (!PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+            return null;
+        }
+        $userId = (int) ($order['user_id'] ?? 0);
+        $orderRef = (string) ($order['order_ref'] ?? '');
+        if ($userId <= 0 || $orderRef === '') {
+            return null;
+        }
+        $replay = $this->autoCancelledReplay($order);
+        if ($replay !== null) {
+            return $replay;
+        }
+        $this->portOne->assertPaidMatchesOrder($order, $paymentId);
+
+        return $this->completeOrder($userId, $orderRef, true);
+    }
+
+    /**
+     * @param bool $pgVerified 포트원 등 실PG 단건 조회 검증을 이미 통과한 경우 true (mock 게이트 생략)
+     * @return array<string, mixed>
+     */
+    public function completeOrder(int $userId, string $orderRef, bool $pgVerified = false): array
+    {
+        if (!PaidCheckoutGate::paymentsEnabled()) {
+            throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
+        }
+        if (!$pgVerified && !PaidCheckoutGate::mockCompleteAllowed()) {
             throw new \RuntimeException(PaidCheckoutGate::CLOSED_MESSAGE);
         }
 
@@ -420,6 +524,15 @@ final class ProviderCheckoutService
                 if ($status === 'paid'
                     && $active !== []
                     && !$this->tickets->packExistsForOrderRef($orderRef)) {
+                    if ($pgVerified && PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+                        if ($this->pdo->inTransaction()) {
+                            $this->pdo->rollBack();
+                        }
+                        $this->releaseHeldMemoLock($lockKey);
+                        $lockKey = null;
+
+                        return $this->autoCancelAfterPaidConflict($orderRef, 'pack_not_granted');
+                    }
                     $this->pdo->commit();
                     $this->orders->markFulfillment(
                         $orderRef,
@@ -522,6 +635,13 @@ final class ProviderCheckoutService
                 $grant = $this->fulfill($userId, $order);
                 $this->orders->markFulfillment($orderRef, 'succeeded', null);
             } catch (\Throwable $e) {
+                $packMissing = $isPack && !$this->tickets->packExistsForOrderRef($orderRef);
+                if ($packMissing && $pgVerified && PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''))) {
+                    $this->releaseHeldMemoLock($lockKey);
+                    $lockKey = null;
+
+                    return $this->autoCancelAfterPaidConflict($orderRef, 'pack_fulfill_failed');
+                }
                 $this->orders->markFulfillment($orderRef, 'failed', $e->getMessage());
                 $paid = $this->orders->getByRef($orderRef) ?? $order;
                 if ($lockKey !== null) {
@@ -561,6 +681,15 @@ final class ProviderCheckoutService
                 if (is_array($failed) && MemoTicketPolicy::isImmediateVariant((string) ($failed['variant_label'] ?? ''))) {
                     $this->recordImmediateFailure($orderRef, $e);
                 }
+            }
+            if (!$e instanceof PaidLockBusyException
+                && $e instanceof PaidConflictException
+                && $pgVerified
+                && $this->orderUsesPortOne($orderRef)) {
+                $this->releaseHeldMemoLock($lockKey);
+                $lockKey = null;
+
+                return $this->autoCancelAfterPaidConflict($orderRef, $this->conflictReasonCode($e));
             }
             throw $e;
         } finally {
@@ -964,6 +1093,133 @@ final class ProviderCheckoutService
         }
     }
 
+    /**
+     * 이미 자동취소된 주문은 포트원 재조회 없이 같은 결과를 돌려준다.
+     * 취소된 결제는 PAID가 아니라서, 여기서 막지 않으면 웹훅이 500으로 재시도한다.
+     *
+     * @param array<string, mixed> $order
+     * @return array<string, mixed>|null
+     */
+    private function autoCancelledReplay(array $order): ?array
+    {
+        if ((string) ($order['status'] ?? '') !== 'cancelled') {
+            return null;
+        }
+        if (!str_starts_with((string) ($order['fulfillment_error'] ?? ''), 'auto_cancelled:')) {
+            return null;
+        }
+        $payload = $this->buildCompletePayload($order, false);
+        $payload['auto_cancelled'] = true;
+        $payload['status'] = 'cancelled';
+        $payload['fulfilled'] = false;
+        $payload['message'] = self::AUTO_CANCEL_CUSTOMER_MESSAGE;
+
+        return $payload;
+    }
+
+    private function orderUsesPortOne(string $orderRef): bool
+    {
+        $order = $this->orders->getByRef($orderRef);
+
+        return is_array($order) && PgProvider::usesPortOne((string) ($order['pg_provider'] ?? ''));
+    }
+
+    private function conflictReasonCode(\Throwable $e): string
+    {
+        $message = $e->getMessage();
+        if (str_contains($message, 'Prime')) {
+            return 'prime_full';
+        }
+        if (str_contains($message, '묶음권')) {
+            return 'pack_conflict';
+        }
+
+        return 'conflict';
+    }
+
+    private function releaseHeldMemoLock(?string $lockKey): void
+    {
+        if (is_string($lockKey) && $lockKey !== '') {
+            $this->releaseMemoLock($lockKey);
+        }
+    }
+
+    /**
+     * 포트원 결제 검증은 이미 끝난 뒤, 지급만 못 할 때 전액 취소한다.
+     * 취소 실패 시 주문 상태는 그대로 두고 예외를 다시 던진다.
+     *
+     * @return array<string, mixed>
+     */
+    private function autoCancelAfterPaidConflict(string $orderRef, string $reason): array
+    {
+        $this->pdo->beginTransaction();
+        try {
+            $locked = $this->orders->getByRefForUpdate($orderRef);
+            if ($locked === null) {
+                $this->pdo->rollBack();
+                throw new InvalidArgumentException('주문을 찾을 수 없습니다.');
+            }
+            $replay = $this->autoCancelledReplay($locked);
+            if ($replay !== null) {
+                $this->pdo->commit();
+
+                return $replay;
+            }
+            $status = (string) ($locked['status'] ?? '');
+            if (!in_array($status, ['pending', 'paid'], true)) {
+                $this->pdo->rollBack();
+                throw new InvalidArgumentException('완료할 수 없는 주문 상태입니다.');
+            }
+            $isPack = (string) ($locked['product_kind'] ?? '') === 'count'
+                && MemoTicketPolicy::isPaidPackVariant((string) ($locked['variant_label'] ?? ''));
+            $alreadyGranted = (string) ($locked['fulfillment_status'] ?? '') === 'succeeded'
+                || ($isPack && $this->tickets->packExistsForOrderRef($orderRef));
+            if ($alreadyGranted) {
+                $this->pdo->rollBack();
+
+                return $this->buildCompletePayload($locked, true);
+            }
+
+            $paymentId = trim((string) ($locked['pg_payment_id'] ?? ''));
+            $amount = (int) ($locked['amount_won'] ?? 0);
+            try {
+                $cancel = $this->portOne->cancel($paymentId, $amount, $amount, '지급 불가 자동취소');
+            } catch (\Throwable $e) {
+                if ($this->pdo->inTransaction()) {
+                    $this->pdo->rollBack();
+                }
+                error_log('[portone] auto_cancel_failed order_ref=' . $orderRef . ' paymentId=' . $paymentId);
+                throw $e;
+            }
+            PortOneCancelOpsLog::record(
+                $paymentId,
+                (string) ($cancel['cancel_id'] ?? ''),
+                $amount,
+                $orderRef,
+                'auto_cancel_conflict',
+            );
+            if (!$this->orders->markAutoCancelled($orderRef, $reason)) {
+                $this->pdo->rollBack();
+                throw new \RuntimeException('자동취소 상태 갱신에 실패했습니다.');
+            }
+            $this->pdo->commit();
+            $fresh = $this->orders->getByRef($orderRef) ?? $locked;
+
+            $payload = $this->buildCompletePayload($fresh, false);
+            $payload['auto_cancelled'] = true;
+            $payload['status'] = 'cancelled';
+            $payload['fulfilled'] = false;
+            $payload['message'] = self::AUTO_CANCEL_CUSTOMER_MESSAGE;
+
+            return $payload;
+        } catch (\Throwable $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            throw $e;
+        }
+    }
+
     /** @param array<string, mixed> $order */
     private function buildCompletePayload(array $order, bool $fulfilled, ?string $fulfillmentError = null): array
     {
@@ -1137,7 +1393,7 @@ final class ProviderCheckoutService
         $stmt->execute([$key]);
         $got = $stmt->fetchColumn();
         if ($got === false || $got === null || (int) $got !== 1) {
-            throw new PaidConflictException('쪽지권 구매가 진행 중입니다. 잠시 후 다시 시도해 주세요.');
+            throw new PaidLockBusyException('쪽지권 구매가 진행 중입니다. 잠시 후 다시 시도해 주세요.');
         }
     }
 

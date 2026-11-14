@@ -81,17 +81,17 @@ final class PaidApi
     /**
      * JSON 오류. 활성 유료 묶음권 충돌은 409 conflict.
      * 검증 실패는 422 validation.
+     * $allow5xx는 결제 확인 502처럼 문구가 고정된 5xx만. 그 외 5xx는 헤더가 있어도 그대로.
+     *
+     * @param array<string, mixed> $extra
      */
-    /** @param array<string, mixed> $extra */
-    public static function fail(int $status, string $error, string $message, array $extra = []): never
+    public static function fail(int $status, string $error, string $message, array $extra = [], bool $allow5xx = false): never
     {
-        http_response_code($status);
-        echo json_encode(array_merge([
+        study114_json_error($status, array_merge([
             'ok' => false,
             'error' => $error,
             'message' => $message,
-        ], $extra), JSON_UNESCAPED_UNICODE);
-        exit;
+        ], $extra), $allow5xx);
     }
 
     /** @param callable(): void $fn */

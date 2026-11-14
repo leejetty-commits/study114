@@ -83,6 +83,8 @@ function mapApiOrder(order) {
     paymentMethod: String(order.pg_provider || 'card') === 'dev_mock' ? 'card' : String(order.pg_provider || 'card'),
     paidAt: String(order.paid_at || order.created_at || ''),
     status: /** @type {HistoryRow['status']} */ (order.status || 'pending'),
+    productKind: String(order.product_kind || ''),
+    remaining: order.memo_remaining == null ? undefined : Number(order.memo_remaining),
     source: 'api',
   };
 }

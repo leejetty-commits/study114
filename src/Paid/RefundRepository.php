@@ -11,7 +11,7 @@ use PDO;
  *
  * 정본: docs/ssot/18c-memo-ticket-refund-lock.md
  */
-final class RefundRepository
+class RefundRepository
 {
     public function __construct(private readonly PDO $pdo)
     {
@@ -152,7 +152,7 @@ final class RefundRepository
     /* ── 상태 변경 ────────────────────────────────────── */
 
     /**
-     * requested → approved (자동승인)
+     * requested → approved (자동승인 · dev_mock)
      */
     public function markApproved(string $orderRef): bool
     {
@@ -160,6 +160,24 @@ final class RefundRepository
             "UPDATE provider_refund_requests
              SET status = 'approved', decided_at = NOW(), updated_at = NOW()
              WHERE order_ref = ? AND status = 'requested'
+             LIMIT 1"
+        );
+
+        return $stmt->execute([$orderRef]) && $stmt->rowCount() > 0;
+    }
+
+    /**
+     * 339 — portone_test 취소 성공 후 refunded 마감
+     */
+    public function markRefunded(string $orderRef): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE provider_refund_requests
+             SET status = 'refunded',
+                 decided_at = COALESCE(decided_at, NOW()),
+                 refunded_at = NOW(),
+                 updated_at = NOW()
+             WHERE order_ref = ? AND status IN ('requested', 'approved')
              LIMIT 1"
         );
 
@@ -199,6 +217,111 @@ final class RefundRepository
         );
 
         return $stmt->execute([$identityMethod, $orderRef]) && $stmt->rowCount() > 0;
+    }
+
+    /**
+     * 339 — 포트원 취소 메타 저장.
+     * pg_cancel_id는 비어 있을 때만 첫 ID를 넣고, 이후 ID는 reason_text JSON pg_cancels[]에 누적.
+     */
+    public function savePgCancelMeta(
+        string $orderRef,
+        string $cancelId,
+        ?string $cancelledAt,
+        int $cancelAmountWon,
+        int $remainingWon,
+    ): bool {
+        if (!$this->hasColumn('pg_cancel_id')) {
+            return false;
+        }
+        $prev = $this->findByOrderRef($orderRef);
+        if (!is_array($prev)) {
+            return false;
+        }
+        $prevCancel = (int) ($prev['pg_cancel_amount_won'] ?? 0);
+        $totalCancel = $prevCancel + $cancelAmountWon;
+        $at = $cancelledAt;
+        if (is_string($at) && $at !== '') {
+            $ts = strtotime($at);
+            $at = $ts !== false ? date('Y-m-d H:i:s', $ts) : null;
+        } else {
+            $at = null;
+        }
+
+        $reasonRaw = (string) ($prev['reason_text'] ?? '');
+        $reasonData = [];
+        if ($reasonRaw !== '') {
+            $decoded = json_decode($reasonRaw, true);
+            if (is_array($decoded)) {
+                $reasonData = $decoded;
+            }
+        }
+        $cancels = isset($reasonData['pg_cancels']) && is_array($reasonData['pg_cancels'])
+            ? $reasonData['pg_cancels']
+            : [];
+        $cancels[] = [
+            'cancel_id' => $cancelId,
+            'amount_won' => $cancelAmountWon,
+            'cancelled_at' => $at,
+            'remaining_won' => max(0, $remainingWon),
+        ];
+        $reasonData['pg_cancels'] = $cancels;
+        $reasonJson = json_encode($reasonData, JSON_UNESCAPED_UNICODE);
+
+        $existingCancelId = trim((string) ($prev['pg_cancel_id'] ?? ''));
+        $keepCancelId = $existingCancelId !== '' ? $existingCancelId : $cancelId;
+
+        $stmt = $this->pdo->prepare(
+            'UPDATE provider_refund_requests
+             SET pg_cancel_id = ?,
+                 pg_cancelled_at = COALESCE(pg_cancelled_at, ?),
+                 pg_cancel_amount_won = ?,
+                 pg_remaining_won = ?,
+                 reason_text = ?,
+                 updated_at = NOW()
+             WHERE order_ref = ?
+             LIMIT 1'
+        );
+
+        return $stmt->execute([
+            $keepCancelId,
+            $at,
+            $totalCancel,
+            max(0, $remainingWon),
+            $reasonJson,
+            $orderRef,
+        ]) && $stmt->rowCount() > 0;
+    }
+
+    public function pgRemainingWon(string $orderRef, int $orderAmountWon): int
+    {
+        $row = $this->findByOrderRef($orderRef);
+        if (is_array($row) && array_key_exists('pg_remaining_won', $row) && $row['pg_remaining_won'] !== null) {
+            return max(0, (int) $row['pg_remaining_won']);
+        }
+        if (is_array($row) && isset($row['pg_cancel_amount_won'])) {
+            return max(0, $orderAmountWon - (int) $row['pg_cancel_amount_won']);
+        }
+
+        return max(0, $orderAmountWon);
+    }
+
+    private function hasColumn(string $column): bool
+    {
+        static $cache = [];
+        if (array_key_exists($column, $cache)) {
+            return $cache[$column];
+        }
+        $stmt = $this->pdo->prepare(
+            'SELECT 1 FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1'
+        );
+        $stmt->execute(['provider_refund_requests', $column]);
+        $cache[$column] = (bool) $stmt->fetchColumn();
+
+        return $cache[$column];
     }
 
     /* ── 테이블 존재 확인 ─────────────────────────────── */

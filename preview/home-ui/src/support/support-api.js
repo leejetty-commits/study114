@@ -1,3 +1,5 @@
+import { adminFetch, adminHttpStatus } from '../admin/admin-fetch.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 const CREDENTIALS = { credentials: 'include' };
 
@@ -5,7 +7,7 @@ async function readJson(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data.ok) {
     const err = new Error(data.message || '요청을 처리하지 못했습니다.');
-    err.status = res.status;
+    err.status = adminHttpStatus(res, data);
     throw err;
   }
   return data;
@@ -17,7 +19,7 @@ export async function fetchNotices() {
 }
 
 export async function saveNotice(input) {
-  const res = await fetch('/api/support/notices.php', {
+  const res = await adminFetch('/api/support/notices.php', {
     method: 'POST',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -27,7 +29,7 @@ export async function saveNotice(input) {
 }
 
 export async function removeNotice(id) {
-  const res = await fetch(`/api/support/notices.php?id=${encodeURIComponent(id)}`, {
+  const res = await adminFetch(`/api/support/notices.php?id=${encodeURIComponent(id)}`, {
     method: 'DELETE',
     ...CREDENTIALS,
   });
@@ -35,7 +37,7 @@ export async function removeNotice(id) {
 }
 
 export async function resetNoticeSeed() {
-  const res = await fetch('/api/support/notices.php', {
+  const res = await adminFetch('/api/support/notices.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -63,14 +65,13 @@ export async function fetchAdminTickets({ group = 'open', q = '', page = 1 } = {
     page: String(page),
     per_page: '20',
   });
-  const res = await fetch(`/api/support/tickets.php?${params}`, CREDENTIALS);
+  const res = await adminFetch(`/api/support/tickets.php?${params}`);
   return readJson(res);
 }
 
 export async function fetchAdminTicketsByUser(userId) {
-  const res = await fetch(
+  const res = await adminFetch(
     `/api/support/tickets.php?admin=1&user_id=${encodeURIComponent(String(userId))}`,
-    CREDENTIALS,
   );
   return readJson(res);
 }
@@ -86,7 +87,7 @@ export async function submitTicket(input) {
 }
 
 export async function patchTicketStatus(id, status) {
-  const res = await fetch('/api/support/tickets.php', {
+  const res = await adminFetch('/api/support/tickets.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,
@@ -96,7 +97,7 @@ export async function patchTicketStatus(id, status) {
 }
 
 export async function patchTicketReply(id, adminReplyText) {
-  const res = await fetch('/api/support/tickets.php', {
+  const res = await adminFetch('/api/support/tickets.php', {
     method: 'PATCH',
     headers: JSON_HEADERS,
     ...CREDENTIALS,

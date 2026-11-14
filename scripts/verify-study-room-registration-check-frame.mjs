@@ -76,7 +76,7 @@ const tokens = read('preview/home-ui/src/styles/tokens.css');
 assert(tokens.includes('--expo-prime-media-height-scale: 1.3'), 'tokens: prime media height ×1.3');
 assert(!tokens.includes('--expo-prime-media-ratio'), 'tokens: no aspect-ratio swap token');
 
-const listings = read('preview/home-ui/src/styles/home-listings.css');
+const listings = ['preview/home-ui/src/styles/home-listings-headings.css', 'preview/home-ui/src/styles/home-listings-cards.css', 'preview/home-ui/src/styles/home-listings.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 assert(listings.includes('aspect-ratio: 160 / 117'), 'listings: prime 16:9×1.3 via aspect-ratio (no cqw collapse)');
 assert(!listings.includes('--expo-prime-media-ratio'), 'listings: no aspect-ratio swap token');
 assert(!listings.includes('100cqw * 9 / 16'), 'listings: no cqw prime height');

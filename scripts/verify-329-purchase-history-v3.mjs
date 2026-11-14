@@ -29,9 +29,13 @@ function ok(name, cond, detail = '') {
   }
 }
 
-const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
+const screens = exists('preview/home-ui/src/plans/screens.js')
+  ? ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n')
+  : '';
 const myScreens = exists('preview/home-ui/src/mypage/screens.js') ? read('preview/home-ui/src/mypage/screens.js') : '';
-const css = exists('preview/home-ui/src/styles/mypage-ops.css') ? read('preview/home-ui/src/styles/mypage-ops.css') : '';
+const css = exists('preview/home-ui/src/styles/mypage-ops.css')
+  ? ['preview/home-ui/src/styles/mypage-ops-shell.css', 'preview/home-ui/src/styles/mypage-ops-register.css', 'preview/home-ui/src/styles/mypage-ops.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '')
+  : '';
 const copy = exists('preview/home-ui/src/mypage/mypage-copy.js') ? read('preview/home-ui/src/mypage/mypage-copy.js') : '';
 const router = exists('preview/home-ui/src/plans/router.js') ? read('preview/home-ui/src/plans/router.js') : '';
 
@@ -49,7 +53,8 @@ ok('A8 is-open 토글', screens.includes("is-open"));
 /* ── B. v3 셀 5개 ────────────────────────────────────── */
 
 ok('B1 내역 셀', screens.includes("cellBtn('내역'"));
-ok('B2 환불 셀', screens.includes("cellBtn('환불'"));
+ok('B2 줄 위 환불 셀 없음', !screens.includes("cellBtn('환불'"));
+ok('B2b 내역 패널 환불 신청 링크', screens.includes('plans-hist-refund-link') && screens.includes('>환불 신청<'));
 ok('B3 진행상황 셀', screens.includes("cellBtn('진행상황'"));
 ok('B4 종료 셀', screens.includes("cellBtn('종료'"));
 ok('B5 소멸 셀', screens.includes("cellBtn('소멸'"));

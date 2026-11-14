@@ -1,0 +1,70 @@
+{
+  "stamp": "cover-mwcg5o96",
+  "report": [
+    {
+      "name": "368-cover-mwcg5o96-cover-page-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "20e3d8b52782",
+      "bytes": 138985
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-soft-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "bfbf277a6244",
+      "bytes": 138821
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-crop-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "afbb88337035",
+      "bytes": 150201
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-after-1280.png",
+      "viewportW": 1280,
+      "innerWidth": 1280,
+      "clientWidth": 1280,
+      "hash": "8ee15724c926",
+      "bytes": 123855
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-page-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "e0e4c95855bd",
+      "bytes": 79760
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-soft-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "fc389c328009",
+      "bytes": 77143
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-crop-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "2d4999ff9ad7",
+      "bytes": 63304
+    },
+    {
+      "name": "368-cover-mwcg5o96-cover-after-390.png",
+      "viewportW": 390,
+      "innerWidth": 390,
+      "clientWidth": 390,
+      "hash": "d374030e8cdb",
+      "bytes": 64330
+    }
+  ],
+  "dups": []
+}

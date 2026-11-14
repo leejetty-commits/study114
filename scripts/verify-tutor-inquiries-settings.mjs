@@ -46,7 +46,7 @@ const render = read('preview/home-ui/src/tutor-reg/inquiries-render.js');
 const edit = read('preview/home-ui/src/tutor-reg/inquiries-edit.js');
 const pref = read('preview/home-ui/src/tutor-reg/inquiries-pref.js');
 const store = read('preview/home-ui/src/tutor-reg/store.js');
-const css = read('preview/home-ui/src/styles/home-member-flows.css');
+const css = ['preview/home-ui/src/styles/home-member-flows-account.css', 'preview/home-ui/src/styles/home-member-flows.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const regsApi = read('preview/home-ui/src/registrations-api.js');
 const rcRender = read('preview/home-ui/src/tutor-reg/registration-check-render.js');
 const rcModel = read('preview/home-ui/src/tutor-reg/registration-check-model.js');

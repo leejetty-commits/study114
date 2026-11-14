@@ -5,9 +5,11 @@ import {
 } from '../lifecycle-copy.js';
 import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
+import { bindQuickMatchScreen, renderQuickMatchScreen } from './quick-match-screen.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
 import { bindWithdrawReasonChoices, readWithdrawReason, renderWithdrawReasonChoices } from '../withdraw-reason-ui.js';
+import { WITHDRAW_REFUND_HINT } from '../refund-policy-copy.js';
 import {
   getPreviewProfile,
   getSubmissionDocs,
@@ -36,6 +38,7 @@ import { formatResumeToken } from '../handoff-resume.js';
 import { renderDecisionStickers } from '../handoff-sticker.js';
 import { openDetailDecision, showP24Toast } from '../detail-decision/index.js';
 import { startFirstMemoFlow } from '../messages/compose-flow.js';
+import { displayContextLabel } from '../messages/messages-copy.js';
 import { exposureStatusLabel } from '../lifecycle-copy.js';
 import {
   getWishlistEntries,
@@ -220,6 +223,7 @@ export function renderMypageScreen(path) {
   ) {
     return renderSubmissionRetired();
   }
+  if (path === '/mypage/quick-match') return renderQuickMatchScreen();
   if (path === '/mypage/account') return renderAccount(r, profile);
   const dest = getDefaultMypagePath(r);
   if (dest && dest !== path) return renderMypageScreen(dest);
@@ -815,7 +819,7 @@ function renderMemoUsedTargets() {
         <li class="mp-card__row mp-card__row--split">
           <div>
             <p class="mp-card__row-title">${esc(t.name)}</p>
-            ${t.contextLabel ? `<p class="mp-card__row-meta">${esc(t.contextLabel)}</p>` : ''}
+            ${t.contextLabel ? `<p class="mp-card__row-meta">${esc(displayContextLabel(t.contextLabel))}</p>` : ''}
           </div>
           <a href="#${href}" class="mp-card__link" data-mypage-nav="${href}">쪽지상세</a>
         </li>`;
@@ -1238,7 +1242,7 @@ function renderAccount(role, profile) {
             <li>탈퇴 후 동일 계정으로 즉시 재가입·복구되지 않을 수 있습니다.</li>
             <li>진행 중인 문의·쪽지 대화는 더 이상 확인할 수 없습니다.</li>
             <li>유료 이용 중이라면 잔여 기간·횟수도 함께 종료됩니다.</li>
-            <li>환불은 결제 후 7일 이내 · 사용 구간별 환불표(서버 정본)에 따라 처리됩니다.</li>
+            <li>${esc(WITHDRAW_REFUND_HINT)}</li>
           </ul>
           <form data-form="withdraw-account" class="account-form" autocomplete="off">
             ${renderWithdrawReasonChoices(role === 'parent' ? 'student' : role, {
@@ -1813,7 +1817,7 @@ function bindPrimeMatchConsentEvents(root) {
         .map((student) => {
           const id = Number(student.id);
           const on = Number(student.prime_match_opt_in) === 1;
-          const name = String(student.public_display_name || '').trim();
+          const name = String(student.student_name || '').trim();
           const nameHtml =
             students.length > 1 && name ? `<p class="account-meta__hint">${esc(name)}</p>` : '';
           return `${nameHtml}<label class="account-check">
@@ -1860,6 +1864,7 @@ function bindPrimeMatchConsentEvents(root) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
+  bindQuickMatchScreen(root);
   const path = getMypagePath();
   if (path === '/mypage/account') {
     const role = sessionMypageRole();

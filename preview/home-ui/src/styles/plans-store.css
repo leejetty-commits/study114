@@ -7,6 +7,15 @@
   max-width: 68rem;
 }
 
+/* ── 369 checkout: nav 없는 결제·결과 화면은 단일 열 ── */
+.plans-layout .sup-frame--no-nav {
+  display: block;
+}
+.plans-checkout {
+  max-width: 44rem;
+  margin-inline: auto;
+}
+
 .plans-store {
   display: flex;
   flex-direction: column;
@@ -1281,6 +1290,7 @@ a.plans-chip:hover {
   font-weight: 700;
   color: var(--plans-ink, #292823);
   text-align: right;
+  white-space: nowrap;
 }
 
 .plans-order-summary__total {
@@ -1362,6 +1372,24 @@ a.plans-chip:hover {
 .plans-policy-acc__body {
   margin-top: 0.65rem;
   font-size: var(--text-sm);
+}
+
+.refund-policy-detail p {
+  margin: 0 0 0.45rem;
+}
+
+.refund-policy-list {
+  list-style: disc;
+  margin: 0 0 0.65rem;
+  padding-left: 1.2em;
+}
+
+.refund-policy-list li {
+  margin: 0.2rem 0;
+}
+
+.refund-policy-detail .refund-policy-list:last-child {
+  margin-bottom: 0;
 }
 
 /* aux-nav — 봇 시안 */
@@ -1970,21 +1998,26 @@ a.plans-chip:hover {
   }
 
   .plans-order-summary__row {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
-    gap: var(--space-1) var(--space-3);
+    gap: var(--space-3);
   }
 
   .plans-order-summary__row dt {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
   }
 
   .plans-order-summary__row dd {
-    flex: 1 1 8rem;
+    flex: 1 1 auto;
     min-width: 0;
     text-align: right;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+    white-space: normal;
+    overflow-wrap: break-word;
+  }
+
+  /* 날짜·금액 등 짧은 값은 줄바꿈 금지 */
+  .plans-order-summary__row--nowrap dd {
+    white-space: nowrap;
   }
 
   .plans-order-summary__total {
@@ -2124,5 +2157,133 @@ a.plans-chip:hover {
     flex-direction: column;
     gap: var(--space-4);
     margin-top: 0;
+  }
+}
+
+/* 결제 결과. 이 화면 클래스만. 전역 박스·버튼 정의는 바꾸지 않는다. */
+.plans-result {
+  max-width: min(40rem, 100%);
+  margin-inline: auto;
+  min-width: 0;
+  color: var(--plans-ink, #292823);
+}
+.plans-result__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.85rem;
+  margin-bottom: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 12px;
+  background: var(--plans-surface, #fff);
+}
+.plans-result--fail .plans-result__hero {
+  background: var(--plans-warn, #fff0e9);
+  border-color: var(--plans-warn-line, #e4b59f);
+}
+.plans-result__mark {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  color: var(--plans-ok, #3f7545);
+}
+.plans-result__hero-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.plans-result__status {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+.plans-result__amount {
+  margin: 0.1rem 0 0;
+  font-size: 1.875rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.plans-result__order {
+  flex: 1 1 100%;
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--plans-muted, #766f64);
+}
+.plans-result__card {
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 12px;
+  background: var(--plans-surface, #fff);
+  overflow: hidden;
+}
+.plans-result__rows {
+  margin: 0;
+  padding: 0.2rem 1rem;
+}
+.plans-result__rows + .plans-result__rows {
+  border-top: 1px solid var(--plans-line, #e6dfd4);
+}
+.plans-result__row {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding: 0.45rem 0;
+}
+.plans-result__row dt,
+.plans-result__row dd {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.plans-result__row dt {
+  color: var(--plans-muted, #766f64);
+}
+.plans-result__row dd {
+  min-width: 0;
+  white-space: normal;
+  word-break: keep-all;
+  text-align: right;
+}
+.plans-result__row--total dt,
+.plans-result__row--total dd {
+  font-weight: 700;
+  color: var(--plans-ink, #292823);
+}
+.plans-result__refund,
+.plans-result__note {
+  margin: 0.85rem 0 0;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--plans-line, #e6dfd4);
+  border-radius: 8px;
+  background: var(--plans-selected, #fbf7ef);
+  color: var(--plans-muted, #766f64);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.plans-result__actions {
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+.plans-result__actions .btn {
+  min-height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+@media (max-width: 480px) {
+  .plans-result__row {
+    column-gap: 0.4rem;
+  }
+  .plans-result__row dd {
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
+  .plans-result__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .plans-result__actions .btn {
+    width: 100%;
   }
 }

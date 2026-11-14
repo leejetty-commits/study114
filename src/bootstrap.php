@@ -252,6 +252,30 @@ function study114_send_cors_headers(bool $credentials = true): void
 }
 
 /**
+ * 닷홈이 4xx JSON 본문을 HTML로 바꾸는 것을 피한다.
+ * 요청 헤더 X-Study114-Soft-Error: 1 이고 4xx일 때만 HTTP 200 + http_status.
+ * 헤더가 없으면 원래 상태코드. 5xx는 $allow5xx일 때만(결제 확인 502 고정 문구).
+ * Content-Type은 호출한 쪽이 이미 보낸다.
+ *
+ * @param array<string, mixed> $body
+ */
+function study114_json_error(int $status, array $body, bool $allow5xx = false): never
+{
+    $wantsSoft = (string) ($_SERVER['HTTP_X_STUDY114_SOFT_ERROR'] ?? '') === '1';
+    $is4xx = $status >= 400 && $status < 500;
+    $is5xx = $status >= 500 && $status < 600;
+    if ($wantsSoft && ($is4xx || ($allow5xx && $is5xx))) {
+        http_response_code(200);
+        $body['http_status'] = $status;
+        header('X-Study114-Status: ' . $status);
+    } else {
+        http_response_code($status);
+    }
+    echo json_encode($body, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+/**
  * 닷홈 공유 /tmp 는 다른 사이트의 session.gc_maxlifetime(보통 20~24분)으로 파일이 지워진다.
  * 우리 수명(7일)을 쓰려면 전용 디렉터리가 필요하다.
  */
@@ -271,8 +295,9 @@ function study114_session_save_path(): ?string
 }
 
 /**
- * 로컬·개발에서만 루트 .env의 PORTONE_·STUDY114_IDENTITY_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
- * production 이면 실행하지 않는다. 값은 로그하지 않는다.
+ * 로컬·개발에서만 루트 .env의 PG_·PORTONE_·STUDY114_IDENTITY_ 키를 읽어 putenv (이미 있는 값은 덮지 않음).
+ * study114_env('STUDY114_APP_ENV')===production 이면 실행하지 않는다. 값은 로그하지 않는다.
+ * 워크트리에서는 저장소 루트 .env도 본다.
  */
 function study114_load_dotenv_local(): void
 {
@@ -282,7 +307,7 @@ function study114_load_dotenv_local(): void
     $path = null;
     foreach ([
         dirname(__DIR__) . '/.env',
-        dirname(__DIR__, 3) . '/.env', // .wt/work-* 워크트리 → 저장소 루트
+        dirname(__DIR__, 3) . '/.env',
     ] as $candidate) {
         if (is_file($candidate) && is_readable($candidate)) {
             $path = $candidate;
@@ -306,13 +331,10 @@ function study114_load_dotenv_local(): void
         }
         [$key, $value] = explode('=', $line, 2);
         $key = trim($key);
-        if ($key === '') {
-            continue;
-        }
         $allowed = str_starts_with($key, 'PORTONE_')
             || str_starts_with($key, 'PG_')
             || str_starts_with($key, 'STUDY114_IDENTITY_');
-        if (!$allowed || !preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
+        if ($key === '' || !$allowed || !preg_match('/^[A-Z][A-Z0-9_]*$/', $key)) {
             continue;
         }
         $existing = getenv($key);

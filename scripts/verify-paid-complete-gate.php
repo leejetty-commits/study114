@@ -56,6 +56,13 @@ foreach ($closed as $label => $value) {
 setFlag('1');
 check('gate_open_1', PaidCheckoutGate::mockCompleteAllowed() === true);
 
+putenv('STUDY114_PAYMENTS_ENABLED');
+check('payments_closed_unset', PaidCheckoutGate::paymentsEnabled() === false);
+putenv('STUDY114_PAYMENTS_ENABLED=0');
+check('payments_closed_zero', PaidCheckoutGate::paymentsEnabled() === false);
+putenv('STUDY114_PAYMENTS_ENABLED=1');
+check('payments_open_1', PaidCheckoutGate::paymentsEnabled() === true);
+
 final class GateProbePdo extends PDO
 {
     public int $begins = 0;

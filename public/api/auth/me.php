@@ -140,7 +140,7 @@ if ((string) ($user['role_type'] ?? '') === 'guardian_student') {
     }
 }
 
-echo json_encode([
+$me = [
     'ok' => true,
     'authenticated' => true,
     'user_id' => $user['user_id'],
@@ -159,4 +159,8 @@ echo json_encode([
     'identity_verified_at' => $identityStatus['verified_at'] ?? null,
     'needs_basic_register' => $needsBasicRegister,
     'student_branch' => $studentBranch,
-], JSON_UNESCAPED_UNICODE);
+];
+if ($adminLevel !== null) {
+    $me['console_unlocked'] = (new \Study114\Admin\AdminConsolePasswordService())->sessionIsActive();
+}
+echo json_encode($me, JSON_UNESCAPED_UNICODE);

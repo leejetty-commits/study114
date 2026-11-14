@@ -26,7 +26,6 @@ import { toggleWishlist, toggleCompare, isWishlisted, isInCompare, isOwnProvider
 import { lookupAllExposureItems } from '../exposure-lookup.js';
 import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
 import { renderRightRailBlock, bindRightRailEvents } from '../right-rail.js';
-import { maskPublicDisplayName } from '../student-blind-teaser.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
 import { goHomeHashPath } from '../spa-navigation.js';
@@ -63,7 +62,7 @@ export function closeDetailModal() {
 }
 
 function itemTitle(kind, item) {
-  if (kind === 'student') return maskPublicDisplayName(item.public_display_name) || '학습 요청';
+  if (kind === 'student') return String(item.public_display_name || '').trim() || '학습 요청';
   if (kind === 'tutor') return item.tutor_display_name || '과외쌤';
   return item.study_room_name || '공부방';
 }

@@ -805,7 +805,7 @@ class FillNode {
   }
 }
 
-const memberCss = read('preview/home-ui/src/styles/home-member-flows.css');
+const memberCss = ['preview/home-ui/src/styles/home-member-flows-account.css', 'preview/home-ui/src/styles/home-member-flows.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '');
 const stageCss = read('preview/home-ui/src/styles/student-mypage-stage5b.css');
 const p19InputRule = memberCss.slice(memberCss.indexOf('.p19-input {'), memberCss.indexOf('}', memberCss.indexOf('.p19-input {')) + 1);
 const surfaceRule = stageCss.slice(stageCss.indexOf('.home-app--role-parent .mypage-layout {'), stageCss.indexOf('}', stageCss.indexOf('.home-app--role-parent .mypage-layout {')) + 1);
@@ -833,7 +833,7 @@ try {
   const room = layout.append(new FillNode('div', { className: 'mp-room' }));
   const basic = room.append(new FillNode('form', { id: 'basic', attrs: { 'data-p19-form': 'basic' } }));
   const field = (tag, opts) => basic.append(new FillNode(tag, opts));
-  field('input', { id: 'name', className: 'p19-input', attrs: { name: 'public_display_name' }, value: '맑은하늘' });
+  field('input', { id: 'name', className: 'p19-input', attrs: { name: 'student_name' }, value: '맑은하늘' });
   field('input', { id: 'request', className: 'p19-input', attrs: { name: 'request_summary' }, value: '' });
   field('input', { id: 'fee', className: 'p19-input', type: 'number', attrs: { name: 'preferred_fee_amount' }, value: '550' });
   field('input', { id: 'fee-empty', className: 'p19-input', type: 'number', attrs: { name: 'preferred_studyroom_fee_amount' }, value: '' });

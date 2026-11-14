@@ -82,6 +82,9 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       image_path: String(apiItem.image_path || ''),
       image_path_prime: String(apiItem.image_path_prime || apiItem.image_path || ''),
       image_path_basic: String(apiItem.image_path_basic || apiItem.image_path || ''),
+      image_path_basic_360: String(apiItem.image_path_basic_360 || ''),
+      image_path_basic_720: String(apiItem.image_path_basic_720 || ''),
+      image_path_fit: String(apiItem.image_path_fit || ''),
       images: Array.isArray(apiItem.images) ? apiItem.images : [],
     };
     merged.badges = studyRoomBadges(merged);
@@ -103,6 +106,11 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
       lesson_places: Array.isArray(apiItem.lesson_places) ? apiItem.lesson_places : [],
       teaching_style_badges: Array.isArray(apiItem.teaching_style_badges) ? apiItem.teaching_style_badges : [],
       image_path: String(apiItem.image_path || apiItem.image_path_basic || ''),
+      image_path_prime: String(apiItem.image_path_prime || apiItem.image_path || ''),
+      image_path_basic: String(apiItem.image_path_basic || apiItem.image_path || ''),
+      image_path_basic_360: String(apiItem.image_path_basic_360 || ''),
+      image_path_basic_720: String(apiItem.image_path_basic_720 || ''),
+      image_path_fit: String(apiItem.image_path_fit || ''),
       career_year_band: apiItem.career_year_band || null,
       university_name: apiItem.university_name || '',
       major_name: apiItem.major_name || '',
@@ -123,8 +131,11 @@ export function mapToExposureItem(tab, apiItem, index = 0) {
   }
 
   // 과목이 비면 비워 둔다. summary 첫 조각은 지역일 수 있다.
+  // 제목은 서버가 가린 title 만 쓴다. 원문 키는 카드에 남기지 않는다.
+  const studentCard = { ...apiItem };
+  delete studentCard.student_name;
   const merged = {
-    ...apiItem,
+    ...studentCard,
     id,
     public_display_name: String(apiItem.title || ''),
     grade_level: String(apiItem.grade_level || ''),

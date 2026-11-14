@@ -723,7 +723,11 @@ assertBranchRedirect('(e) 공부방 분기', 'tutor', 'room');
 
 /* ── 소스 계약 ── */
 console.log('=== 소스 계약 ===');
-const findSrc = read('preview/search-ui/src/search-find-surface.js');
+const findSrc = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 const mapSrc = read('preview/search-ui/src/search-map.js');
 const naverSrc = read('preview/shared/naver-map.js');
 ok('찾기: 학생은 canonical 저장 선택에 쓰지 않음', /state\.role !== 'guest' && state\.role !== 'parent'\)/.test(findSrc));

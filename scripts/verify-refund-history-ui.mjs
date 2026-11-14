@@ -29,7 +29,9 @@ function ok(name, cond, detail = '') {
   }
 }
 
-const screens = exists('preview/home-ui/src/plans/screens.js') ? read('preview/home-ui/src/plans/screens.js') : '';
+const screens = exists('preview/home-ui/src/plans/screens.js')
+  ? ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n')
+  : '';
 const paidApi = exists('preview/home-ui/src/paid-api.js') ? read('preview/home-ui/src/paid-api.js') : '';
 const histMock = exists('preview/home-ui/src/plans/history-mock.js') ? read('preview/home-ui/src/plans/history-mock.js') : '';
 const copy = exists('preview/home-ui/src/mypage/mypage-copy.js') ? read('preview/home-ui/src/mypage/mypage-copy.js') : '';
@@ -220,7 +222,7 @@ ok('O10 개발자 sourceNote 제거', () => {
 });
 ok('O11 탭 15px CSS', () => {
   const css = exists('preview/home-ui/src/styles/mypage-ops.css')
-    ? read('preview/home-ui/src/styles/mypage-ops.css')
+    ? ['preview/home-ui/src/styles/mypage-ops-shell.css', 'preview/home-ui/src/styles/mypage-ops-register.css', 'preview/home-ui/src/styles/mypage-ops.css'].map((rel) => read(rel)).join('').replace(/^@import\s+['"]\.\/[^'"]+['"];\r?\n/gm, '')
     : '';
   const idx = css.indexOf('.plans-hist-tabs .plans-tab');
   if (idx < 0) return false;

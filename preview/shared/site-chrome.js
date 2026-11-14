@@ -16,7 +16,9 @@ import {
 import { resolveAccountDisplayName } from '../home-ui/src/auth/display-identity.js';
 import { PROMO_VIDEOS, isValidYoutubeId } from '../home-ui/src/promo-video-config.js';
 
-import { ensureBackToTop } from './back-to-top.js';
+import { ensureBackToTop, closeInquiryPanel, renderDrawerInquiryMarkup, bindDrawerInquiry } from './back-to-top.js';
+import { isChromeLoggedIn } from './chrome-session.js';
+import { authRoleType } from '../home-ui/src/auth-role.js';
 import { setPendingRoute } from './pending-route.js';
 
 const DRAWER_PROMO_LABELS = {
@@ -154,7 +156,7 @@ export function renderSiteHeader(opts = {}) {
       <div class="home-header__main">
         <div class="home-header__inner">
           <a href="${logoHref}" class="home-header__logo" data-site-logo="${logoHref}" aria-label="우동공과 홈">
-            <img src="/assets/brand/udong-symbol-2026.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" class="home-header__wordmark" />
+            <img src="/assets/brand/udong-symbol-2026.png" alt="" class="home-header__symbol" /><img src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" class="home-header__wordmark" /><span class="home-header__tagline">우리동네 공부방과외</span>
           </a>
           <nav class="home-gnb" aria-label="메인 메뉴">${gnbItems}</nav>
           <button type="button" class="home-hamburger" data-action="hamburger-toggle" aria-label="메뉴 열기" aria-expanded="false">
@@ -175,6 +177,7 @@ export function renderSiteHeader(opts = {}) {
           <div class="home-drawer__gnb">${drawerGnb}</div>
           ${drawerPromo}
           <div class="home-drawer__util">${utilHtml}</div>
+          ${renderDrawerInquiryMarkup(loggedIn)}
         </nav>
       </div>
     </header>
@@ -224,6 +227,7 @@ function openDrawer(header) {
   const drawer = header.querySelector('[data-drawer]');
   const btn = header.querySelector('[data-action="hamburger-toggle"]');
   if (!drawer) return;
+  closeInquiryPanel();
   drawer.hidden = false;
   document.body.classList.add('is-drawer-open');
   if (btn) btn.setAttribute('aria-expanded', 'true');
@@ -271,6 +275,10 @@ export function bindSiteChrome(root, handlers = {}) {
   });
   header.querySelector?.('.home-drawer__util')?.addEventListener('click', (e) => {
     if (e.target.closest('[data-action]') || e.target.closest('[data-util-href]')) closeDrawer(header);
+  });
+  bindDrawerInquiry(header, {
+    isLoggedIn: () => isChromeLoggedIn() || authRoleType() !== '',
+    closeDrawer: () => closeDrawer(header),
   });
 
   root.querySelectorAll('[data-util-href]').forEach((el) => {

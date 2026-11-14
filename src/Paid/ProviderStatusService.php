@@ -73,6 +73,7 @@ final class ProviderStatusService
             'memo_nearest_expiry' => $memoSummary['nearest_expiry'],
             'can_cold_memo' => $canColdMemo,
             'memo_packs' => $memoPacks,
+            'prime_active' => $this->exposureHasPrime($exposure),
         ];
     }
 
@@ -89,6 +90,22 @@ final class ProviderStatusService
                 ],
             ],
         ];
+    }
+
+    /** @param array<string, mixed> $exposure */
+    private function exposureHasPrime(array $exposure): bool
+    {
+        $positions = $exposure['positions'] ?? [];
+        if (!is_array($positions)) {
+            return false;
+        }
+        foreach ($positions as $pos) {
+            if (is_array($pos) && (string) ($pos['sku'] ?? '') === 'prime') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return array{state: string, label: string, positions: list<mixed>} */

@@ -79,7 +79,7 @@ export function renderPlansShell(currentPath, bodyHtml, opts = {}) {
           <h1 class="sup-content__title">${renderPlansPageTitle(currentPath)}</h1>
         </div>
       </header>
-      <div class="sup-frame">
+      <div class="sup-frame${hideNav ? ' sup-frame--no-nav' : ''}">
         ${hideNav ? '' : renderPlansNav(currentPath, { guestCatalogOnly })}
         <div class="sup-frame__body">${bodyHtml}</div>
       </div>

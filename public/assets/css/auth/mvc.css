@@ -40,6 +40,89 @@
   padding: 1rem;
   font-size: var(--text-xs, 0.75rem);
   color: var(--gray-400, #9ca3af);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.auth-shell__footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem 0;
+}
+
+.auth-shell__footer-links a {
+  color: var(--gray-600, #4b5563);
+  text-decoration: none;
+  padding: 0 0.5rem;
+}
+
+.auth-shell__footer-links a:hover,
+.auth-shell__footer-links a:focus-visible {
+  color: var(--gray-900, #111827);
+  text-decoration: underline;
+}
+
+.auth-shell__footer-sep {
+  color: var(--gray-300, #d1d5db);
+  user-select: none;
+}
+
+.auth-shell__footer-notice,
+.auth-shell__footer-legal {
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.6;
+}
+
+.auth-shell__footer-company {
+  margin: 0;
+  max-width: 48rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35em;
+  line-height: 1.6;
+}
+
+.auth-shell__footer-company-row {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  row-gap: 0.2em;
+}
+
+.auth-shell__footer-company-item {
+  white-space: nowrap;
+}
+
+.auth-shell__footer-company-label {
+  font-weight: 500;
+  color: var(--gray-500, #6b7280);
+}
+
+.auth-shell__footer-company-sep {
+  margin: 0 0.45em;
+  color: var(--gray-300, #d1d5db);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.auth-shell__footer-biz,
+.auth-shell__footer-mail {
+  color: var(--gray-600, #4b5563);
+  text-decoration: underline;
+}
+
+@media (min-width: 960px) {
+  .auth-shell__footer-company-row {
+    flex-wrap: nowrap;
+  }
 }
 
 .field-db-name {

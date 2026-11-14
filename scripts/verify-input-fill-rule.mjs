@@ -513,7 +513,7 @@ sc({
   waitFor: '[data-p19-form="basic"] [data-field="region_sido"]',
   async run({ page, snap, one, focusCheck, typeCheck, ruleOffCheck, acceptDialogs }) {
     checkApplied('H1 학생 기본정보', await snap());
-    await focusCheck('H1 학생 기본정보', '[data-p19-form="basic"] [name="public_display_name"]');
+    await focusCheck('H1 학생 기본정보', '[data-p19-form="basic"] [name="student_name"]');
     await typeCheck('H1 학생 기본정보', '[data-p19-form="basic"] [name="request_summary"]');
     const sido = '[data-p19-form="basic"] [data-field="region_sido"]';
     const city = '[data-p19-form="basic"] [data-field="region_city"]';

@@ -174,7 +174,6 @@ export function buildShopViewModel(s, room = {}) {
     p
       ? {
           src: p.src,
-          blurSrc: p.blurSrc || p.src,
           type: p.type,
           title: p.title || '',
           index,

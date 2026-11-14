@@ -4,7 +4,7 @@
 
 import { fetchRegionsCatalog } from '../../shared/regions-catalog.js';
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' };
+const JSON_HEADERS = { 'Content-Type': 'application/json', 'X-Study114-Soft-Error': '1' };
 
 /** PHP notice가 JSON 앞에 붙어도 본문을 살린다. */
 export function parseApiJson(rawText) {
@@ -35,10 +35,11 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
   });
   const rawText = await res.text();
   const data = parseApiJson(rawText);
+  const status = data.http_status ?? res.status;
   if (!res.ok || !data.ok) {
     if (import.meta.env?.DEV) {
       console.warn('[auth-api]', url, {
-        status: res.status,
+        status,
         error: data.error || null,
         message: data.message || null,
         ok: data.ok,
@@ -46,16 +47,16 @@ async function postJson(url, body, { credentials = 'include' } = {}) {
       });
     }
     const fallback =
-      res.status === 422
+      status === 422
         ? '입력값을 확인해 주세요.'
-        : res.status >= 500
+        : status >= 500
           ? '저장에 실패했습니다. 잠시 후 다시 시도해 주세요.'
-          : `서버 오류 (${res.status})`;
+          : `서버 오류 (${status})`;
     const err = new Error(data.message || fallback);
     if (data.error) {
       err.code = data.error;
     }
-    err.status = res.status;
+    err.status = status;
     throw err;
   }
   return data;

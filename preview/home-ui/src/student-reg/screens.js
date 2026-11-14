@@ -272,18 +272,61 @@ function hopeRegionValues(student) {
   };
 }
 
-/** 과외 희망지역(광역시 / 도의 시·군) 선택칸. @param {number} studentId @param {string|number|null|undefined} regionId */
-function renderTutorRegionField(studentId, regionId) {
+/**
+ * 과외 희망지역(광역시 / 도의 시·군) 선택칸. 본 지역과 희망지역 추가가 같은 위젯을 쓴다.
+ * @param {number} studentId
+ * @param {string|number|null|undefined} regionId
+ * @param {{ hiddenName?: string, idPrefix?: string }} [field]
+ */
+function renderTutorRegionField(studentId, regionId, field = {}) {
+  const hiddenName = field.hiddenName || 'preferred_tutor_region_id';
+  const idPrefix = field.idPrefix || `p19_tutor_region_${studentId}`;
   return tutorCityUnitsReady()
     ? renderTutorUnitCascade({
-        idPrefix: `p19_tutor_region_${studentId}`,
+        idPrefix,
         units: getTutorCityUnits(),
         regionId,
         selectClass: 'p19-input p19-select',
-        hiddenName: 'preferred_tutor_region_id',
+        hiddenName,
       })
     : `<p class="p19-field__hint">${esc(tutorCityUnitsError() || '지역 목록을 불러오는 중입니다.')}</p>
-       <input type="hidden" name="preferred_tutor_region_id" value="" />`;
+       <input type="hidden" name="${esc(hiddenName)}" value="" />`;
+}
+
+/** 저장된 공부방 희망지역 추가. 다른 유형 값은 채우지 않는다. */
+function extraHopeRegionValues(student) {
+  if (student.preferred_lesson_type !== 'study_room') {
+    return { region_id: '', region_basis: 'dong', region_label: '', complex_name: '', complex_label: '' };
+  }
+  const basis = student.preferred_studyroom_region_extra_basis === 'complex' ? 'complex' : 'dong';
+  const complexName = basis === 'complex'
+    ? String(student.preferred_studyroom_complex_extra_label || '').trim()
+    : '';
+  return {
+    region_id: student.preferred_studyroom_region_extra_id != null && student.preferred_studyroom_region_extra_id !== ''
+      ? String(student.preferred_studyroom_region_extra_id)
+      : '',
+    region_basis: basis,
+    region_label: String(student.preferred_studyroom_region_extra_label || '').trim(),
+    complex_name: complexName,
+    complex_label: complexName,
+  };
+}
+
+/** 상세정보 희망지역 추가. 저장된 희망 유형의 본 희망지역 위젯만 보여 준다. */
+function renderExtraHopeControl(student) {
+  const hope = student.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
+  if (hope === 'study_room') {
+    return `<div data-p19-extra-hope="study_room" data-p19-hope-region-slot>${renderStudentHopeRegion(extraHopeRegionValues(student))}</div>`;
+  }
+  return `<div data-p19-extra-hope="tutor" data-p19-tutor-region-slot>${renderTutorRegionField(
+    student.id,
+    student.preferred_tutor_region_extra_id,
+    {
+      hiddenName: 'preferred_tutor_region_extra_id',
+      idPrefix: `p19_tutor_region_extra_${student.id}`,
+    },
+  )}</div>`;
 }
 
 /** @param {import('./store.js').StudentRecord} student */
@@ -309,8 +352,8 @@ function renderBasicForm(student) {
         '카드에 보이는 기본 항목입니다.',
         `
         <label class="p19-field">
-          <span class="p19-field__label">표시명</span>
-          ${renderTextInput('public_display_name', student.public_display_name || '', { maxlength: 40 })}
+          <span class="p19-field__label">학생 이름</span>
+          ${renderTextInput('student_name', student.student_name || '', { maxlength: 50 })}
         </label>
         <div class="p19-row2">
           <label class="p19-field">
@@ -383,8 +426,9 @@ function renderDetailField(label, hint, control) {
 
 /** @param {import('./store.js').StudentRecord} student */
 function renderDetailForm(student) {
+  const hope = student.preferred_lesson_type === 'study_room' ? 'study_room' : 'tutor';
   const formBody = `
-    <form class="p19-form student-detail-form" data-p19-form="detail" data-p19-student-id="${student.id}">
+    <form class="p19-form student-detail-form" data-p19-form="detail" data-p19-student-id="${student.id}" data-p19-hope="${hope}">
       <section class="p19-form-section student-detail-section">
         <header class="p19-form-section__head student-detail-head">
           <h3 class="p19-form-section__title student-detail-title">학생 상세정보</h3>
@@ -392,12 +436,9 @@ function renderDetailForm(student) {
         </header>
         <div class="p19-form-section__body student-detail-body">
           ${renderDetailField(
-            '희망지역 추가값',
-            '기본정보 희망지역 외에 더 알릴 지역입니다.',
-            renderTextInput('preferred_region_note', student.preferred_region_note || '', {
-              placeholder: '예: 대치동 주변',
-              maxlength: 255,
-            }),
+            '희망지역 추가',
+            '기본정보 희망지역과 같은 방식으로 하나 더 고를 수 있습니다. 비워도 됩니다.',
+            renderExtraHopeControl(student),
           )}
           ${renderDetailField(
             '희망 수업장소',
@@ -655,6 +696,12 @@ export function bindStudentRegEvents(root, rerender) {
       const hopeSlot = form.querySelector('[data-p19-hope-region-slot]');
       if (hopeSlot) bindStudentHopeRegion(hopeSlot);
     }
+    if (form.getAttribute('data-p19-form') === 'detail') {
+      const extraTutor = form.querySelector('[data-p19-extra-hope="tutor"]');
+      if (extraTutor) bindTutorUnitCascades(extraTutor, getTutorCityUnits());
+      const extraHope = form.querySelector('[data-p19-extra-hope="study_room"]');
+      if (extraHope) bindStudentHopeRegion(extraHope);
+    }
     bindInputFill(form);
 
     form.addEventListener('submit', async (e) => {
@@ -712,6 +759,53 @@ export function bindStudentRegEvents(root, rerender) {
       if (formKind === 'detail') {
         if (!patch.lesson_places) patch.lesson_places = [];
         if (!patch.teaching_style_badges) patch.teaching_style_badges = [];
+        delete patch.preferred_region_note;
+        const hope = form.getAttribute('data-p19-hope') === 'study_room' ? 'study_room' : 'tutor';
+        if (hope === 'study_room') {
+          delete patch.preferred_tutor_region_extra_id;
+          const hopeRegion = readStudentHopeRegion(form);
+          const issue = studyRoomHopeIssue(hopeRegion);
+          if (issue) {
+            void s114Alert(issue);
+            return;
+          }
+          const basis = hopeRegion?.region_basis === 'complex' ? 'complex' : 'dong';
+          const regionId = String(hopeRegion?.region_id || '').trim();
+          const place = String(hopeRegion?.complex_name || '').trim();
+          patch.preferred_studyroom_region_extra_basis = basis;
+          patch.preferred_studyroom_region_extra_id = regionId;
+          delete patch.extra_complex_name;
+          delete patch.extra_complex_address;
+          delete patch.preferred_studyroom_complex_extra_id;
+          delete patch.complex_name;
+          delete patch.complex_address;
+          if (basis === 'complex' && place) {
+            patch.extra_complex_name = place;
+          } else {
+            patch.preferred_studyroom_complex_extra_id = '';
+          }
+        } else {
+          delete patch.preferred_studyroom_region_extra_id;
+          delete patch.preferred_studyroom_complex_extra_id;
+          delete patch.preferred_studyroom_region_extra_basis;
+          delete patch.extra_complex_name;
+          delete patch.complex_name;
+          if (!tutorCityUnitsReady()) {
+            void s114Alert(tutorCityUnitsError() || TUTOR_UNIT_LIST_ERROR);
+            return;
+          }
+          const regionId = String(patch.preferred_tutor_region_extra_id || '').trim();
+          const picker = form.querySelector('[data-p19-extra-hope="tutor"] [data-region-cascade]');
+          const started = Boolean(picker?.querySelector('[data-field="region_sido"]')?.value);
+          if (started && !/^\d+$/.test(regionId)) {
+            void s114Alert('희망지역의 시·군을 선택해 주세요.');
+            return;
+          }
+          if (regionId !== '' && !/^\d+$/.test(regionId)) {
+            void s114Alert('희망지역을 선택해 주세요.');
+            return;
+          }
+        }
       }
 
       const branchChanged =

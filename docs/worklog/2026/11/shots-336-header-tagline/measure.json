@@ -1,0 +1,326 @@
+{
+  "home-1920": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 104
+    },
+    "wordmarkBottom": 104,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "find-1920": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 104
+    },
+    "wordmarkBottom": 104,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "study-room-1920": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 60
+    },
+    "wordmarkBottom": 60,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "tutor-1920": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 60
+    },
+    "wordmarkBottom": 60,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "home-1280": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 168
+    },
+    "wordmarkBottom": 168,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "find-1280": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 104
+    },
+    "wordmarkBottom": 104,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "study-room-1280": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 60
+    },
+    "wordmarkBottom": 60,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "tutor-1280": {
+    "headerH": 66,
+    "innerH": 42,
+    "mainH": 42,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": true,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 60
+    },
+    "wordmarkBottom": 60,
+    "gapWordmarkTagline": 8,
+    "gnbFontSize": "14px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "home-390": {
+    "headerH": 45,
+    "innerH": 44,
+    "mainH": 44,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": false,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 0
+    },
+    "wordmarkBottom": 218,
+    "gapWordmarkTagline": null,
+    "gnbFontSize": "12px",
+    "gnbWrap": false,
+    "logoHref": "#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "find-390": {
+    "headerH": 45,
+    "innerH": 44,
+    "mainH": 44,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": false,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 0
+    },
+    "wordmarkBottom": 112,
+    "gapWordmarkTagline": null,
+    "gnbFontSize": "12px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "study-room-390": {
+    "headerH": 45,
+    "innerH": 44,
+    "mainH": 44,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": false,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 0
+    },
+    "wordmarkBottom": 38,
+    "gapWordmarkTagline": null,
+    "gnbFontSize": "12px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  },
+  "tutor-390": {
+    "headerH": 45,
+    "innerH": 44,
+    "mainH": 44,
+    "symbol": {
+      "w": 17.6875,
+      "h": 25.703125
+    },
+    "wordmark": {
+      "w": 98.609375,
+      "h": 32
+    },
+    "tagline": {
+      "text": "우리동네 공부방과외",
+      "visible": false,
+      "fontSize": "12px",
+      "fontWeight": "500",
+      "color": "rgb(75, 85, 99)",
+      "bottom": 0
+    },
+    "wordmarkBottom": 38,
+    "gapWordmarkTagline": null,
+    "gnbFontSize": "12px",
+    "gnbWrap": false,
+    "logoHref": "http://127.0.0.1:5174/#/guest",
+    "wordmarkAlt": "우동공과"
+  }
+}

@@ -37,7 +37,7 @@ import { parseThreadId, threadPath, MESSAGES_BASE, REVIEWS_BASE } from './router
 
 
 
-import { BLOCK_THREAD_COPY, resolveMemoRole } from './messages-copy.js';
+import { BLOCK_THREAD_COPY, displayContextLabel, resolveMemoRole } from './messages-copy.js';
 import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { isReviewsPath, parseReviewsPath, renderReviewInboxPlaceholder, hydrateReviewInbox } from '../provider-reviews/inbox.js';
 import { showP24Toast } from '../detail-decision/detail-utils.js';
@@ -119,6 +119,21 @@ export function renderMessagesScreen(path) {
   return renderList(parseThreadId(path));
 }
 
+function messageOrigin() {
+  const hash = typeof window === 'undefined' ? '' : window.location.hash;
+  const query = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
+  return new URLSearchParams(query).get('origin') === 'quick_match' ? 'quick_match' : 'general';
+}
+
+function renderOriginTabs(active) {
+  const general = `${MESSAGES_BASE}?origin=general`;
+  const quick = `${MESSAGES_BASE}?origin=quick_match`;
+  return `<div class="qm-origin-tabs" role="tablist" aria-label="쪽지 구분">
+    <a href="#${general}" class="qm-origin-tabs__tab${active === 'general' ? ' is-active' : ''}">일반</a>
+    <a href="#${quick}" class="qm-origin-tabs__tab${active === 'quick_match' ? ' is-active' : ''}">실시간 퀵매칭</a>
+  </div>`;
+}
+
 function renderMessagesHub(active) {
   const msgHref = MESSAGES_BASE;
   const revHref = REVIEWS_BASE;
@@ -131,11 +146,13 @@ function renderMessagesHub(active) {
 /** @param {number|null} expandedId */
 function renderList(expandedId) {
   const role = resolveMemoRole(getNavRole());
-  const threads = getThreadsForTab('all');
+  const origin = messageOrigin();
+  const threads = getThreadsForTab('all').filter((t) => (t.threadOrigin === 'quick_match' ? 'quick_match' : 'general') === origin);
 
   if (threads.length === 0) {
     return `
     ${renderMessagesHub('messages')}
+    ${renderOriginTabs(origin)}
     <section class="mp-card msg-card"><p class="mp-card__empty">${esc(getEmptyCopy('messages').title)}</p></section>`;
   }
 
@@ -152,6 +169,7 @@ function renderList(expandedId) {
 
   return `
     ${renderMessagesHub('messages')}
+    ${renderOriginTabs(origin)}
     <section class="mp-card msg-card"><div class="msg-list">${sections.join('')}</div></section>`;
 }
 
@@ -178,8 +196,7 @@ function renderRow(t, expandedId, role) {
         open
           ? ''
           : `<div class="msg-row__chips">
-        <span class="msg-chip">${esc(t.contextLabel)}</span>
-        <span class="msg-badge msg-badge--sm">${esc(t.scopeBadge)}</span>
+        <span class="msg-chip">${esc(displayContextLabel(t.contextLabel))}</span>
       </div>`
       }
     </article>`;
@@ -233,13 +250,12 @@ function renderExpandedBody(thread, role) {
       </form>`
     : `<p class="msg-note msg-note--warn">${esc(getReplyBlockedMessage(t, role))}</p>`;
 
+  const advice = t.threadOrigin === 'quick_match' && role === 'parent'
+    ? '<p class="qm-advice">학력·등록 여부 등은 쌤이 직접 입력한 정보예요. 상담하실 때 증명서류를 직접 확인해 주세요.</p>'
+    : '';
   return `
     <div class="msg-row__expand">
-      <div class="msg-scope">
-        <span class="msg-scope__label">공개 범위:</span>
-        <span class="msg-badge">${esc(t.scopeBadge)}</span>
-        <span class="msg-scope__hint">${esc(t.scopeHint)}</span>
-      </div>
+      ${advice}
       <details class="msg-summary">
         <summary>상대 요약</summary>
         <p>${esc(t.structuredLine)}</p>

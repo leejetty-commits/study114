@@ -478,6 +478,12 @@ ok(
   'repo_legacy_insert_without_snapshot',
   repo.includes('(user_id, order_ref, product_id, variant_label, product_kind, amount_won, status, pg_provider)'),
 );
+ok(
+  'history_lists_paid_and_after_only',
+  repo.includes("status IN ('paid', 'refund_requested', 'refunded')") &&
+    repo.includes("status = 'cancelled' AND fulfillment_status = 'failed'") &&
+    repo.includes("LIKE 'auto\\\\_cancelled:%'"),
+);
 const sql061 = read('sql/schema/061_payment_catalog_snapshot.sql');
 ok('sql061_is_sql_not_php', !sql061.trimStart().startsWith('<?php') && sql061.includes('catalog_version'));
 ok('sql061_comment_ops_not_apply', /운영 DB에는 수동 승인 전까지 적용하지 않는다/.test(sql061));
@@ -500,7 +506,7 @@ ok(
 );
 ok(
   'frontend_pay_uses_server_amount',
-  read('preview/home-ui/src/plans/screens.js').includes('created.amount_won'),
+  ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n').includes('created.amount_won'),
 );
 
 // catalog API filters

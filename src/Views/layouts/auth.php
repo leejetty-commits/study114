@@ -23,7 +23,7 @@
       <?= $content ?>
     </main>
     <footer class="auth-shell__footer">
-      <p>study114 MVC · 2·14장 SSOT</p>
+      <?php require dirname(__DIR__) . '/partials/site-footer-legal.php'; ?>
     </footer>
   </div>
 </body>

@@ -360,13 +360,14 @@ function countBottomCells(html) {
     { image_type: 'cover', image_path: '/3.jpg', sort_order: 3, basic_720_path: '/3-basic.jpg', prime_1280_path: '/3-prime.jpg' },
   ];
   const split = splitPhotoSlots(collectShopPhotos(baseState({ images: imgs })));
-  ok('사진3_순서유지', split.top.map((p) => p.src).join(',') === '/1-basic.jpg,/2-basic.jpg' && split.bottom[0]?.src === '/3-basic.jpg');
-  ok('사진3_blur_basic', split.bottom[0]?.blurSrc === '/3-basic.jpg');
+  /* 368: fit 없을 때 image_path → prime → basic 순 (1:1 basic 우선 폐지) */
+  ok('사진3_순서유지', split.top.map((p) => p.src).join(',') === '/1.jpg,/2.jpg' && split.bottom[0]?.src === '/3.jpg');
+  ok('사진3_blurSrc없음', split.bottom[0]?.blurSrc === undefined);
   const html = stripRoot(renderMyshopShowcase(baseState({ images: imgs }), roomOf(baseState())));
   const bottom = countBottomCells(html);
   ok('사진3_아랫단3칸_빈2', sectionIds(html).includes('gallery') && bottom.photos === 1 && bottom.empty === 2);
-  ok('사진3_cover는3번칸', /data-shop-photo-index="3"[^>]*data-shop-thumb="\/3-basic\.jpg"|data-shop-thumb="\/3-basic\.jpg"[^>]*data-shop-photo-index="3"/.test(html));
-  ok('사진3_blur스타일', html.includes("--shop-photo-blur:url('/3-basic.jpg')") || html.includes('--shop-photo-blur:url(&#39;/3-basic.jpg&#39;)') || html.includes("/3-basic.jpg"));
+  ok('사진3_cover는3번칸', /data-shop-photo-index="3"[^>]*data-shop-thumb="\/3\.jpg"|data-shop-thumb="\/3\.jpg"[^>]*data-shop-photo-index="3"/.test(html));
+  ok('사진3_단색contain_blurCSS없음', !html.includes('shop-photo-blur') && html.includes('/3.jpg'));
 }
 
 {
@@ -416,7 +417,7 @@ function countBottomCells(html) {
     { image_type: 'cover', image_path: '/1.jpg', sort_order: 1, basic_720_path: '/1-basic.jpg', prime_1280_path: '/1-prime.jpg', fit_1280_path: '/1-fit.webp' },
   ];
   const photos = collectShopPhotos(baseState({ images: imgs }));
-  ok('사진_fit먼저', photos.length === 1 && photos[0].src === '/1-fit.webp' && photos[0].blurSrc === '/1-basic.jpg');
+  ok('사진_fit먼저', photos.length === 1 && photos[0].src === '/1-fit.webp' && photos[0].blurSrc === undefined);
   const shown = toMyshopShowcaseInputs({
     images: imgs,
     image_path_prime: '/1-prime.jpg',

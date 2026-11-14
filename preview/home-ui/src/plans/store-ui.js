@@ -271,7 +271,7 @@ export function renderBadgeAddonSection(role, ops, opts = {}) {
             .join('')}
         </ul>
       </fieldset>
-      <p class="plans-muted plans-badge-select__note">이용기간 중 추가·교체·배지 단독 결제는 없습니다. 금액은 프라임/픽과 함께 서버가 재계산합니다.</p>
+      <p class="plans-muted plans-badge-select__note">이용기간 중 추가·교체·배지 단독 결제는 없습니다. 금액은 프라임·픽과 함께 계산돼요.</p>
     </section>`;
 }
 

@@ -96,7 +96,7 @@ ok('G 관심 학생 안내 「학부모」 없음', !STUDENT_REVIEW.note.include
 ok('G 학생 계정 상품 안내 「학부모」 없음', !GUARDIAN_PLANS_COPY.lead.includes('학부모'));
 
 const mypageScreens = read('preview/home-ui/src/mypage/screens.js');
-const plansScreens = read('preview/home-ui/src/plans/screens.js');
+const plansScreens = ['preview/home-ui/src/plans/screens-status.js', 'preview/home-ui/src/plans/screens-orders.js', 'preview/home-ui/src/plans/screens.js'].map((rel) => read(rel)).join('\n');
 const resume = read('preview/home-ui/src/handoff-resume.js');
 for (const needle of ['<td>${esc(r.status', '<td>${esc(p.status', 'esc(p.provider_type', '#${esc(String(p.provider_id', 'w.status_label || w.status']) {
   ok(`소스 mypage/screens.js 「${needle}」 0건`, !mypageScreens.includes(needle));

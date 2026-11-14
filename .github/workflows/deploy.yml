@@ -117,10 +117,14 @@ jobs:
           STUDY114_STORAGE_SECRET: ${{ secrets.STUDY114_STORAGE_SECRET }}
           STUDY114_TEST_ACCOUNT_EMAILS: ${{ secrets.STUDY114_TEST_ACCOUNT_EMAILS }}
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          PORTONE_CHANNEL_KEY: ${{ secrets.PORTONE_CHANNEL_KEY }}
           PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          PORTONE_WEBHOOK_SECRET: ${{ secrets.PORTONE_WEBHOOK_SECRET }}
           PORTONE_IDENTITY_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_CHANNEL_KEY }}
           PORTONE_IDENTITY_TEST_CHANNEL_KEY: ${{ secrets.PORTONE_IDENTITY_TEST_CHANNEL_KEY }}
           STUDY114_IDENTITY_CI_PEPPER: ${{ secrets.STUDY114_IDENTITY_CI_PEPPER }}
+          PG_PROVIDER: ${{ vars.PG_PROVIDER }}
+          STUDY114_PAYMENTS_ENABLED: ${{ vars.STUDY114_PAYMENTS_ENABLED }}
         shell: bash
         run: |
           set -euo pipefail
@@ -172,7 +176,7 @@ jobs:
             STUDY114_MAIL_PROBE_KEY="probe_$(openssl rand -hex 12)"
           fi
           data="$(cat "$htaccess")"
-          for v in $required STUDY114_MAIL_PROBE_KEY $identity_soft; do
+          for v in $required STUDY114_MAIL_PROBE_KEY PORTONE_IDENTITY_CHANNEL_KEY PORTONE_IDENTITY_TEST_CHANNEL_KEY STUDY114_IDENTITY_CI_PEPPER; do
             token="__${v}__"
             repl="${!v}"
             case "$data" in
@@ -206,12 +210,32 @@ jobs:
             *) echo "::error::placeholder $test_emails_token not found"; exit 1 ;;
           esac
           data="${data//"$test_emails_token"/"${STUDY114_TEST_ACCOUNT_EMAILS:-}"}"
+          # 결제 키(Secrets)·스위치(Variables). 없으면 빈 값. 값은 출력하지 않음.
+          for v in PORTONE_STORE_ID PORTONE_CHANNEL_KEY PORTONE_API_SECRET PORTONE_WEBHOOK_SECRET PG_PROVIDER STUDY114_PAYMENTS_ENABLED; do
+            token="__${v}__"
+            case "$data" in
+              *"$token"*) ;;
+              *) echo "::error::placeholder $token not found"; exit 1 ;;
+            esac
+            repl="${!v:-}"
+            data="${data//"$token"/"$repl"}"
+          done
           printf '%s\n' "$data" > "$htaccess"
-          if grep -q '__OAUTH_\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__\|__STUDY114_TEST_ACCOUNT_EMAILS__\|__PORTONE_\|__STUDY114_IDENTITY_CI_PEPPER__' "$htaccess"; then
+          if grep -q '__OAUTH_\|__PORTONE_\|__PG_PROVIDER__\|__STUDY114_PAYMENTS_ENABLED__\|__STUDY114_IDENTITY_CI_PEPPER__\|__STUDY114_MAIL_PROBE_KEY__\|__STUDY114_PHONE_OTP_PEPPER__\|__STUDY114_RESEND_API_KEY__\|__STUDY114_CRON_KEY__\|__STUDY114_STORAGE_SECRET__\|__STUDY114_TEST_ACCOUNT_EMAILS__' "$htaccess"; then
             echo "::error::치환되지 않은 placeholder가 남아 있습니다."
             exit 1
           fi
-          echo "OAuth/Resend/Cron/Storage/TestAllowlist/PortOneIdentity SetEnv 주입 완료 (값은 출력하지 않음)."
+          if [ -z "${PG_PROVIDER:-}" ]; then
+            echo "PG_PROVIDER 비어 있음 (값은 출력하지 않음)."
+          else
+            echo "PG_PROVIDER 설정됨 (값은 출력하지 않음)."
+          fi
+          if [ -z "${STUDY114_PAYMENTS_ENABLED:-}" ]; then
+            echo "STUDY114_PAYMENTS_ENABLED 비어 있음 — 결제 꺼짐 (값은 출력하지 않음)."
+          else
+            echo "STUDY114_PAYMENTS_ENABLED 설정됨 (값은 출력하지 않음)."
+          fi
+          echo "OAuth/Resend/Cron/Storage/TestAllowlist/결제/본인인증 SetEnv 주입 완료 (값은 출력하지 않음)."
 
       - name: Build for dothome
         run: bash scripts/build-dothome.sh

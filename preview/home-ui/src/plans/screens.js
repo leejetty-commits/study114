@@ -1,22 +1,20 @@
 /**
  * 34장 — 상품센터 화면 (P18-01~07)
  * 기존 plans-catalog / paid-backend 자산 재사용
+ * 본문은 screens-status.js, screens-orders.js로 나뉘어 있고, 공개 이름은 여기서 다시 내보낸다.
  */
-
-import {
-  P18_EXPOSURE_STATUS,
-} from '../mypage/plans-catalog.js';
+import { P18_EXPOSURE_STATUS } from '../mypage/plans-catalog.js';
 import { getRoiMetrics, getPaidOperationalStatus } from '../paid-backend.js';
 import { renderProviderNoticeBanners, hydrateProviderNotices } from '../provider-notices.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
 import {
   createPaidCheckout,
   completePaidCheckout,
-  fetchTierCheck,
   registerPrimeWaitlist,
   fetchPrimeWaitlist,
   cancelPrimeWaitlist,
 } from '../paid-api.js';
+import { requestPortOneCardPayment } from './portone-checkout.js';
 import {
   getProviderStatus,
   hydrateProviderStatus,
@@ -25,17 +23,11 @@ import {
 } from '../provider-status.js';
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
-import { getStudyRoom } from '../study-room-reg/store.js';
-import { getTutor } from '../tutor-reg/store.js';
-import { studyRoomSectionPath } from '../study-room-reg/router.js';
-import { tutorSectionPath } from '../tutor-reg/router.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
 import {
   getCatalogByFamily,
   getProductConfig,
   getPriceOption,
-  getPlanRuntimeSettings,
-  getPlanSetting,
   resolveCheckoutAmount,
   formatKrw,
   isPlansTestMode,
@@ -43,44 +35,17 @@ import {
   badgePriceKrw,
 } from './runtime-config.js';
 import { parsePlansQuery, buildPlansHref } from './router.js';
-import {
-  getPlansEffectiveRole,
-  listProviderProfiles,
-  resolveSelectedProfile,
-} from './profiles.js';
+import { getPlansEffectiveRole, resolveSelectedProfile } from './profiles.js';
 import {
   setCheckoutDraft,
   getCheckoutDraft,
   clearCheckoutDraft,
   setCheckoutResult,
-  getCheckoutResult,
 } from './checkout-session.js';
-import {
-  getHistoryRows,
-  loadHistoryRows,
-  appendHistoryRow,
-  paymentMethodLabel,
-  orderStatusLabel,
-  invalidateHistoryCache,
-} from './history-mock.js';
-import {
-  fetchRefundEligibility,
-  submitRefund,
-  withdrawRefund,
-} from '../paid-api.js';
-import {
-  REFUND_REASON_CHOICES,
-  REFUND_STATUS_LABELS,
-  REFUND_COPY,
-  HISTORY_EMPTY_COPY,
-} from '../mypage/mypage-copy.js';
-import {
-  resolveRoomPrimeInventory,
-  getSlotForProduct,
-  buildRoomPrimeBoard,
-  isRoomPrimeFull,
-} from './slot-inventory.js';
-import { renderReceiptPanel, bindReceiptEvents } from './receipt.js';
+import { appendHistoryRow } from './history-mock.js';
+import { MEMO_TICKET_REFUND_SHORT } from '../refund-policy-copy.js';
+import { resolveRoomPrimeInventory, getSlotForProduct, isRoomPrimeFull } from './slot-inventory.js';
+import { bindReceiptEvents } from './receipt.js';
 import {
   renderPlansHero,
   renderBadgeAddonSection,
@@ -112,618 +77,52 @@ import {
   previewInclusiveRange,
   periodDisabledReason,
 } from './period-cards.js';
+import {
+  plansStatusSync,
+  accessProfileKey,
+  resetAccessStatusSync,
+  schedulePlansStatusHydrate,
+  plansStatusFlags,
+  readSelectedPrimeRegion,
+  applyTierOrderMissing,
+  scheduleTierCheckHydrate,
+  getEligibility,
+  clearLastPlansHydratedHash,
+  clearTierHydratedHash,
+  productLabel,
+  renderLowCreditBanner,
+  renderRoomPrimeBoard,
+  esc,
+  roleLabel,
+  renderProfileBanner,
+  isProductReady,
+} from './screens-status.js';
+import {
+  renderPlansHistory,
+  renderPlansCheckout,
+  renderPlansResult,
+  scheduleCheckoutServerQuote,
+  bindPlansHistoryEvents,
+  markHistoryCacheStale,
+} from './screens-orders.js';
 
-/** @param {ParentNode} [root] */
-function readSelectedPrimeRegion(root = document) {
-  const el =
-    root.querySelector?.('[data-plans-apply-region]:checked:not(:disabled)') ||
-    root.querySelector?.('[data-plans-apply-region]:not(:disabled)');
-  if (!(el instanceof HTMLInputElement)) {
-    return null;
-  }
-  const cityId = el.getAttribute('data-city-id') || '';
-  const basis = el.getAttribute('data-region-basis') || '';
-  const regionId = el.getAttribute('data-region-id') || '';
-  const complexId = el.getAttribute('data-complex-id') || '';
-  const label = el.value || el.nextElementSibling?.textContent || '';
-  if (cityId) {
-    return {
-      cityId,
-      regionLabel: label,
-      slotGroup: label,
-      regionBasisType: '',
-      regionId: '',
-      complexId: '',
-    };
-  }
-  if (basis !== 'dong' && basis !== 'complex') return null;
-  if (basis === 'complex' && !complexId) return null;
-  if (basis === 'dong' && !regionId) return null;
-  return {
-    regionBasisType: basis,
-    regionId,
-    complexId,
-    slotGroup: label,
-    regionLabel: label,
-    cityId: '',
-  };
-}
-
-/** @type {{ rows: import('./history-mock.js').HistoryRow[], fromApi: boolean, loaded: boolean }} */
-let historyCache = { rows: [], fromApi: false, loaded: false };
+export {
+  accessProfileKey,
+  resetAccessStatusSync,
+  resetPlansStatusSync,
+  schedulePlansStatusHydrate,
+  plansStatusFlags,
+  readTierCheck,
+  rememberTierCheck,
+  tierPurchaseGate,
+  applyTierOrderMissing,
+  scheduleTierCheckHydrate,
+  getEligibility,
+} from './screens-status.js';
+export { renderPlansHistory, renderPlansCheckout, renderPlansResult } from './screens-orders.js';
 
 /** @type {string | null} */
 let openReceiptOrderRef = null;
-
-/**
- * #/plans/access · #/plans/my 프로필별 status 동기화 (stale 구매 방지)
- * @type {{ key: string, phase: 'idle'|'loading'|'ready'|'error', error: string|null, route: string }}
- */
-let plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
-
-/** 같은 hash 재렌더에서 중복 hydrate 방지. 라우트를 벗어나면 비운다. */
-let lastPlansHydratedHash = '';
-
-/** checkout 진입 시 서버 quote만 받고 권리는 선점하지 않는다. */
-let checkoutQuoteKey = '';
-let checkoutQuotePhase = 'idle';
-
-function checkoutQuoteContext(draft) {
-  return {
-    providerType: draft.providerType,
-    providerId: draft.providerId,
-    badgeCodes: Array.isArray(draft.badgeCodes) ? draft.badgeCodes : [],
-    regionBasisType: draft.regionBasisType,
-    regionId: draft.regionId,
-    complexId: draft.complexId,
-    slotGroup: draft.slotGroup,
-    regionLabel: draft.regionLabel,
-    cityId: draft.cityId,
-    primarySubjectId: draft.primarySubjectId,
-  };
-}
-
-/** @param {() => void} rerender */
-function scheduleCheckoutServerQuote(rerender) {
-  const draft = getCheckoutDraft();
-  if (!draft) return;
-  const isPosition = draft.productCode === 'prime' || draft.productCode === 'pick';
-  if (!isPosition) return;
-  const key = [
-    draft.providerType,
-    draft.providerId,
-    draft.productCode,
-    draft.apiVariant,
-    (draft.badgeCodes || []).join(','),
-    draft.cityId || '',
-    draft.regionId || '',
-    draft.complexId || '',
-  ].join('|');
-  if (checkoutQuoteKey === key && checkoutQuotePhase !== 'idle') return;
-  checkoutQuoteKey = key;
-  checkoutQuotePhase = 'loading';
-  createPaidCheckout(draft.productCode, draft.apiVariant, checkoutQuoteContext(draft))
-    .then((created) => {
-      checkoutQuotePhase = 'ready';
-      const cur = getCheckoutDraft();
-      if (!cur) return;
-      const snap = created.price_snapshot && typeof created.price_snapshot === 'object' ? created.price_snapshot : {};
-      setCheckoutDraft({
-        ...cur,
-        orderRef: created.order_ref,
-        serverAmountWon: Number(created.amount_won),
-        serverBadgeSaleKrw: Number(created.badge_sale_krw || 0),
-        serverPositionSaleKrw: Number(snap.position_sale_krw != null ? snap.position_sale_krw : created.amount_won),
-        startedOn: created.started_on || '',
-        endsOn: created.ends_on || '',
-        cityId: created.city_id || cur.cityId,
-        primarySubjectId: created.primary_subject_id || cur.primarySubjectId,
-        memoBundle: created.memo_bundle != null ? Number(created.memo_bundle) : cur.memoBundle,
-      });
-      rerender();
-    })
-    .catch((err) => {
-      checkoutQuoteKey = '';
-      checkoutQuotePhase = 'idle';
-      if (err && err.code === 'tier_fields_missing') {
-        applyTierOrderMissing(
-          draft.providerType,
-          draft.providerId,
-          draft.productCode,
-          err.missing,
-          err.tierMessage || '',
-        );
-        rerender();
-      }
-    });
-}
-
-/** @param {import('./profiles.js').ProviderProfile | null} profile */
-export function accessProfileKey(profile) {
-  return profile ? `${profile.providerType}:${profile.id}` : '';
-}
-
-export function resetAccessStatusSync() {
-  plansStatusSync = { key: '', phase: 'idle', error: null, route: '' };
-  lastPlansHydratedHash = '';
-}
-
-/** @deprecated alias — access/my 공용 */
-export const resetPlansStatusSync = resetAccessStatusSync;
-
-/**
- * @param {import('./profiles.js').ProviderProfile | null} profile
- * @param {() => void} rerender
- * @param {string} routePath '/plans/access' | '/plans/my' | '/mypage/plans/my'
- */
-export function schedulePlansStatusHydrate(profile, rerender, routePath) {
-  if (!profile) {
-    resetPlansStatusSync();
-    return;
-  }
-  const key = accessProfileKey(profile);
-  const hash = window.location.hash;
-  if (plansStatusSync.phase === 'loading' && plansStatusSync.key === key) {
-    return;
-  }
-  if (
-    plansStatusSync.phase === 'ready' &&
-    plansStatusSync.key === key &&
-    lastPlansHydratedHash === hash &&
-    getProviderStatus()
-  ) {
-    return;
-  }
-  if (
-    plansStatusSync.phase === 'error' &&
-    plansStatusSync.key === key &&
-    lastPlansHydratedHash === hash
-  ) {
-    return;
-  }
-
-  plansStatusSync = { key, phase: 'loading', error: null, route: routePath };
-  invalidateProviderStatus();
-  rerender();
-
-  const q = parsePlansQuery();
-  const role = getPlansEffectiveRole();
-  const region = {
-    regionBasisType: q.region_basis_type || '',
-    regionId: q.region_id || '',
-    complexId: q.complex_id || '',
-    slotGroup: q.slot_group || '',
-    providerType: role === 'study_room' || role === 'tutor' ? role : String(profile.providerType || ''),
-    providerId: profile?.id || '',
-  };
-
-  hydrateProviderStatusStrict(7, region)
-    .then(() => {
-      if (plansStatusSync.key !== key) return;
-      lastPlansHydratedHash = window.location.hash;
-      plansStatusSync = { key, phase: 'ready', error: null, route: routePath };
-      rerender();
-    })
-    .catch((err) => {
-      if (plansStatusSync.key !== key) return;
-      lastPlansHydratedHash = window.location.hash;
-      plansStatusSync = {
-        key,
-        phase: 'error',
-        error: err instanceof Error ? err.message : String(err || 'status 조회 실패'),
-        route: routePath,
-      };
-      invalidateProviderStatus();
-      rerender();
-    });
-}
-
-/** @param {import('./profiles.js').ProviderProfile | null} profile */
-export function plansStatusFlags(profile) {
-  const profileKey = accessProfileKey(profile);
-  const syncReady =
-    plansStatusSync.phase === 'ready' &&
-    plansStatusSync.key === profileKey &&
-    Boolean(getProviderStatus());
-  const syncLoading =
-    plansStatusSync.phase === 'loading' && plansStatusSync.key === profileKey;
-  const syncError =
-    plansStatusSync.phase === 'error' && plansStatusSync.key === profileKey;
-  const syncPending = Boolean(profile) && !syncReady && !syncError;
-  return { profileKey, syncReady, syncLoading, syncError, syncPending };
-}
-
-/**
- * @param {number} remaining
- * @returns {boolean}
- */
-function isLowCredit(remaining) {
-  const n = Number(remaining) || 0;
-  if (n <= 2) return true;
-  const threshold = Number(getPlanSetting('low_credit_threshold')) || 0.2;
-  // total 미제공 시 절대 잔여만 사용 (2회 이하)
-  return n > 0 && n <= Math.max(2, Math.ceil(10 * threshold));
-}
-
-function productLabel(code) {
-  const normalized = String(code || '').toLowerCase();
-  if (normalized.includes('prime')) return '프라임';
-  if (normalized.includes('pick')) return '픽';
-  if (normalized.includes('basic')) return '베이직카드';
-  if (normalized.includes('memo')) return '쪽지권';
-  return '이용 상품';
-}
-
-/** 구매이력·홈 요약용. 구매면(#/plans/access)에서는 사용하지 않음. */
-function renderLowCreditBanner(tickets) {
-  if (!tickets) return '';
-  const warns = [];
-  if (isLowCredit(tickets.memo?.remaining)) {
-    warns.push(`쪽지권 남은 횟수 ${tickets.memo.remaining}회 — 구매이력에서 확인하세요`);
-  }
-  if (!warns.length) return '';
-  return `
-    <div class="mypage-info-box is-warn plans-low-credit" role="status">
-      <strong>쪽지권 안내</strong>
-      <ul class="plans-tier-list">${warns.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
-      <a href="#/mypage/plans" class="btn btn--secondary btn--sm" data-nav="/mypage/plans">구매이력 보기</a>
-    </div>`;
-}
-
-/**
- * 공부방 Prime 점유판 (3칸 · 슬롯 선택 없음 · 만석 시 예약대기만)
- * @param {{ capacity: number, used: number, remaining: number }} prime
- */
-function renderRoomPrimeBoard(prime) {
-  const cells = buildRoomPrimeBoard(prime);
-  const full = isRoomPrimeFull(prime);
-  const used = Math.min(3, Math.max(0, Number(prime?.used) || 0));
-  const remaining = Math.max(0, 3 - used);
-  const tone = full ? 'is-full' : used > 0 ? 'is-partial' : 'is-open';
-  return `
-    <div class="plans-prime-board ${tone}" data-plans-prime-board>
-      <h4 class="plans-prime-board__title">선택 지역 프라임 노출 현황</h4>
-      <p class="plans-prime-board__occupancy">3자리 중 ${used}자리 이용 중${remaining ? ` · 남은 자리 ${remaining}` : ' · 만석'}</p>
-      <p class="plans-prime-board__lead">선택 지역의 프라임 대표 노출 · 빈자리는 왼쪽부터 자동 배정됩니다. 슬롯 번호는 고르지 않습니다.</p>
-      <ul class="plans-prime-board__cells" aria-label="프라임 자리 3칸">
-        ${cells
-          .map((c) => {
-            const st = c.status === 'held' ? 'held' : c.status;
-            const meta =
-              st === 'available'
-                ? '빈자리'
-                : st === 'held'
-                  ? '임시확보'
-                  : c.endsAt
-                    ? `${c.endsAt} 종료 예정`
-                    : '이용 중';
-            return `
-          <li class="plans-prime-cell is-${esc(st)}">
-            <span class="plans-prime-cell__label">프라임 자리</span>
-            <span class="plans-prime-cell__status">${esc(c.label)}</span>
-            <span class="plans-prime-cell__meta">${esc(meta)}</span>
-          </li>`;
-          })
-          .join('')}
-      </ul>
-      ${
-        full
-          ? `<div class="plans-prime-waitlist" data-plans-waitlist>
-              <p><strong>현재 선택 지역의 프라임 자리는 모두 이용 중입니다.</strong></p>
-              <p>예약대기를 등록하면 빈자리가 열릴 때 알려드립니다. 대기 등록만으로 자리나 순번이 보장되지는 않으며 결제가 완료되어야 확정됩니다.</p>
-              <button type="button" class="btn btn--primary" data-plans-waitlist-register>예약대기 등록</button>
-              <p class="mypage-muted" style="margin-top:0.5rem"><a href="#/mypage/plans/my" data-nav="/mypage/plans/my">내 예약대기 보기</a></p>
-            </div>`
-          : ''
-      }
-    </div>`;
-}
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-}
-
-function roleLabel(role) {
-  if (role === 'study_room') return '공부방';
-  if (role === 'tutor') return '과외쌤';
-  if (role === 'parent') return '학생';
-  return '비로그인';
-}
-
-/** @param {import('./profiles.js').ProviderProfile | null} profile */
-function renderProfileBanner(profile, role) {
-  if (role === 'guest') {
-    return `
-      <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 대상</strong>
-        <p>비로그인 · 상품 소개만 볼 수 있습니다. 구매는 공급자 로그인 후 진행합니다.</p>
-        <a href="${AUTH_UI_BASE}/#/login" class="btn btn--primary btn--sm" data-same-tab-href="${AUTH_UI_BASE}/#/login">로그인</a>
-      </div>`;
-  }
-  if (role === 'parent') {
-    return `
-      <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 대상</strong>
-        <p>학생 계정은 유료상품 구매 주체가 아닙니다. FAQ에서 안내만 확인하세요.</p>
-        <a href="#/support/faq" class="btn btn--secondary btn--sm" data-nav="/support/faq">자주 묻는 질문</a>
-      </div>`;
-  }
-  if (!profile) {
-    const profiles = listProviderProfiles(role);
-    if (!profiles.length) {
-      return `
-        <div class="mypage-info-box plans-profile-banner is-warn">
-          <strong>적용 프로필</strong>
-          <p>등록된 ${esc(roleLabel(role))} 프로필이 없습니다. 상세등록을 먼저 완료해 주세요.</p>
-          <a href="#/mypage/registrations" class="btn btn--secondary btn--sm" data-nav="/mypage/registrations">내 등록으로</a>
-        </div>`;
-    }
-    return `
-      <div class="mypage-info-box plans-profile-banner">
-        <strong>적용 프로필을 선택하세요</strong>
-        <p class="mypage-muted">같은 역할의 프로필이 여러 개입니다. 적용할 프로필을 고른 뒤 상품을 선택합니다.</p>
-        <ul class="plans-profile-pick">
-          ${profiles
-            .map(
-              (p) => `
-            <li>
-              <a class="btn btn--secondary btn--sm" href="${buildPlansHref(window.location.hash.slice(1).split('?')[0] || '/plans', {
-                provider_type: p.providerType,
-                provider_id: p.id,
-              })}" data-plans-nav-query>${esc(p.label)} · ${esc(p.status || '')}</a>
-            </li>`,
-            )
-            .join('')}
-        </ul>
-      </div>`;
-  }
-  return `
-    <div class="mypage-info-box plans-profile-banner is-active">
-      <strong>적용 프로필</strong>
-      <p><span class="plans-profile-name">${esc(profile.label)}</span>
-        <span class="mypage-muted">· ${esc(roleLabel(profile.providerType))} · ${esc(profile.status || '')}</span>
-      </p>
-    </div>`;
-}
-
-/**
- * 픽·프라임 구매 판정 캐시. 화면은 서버 tier-check 답만 읽는다.
- * @type {Record<string, { phase: 'loading'|'ready'|'error', pick: { can_buy?: boolean, missing?: { id?: string, label?: string }[]|string[], message?: string }|null, prime: { can_buy?: boolean, missing?: { id?: string, label?: string }[]|string[], message?: string }|null, loadedAt: number }>}
- */
-const tierCheckCache = {};
-let tierHydratedHash = '';
-
-function tierCacheKey(providerType, providerId) {
-  return `${providerType}:${providerId}`;
-}
-
-/** @param {'tutor'|'study_room'|string} providerType @param {string|number} providerId */
-export function readTierCheck(providerType, providerId) {
-  return tierCheckCache[tierCacheKey(providerType, providerId)] || null;
-}
-
-/** @param {'tutor'|'study_room'|string} providerType @param {string|number} providerId */
-export function rememberTierCheck(providerType, providerId, payload) {
-  tierCheckCache[tierCacheKey(providerType, providerId)] = {
-    phase: 'ready',
-    pick: payload?.pick || null,
-    prime: payload?.prime || null,
-    loadedAt: Date.now(),
-  };
-}
-
-function tierLabels(missing) {
-  if (!Array.isArray(missing)) return [];
-  return missing
-    .map((item) => (item && typeof item === 'object' ? String(item.label || '') : String(item || '')))
-    .filter(Boolean);
-}
-
-/**
- * @param {'tutor'|'study_room'|string} providerType
- * @param {string|number} providerId
- * @param {'pick'|'prime'|string} tier
- */
-export function tierPurchaseGate(providerType, providerId, tier) {
-  const id = Number(providerId);
-  const href = providerType === 'study_room' ? studyRoomSectionPath(id, 'publish') : tutorSectionPath(id, 'publish');
-  const entry = readTierCheck(providerType, id);
-  const side = entry && tier === 'prime' ? entry.prime : entry ? entry.pick : null;
-  if (!entry || entry.phase === 'loading' || (entry.phase === 'ready' && !side)) {
-    return {
-      blocked: true,
-      phase: 'loading',
-      lines: ['구매 조건을 확인하고 있어요'],
-      reason: '구매 조건을 확인하고 있어요',
-      registerCheckHref: '',
-    };
-  }
-  if (entry.phase === 'error') {
-    return {
-      blocked: true,
-      phase: 'error',
-      lines: ['구매 조건을 확인하지 못했어요 · 다시 시도'],
-      reason: '구매 조건을 확인하지 못했어요 · 다시 시도',
-      registerCheckHref: '',
-    };
-  }
-  const labels = tierLabels(side.missing);
-  if (side.can_buy !== false && labels.length === 0) {
-    return { blocked: false, phase: 'ready', lines: [], reason: '구매 가능', registerCheckHref: '' };
-  }
-  const message = String(side.message || '');
-  const lines = message ? [message, ...labels] : [...labels];
-  const reason = message && labels.length ? `${message} · ${labels.join(', ')}` : lines[0] || message;
-  return { blocked: true, phase: 'ready', lines, reason, registerCheckHref: href };
-}
-
-/** 주문 422의 missing으로 해당 등급 캐시만 바꾼다. */
-export function applyTierOrderMissing(providerType, providerId, tier, missing, message) {
-  if (tier !== 'pick' && tier !== 'prime') return;
-  const key = tierCacheKey(providerType, providerId);
-  const prev = tierCheckCache[key] || { phase: 'ready', pick: null, prime: null, loadedAt: 0 };
-  const rows = tierLabels(missing).map((label) => ({ id: '', label }));
-  const side = {
-    can_buy: rows.length === 0,
-    missing: rows,
-    message: rows.length ? String(message || '') : '',
-  };
-  tierCheckCache[key] = {
-    phase: 'ready',
-    pick: tier === 'pick' ? side : prev.pick,
-    prime: tier === 'prime' ? side : prev.prime,
-    loadedAt: Date.now(),
-  };
-  tierHydratedHash = typeof window !== 'undefined' ? window.location.hash : '';
-}
-
-/**
- * @param {import('./profiles.js').ProviderProfile | null} profile
- * @param {() => void} rerender
- * @param {{ force?: boolean }} [opts]
- */
-export function scheduleTierCheckHydrate(profile, rerender, opts = {}) {
-  if (!profile || (profile.providerType !== 'tutor' && profile.providerType !== 'study_room')) return;
-  const key = tierCacheKey(profile.providerType, profile.id);
-  const hash = window.location.hash;
-  const force = opts.force === true;
-  const cur = tierCheckCache[key];
-  if (!force && cur?.phase === 'loading') return;
-  if (!force && cur?.phase === 'ready' && tierHydratedHash === hash) return;
-  if (!force && cur?.phase === 'error' && tierHydratedHash === hash) return;
-  tierCheckCache[key] = {
-    phase: 'loading',
-    pick: cur?.pick || null,
-    prime: cur?.prime || null,
-    loadedAt: 0,
-  };
-  rerender();
-  fetchTierCheck(profile.providerType, profile.id)
-    .then((data) => {
-      if (tierCheckCache[key]?.phase !== 'loading' && !force) return;
-      rememberTierCheck(profile.providerType, profile.id, data);
-      tierHydratedHash = window.location.hash;
-      rerender();
-    })
-    .catch(() => {
-      tierCheckCache[key] = { phase: 'error', pick: null, prime: null, loadedAt: Date.now() };
-      tierHydratedHash = window.location.hash;
-      rerender();
-    });
-}
-
-/**
- * @param {import('./profiles.js').ProviderProfile} profile
- * @param {string} productCode
- * @param {'position'|'access'} [family]
- */
-export function getEligibility(profile, productCode, family = 'position') {
-  /** @type {string[]} */
-  const missing = [];
-  let canBuy = true;
-  /** @type {string} */
-  let registerCheckHref = '';
-  /** @type {''|'loading'|'error'|'ready'} */
-  let tierPhase = '';
-
-  if (family === 'access') {
-    if (profile.providerType !== 'tutor' && profile.providerType !== 'study_room') {
-      return { canBuy: false, missing: ['쪽지권은 공부방·과외쌤만 구매할 수 있습니다'], registerCheckHref: '', tierPhase: '' };
-    }
-    if (profile.providerType === 'tutor') {
-      const tutor = getTutor(Number(profile.id));
-      if (!tutor) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
-      }
-    } else {
-      const room = getStudyRoom(Number(profile.id));
-      if (!room) {
-        return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
-      }
-    }
-    return { canBuy: true, missing: [], registerCheckHref: '', tierPhase: '' };
-  }
-
-  const tier = productCode === 'prime' || productCode === 'pick' ? productCode : '';
-
-  if (profile.providerType === 'study_room') {
-    const room = getStudyRoom(Number(profile.id));
-    if (!room) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
-    }
-    if (room.profile_status === 'hidden') {
-      missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
-      canBuy = false;
-    }
-    if (tier) {
-      const gate = tierPurchaseGate('study_room', room.id, tier);
-      tierPhase = gate.phase;
-      if (gate.blocked) {
-        gate.lines.forEach((line) => missing.push(line));
-        if (gate.registerCheckHref) registerCheckHref = gate.registerCheckHref;
-        canBuy = false;
-      }
-      const apply = getApplyTargetReadiness(profile, 'study_room');
-      if (!apply.regionReady) {
-        missing.push('대표 홍보지역(행정동·단지 ID)이 필요합니다 · 기본정보에서 지역을 다시 저장하세요');
-        canBuy = false;
-      }
-    }
-  } else {
-    const tutor = getTutor(Number(profile.id));
-    if (!tutor) {
-      return { canBuy: false, missing: ['프로필을 찾을 수 없습니다'], registerCheckHref: '', tierPhase: '' };
-    }
-    if (tutor.profile_status === 'hidden') {
-      missing.push('숨김 상태입니다. 구매는 홈·찾기에 다시 보인 뒤에 가능합니다.');
-      canBuy = false;
-    }
-    if (tier) {
-      const gate = tierPurchaseGate('tutor', tutor.id, tier);
-      tierPhase = gate.phase;
-      if (gate.blocked) {
-        gate.lines.forEach((line) => missing.push(line));
-        if (gate.registerCheckHref) registerCheckHref = gate.registerCheckHref;
-        canBuy = false;
-      }
-    }
-  }
-
-  return { canBuy, missing: [...new Set(missing)], registerCheckHref, tierPhase };
-}
-
-/**
- * Position(Pick·Prime) 단일 구매 준비 게이트 (319).
- * 카드 색·클릭·요약·배지·CTA가 이 함수 하나만 참조한다.
- * @param {import('./profiles.js').ProviderProfile | null} profile
- * @param {string} productCode 'pick' | 'prime'
- * @param {string} role
- * @returns {{ ready: boolean, reason: string, label: string, phase: string, registerCheckHref: string }}
- */
-function isProductReady(profile, productCode, role) {
-  if (!profile) {
-    return { ready: false, reason: 'no-profile', label: '적용 프로필을 먼저 선택하세요', phase: '', registerCheckHref: '' };
-  }
-  const elig = getEligibility(profile, productCode);
-
-  if (elig.tierPhase === 'loading') {
-    const tierLoadingMsg = '구매 조건을 확인하고 있어요';
-    const nonTierMissing = elig.missing.filter((m) => m !== tierLoadingMsg);
-    if (nonTierMissing.length > 0) {
-      return { ready: false, reason: 'missing', label: nonTierMissing.join(' · '), phase: 'loading', registerCheckHref: elig.registerCheckHref || '' };
-    }
-    return { ready: false, reason: 'checking', label: '확인 중', phase: 'loading', registerCheckHref: '' };
-  }
-
-  if (!elig.canBuy) {
-    let reason = 'missing';
-    if (elig.tierPhase === 'error') reason = 'tier-error';
-    else if (elig.missing.some((m) => m.includes('지역') || m.includes('행정동'))) reason = 'region';
-    return { ready: false, reason, label: elig.missing.join(' · ') || '필수 입력을 완료해 주세요', phase: elig.tierPhase || '', registerCheckHref: elig.registerCheckHref || '' };
-  }
-
-  return { ready: true, reason: 'ok', label: '', phase: elig.tierPhase || 'ready', registerCheckHref: '' };
-}
 
 /**
  * @param {object} product
@@ -1059,7 +458,7 @@ function renderTestModeToggle() {
   return `
     <label class="plans-test-mode">
       <input type="checkbox" data-plans-test-mode ${on ? 'checked' : ''} />
-      <span>결제 테스트 모드 (금액은 카탈로그 기준)</span>
+      <span>결제 테스트 모드</span>
     </label>`;
 }
 
@@ -1150,7 +549,7 @@ export function renderPlansPositions() {
           selectedRegionScope?.label ||
           (role === 'tutor' ? (applyReady ? '시 미선택' : '과외지역·주력과목 필요') : applyReady ? '—' : '미선택'),
         periodLabel,
-        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터 (서버 확정)',
+        periodRangeText: periodPreview ? `${periodPreview.startedOn} ~ ${periodPreview.endsOn}` : '결제 완료 시점부터',
         listPriceText:
           selectedOption && Number(selectedOption.discountKrw) > 0 && Number(selectedOption.listPriceKrw) > 0
             ? formatKrw(selectedOption.listPriceKrw)
@@ -1257,7 +656,7 @@ export function renderPlansPositions() {
               renderOffer(p, p.tagline || p.name || productLabel(p.productCode), (primeProduct ? 1 : 0) + (pickProduct ? 1 : 0) + i),
             )
             .join('')}`
-              : `<div class="plans-sf-empty" role="status">표시할 노출상품이 없습니다. 카탈로그를 다시 불러와 주세요.</div>`
+              : `<div class="plans-sf-empty" role="status">상품 정보를 다시 불러와 주세요.</div>`
           }
 
           ${renderBadgeAddonSection(role, ops, {
@@ -1277,11 +676,11 @@ export function renderPlansPositions() {
           ${renderOrderSummaryBlock({
             family: 'position',
             rows: orderRows,
-            totalLabel: '결제 예정(표시가·서버 재검증)',
+            totalLabel: '예상 결제 금액',
             totalValue: displayTotal != null ? formatKrw(displayTotal) : '—',
             ctaDisabled: orderCtaDisabled,
             ctaLabel: roomPrimeSoldOut ? '예약대기만 가능' : '구매하기',
-            note: '시작일·종료일은 결제 완료 시 서버 확정 · 자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+            note: '시작일·종료일은 결제 완료 시 확정 · 자동연장 없음 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
           })}
         </aside>
       </div>
@@ -1350,6 +749,7 @@ export function renderPlansAccess() {
           { label: '사용기한', value: '구매일부터 120일' },
           { label: '소멸', value: '사용기한 경과 시 잔여 소멸(환불액 0) · 연장 없음' },
         ]),
+    { label: '환불', value: MEMO_TICKET_REFUND_SHORT },
     { label: '적용 프로필', value: profile ? profile.label : '미선택' },
   ];
 
@@ -1559,568 +959,6 @@ export function renderPlansMy() {
     </section>`;
 }
 
-/** 326→329 v3: 결제내역 탭(쪽지권/노출) 상태 */
-let historyTab = 'count';
-
-/** 329 v3: 현재 열린 셀 { orderRef, cell } | null */
-let openCell = null;
-
-/** @type {{ orderRef: string, data: object }|null} 환불 자격 캐시 */
-let refundEligCache = null;
-
-/** P18-05 결제내역 (329 v3: 행 기반 목록, 셀 분할 · 330 빈 상태) */
-export function renderPlansHistory() {
-  const role = getPlansEffectiveRole();
-  if (role === 'parent' || role === 'guest') {
-    return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">구매이력</p>
-        ${renderProfileBanner(null, role)}
-      </section>`;
-  }
-
-  const rows = historyCache.loaded ? historyCache.rows : getHistoryRows();
-  /* 330: 정상 fromApi 는 sourceNote 비노출. 「서버」「기기」「임시」 사용자 노출 금지 */
-  let sourceNoteHtml = '';
-  if (!historyCache.loaded) {
-    sourceNoteHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loading)}</p>`;
-  } else if (!historyCache.fromApi) {
-    sourceNoteHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loadPartialFail)}</p>`;
-  }
-
-  const countRows = rows.filter((r) => isCountProduct(r));
-  const positionRows = rows.filter((r) => !isCountProduct(r));
-  const activeRows = historyTab === 'count' ? countRows : positionRows;
-
-  let listHtml;
-  if (!historyCache.loaded) {
-    listHtml = `<p class="mypage-muted">${esc(HISTORY_EMPTY_COPY.loading)}</p>`;
-  } else if (activeRows.length) {
-    listHtml = activeRows.map((r) => renderHistV3Row(r)).join('');
-  } else {
-    listHtml = renderHistEmpty(historyTab);
-  }
-
-  return `
-    <section class="mypage-panel">
-      <p class="mypage-lead">구매이력</p>
-      ${sourceNoteHtml}
-      <div class="plans-hist-tabs" role="tablist">
-        <button type="button" role="tab" class="plans-tab${historyTab === 'count' ? ' is-active' : ''}" data-history-tab="count" aria-selected="${historyTab === 'count'}">쪽지권</button>
-        <button type="button" role="tab" class="plans-tab${historyTab === 'position' ? ' is-active' : ''}" data-history-tab="position" aria-selected="${historyTab === 'position'}">노출상품</button>
-      </div>
-      <div class="plans-history-layout" role="tabpanel">
-        ${listHtml}
-      </div>
-    </section>`;
-}
-
-/** 330: 탭별 빈 상태 — 예시 1행 + 안내 */
-function renderHistEmpty(tab) {
-  return `${renderHistExampleRow(tab)}${renderHistEmptyGuide(tab)}`;
-}
-
-/** 330: 흐린 예시 행 (클릭·환불 이벤트 속성 없음) */
-function renderHistExampleRow(tab) {
-  const pack = tab === 'position' ? HISTORY_EMPTY_COPY.position : HISTORY_EMPTY_COPY.count;
-  const disabledActs = ['내역', '환불', '진행상황', '종료', '소멸']
-    .map((label) => `<button type="button" disabled tabindex="-1">${esc(label)}</button>`)
-    .join('');
-  return `
-    <div class="plans-hist-example-wrap">
-      <span class="plans-hist-row__example-badge">${esc(HISTORY_EMPTY_COPY.exampleBadge)}</span>
-      <div class="plans-hist-row plans-hist-row--example" aria-label="${esc(HISTORY_EMPTY_COPY.exampleAria)}">
-        <div class="plans-hist-row__bar">
-          <div class="plans-hist-row__info">
-            <span class="plans-hist-row__name">${esc(pack.productName)}</span><span class="plans-hist-row__meta plans-hist-row__meta--placeholder">${esc(pack.amount)} · ${esc(pack.date)}</span>
-          </div>
-          <div class="plans-hist-row__acts">
-            ${disabledActs}
-          </div>
-        </div>
-      </div>
-    </div>`;
-}
-
-/** 330: 빈 상태 안내 + CTA */
-function renderHistEmptyGuide(tab) {
-  const pack = tab === 'position' ? HISTORY_EMPTY_COPY.position : HISTORY_EMPTY_COPY.count;
-  return `
-    <div class="plans-hist-empty">
-      <p class="plans-hist-empty__title">${esc(HISTORY_EMPTY_COPY.title)}</p>
-      <p class="plans-hist-empty__body">${esc(pack.body)}</p>
-      <a href="${esc(pack.href)}" class="btn btn--primary" data-plans-nav="${esc(pack.nav)}">${esc(pack.cta)}</a>
-    </div>`;
-}
-
-/** @param {object} r */
-function isCountProduct(r) {
-  const kind = r.productKind || r.product_kind || '';
-  const name = (typeof r.productName === 'string' ? r.productName : '') || '';
-  return kind === 'count' || /쪽지/.test(name);
-}
-
-/* ── 329 v3 행 렌더 ── */
-
-/**
- * 행 상태 결정: 어떤 셀이 활성(클릭 가능)인지
- * @param {object} r order row
- * @returns {{ detail:boolean, refund:boolean, progress:boolean, ended:boolean, expired:boolean, statusBadge:string, statusClass:string }}
- */
-function resolveV3Cells(r) {
-  const status = r.status || '';
-  const kind = r.productKind || r.product_kind || '';
-  const isFromApi = r.source === 'api';
-  const remaining = typeof r.remaining === 'number' ? r.remaining : null;
-  const refundStatus = r.refundStatus || r.refund_status || '';
-  const hasRefundRequest = status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved';
-  /* PG HOLD(301): refunded 상태는 아직 UI에 노출하지 않는다 */
-  const isRefundRejected = refundStatus === 'rejected';
-  const isWithdrawn = refundStatus === 'cancelled';
-  const isPaid = status === 'paid';
-  const isExpired = status === 'expired' || !!r.expired;
-  const isEnded = remaining === 0 && !isExpired && !hasRefundRequest;
-
-  const canRefund = isFromApi && kind !== 'badge_addon'
-    && (isPaid || status === 'refund_requested')
-    && !isWithdrawn;
-
-  let statusBadge = '';
-  let statusClass = '';
-  if (hasRefundRequest) {
-    statusBadge = '환불 검토 중';
-    statusClass = 'plans-hist-row__st--ing';
-  } else if (isRefundRejected) {
-    statusBadge = '환불 반려';
-    statusClass = 'plans-hist-row__st--no';
-  }
-
-  return {
-    detail: isFromApi,
-    refund: canRefund && !hasRefundRequest,
-    progress: hasRefundRequest || isRefundRejected,
-    ended: isEnded,
-    expired: isExpired,
-    statusBadge,
-    statusClass,
-  };
-}
-
-/** v3 행 하나 렌더 */
-function renderHistV3Row(r) {
-  const ref = r.orderRef || '';
-  const cells = resolveV3Cells(r);
-  const isOpen = openCell?.orderRef === ref;
-  const curCell = isOpen ? openCell.cell : '';
-  const isRefundActive = cells.refund || cells.progress;
-
-  const nameText = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
-  const amountText = formatKrw(r.amountKrw);
-  const dateText = esc(String(r.paidAt || '').slice(0, 10));
-  const remainingText = typeof r.remaining === 'number' ? ` · 남은 ${r.remaining}` : '';
-  const metaText = `${amountText} · ${dateText}${remainingText}`;
-
-  const badgeHtml = cells.statusBadge
-    ? `<span class="plans-hist-row__st ${cells.statusClass}">${esc(cells.statusBadge)}</span>`
-    : '';
-
-  const cellBtn = (name, enabled, isPrimary) => {
-    if (!enabled) return `<button type="button" disabled>${esc(name)}</button>`;
-    const cls = [
-      curCell === name ? 'is-cell-active' : '',
-      isPrimary ? 'is-primary' : '',
-    ].filter(Boolean).join(' ');
-    return `<button type="button" class="${cls}" data-v3-cell="${esc(name)}" data-v3-ref="${esc(ref)}">${esc(name)}</button>`;
-  };
-
-  const panelHtml = isOpen ? renderV3Panel(r, curCell) : '';
-
-  return `
-    <div class="plans-hist-row${isOpen ? ' is-open' : ''}${isRefundActive ? ' is-refund-active' : ''}" data-v3-row="${esc(ref)}">
-      <div class="plans-hist-row__bar">
-        <div class="plans-hist-row__info">
-          <span class="plans-hist-row__name">${nameText}</span>${badgeHtml}<span class="plans-hist-row__meta">${metaText}</span>
-        </div>
-        <div class="plans-hist-row__acts">
-          ${cellBtn('내역', cells.detail, false)}
-          ${cellBtn('환불', cells.refund, true)}
-          ${cellBtn('진행상황', cells.progress, false)}
-          ${cellBtn('종료', cells.ended, false)}
-          ${cellBtn('소멸', cells.expired, false)}
-        </div>
-      </div>
-      <div class="plans-hist-row__panel">${panelHtml}</div>
-    </div>`;
-}
-
-/**
- * v3 패널 내용 (셀별)
- * @param {object} r
- * @param {string} cell  '내역'|'환불'|'진행상황'|'종료'|'소멸'
- */
-function renderV3Panel(r, cell) {
-  const ref = r.orderRef || '';
-
-  if (cell === '내역') return renderV3DetailPanel(r);
-  if (cell === '환불') return renderV3RefundPanel(r);
-  if (cell === '진행상황') return renderV3ProgressPanel(r);
-  if (cell === '종료') return renderV3EndedPanel(r);
-  if (cell === '소멸') return renderV3ExpiredPanel(r);
-  return '';
-}
-
-function renderV3DetailPanel(r) {
-  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
-  const amount = formatKrw(r.amountKrw);
-  const dateText = esc(String(r.paidAt || '').slice(0, 10));
-  const remaining = typeof r.remaining === 'number' ? r.remaining : '—';
-  const used = typeof r.usedCount === 'number' ? r.usedCount : (typeof r.used_count === 'number' ? r.used_count : '—');
-
-  return `<div class="plans-hist-row__panel-inner">
-    <b>구성</b>
-    <table>
-      <tr><td>${name}</td><td>${amount}</td></tr>
-      <tr><td>결제일</td><td>${dateText}</td></tr>
-      ${typeof r.remaining === 'number' ? `<tr><td>사용</td><td>${used}회 / 남은 ${remaining}회</td></tr>` : ''}
-    </table>
-  </div>`;
-}
-
-function renderV3RefundPanel(r) {
-  const elig = refundEligCache?.orderRef === r.orderRef ? refundEligCache.data : null;
-  const kind = r.productKind || r.product_kind || '';
-
-  if (!elig) {
-    return `<div class="plans-hist-row__panel-inner"><p>환불 가능 여부를 확인하는 중…</p></div>`;
-  }
-
-  if (!elig.eligible) {
-    return `<div class="plans-hist-row__panel-inner"><p>${esc(elig.message || REFUND_COPY.notEligible)}</p></div>`;
-  }
-
-  const breakdownHtml = Array.isArray(elig.breakdown) && elig.breakdown.length
-    ? `<ul class="refund-breakdown">${elig.breakdown.map((b) => `<li>${esc(b.label)}: ${formatKrw(b.refund_won)}${b.amount_won ? ` (결제 ${formatKrw(b.amount_won)})` : ''}</li>`).join('')}</ul>`
-    : '';
-  const usedInfo = typeof elig.used_count === 'number' && elig.used_count > 0
-    ? ` (사용 ${elig.used_count}회)`
-    : '';
-
-  return `<div class="plans-hist-row__panel-inner">
-    <b>환불 가능</b>
-    <div class="refund-formula">환불 예정액: <strong>${formatKrw(elig.refund_won)}</strong>${usedInfo}</div>
-    ${breakdownHtml}
-    <label class="refund-action-box__label">사유 선택
-      <select data-refund-reason-select>
-        ${REFUND_REASON_CHOICES.map((c) => `<option value="${esc(c.value)}">${esc(c.label)}</option>`).join('')}
-      </select>
-    </label>
-    <label class="refund-action-box__label">상세 (선택)
-      <input type="text" data-refund-detail maxlength="200" placeholder="추가 사유가 있으면 입력" />
-    </label>
-    <button type="button" class="btn btn--primary btn--sm" data-refund-submit="${esc(r.orderRef)}">환불 신청</button>
-  </div>`;
-}
-
-function renderV3ProgressPanel(r) {
-  const refundStatus = r.refundStatus || r.refund_status || '';
-  const kind = r.productKind || r.product_kind || '';
-  const status = r.status || '';
-
-  if (status === 'refund_requested' || refundStatus === 'requested' || refundStatus === 'approved') {
-    const frozenMsg = kind === 'position' ? REFUND_COPY.positionFrozenNote : REFUND_COPY.frozenNote;
-    const withdrawNote = kind === 'position' ? REFUND_COPY.positionWithdrawNote : '';
-    const stepsHtml = renderProgressSteps(refundStatus || 'requested');
-    return `<div class="plans-hist-row__panel-inner">
-      ${stepsHtml}
-      <p>${esc(frozenMsg)}</p>
-      ${withdrawNote ? `<p class="mypage-muted">${esc(withdrawNote)}</p>` : ''}
-      <label class="refund-action-box__label">${esc(REFUND_COPY.withdrawConfirmLabel)}
-        <input type="text" data-refund-withdraw-confirm maxlength="10" placeholder="${esc(REFUND_COPY.withdrawConfirmPlaceholder)}" autocomplete="off" />
-      </label>
-      <button type="button" class="btn btn--secondary btn--sm" data-refund-withdraw="${esc(r.orderRef)}">환불 철회</button>
-    </div>`;
-  }
-
-  /* PG HOLD(301): refunded 패널은 PG 실환불 해제 전까지 표시하지 않는다 */
-
-  if (refundStatus === 'rejected') {
-    return `<div class="plans-hist-row__panel-inner">
-      ${renderProgressSteps('rejected')}
-      <p class="mypage-muted">${esc(r.refundRejectReason || '환불이 반려되었습니다.')}</p>
-    </div>`;
-  }
-
-  return `<div class="plans-hist-row__panel-inner"><p class="mypage-muted">진행 정보가 없습니다.</p></div>`;
-}
-
-function renderProgressSteps(refundStatus) {
-  /* PG HOLD(301): 승인 단계까지만 표시 (실환불 UI는 이후 tip) */
-  const steps = [
-    { label: '신청', key: 'requested' },
-    { label: '검토 중', key: 'reviewing' },
-    { label: '승인', key: 'approved' },
-  ];
-  const isRejected = refundStatus === 'rejected';
-  const doneKeys = isRejected
-    ? ['requested', 'reviewing']
-    : refundStatus === 'approved'
-      ? ['requested', 'reviewing', 'approved']
-      : ['requested'];
-  const curKey = isRejected ? null : (refundStatus === 'requested' ? 'reviewing' : null);
-
-  let html = '<div class="plans-hist-steps">';
-  for (const s of steps) {
-    const isDone = doneKeys.includes(s.key);
-    const isCur = s.key === curKey;
-    const cls = isDone ? 'is-done' : isCur ? 'is-current' : '';
-    html += `<div class="${cls}">${esc(s.label)}</div>`;
-  }
-  if (isRejected) {
-    html += `<div class="is-rejected">반려</div>`;
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderV3EndedPanel(r) {
-  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
-  const amount = formatKrw(r.amountKrw);
-  return `<div class="plans-hist-row__panel-inner">
-    <b>구성</b>
-    <table><tr><td>${name}</td><td>${amount}</td></tr></table>
-    <div class="refund-formula">남은 0회 → 종료</div>
-  </div>`;
-}
-
-function renderV3ExpiredPanel(r) {
-  const name = esc(typeof r.productName === 'string' ? r.productName : String(r.productName || ''));
-  const dateText = esc(r.expiredAt || r.expired_at || '');
-  const remaining = typeof r.remaining === 'number' ? r.remaining : 0;
-  return `<div class="plans-hist-row__panel-inner">
-    <table><tr><td>만료</td><td>${dateText ? `${dateText} · 유효기간 경과` : '유효기간 경과'}</td></tr></table>
-    <div class="refund-formula">남은 ${remaining}회 → 소멸 (환불 대상 아님)</div>
-  </div>`;
-}
-
-/** P18-06 checkout */
-export function renderPlansCheckout() {
-  const draft = getCheckoutDraft();
-  const role = getPlansEffectiveRole();
-  if (!draft) {
-    return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
-        <div class="mypage-info-box is-warn">
-          <p>결제할 상품이 없습니다. 노출상품에서 다시 선택해 주세요.</p>
-          <a href="#/plans/positions" class="btn btn--primary" data-plans-nav="/plans/positions">노출상품으로</a>
-        </div>
-      </section>`;
-  }
-
-  if (role !== 'study_room' && role !== 'tutor') {
-    return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">결제</p>
-        ${renderProfileBanner(null, role)}
-      </section>`;
-  }
-
-  const amt = resolveCheckoutAmount(draft.priceKrw);
-  const methods = getPlanRuntimeSettings().payment_methods;
-  const isPosition = draft.productCode === 'prime' || draft.productCode === 'pick';
-  const badgeCodes = isPosition ? sanitizeBadgeCodes(draft.providerType, draft.badgeCodes || []) : [];
-  const badgeLines = badgeCodes.map((code) => {
-    const price = badgePriceKrw(draft.providerType, undefined, code, draft.optionLabel || draft.apiVariant);
-    return {
-      label: badgeDisplayName(code),
-      value: price != null ? formatKrw(price) : '—',
-      priceKrw: price || 0,
-    };
-  });
-  const badgeSum = badgeLines.reduce((n, b) => n + (b.priceKrw || 0), 0);
-  const positionDisplay =
-    draft.serverPositionSaleKrw != null ? Number(draft.serverPositionSaleKrw) : amt.displayKrw;
-  const badgeDisplay =
-    draft.serverBadgeSaleKrw != null ? Number(draft.serverBadgeSaleKrw) : badgeSum;
-  const previewTotal =
-    draft.serverAmountWon != null ? Number(draft.serverAmountWon) : positionDisplay + badgeDisplay;
-  const periodRangeText =
-    draft.startedOn && draft.endsOn
-      ? `${draft.startedOn} ~ ${draft.endsOn}`
-      : '결제 완료 시점부터 (서버 확정)';
-  const checkoutRows = isPosition
-    ? buildPositionOrderRows({
-        profileLabel: draft.providerLabel,
-        roleText: roleLabel(draft.providerType),
-        productName: draft.productName,
-        regionValue: draft.regionLabel || (draft.providerType === 'tutor' ? '시·주력과목' : '—'),
-        periodLabel: draft.optionLabel || draft.apiVariant,
-        periodRangeText,
-        listPriceText:
-          Number(draft.discountKrw) > 0 && Number(draft.listPriceKrw) > 0 ? formatKrw(draft.listPriceKrw) : '',
-        positionPriceText: formatKrw(positionDisplay),
-        discountText: draft.discountLabel || '',
-        memoBundleText: Number(draft.memoBundle) > 0 ? `쪽지권 ${draft.memoBundle}회 포함` : '',
-        badgeLines,
-        badgeSumText: formatKrw(badgeDisplay),
-      })
-    : [
-        { label: '상품', value: `${draft.productName} · ${draft.optionLabel}` },
-        { label: '표시가', value: formatKrw(amt.displayKrw) },
-        { label: '자동연장', value: '없음' },
-      ];
-  const tierGate = isPosition
-    ? tierPurchaseGate(draft.providerType, draft.providerId, draft.productCode)
-    : null;
-  const tierBlocked = Boolean(tierGate?.blocked);
-  const cancelHref = isPosition
-    ? buildPlansHref(
-        '/plans/positions',
-        applyBadgeQuery(
-          {
-            product: draft.productCode,
-            option: draft.optionId,
-            badges: (draft.badgeCodes || []).join(','),
-            city_id: draft.cityId ? String(draft.cityId) : '',
-          },
-          draft.providerType,
-        ),
-      )
-    : buildPlansHref('/plans/access', { option: draft.optionId });
-
-  return `
-    <section class="mypage-panel plans-checkout">
-      <p class="mypage-lead">결제</p>
-      ${renderOrderSummaryBlock({
-        family: isPosition ? 'position' : 'access',
-        rows: checkoutRows,
-        totalLabel: '결제 예정(표시가·서버 재검증)',
-        totalValue: formatKrw(previewTotal),
-        showCta: false,
-        note: '자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본) · 결제 직전 서버가 재검증합니다.',
-      })}
-      <ol class="plans-checkout-steps">
-        <li class="is-done"><strong>1. 적용 프로필</strong>
-          <p>${esc(draft.providerLabel)} · ${esc(roleLabel(draft.providerType))}</p>
-        </li>
-        <li class="is-done"><strong>2. 상품 옵션</strong>
-          <p>${esc(draft.productName)} · ${esc(draft.optionLabel)}</p>
-        </li>
-        ${
-          draft.apiVariant === '1회'
-            ? `<li class="is-done"><strong>즉시 발송</strong>
-          <p class="mypage-muted">1회 즉시권은 수신 학생과 첫 쪽지 본문이 필요합니다. 대상이 없으면 구매할 수 없습니다.</p>
-          <label class="plans-card__pick"><span class="plans-card__pick-label">학생 ID</span>
-            <input type="number" data-plans-immediate-student min="1" value="${esc(String(draft.studentId || ''))}" class="student-form__select" /></label>
-          <label class="plans-card__pick"><span class="plans-card__pick-label">첫 쪽지</span>
-            <textarea data-plans-immediate-body class="student-form__select" rows="3">${esc(draft.body || '')}</textarea></label>
-        </li>`
-            : ''
-        }
-        <li class="is-done"><strong>3. 금액 확인</strong>
-          <p>표시가 ${formatKrw(previewTotal)}
-            ${isPosition && badgeDisplay ? ` · 노출 ${formatKrw(positionDisplay)} · 배지 소계 ${formatKrw(badgeDisplay)}` : ''}
-            ${amt.testMode ? ` · <em>테스트 모드</em>` : ''}</p>
-        </li>
-        <li>
-          <strong>4. 약관 동의</strong>
-          <label class="plans-check">
-            <input type="checkbox" data-plans-agree />
-            <span>유료상품 이용약관 및 환불 안내를 확인했습니다.</span>
-          </label>
-        </li>
-        <li>
-          <strong>5. 결제수단</strong>
-          <div class="plans-pay-methods">
-            ${(methods || [])
-              .map(
-                (m, i) => `
-              <label class="plans-check">
-                <input type="radio" name="plans_pay_method" value="${esc(m)}" ${i === 0 ? 'checked' : ''} />
-                <span>${esc(paymentMethodLabel(m))}</span>
-              </label>`,
-              )
-              .join('')}
-          </div>
-        </li>
-        <li>
-          <strong>6. 결제 진행</strong>
-          <div class="mypage-actions-row">
-            <button type="button" class="btn btn--primary" data-plans-pay ${tierBlocked ? 'disabled' : ''}>결제하기</button>
-            <a href="${esc(cancelHref)}" class="btn btn--secondary" data-plans-nav="${isPosition ? '/plans/positions' : '/plans/access'}">취소</a>
-          </div>
-          <p class="plans-checkout-error mypage-muted" data-plans-checkout-error ${tierBlocked ? '' : 'hidden'}>${tierBlocked ? esc(tierGate.reason) : ''}</p>
-          ${tierGate?.phase === 'error' ? `<button type="button" class="btn btn--secondary" data-plans-tier-retry>다시 시도</button>` : ''}
-        </li>
-      </ol>
-    </section>`;
-}
-
-/** P18-07 result */
-export function renderPlansResult() {
-  const result = getCheckoutResult();
-  if (!result) {
-    return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">결제 결과</p>
-        <div class="mypage-info-box">
-          <p>표시할 결과가 없습니다.</p>
-          <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품홈</a>
-        </div>
-      </section>`;
-  }
-
-  if (result.status === 'unavailable') {
-    return `
-      <section class="mypage-panel">
-        <p class="mypage-lead">결제 안내</p>
-        <div class="mypage-info-box">
-          <p>결제를 진행할 수 없습니다. 잠시 후 다시 시도해 주세요.</p>
-        </div>
-        <div class="mypage-actions-row">
-          <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">유료상품으로 돌아가기</a>
-        </div>
-      </section>`;
-  }
-
-  const ok = result.status === 'success';
-  const backOp =
-    result.providerType === 'tutor'
-      ? `#/mypage/registrations/tutors/${result.providerId || ''}/exposure`
-      : `#/mypage/registrations/study-rooms/${result.providerId || ''}/inquiries`;
-  const resultBadges = sanitizeBadgeCodes(result.providerType || '', result.badgeCodes || []);
-  const resultBadgeLines = resultBadges.length
-    ? resultBadges
-        .map((code) => `<p>홍보 배지 · ${esc(badgeDisplayName(code))}</p>`)
-        .join('')
-    : '<p>홍보 배지 없음</p>';
-
-  return `
-    <section class="mypage-panel">
-      <p class="mypage-lead">${ok ? '결제 완료' : '결제 미완료'}</p>
-      <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
-        <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
-        ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
-        ${result.productName ? `<p>${esc(result.productName)}${result.optionLabel ? ` · ${esc(result.optionLabel)}` : ''}</p>` : ''}
-        ${result.providerLabel ? `<p>적용 프로필: ${esc(result.providerLabel)}</p>` : ''}
-        ${result.regionLabel ? `<p>적용 지역: ${esc(result.regionLabel)}</p>` : ''}
-        ${result.startedOn || result.endsOn ? `<p>이용 기간 ${esc(result.startedOn || '—')} ~ ${esc(result.endsOn || '—')}</p>` : ''}
-        ${resultBadgeLines}
-        ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
-        ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>자동연장 없음 · 환불은 시작 전 전액, 시작 후 일할 계산(서버 정본, 배지 포함·같이 회수)</p>
-        ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
-        ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
-      </div>
-      <div class="mypage-actions-row">
-        <a href="#/mypage/plans" class="btn btn--primary" data-nav="/mypage/plans">구매이력 보기</a>
-        ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">운영 화면으로</a>` : ''}
-        ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
-        <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품센터</a>
-      </div>
-    </section>`;
-}
-
 /** @param {string} path */
 export function renderPlansScreen(path) {
   ensureStudyRoomStore();
@@ -2139,10 +977,10 @@ export function renderPlansScreen(path) {
 export function bindPlansScreenEvents(root, rerender) {
   const path = (window.location.hash.slice(1) || '').split('?')[0];
   if (path !== '/plans/access' && path !== '/mypage/plans/my' && path !== '/plans/my' && path !== '/plans/positions') {
-    lastPlansHydratedHash = '';
+    clearLastPlansHydratedHash();
   }
   if (path !== '/plans/positions' && path !== '/plans/checkout') {
-    tierHydratedHash = '';
+    clearTierHydratedHash();
   }
   if (path === '/plans/positions') {
     const role = getPlansEffectiveRole();
@@ -2255,113 +1093,7 @@ export function bindPlansScreenEvents(root, rerender) {
         });
     }
   }
-  /* 329 v3: 구매이력 히스토리 로딩 (#/mypage/plans 본화면에서도) */
-  if ((path === '/mypage/plans' || path === '/plans/history' || path.endsWith('/history')) && !historyCache.loaded) {
-    loadHistoryRows().then((result) => {
-      historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
-      rerender();
-    });
-  }
-
-  /* 329 v3: 탭 전환 (쪽지권/노출상품) */
-  root.querySelectorAll('[data-history-tab]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      historyTab = btn.getAttribute('data-history-tab') || 'count';
-      openCell = null;
-      refundEligCache = null;
-      rerender();
-    });
-  });
-
-  /* 329 v3: 셀 토글 */
-  root.querySelectorAll('[data-v3-cell]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const ref = btn.getAttribute('data-v3-ref') || '';
-      const cell = btn.getAttribute('data-v3-cell') || '';
-      const same = openCell?.orderRef === ref && openCell?.cell === cell;
-      if (same) {
-        openCell = null;
-        refundEligCache = null;
-        rerender();
-        return;
-      }
-      openCell = { orderRef: ref, cell };
-      if (cell !== '환불') {
-        refundEligCache = null;
-      }
-      rerender();
-      if (cell === '환불' && ref) {
-        fetchRefundEligibility(ref)
-          .then((data) => {
-            refundEligCache = { orderRef: ref, data };
-            if (openCell?.orderRef === ref && openCell?.cell === '환불') rerender();
-          })
-          .catch(() => {
-            refundEligCache = { orderRef: ref, data: { eligible: false, message: '확인에 실패했습니다.' } };
-            if (openCell?.orderRef === ref && openCell?.cell === '환불') rerender();
-          });
-      }
-    });
-  });
-
-  /* 329 v3: 환불 신청 (326 로직 유지) */
-  root.querySelectorAll('[data-refund-submit]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const ref = btn.getAttribute('data-refund-submit');
-      if (!ref) return;
-      const panel = btn.closest('.plans-hist-row__panel-inner');
-      const reasonChoice = panel?.querySelector('[data-refund-reason-select]')?.value || '';
-      const detail = panel?.querySelector('[data-refund-detail]')?.value || '';
-      const kind = btn.closest('.plans-hist-row')?.getAttribute('data-v3-row') || '';
-      if (!confirm(REFUND_COPY.confirmSubmit)) return;
-      try {
-        await submitRefund(ref, { reason_choice: reasonChoice, detail });
-        void s114Alert(REFUND_COPY.submitSuccess);
-        historyCache.loaded = false;
-        openCell = null;
-        refundEligCache = null;
-        invalidateHistoryCache();
-        rerender();
-        loadHistoryRows().then((result) => {
-          historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
-          rerender();
-        });
-      } catch (err) {
-        void s114Alert(err?.message || '환불 신청에 실패했습니다.');
-      }
-    });
-  });
-
-  /* 329 v3: 환불 철회 (326b 본인확인 유지) */
-  root.querySelectorAll('[data-refund-withdraw]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const ref = btn.getAttribute('data-refund-withdraw');
-      if (!ref) return;
-      const panel = btn.closest('.plans-hist-row__panel-inner');
-      const confirmInput = panel?.querySelector('[data-refund-withdraw-confirm]');
-      const confirmText = confirmInput?.value?.trim() || '';
-      if (confirmText !== REFUND_COPY.withdrawConfirmText) {
-        void s114Alert(`「${REFUND_COPY.withdrawConfirmText}」을(를) 정확히 입력해 주세요.`);
-        return;
-      }
-      if (!confirm(REFUND_COPY.confirmWithdraw)) return;
-      try {
-        await withdrawRefund(ref, confirmText);
-        void s114Alert(REFUND_COPY.withdrawSuccess);
-        historyCache.loaded = false;
-        openCell = null;
-        refundEligCache = null;
-        invalidateHistoryCache();
-        rerender();
-        loadHistoryRows().then((result) => {
-          historyCache = { rows: result.rows, fromApi: result.fromApi, loaded: true };
-          rerender();
-        });
-      } catch (err) {
-        void s114Alert(err?.message || '환불 철회에 실패했습니다.');
-      }
-    });
-  });
+  bindPlansHistoryEvents(root, rerender, path);
 
   root.querySelectorAll('[data-plans-receipt-open]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -2652,7 +1384,7 @@ export function bindPlansScreenEvents(root, rerender) {
       payBtn.setAttribute('disabled', 'true');
       try {
         if (!getProductConfig(draft.productCode, draft.providerType)) {
-          throw new Error('상품 카탈로그가 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.');
+          throw new Error('상품 정보가 아직 준비되지 않았어요. 잠시 후 다시 시도해 주세요.');
         }
         let created = null;
         if (draft.orderRef) {
@@ -2666,6 +1398,12 @@ export function bindPlansScreenEvents(root, rerender) {
             ends_on: draft.endsOn,
             city_id: draft.cityId,
             memo_bundle: 0,
+            pg_provider: draft.pgProvider || '',
+            payment_id: draft.paymentId || '',
+            store_id: draft.storeId || '',
+            channel_key: draft.channelKey || '',
+            order_name: draft.orderName || '',
+            currency: draft.payCurrency || 'CURRENCY_KRW',
           };
         } else {
           created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
@@ -2687,17 +1425,70 @@ export function bindPlansScreenEvents(root, rerender) {
         }
         const serverAmount = Number(created.amount_won ?? created.sale_price_krw);
         if (!Number.isFinite(serverAmount) || serverAmount <= 0) {
-          throw new Error('서버 결제금액이 올바르지 않습니다.');
+          throw new Error('결제 금액을 확인하지 못했어요. 다시 시도해 주세요.');
         }
         // 클라이언트 draft 금액과 달라도 서버 판매가를 사용한다
         if (Number(draft.priceKrw) !== serverAmount) {
           console.warn('[plans/checkout] client price ignored', draft.priceKrw, '→', serverAmount);
         }
-        const completed = await completePaidCheckout(created.order_ref);
+        let completed;
+        if (String(created.pg_provider || '') === 'portone_test') {
+          const pay = await requestPortOneCardPayment({
+            storeId: String(created.store_id || ''),
+            channelKey: String(created.channel_key || ''),
+            paymentId: String(created.payment_id || ''),
+            orderName: String(created.order_name || `${draft.productName} ${draft.optionLabel}`),
+            totalAmount: serverAmount,
+            currency: String(created.currency || 'CURRENCY_KRW'),
+          });
+          if (!pay.ok) {
+            setCheckoutResult({
+              status: pay.kind === 'cancel' ? 'canceled' : 'failed',
+              message: pay.message,
+              orderRef: created.order_ref,
+              productName: draft.productName,
+              optionLabel: draft.optionLabel,
+              providerLabel: draft.providerLabel,
+              providerType: draft.providerType,
+              providerId: draft.providerId,
+              chargeKrw: serverAmount,
+            });
+            if (errEl) {
+              errEl.hidden = false;
+              errEl.textContent = pay.message;
+            }
+            window.location.hash = '#/plans/result';
+            return;
+          }
+          completed = await completePaidCheckout(created.order_ref, { paymentId: pay.paymentId });
+        } else {
+          completed = await completePaidCheckout(created.order_ref);
+        }
         invalidateProviderStatus();
         resetAccessStatusSync();
         await hydrateProviderStatusStrict().catch(() => hydrateProviderStatus());
         await hydrateProviderNotices();
+
+        if (completed && completed.auto_cancelled === true) {
+          markHistoryCacheStale();
+          setCheckoutResult({
+            status: 'cancelled',
+            auto_cancelled: true,
+            message: typeof completed.message === 'string' && completed.message
+              ? completed.message
+              : '선택한 상품을 지금 지급할 수 없어 결제를 자동으로 취소했어요. 카드사에 따라 환불까지 3~5영업일 걸릴 수 있어요.',
+            orderRef: completed.order_ref || created.order_ref,
+            productName: draft.productName,
+            optionLabel: draft.optionLabel,
+            providerLabel: draft.providerLabel,
+            providerType: draft.providerType,
+            providerId: draft.providerId,
+            chargeKrw: serverAmount,
+          });
+          clearCheckoutDraft();
+          window.location.hash = '#/plans/result';
+          return;
+        }
 
         appendHistoryRow({
           orderRef: completed.order_ref || created.order_ref,
@@ -2708,7 +1499,7 @@ export function bindPlansScreenEvents(root, rerender) {
           paidAt: new Date().toISOString(),
           status: 'paid',
         });
-        historyCache.loaded = false;
+        markHistoryCacheStale();
 
         setCheckoutResult({
           status: 'success',
@@ -2774,3 +1565,5 @@ export function bindPlansScreenEvents(root, rerender) {
     });
   }
 }
+
+

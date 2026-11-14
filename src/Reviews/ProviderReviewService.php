@@ -300,7 +300,7 @@ final class ProviderReviewService
      * @param array{user_id: int, role_type: string} $auth
      * @return array<string, mixed>
      */
-    public function inbox(array $auth, string $lane, int $page, int $limit): array
+    public function inbox(array $auth, string $lane, int $page, int $limit, string $origin = ''): array
     {
         $role = (string) ($auth['role_type'] ?? '');
         $userId = (int) $auth['user_id'];
@@ -314,7 +314,7 @@ final class ProviderReviewService
         }
 
         if ($lane === 'all' || $lane === '') {
-            return $this->inboxAll($auth, $page, $limit);
+            return $this->applyOriginFilter($this->inboxAll($auth, $page, $limit), $origin);
         }
 
         if ($lane === 'received') {
@@ -333,7 +333,7 @@ final class ProviderReviewService
             $type = $role === 'tutor' ? 'tutor' : 'study_room';
             $total = $this->repo->countReceivedByOwner($userId, $type);
             $items = array_map(
-                fn (array $row) => $this->mapReview($row, [
+                fn (array $row) => $this->stampMatchOrigin($this->mapReview($row, [
                     'is_owner' => true,
                     'include_author' => true,
                     'is_review_blocked' => $this->repo->hasReviewBlock(
@@ -341,11 +341,11 @@ final class ProviderReviewService
                         (int) $row['provider_id'],
                         (int) $row['author_user_id'],
                     ),
-                ]),
+                ]), $row),
                 $this->repo->listReceivedByOwner($userId, $type, $limit, $offset),
             );
 
-            return [
+            return $this->applyOriginFilter([
                 'mode' => 'account',
                 'lane' => 'received',
                 'label' => '내가 관리하는 후기',
@@ -354,12 +354,12 @@ final class ProviderReviewService
                 'total' => $total,
                 'count' => $total,
                 'items' => $items,
-            ];
+            ], $origin);
         }
 
         $total = $this->repo->countWrittenByAuthor($userId, true);
         $items = array_map(
-            fn (array $row) => $this->mapReview($row, [
+            fn (array $row) => $this->stampMatchOrigin($this->mapReview($row, [
                 'is_owner' => false,
                 'include_status' => true,
                 'is_review_blocked' => $this->repo->hasReviewBlock(
@@ -367,11 +367,11 @@ final class ProviderReviewService
                     (int) $row['provider_id'],
                     $userId,
                 ),
-            ]),
+            ]), $row),
             $this->repo->listWrittenByAuthor($userId, $limit, $offset, true),
         );
 
-        return [
+        return $this->applyOriginFilter([
             'mode' => 'account',
             'lane' => 'written',
             'label' => '내가 쓴 후기',
@@ -380,7 +380,7 @@ final class ProviderReviewService
             'total' => $total,
             'count' => $total,
             'items' => $items,
-        ];
+        ], $origin);
     }
 
     /**
@@ -454,7 +454,7 @@ final class ProviderReviewService
             );
             $mapped['is_mine'] = $isMine;
             $mapped['is_owner'] = $isOwner && !$isMine;
-            $items[] = $mapped;
+            $items[] = $this->stampMatchOrigin($mapped, $row);
         }
 
         return [
@@ -597,7 +597,9 @@ final class ProviderReviewService
                 '이 대상에는 후기를 더 남길 수 없습니다. (최대 3회)',
             );
         }
-        if (!$this->repo->hasMessageThread($providerType, $providerId, $userId)) {
+        $generalThread = $this->repo->hasMessageThread($providerType, $providerId, $userId);
+        $quickThread = $this->repo->isQuickMatchReview($providerType, $providerId, $userId);
+        if (!$generalThread && !$quickThread) {
             throw new ReviewPolicyException(
                 ReviewPolicy::ERR_NO_THREAD,
                 '후기 작성은 쪽지(상담/문의) 경험 후 가능해요.',
@@ -751,6 +753,43 @@ final class ProviderReviewService
             'cta_kind' => $cta,
             'has_live_reviews' => $hasLive,
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $mapped
+     * @param array<string, mixed> $row
+     * @return array<string, mixed>
+     */
+    private function stampMatchOrigin(array $mapped, array $row): array
+    {
+        $quick = $this->repo->isQuickMatchReview(
+            (string) ($row['provider_type'] ?? ''),
+            (int) ($row['provider_id'] ?? 0),
+            (int) ($row['author_user_id'] ?? 0),
+        );
+        $mapped['match_origin'] = $quick ? 'quick_match' : 'general';
+
+        return $mapped;
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    private function applyOriginFilter(array $payload, string $origin): array
+    {
+        if ($origin !== 'general' && $origin !== 'quick_match') {
+            return $payload;
+        }
+        $items = array_values(array_filter(
+            is_array($payload['items'] ?? null) ? $payload['items'] : [],
+            static fn (array $item): bool => (string) ($item['match_origin'] ?? 'general') === $origin,
+        ));
+        $payload['items'] = $items;
+        $payload['origin'] = $origin;
+        $payload['count'] = count($items);
+
+        return $payload;
     }
 
     /** @param array<string, mixed> $row @param array<string, mixed> $viewer */

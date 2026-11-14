@@ -47,7 +47,11 @@ function sliceFn(src, name) {
   return src.slice(start, end);
 }
 
-const surface = read('preview/search-ui/src/search-find-surface.js');
+const surface = [
+  read('preview/search-ui/src/search-find-place.js'),
+  read('preview/search-ui/src/search-find-region.js'),
+  read('preview/search-ui/src/search-find-surface.js'),
+].join('\n');
 const api = read('preview/search-ui/src/search-api.js');
 const enums = read('preview/search-ui/src/search-enums.js');
 const tier = read('preview/search-ui/src/search-tier-render.js');
@@ -151,6 +155,8 @@ assert(/GUEST_BASE_GU_OFFICIAL_CODE = '1168000000'/.test(guLink), '9 게스트 �
 assert(/GUEST_BASE_GU_OFFICIAL_CODE/.test(searchPhp), '9 검색이 강남구 코드를 사용');
 
 for (const rel of [
+  'preview/search-ui/src/search-find-place.js',
+  'preview/search-ui/src/search-find-region.js',
   'preview/search-ui/src/search-find-surface.js',
   'preview/search-ui/src/search-api.js',
   'preview/search-ui/src/search-enums.js',

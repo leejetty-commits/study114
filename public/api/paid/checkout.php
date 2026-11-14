@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 
+use Study114\Database\Connection;
 use Study114\Paid\PaidApi;
 use Study114\Paid\PaidCheckoutGate;
+use Study114\Paid\Pg\PgProvider;
+use Study114\Paid\ProviderCheckoutRepository;
 use Study114\Paid\ProviderCheckoutService;
 
 PaidApi::bootstrap();
@@ -15,8 +18,16 @@ PaidApi::run(static function (): void {
     $userId = (int) $auth['user_id'];
     $method = PaidApi::method();
 
+    if ($method === 'GET') {
+        PaidApi::ok(['payments_enabled' => PaidCheckoutGate::paymentsEnabled()]);
+    }
+
     if ($method !== 'POST') {
         PaidApi::fail(405, 'method_not_allowed', 'POST만 허용됩니다.');
+    }
+
+    if (!PaidCheckoutGate::paymentsEnabled()) {
+        PaidApi::fail(403, 'payment_not_available', PaidCheckoutGate::CLOSED_MESSAGE);
     }
 
     $input = PaidApi::readJson();
@@ -24,12 +35,32 @@ PaidApi::run(static function (): void {
     $service = new ProviderCheckoutService();
 
     if ($action === 'complete') {
-        if (!PaidCheckoutGate::mockCompleteAllowed()) {
-            PaidApi::fail(403, 'payment_not_available', PaidCheckoutGate::CLOSED_MESSAGE);
-        }
         $orderRef = trim((string) ($input['order_ref'] ?? ''));
         if ($orderRef === '') {
             PaidApi::fail(422, 'validation', 'order_ref가 필요합니다.');
+        }
+
+        $orders = new ProviderCheckoutRepository(Connection::get());
+        $existing = $orders->getByRef($orderRef);
+        if ($existing === null || (int) ($existing['user_id'] ?? 0) !== $userId) {
+            PaidApi::fail(404, 'not_found', '주문을 찾을 수 없습니다.');
+        }
+
+        $orderPg = (string) ($existing['pg_provider'] ?? PgProvider::DEV_MOCK);
+        if (PgProvider::usesPortOne($orderPg)) {
+            $claimedPaymentId = isset($input['payment_id']) ? trim((string) $input['payment_id']) : null;
+            try {
+                PaidApi::ok($service->completePortOneOrder($userId, $orderRef, $claimedPaymentId));
+            } catch (InvalidArgumentException $e) {
+                PaidApi::fail(422, 'payment_verify_failed', $e->getMessage());
+            } catch (Throwable $e) {
+                error_log('[portone] complete failed order_ref=' . $orderRef . ' err=' . $e->getMessage());
+                PaidApi::fail(502, 'payment_verify_failed', '결제 확인에 실패했습니다. 잠시 후 다시 시도해 주세요.', [], true);
+            }
+        }
+
+        if (!PaidCheckoutGate::mockCompleteAllowed()) {
+            PaidApi::fail(403, 'payment_not_available', PaidCheckoutGate::CLOSED_MESSAGE);
         }
         PaidApi::ok($service->completeOrder($userId, $orderRef));
     }

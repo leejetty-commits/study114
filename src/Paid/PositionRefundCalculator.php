@@ -52,6 +52,11 @@ final class PositionRefundCalculator
         $segStart = trim($in['segment_started_on'] ?? '');
         $segEndExcl = trim($in['segment_end_exclusive_on'] ?? '');
 
+        /* 356 안 A (2026-11-13 종현): 뒤에 살아 있는 연장이 있으면 이 주문 환불 불가 */
+        if (!empty($in['has_live_later_extension'])) {
+            return self::result(0, 'has_live_later_extension', $segStart, $segEndExcl, 0, 0, []);
+        }
+
         if ($segStart === '' || $segEndExcl === '') {
             return self::result(0, 'not_paid', $segStart, $segEndExcl, 0, 0, []);
         }

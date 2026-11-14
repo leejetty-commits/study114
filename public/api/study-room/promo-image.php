@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Auth\AuthSession;
 use Study114\Auth\EmailVerificationGate;
 use Study114\Auth\EmailVerificationRequiredException;
+use Study114\Media\PromoImageException;
 use Study114\Media\PromoImageService;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -78,6 +79,7 @@ try {
             (string) ($_POST['image_type'] ?? 'cover'),
             (int) ($_POST['sort_order'] ?? 0),
             (string) ($_POST['caption'] ?? ''),
+            (int) ($_POST['replace_image_id'] ?? 0),
         );
         echo json_encode(['ok' => true, 'image' => $image], JSON_UNESCAPED_UNICODE);
         exit;
@@ -119,11 +121,24 @@ try {
     }
 
     throw new InvalidArgumentException('action: upload | recrop | caption | delete');
+} catch (PromoImageException $e) {
+    $code = $e->errorCode();
+    error_log('[promo-image] ' . $code . ' ' . $e->getMessage());
+    $status = in_array($code, ['too_large', 'bad_type'], true) ? 422 : 500;
+    http_response_code($status);
+    echo json_encode(['ok' => false, 'error' => $code, 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (InvalidArgumentException $e) {
+    error_log('[promo-image] validation ' . $e->getMessage());
     http_response_code(422);
     echo json_encode(['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
-    error_log('[promo-image] ' . $e->getMessage());
+    $code = (str_contains($e->getMessage(), 'undefined function') && str_contains($e->getMessage(), 'image'))
+        ? 'gd_missing'
+        : 'server_error';
+    error_log('[promo-image] ' . $code . ' ' . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['ok' => false, 'error' => 'server_error', 'message' => '사진 처리 중 오류가 발생했습니다.'], JSON_UNESCAPED_UNICODE);
+    $msg = $code === 'gd_missing'
+        ? '지금은 사진을 처리할 수 없어요. 잠시 후 다시 시도해 주세요.'
+        : '사진을 처리하지 못했어요. 다시 시도해 주세요.';
+    echo json_encode(['ok' => false, 'error' => $code, 'message' => $msg], JSON_UNESCAPED_UNICODE);
 }

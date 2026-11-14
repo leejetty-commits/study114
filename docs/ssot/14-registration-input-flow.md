@@ -57,7 +57,7 @@ auth-ui 라우트: `#/signup/terms` → `form` → `role` → **`verify-email`**
 | 항목 | DB (4장) |
 |------|----------|
 | 희망 유형 | `preferred_lesson_type` |
-| 희망 지역 | `preferred_studyroom_region_id` / `preferred_tutor_region_id` (+ `preferred_region_note`) |
+| 희망 지역 | 본 지역 `preferred_studyroom_region_id` / `preferred_tutor_region_id`. 희망지역 추가는 상세에서 같은 위젯 1개(`preferred_*_extra`, 선택) |
 | 희망 과목 | `student_subject_targets` + `subject_masters` |
 | 학교급/학년 | `grade_level` · `school_level` |
 | 희망 수업장소 | `student_preferred_lesson_places` |
@@ -151,7 +151,7 @@ auth-ui 라우트: `#/signup/terms` → `form` → `role` → **`verify-email`**
 
 ## 8. 자유 텍스트 허용 영역
 
-슬로건 · 소개문 · 상세 소개 · 요청문 · 주교재 · 강의 스타일 설명 · 연락 시간 · 시설 자유기술 · 희망 스타일 메모 · 학업 수준 메모 · `preferred_region_note`
+슬로건 · 소개문 · 상세 소개 · 요청문 · 주교재 · 강의 스타일 설명 · 연락 시간 · 시설 자유기술 · 희망 스타일 메모 · 학업 수준 메모
 
 ---
 
@@ -162,7 +162,7 @@ auth-ui 라우트: `#/signup/terms` → `form` → `role` → **`verify-email`**
 | 경력 구간 | `y1_3` · `y4_6` · `y7_10` · `y10_plus` |
 | 학교명 | 한국 대학교명 · 학과명 서술형 |
 | 학생 상세 CTA | 신청하기 아님 · **메모(쪽지) 우선** |
-| 학생 희망지역 | **1개 UI** · 기본값 = 가입 주소 · `preferred_region_note` 보조 |
+| 학생 희망지역 | 본 지역 **1개 UI** · 기본값 = 가입 주소. 희망지역 추가는 상세에서 유형과 같은 위젯 1개(선택). 옛 `preferred_region_note` 는 화면에서 빼되 컬럼은 유지 |
 | 학생 지역 카드 | 과외 맥락 **시** · 공부방 맥락 **동/단지** |
 | 예산 라벨 | **수업예산** 통일 |
 | 학생 장소/수업인원/스타일 | 구조화 값 필수 |

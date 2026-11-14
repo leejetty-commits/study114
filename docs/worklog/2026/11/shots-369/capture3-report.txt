@@ -1,0 +1,10 @@
+after-prime-badge-1280.png  size:147316  sha256:b5b17211e5531d11  date:2026-11-12 ~ 2027-02-09  period:90일  amount:99,000원  badge:9,900원  total:108,900원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|정상가|노출상품 표시가|기간 할인|무료 쪽지|홍보 배지 · Hot|배지 소계|자동연장|환불기준
+after-prime-badge-390.png  size:128687  sha256:728aeb09039bb022  date:2026-11-12 ~ 2027-02-09  period:90일  amount:99,000원  badge:9,900원  total:108,900원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|정상가|노출상품 표시가|기간 할인|무료 쪽지|홍보 배지 · Hot|배지 소계|자동연장|환불기준
+after-prime-nobadge-1280.png  size:140477  sha256:6b1ec89e7e83ddd8  date:2026-11-12 ~ 2027-02-09  period:90일  amount:99,000원  badge:없음  total:99,000원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|정상가|노출상품 표시가|기간 할인|무료 쪽지|홍보 배지|자동연장|환불기준
+after-prime-nobadge-390.png  size:121767  sha256:cb0ca4c9501ae786  date:2026-11-12 ~ 2027-02-09  period:90일  amount:99,000원  badge:없음  total:99,000원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|정상가|노출상품 표시가|기간 할인|무료 쪽지|홍보 배지|자동연장|환불기준
+after-pick-badge-1280.png  size:138728  sha256:793f874e8d338d08  date:2026-11-12 ~ 2026-12-11  period:30일  amount:33,000원  badge:5,500원  total:38,500원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|노출상품 표시가|홍보 배지 · Hot|배지 소계|자동연장|환불기준
+after-pick-badge-390.png  size:120142  sha256:e9083345f9740440  date:2026-11-12 ~ 2026-12-11  period:30일  amount:33,000원  badge:5,500원  total:38,500원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|노출상품 표시가|홍보 배지 · Hot|배지 소계|자동연장|환불기준
+after-pick-nobadge-1280.png  size:131804  sha256:c475537e0778db46  date:2026-11-12 ~ 2026-12-11  period:30일  amount:33,000원  badge:없음  total:33,000원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|노출상품 표시가|홍보 배지|자동연장|환불기준
+after-pick-nobadge-390.png  size:113939  sha256:80b431d3a6a42ecf  date:2026-11-12 ~ 2026-12-11  period:30일  amount:33,000원  badge:없음  total:33,000원  rows:적용 프로필|역할|상품|적용 지역|기간|시작일 ~ 종료일|노출상품 표시가|홍보 배지|자동연장|환불기준
+storefront-prime-badge-390.png  size:415479  sha256:2e8eedcd5533f85e  date:2026-11-12 ~ 2027-02-09  period:90일  amount:99,000원  badge:9,900원  total:108,900원
+dup_hashes=0

@@ -486,6 +486,109 @@ body {
   }
 }
 
+/* ── 문의하기 FAB — 「맨 위로」자리 위 고정(숨김 시에도 자리 차지 안 함) ── */
+.inquiry-fab {
+  --inquiry-fab-gap: 8px;
+  --inquiry-fab-stack: calc(1.25rem + 2.75rem + var(--inquiry-fab-gap));
+  position: fixed;
+  right: max(1rem, calc((100vw - var(--home-max)) / 2 + 1rem));
+  bottom: var(--inquiry-fab-stack);
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.inquiry-fab.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* 모바일: 맨 아래로 자리 위 */
+@media (max-width: 768px) {
+  .inquiry-fab {
+    bottom: calc(1.25rem + 2 * (2.75rem + 8px));
+  }
+}
+
+.inquiry-fab__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--gray-800);
+  font-family: var(--font-sans);
+  font-size: var(--fs-1);
+  font-weight: var(--fw-semibold);
+  line-height: 1.2;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.inquiry-fab__toggle:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue-dark);
+}
+
+.inquiry-fab__toggle:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 2px;
+}
+
+.inquiry-fab.is-open .inquiry-fab__toggle {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue-dark);
+}
+
+.inquiry-fab__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: max-content;
+  max-width: min(16rem, calc(100vw - 2.5rem));
+  padding: 0.4rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
+}
+
+.inquiry-fab__panel[hidden] {
+  display: none !important;
+}
+
+.inquiry-fab__item {
+  display: block;
+  padding: 0.55rem 0.75rem;
+  border-radius: calc(var(--radius-md) - 2px);
+  color: var(--gray-800);
+  font-family: var(--font-sans);
+  font-size: var(--fs-2);
+  font-weight: var(--fw-medium);
+  line-height: 1.3;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.inquiry-fab__item:hover,
+.inquiry-fab__item:focus-visible {
+  background: var(--brand-blue-light, #eff6ff);
+  color: var(--brand-blue-dark);
+  outline: none;
+}
+
 /* ── Buttons unify to brand blue (product UI) ── */
 .btn--primary,
 .msg-tab.is-active {

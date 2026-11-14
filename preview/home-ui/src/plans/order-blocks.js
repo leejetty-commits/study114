@@ -10,6 +10,12 @@ import { getTutor } from '../tutor-reg/store.js';
 import { tierPurchaseGate } from './screens.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
 import { providerPageName } from '../mypage/mypage-copy.js';
+import {
+  MEMO_TICKET_REFUND_SHORT,
+  POSITION_REFUND_SHORT,
+  POSITION_REFUND_SUMMARY_LINE,
+  renderRefundDetailHtml,
+} from '../refund-policy-copy.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -113,8 +119,8 @@ export function studyRoomRegionPurchaseState(region, ctx) {
       const cap = Number(match.capacity) || 3;
       const place =
         region.region_basis_type === 'complex'
-          ? `해당 단지 Prime ${used}/${cap} 마감`
-          : `해당 행정동 Prime ${used}/${cap} 마감`;
+          ? `해당 단지 프라임 ${used}/${cap} 마감`
+          : `해당 행정동 프라임 ${used}/${cap} 마감`;
       return { purchasable: false, reason: place, tone: 'soldout' };
     }
   }
@@ -402,23 +408,24 @@ export function buildPositionOrderRows(opts) {
     ? opts.badgeLines.map((b) => ({
         label: `홍보 배지 · ${b.label}`,
         value: b.value,
+        nowrap: true,
       }))
-    : [{ label: '홍보 배지', value: '없음' }];
+    : [{ label: '홍보 배지', value: '없음', nowrap: true }];
   return [
     { label: '적용 프로필', value: opts.profileLabel },
-    { label: '역할', value: opts.roleText },
+    { label: '역할', value: opts.roleText, nowrap: true },
     { label: '상품', value: opts.productName },
     { label: '적용 지역', value: opts.regionValue },
-    { label: '기간', value: opts.periodLabel },
-    ...(opts.periodRangeText ? [{ label: '시작일 ~ 종료일', value: opts.periodRangeText }] : []),
-    ...(opts.listPriceText ? [{ label: '정상가', value: opts.listPriceText }] : []),
-    { label: '노출상품 표시가', value: opts.positionPriceText },
-    ...(opts.discountText ? [{ label: '기간 할인', value: opts.discountText }] : []),
+    { label: '기간', value: opts.periodLabel, nowrap: true },
+    ...(opts.periodRangeText ? [{ label: '시작일 ~ 종료일', value: opts.periodRangeText, nowrap: true }] : []),
+    ...(opts.listPriceText ? [{ label: '정상가', value: opts.listPriceText, nowrap: true }] : []),
+    { label: '노출상품 표시가', value: opts.positionPriceText, nowrap: true },
+    ...(opts.discountText ? [{ label: '기간 할인', value: opts.discountText, nowrap: true }] : []),
     ...(opts.memoBundleText ? [{ label: '무료 쪽지', value: opts.memoBundleText }] : []),
     ...badgeRows,
-    ...(opts.badgeLines.length && opts.badgeSumText ? [{ label: '배지 소계', value: opts.badgeSumText }] : []),
-    { label: '자동연장', value: '없음' },
-    { label: '환불기준', value: opts.refundText || '시작 전 전액 · 시작 후 일할 계산(서버 정본)' },
+    ...(opts.badgeLines.length && opts.badgeSumText ? [{ label: '배지 소계', value: opts.badgeSumText, nowrap: true }] : []),
+    { label: '자동연장', value: '없음', nowrap: true },
+    { label: '환불기준', value: opts.refundText || POSITION_REFUND_SUMMARY_LINE },
   ];
 }
 
@@ -433,13 +440,13 @@ export function renderOrderSummaryBlock(opts) {
     <section class="plans-sf-panel plans-order-summary" data-plans-order-summary data-family="${esc(opts.family)}">
       <header class="plans-sf-panel__head">
         <h2 class="plans-sf-panel__title">주문 요약</h2>
-        <p class="plans-sf-panel__lead">결제 금액은 서버 카탈로그 기준으로 다시 확인됩니다.</p>
+        <p class="plans-sf-panel__lead">최종 금액은 결제 직전에 한 번 더 확인해요.</p>
       </header>
       <dl class="plans-order-summary__list">
         ${rows
           .map(
             (r) => `
-          <div class="plans-order-summary__row">
+          <div class="plans-order-summary__row${r.nowrap ? ' plans-order-summary__row--nowrap' : ''}">
             <dt>${esc(r.label)}</dt>
             <dd>${esc(r.value)}</dd>
           </div>`,
@@ -452,7 +459,7 @@ export function renderOrderSummaryBlock(opts) {
           : ''
       }
       <p class="plans-muted plans-order-summary__note">${esc(
-        opts.note || '자동연장 없음 · 표시가는 참고이며 결제 직전 서버가 재검증합니다.',
+        opts.note || '자동연장 없음 · 최종 금액은 결제 직전에 한 번 더 확인해요.',
       )}</p>
       ${
         opts.showCta === false
@@ -469,7 +476,7 @@ export function renderAccessPurchaseCheck() {
         <h2 class="plans-sf-panel__title">구매 전 확인</h2>
       </header>
       <p>5회권과 10회권은 구매일부터 120일 동안 사용할 수 있습니다. 사용 중인 유료 묶음권은 중복 구매할 수 없으니 예상 사용량을 확인하고 필요한 만큼만 구매하세요.</p>
-      <p class="plans-muted">사용기한(120일) 경과 시 잔여 소멸(환불액 0) · 연장 없음. 환불은 결제 후 7일 이내 사용 구간별(환불규정 · 서버 정본).</p>
+      <p class="plans-muted">${esc(MEMO_TICKET_REFUND_SHORT)}</p>
     </section>`;
 }
 
@@ -478,18 +485,14 @@ export function renderAccessPurchaseCheck() {
  * @param {string} [role]
  */
 export function renderPolicyAccordion(family, role) {
+  void role;
   if (family === 'access') {
     return `
       <details class="plans-policy-acc">
         <summary>환불·소멸 안내</summary>
         <div class="plans-policy-acc__body">
-          <ul class="plans-tier-list">
-            <li>1회 즉시권: 7일 이내 미발송 시 전액 · 발송 완료 또는 7일 경과 시 0원</li>
-            <li>5회권·10회권: 결제 후 7일 이내 · 사용 구간별 환불표(서버·약관 정본)</li>
-            <li>120일 만료 시 잔여 소멸(환불액 0) · 연장 없음</li>
-            <li>회사 귀책 발송 실패는 횟수 복구를 우선합니다</li>
-          </ul>
-          <p class="mypage-muted">환불 가능 여부와 금액은 프론트가 계산하지 않으며, 요청 시 서버가 확정합니다.</p>
+          <p><strong>${esc(MEMO_TICKET_REFUND_SHORT)}</strong></p>
+          ${renderRefundDetailHtml('access')}
         </div>
       </details>`;
   }
@@ -497,13 +500,8 @@ export function renderPolicyAccordion(family, role) {
     <details class="plans-policy-acc">
       <summary>환불·만료 안내</summary>
       <div class="plans-policy-acc__body">
-        <ul class="plans-tier-list">
-          <li>시작 전: 전액 환불</li>
-          <li>시작 후: 요청일 다음 날부터 남은 미사용 기간을 실제 결제금액 기준 일할 계산(배지 포함·같이 회수)</li>
-          <li>만료 후 베이직카드(기본 노출)로 복귀 · ${providerPageName(role)}은 유지</li>
-          <li>자동연장 없음</li>
-        </ul>
-        <p class="mypage-muted">환불 금액은 서버 정본으로 산정합니다. 화면 안내는 참고용입니다.</p>
+        <p><strong>${esc(POSITION_REFUND_SHORT)}</strong></p>
+        ${renderRefundDetailHtml('position')}
       </div>
     </details>`;
 }

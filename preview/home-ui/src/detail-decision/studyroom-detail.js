@@ -28,23 +28,23 @@ export function renderStudyRoomDetailBody(item, viewer) {
       </div>
     </details>`;
 
+  /* 368: fit → prime/원본 → basic(최후). 1:1 정사각 강제·흐림 배경 없음 */
   const photoFit = String(item.image_path_fit || '').trim();
+  const photoPrime = String(item.image_path_prime || '').trim();
+  const photoPath = String(item.image_path || '').trim();
   const photoBasic = String(item.image_path_basic_720 || item.image_path_basic_360 || item.image_path_basic || '').trim();
-  const photoLast = String(item.image_path_prime || '').trim();
-  const photoBlur = String(item.image_path_basic_360 || item.image_path_basic_720 || item.image_path_basic || '').trim();
 
   return `
     <section class="p24-section">
       <h3 class="p24-section__title">핵심 조건</h3>
       <dl class="p24-dl">
         <dt>사진</dt><dd>${renderUncroppedPhoto(
-          photoFit || photoBasic || photoLast,
-          photoBlur,
+          photoFit || photoPrime || photoPath || photoBasic,
+          '',
           item.study_room_name,
           {
             logo: '/assets/brand/room-card-default-pick.svg',
             eager: true,
-            square: !photoFit && Boolean(photoBasic),
           },
         )}</dd>
         <dt>과목</dt><dd>${esc(item.main_subject_note || '—')}</dd>

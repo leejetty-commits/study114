@@ -46,7 +46,6 @@ import {
   getBasicPool,
 } from './exposure-rules.js';
 import {
-  maskPublicDisplayName,
   guestStudentTeaserFields,
   guestStudentRegionKind,
   coarseRegionForGuest,
@@ -384,15 +383,27 @@ function renderMediaBlock(image_path, alt, ratio, zones = {}, opts = {}) {
     </div>`;
 }
 
-export function listingImage(item, ratio) {
-  if (ratio === 'prime' || ratio === 'pick') {
-    return item.image_path_prime || item.image_path || '';
-  }
-  return item.image_path_basic_360 || item.image_path_basic || item.image_path || '';
+/**
+ * 카드 사진 — 잘린 1:1(basic)보다 안 잘린 fit/원본·프라임 우선.
+ * 칸 CSS는 object-fit:contain + 단색 바탕 (368-card-contain).
+ */
+export function listingImage(item, _ratio) {
+  const fit = String(item?.image_path_fit || '').trim();
+  if (fit) return fit;
+  return (
+    String(item?.image_path_prime || '').trim()
+    || String(item?.image_path || '').trim()
+    || String(item?.image_path_basic_720 || '').trim()
+    || String(item?.image_path_basic_360 || '').trim()
+    || String(item?.image_path_basic || '').trim()
+    || ''
+  );
 }
 
-/** 기본카드 선명한 화면용 720. 360과 같으면 비운다. */
+/** fit이 주 src면 별도 2x 크롭 체인 불필요. */
 function listingImageLarge(item) {
+  const fit = String(item?.image_path_fit || '').trim();
+  if (fit) return '';
   const large = String(item?.image_path_basic_720 || '').trim();
   const small = String(item?.image_path_basic_360 || item?.image_path_basic || '').trim();
   return large && large !== small ? large : '';
@@ -1003,7 +1014,9 @@ function renderBasicStudentRow(item, opts) {
     ? 'parent'
     : opts.viewerRole || (opts.guest ? 'guest' : navRoleFromAuthUser(getAuthUser()));
   const isGuest = !selfView && Boolean(opts.guest || viewerRole === 'guest');
-  const maskedName = maskPublicDisplayName(item.public_display_name);
+  // 홈·찾기·상세는 본인 카드여도 서버가 가린 값만 쓴다. student_name 원문으로 바꾸지 않는다.
+  // 마이페이지 미리보기는 호출부가 이름 전체를 public_display_name 에 넣어 둔다.
+  const maskedName = String(item.public_display_name || '').trim();
   const locationLabel = isGuest
     ? coarseRegionForGuest(item.location_label, guestStudentRegionKind(item))
     : item.location_label;
@@ -1045,7 +1058,7 @@ function renderBasicStudentRow(item, opts) {
       ${renderExpoTable(
         [
           [
-            labeled('표시명', maskedName),
+            labeled('이름', maskedName),
             labeled('대상', item.grade_level),
             labeled('과목', item.subject_label),
             valOnly(formatStudentBudgetCard(item), { cls: 'expo-tbl__cell--price' }),

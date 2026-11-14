@@ -21,9 +21,7 @@ study114_send_cors_headers();
 
 $user = AuthSession::user();
 if ($user === null) {
-    http_response_code(401);
-    echo json_encode(['ok' => false, 'error' => 'unauthenticated', 'message' => '로그인이 필요합니다.'], JSON_UNESCAPED_UNICODE);
-    exit;
+    study114_json_error(401, ['ok' => false, 'error' => 'unauthenticated', 'message' => '로그인이 필요합니다.']);
 }
 
 $svc = new AccountContactService();
@@ -73,11 +71,9 @@ try {
             : '계정 연락처가 저장되었습니다. 이 정보는 회원에게 공개되지 않습니다.',
     ], JSON_UNESCAPED_UNICODE);
 } catch (\Study114\Auth\PhoneAccountLimitException $e) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => $e->errorCode(), 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    study114_json_error(422, ['ok' => false, 'error' => $e->errorCode(), 'message' => $e->getMessage()]);
 } catch (InvalidArgumentException $e) {
-    http_response_code(422);
-    echo json_encode(['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()], JSON_UNESCAPED_UNICODE);
+    study114_json_error(422, ['ok' => false, 'error' => 'validation', 'message' => $e->getMessage()]);
 } catch (Throwable $e) {
     error_log('[account-contact] ' . $e->getMessage());
     http_response_code(500);

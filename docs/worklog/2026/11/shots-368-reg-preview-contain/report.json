@@ -1,0 +1,41 @@
+{
+  "outDir": "D:\\work\\study114\\.wt\\work-368-reg-preview-contain\\docs\\worklog\\2026\\11\\shots-368-reg-preview-contain",
+  "metrics": [
+    {
+      "objectFit": "contain",
+      "frameBg": "rgb(226, 232, 240)",
+      "natural": {
+        "w": 663,
+        "h": 380
+      },
+      "rendered": {
+        "w": 572,
+        "h": 322
+      },
+      "frame": {
+        "w": 572,
+        "h": 322
+      }
+    },
+    {
+      "objectFit": "contain",
+      "frameBg": "rgb(226, 232, 240)",
+      "natural": {
+        "w": 600,
+        "h": 1200
+      },
+      "rendered": {
+        "w": 572,
+        "h": 322
+      },
+      "frame": {
+        "w": 572,
+        "h": 322
+      }
+    }
+  ],
+  "asserts": {
+    "allContain": true,
+    "solidBg": true
+  }
+}
