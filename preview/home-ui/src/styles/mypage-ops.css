@@ -517,6 +517,8 @@
 
 /* ── 구매이력 버튼 안내 (2026-11-15) ── */
 .plans-hist-guide {
+  --plans-hist-guide-label: 4.5rem;
+  --plans-hist-guide-gap: 0.6rem;
   margin-top: 16px;
   padding: 12px 14px;
   background: #f9fafb;
@@ -535,8 +537,8 @@
 }
 .plans-hist-guide__list > div {
   display: grid;
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-  column-gap: 0.6rem;
+  grid-template-columns: var(--plans-hist-guide-label) minmax(0, 1fr);
+  column-gap: var(--plans-hist-guide-gap);
   margin: 0 0 0.35rem;
 }
 .plans-hist-guide__list dt,
@@ -548,10 +550,15 @@
 }
 .plans-hist-guide__note {
   margin: 8px 0 0;
+  /* 위 설명(dd) 칸의 왼쪽과 같은 시작. 라벨 칸 + 칸 간격 */
+  padding-left: calc(var(--plans-hist-guide-label) + var(--plans-hist-guide-gap));
 }
 @media (max-width: 480px) {
   .plans-hist-guide__list > div {
     grid-template-columns: 1fr;
+  }
+  .plans-hist-guide__note {
+    padding-left: 0;
   }
 }
 
