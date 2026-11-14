@@ -374,11 +374,11 @@ function openGreetingFeed(opts) {
       .map(
         (row) => `
         <li class="ng-feed__item">
-          <p class="ng-feed__who">
-            <span class="ng-feed__kind" data-kind="${esc(row.providerType)}">${esc(row.kindLabel)}</span>
+          <span class="ng-feed__kind" data-kind="${esc(row.providerType)}">${esc(row.kindLabel)}</span>
+          <div class="ng-feed__content">
             <button type="button" class="ng-feed__name" data-ng-feed-name data-ng-kind="${esc(row.providerType)}" data-ng-reg="${row.registrationId}">${esc(row.name)}</button>
-          </p>
-          <p class="ng-feed__body">${esc(row.full)}</p>
+            <p class="ng-feed__body">${esc(row.full)}</p>
+          </div>
         </li>`,
       )
       .join('');
