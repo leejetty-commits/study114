@@ -115,7 +115,7 @@ export function renderConsoleUnlockGate(message = '') {
   return `
     <section class="admin-state admin-console-unlock">
       <h2>운영 콘솔 잠금</h2>
-      <p>콘솔에 들어가려면 2차 비밀번호 6자가 필요해요. (영문 대문자 1 · 소문자 1 · 숫자 2 · 특수문자 2)</p>
+      <p>관리자 콘솔에 들어가려면 2차 비밀번호를 입력해 주세요.</p>
       ${text}
       <form class="admin-console-unlock-form" data-form="admin-console-unlock" autocomplete="off">
         <label>2차 비밀번호
