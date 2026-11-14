@@ -32,7 +32,7 @@ docker run --rm -it -v "${PWD}:/app" -w /app php:8.3-cli php scripts/admin-conso
 해시를 넣을 계정을 먼저 확인한다.
 
 ```sql
-SELECT id, email, admin_level, role_type FROM users WHERE admin_level IS NOT NULL OR role_type='admin';
+SELECT u.id, u.email, u.admin_level FROM users u LEFT JOIN user_roles r ON r.user_id = u.id AND r.role_type = 'admin' WHERE u.admin_level IS NOT NULL OR r.user_id IS NOT NULL;
 ```
 
 ## 등록 SQL
