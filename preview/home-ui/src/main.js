@@ -167,9 +167,7 @@ setConsoleUnlockRequiredHandler(async () => {
   await initAuthSession(false);
   if (isAdminRoute()) {
     await render();
-    return;
   }
-  navigate('/admin');
 });
 
 async function render() {
@@ -464,7 +462,7 @@ function init() {
     });
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
-      if (isAdminUser()) {
+      if (isAdminUser() && getAuthUser()?.console_unlocked === true) {
         await activateAdminApi().catch((err) => {
           console.warn('[admin] api disabled — static A28 fallback', err);
           deactivateAdminApi();
@@ -473,7 +471,7 @@ function init() {
           console.warn('[content-config] api disabled — sessionStorage fallback', err);
           deactivateContentConfigApi();
         });
-      } else {
+      } else if (!isAdminUser()) {
         deactivateAdminApi();
         deactivateContentConfigApi();
       }
@@ -555,7 +553,7 @@ function init() {
               });
           }
         }
-        if (user && isAdminUser()) {
+        if (user && isAdminUser() && user.console_unlocked === true) {
           await activateAdminApi().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);
             deactivateAdminApi();

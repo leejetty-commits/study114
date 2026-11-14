@@ -81,7 +81,9 @@ final class AdminConsolePasswordService
 
     public function unlock(int $userId, string $password): void
     {
-        $this->assertShape($password);
+        if (!AdminConsolePolicy::accepts($password)) {
+            throw new \InvalidArgumentException('비밀번호가 맞지 않아요.');
+        }
         $this->pdo->beginTransaction();
         try {
             $row = $this->lockRow($userId);
@@ -286,12 +288,12 @@ final class AdminConsolePasswordService
             return '';
         }
 
-        return '콘솔에 들어가려면 2차 비밀번호 6자가 필요해요. (영문 대문자 1 · 소문자 1 · 숫자 2 · 특수문자 2)';
+        return '';
     }
 
     private function unsetMessage(): string
     {
-        return '2차 비밀번호가 아직 설정되지 않았어요. 종현이 서버에서 설정한 뒤에 사용할 수 있어요.';
+        return '2차 비밀번호가 아직 등록되지 않았어요. 종현에게 문의해 주세요.';
     }
 
     /** @param array<string, mixed> $row */

@@ -1,5 +1,7 @@
 import { getAdminPath } from '../state.js';
 import { initAuthSession, isAdminUser } from '../auth-session.js';
+import { activateAdminApi } from './admin-backend.js';
+import { activateContentConfigApi } from '../content-config-backend.js';
 import { adminFetch, adminHttpStatus } from './admin-fetch.js';
 import { normalizeAdminPath } from './router.js';
 import { renderAdminShell, renderAdminDeniedFrame, bindAdminShellEvents } from './shell.js';
@@ -126,7 +128,7 @@ function bindConsoleUnlock(root, form, rerender) {
     showError('');
     const password = input instanceof HTMLInputElement ? input.value : '';
     if (!consolePasswordShapeOk(password)) {
-      showError('2차 비밀번호는 6자(영문 대문자 1, 소문자 1, 숫자 2, 특수문자 2)여야 해요.');
+      showError('비밀번호가 맞지 않아요.');
       if (input instanceof HTMLInputElement) input.value = '';
       return;
     }
@@ -148,6 +150,12 @@ function bindConsoleUnlock(root, form, rerender) {
         return;
       }
       await initAuthSession(false);
+      await activateAdminApi().catch((err) => {
+        console.warn('[admin] api disabled — static A28 fallback', err);
+      });
+      await activateContentConfigApi().catch((err) => {
+        console.warn('[content-config] api disabled — sessionStorage fallback', err);
+      });
       rerender();
     } catch {
       if (input instanceof HTMLInputElement) input.value = '';
