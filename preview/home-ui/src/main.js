@@ -91,6 +91,7 @@ import { activateSupportApi, deactivateSupportApi } from './support/support-back
 import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
 import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
+import { setConsoleUnlockRequiredHandler } from './admin/admin-fetch.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
 import { mountHomePopup } from './home-popup/mount.js';
@@ -161,6 +162,15 @@ let paintedHash = null;
 let sessionChecked = false;
 /** 빠른 해시 전환 시 늦게 도착한 비동기 그리기를 버린다. */
 let renderGeneration = 0;
+
+setConsoleUnlockRequiredHandler(async () => {
+  await initAuthSession(false);
+  if (isAdminRoute()) {
+    await render();
+    return;
+  }
+  navigate('/admin');
+});
 
 async function render() {
   const generation = ++renderGeneration;

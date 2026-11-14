@@ -3,6 +3,7 @@
  * 손님·일반 회원에게는 열지 않는다. site-settings 스키마는 건드리지 않는다.
  */
 import { isAdminUser } from '../auth-session.js';
+import { adminFetch } from '../admin/admin-fetch.js';
 import { getCurrentScreen } from '../state.js';
 import { pickHomePopup, pickHomePopups, seoulToday } from './engine.js';
 
@@ -90,9 +91,7 @@ function loadPreviewRow(id) {
   if (previewPromise && previewForId === id) return previewPromise;
   previewForId = id;
   previewRow = null;
-  previewPromise = fetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`, {
-    credentials: 'include',
-  })
+  previewPromise = adminFetch(`/api/admin/home-popups.php?id=${encodeURIComponent(id)}`)
     .then((res) => (res.ok ? res.json() : null))
     .then((data) => {
       previewRow = data && data.ok === true && data.popup ? data.popup : false;

@@ -56,7 +56,7 @@
 
 로컬 Docker MySQL에만 일회용 DB `study114_b1test` 를 만들고 끝에서 삭제했다. 운영 DB는 쓰지 않았다.
 
-`php scripts/verify-admin-console-password.php` → **31 PASS / 0 FAIL**.
+`php scripts/verify-admin-console-password.php` → **34 PASS / 0 FAIL**. 해시 스크립트는 `password_verify`를 통과하고, 형식이 아니거나 확인이 다르면 해시를 내지 않는다.
 
 포함: 형태 거절, 헤더 있으면 200 `console_unlock_required` `http_status` 403, 헤더 없으면 403, 해제, 세션 쿠키 값 변경(값은 기록하지 않음), 해제 후 members 200, 유휴 30분, 회원 403, 비로그인 401, 5회 잠금, 잠금 중 맞는 비밀번호 거절, 만료 후 재시도, 로그아웃, 미설정, 변경 성공·기존 비밀번호 불일치, 감사 로그 5종, 로그에 비밀번호·해시 없음.
 
@@ -68,6 +68,14 @@
 - `docs/worklog/2026/11/shots-363/locked-1280.png`
 - `docs/worklog/2026/11/shots-363/fail-390.png`
 - `docs/worklog/2026/11/shots-363/fail-1280.png`
+
+## 보완 (같은 PR)
+
+- `scripts/admin-console-password-hash.php` 는 DB 없이 숨긴 입력 두 번으로 해시 한 줄만 낸다. 운영 문서 32의 해시 절차를 이 스크립트와 Docker 명령으로 바꿨다.
+- 092 주석은 저장소와 grok-sync 사본 모두 「머지 전」이다.
+- 관리자 API가 `console_unlock_required` 이면 세션을 다시 받고 콘솔 잠금 화면을 연다.
+- 콘텐츠 설정, 고객센터 관리자 요청, 홈 팝업 미리보기에 soft-error 헤더를 붙였다.
+- 잠금해제 입력칸은 제목과 같이 가운데다.
 
 ## 최종 검수 묶음
 

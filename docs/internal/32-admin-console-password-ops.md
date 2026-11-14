@@ -13,20 +13,26 @@
 
 ## 해시 만들기
 
-명령 줄에 비밀번호를 붙이지 않는다. 로컬 PHP에서 표준 입력으로만 넣는다.
+명령 줄에 비밀번호를 붙이지 않는다. 화면에는 보이지 않는 입력 두 번이고, 표준 출력은 해시 한 줄뿐이다. 그 줄만 복사하고 입력한 비밀번호는 남기지 않는다.
 
 ```
-php -r "fwrite(STDOUT, password_hash(stream_get_contents(STDIN), PASSWORD_DEFAULT));"
+php scripts/admin-console-password-hash.php
 ```
 
-비밀번호를 입력한 뒤 Windows는 Ctrl+Z 후 Enter, macOS·Linux는 Ctrl+D 로 입력을 끝낸다. 화면에 나온 한 줄이 해시다. 그 문자열만 복사하고, 입력한 비밀번호는 남기지 않는다.
+PHP가 없는 PC는 저장소 루트에서 Docker로 같은 스크립트를 실행한다.
+
+```
+docker run --rm -it -v "${PWD}:/app" -w /app php:8.3-cli php scripts/admin-console-password-hash.php
+```
 
 조합은 정확히 6자다. 영문 대문자 1, 소문자 1, 숫자 2, 특수문자 2. 특수문자는 `!@#$%^&*?` 만 된다.
 
-같은 머신에 이 저장소가 있으면 CLI도 된다. 비밀번호는 화면에 보이지 않는 입력 두 번이다.
+## 관리자 계정 확인
 
-```
-php scripts/admin-console-password-set.php --email <본인 이메일>
+해시를 넣을 계정을 먼저 확인한다.
+
+```sql
+SELECT id, email, admin_level, role_type FROM users WHERE admin_level IS NOT NULL OR role_type='admin';
 ```
 
 ## 등록 SQL

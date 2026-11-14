@@ -58,6 +58,40 @@ check(str_contains($apiSrc, 'study114_json_error'), 'AdminApi::fail 이 soft-err
 check(str_contains($serviceSrc, 'session_regenerate_id') || str_contains((string) file_get_contents($root . '/public/api/admin/console-unlock.php'), 'AuthSession::regenerate()'), '잠금해제 성공 시 세션 재발급');
 check(!is_file($root . '/public/api/admin/console-setup.php'), '웹 최초 설정 경로 없음');
 
+function runHashScript(string $rootDir, string $first, string $second): array
+{
+    $proc = proc_open(
+        [PHP_BINARY, $rootDir . '/scripts/admin-console-password-hash.php'],
+        [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+        $pipes,
+        $rootDir
+    );
+    if (!is_resource($proc)) {
+        return [1, '', 'spawn'];
+    }
+    fwrite($pipes[0], $first . "\r\n" . $second . "\r\n");
+    fclose($pipes[0]);
+    $out = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $code = proc_close($proc);
+
+    return [$code, is_string($out) ? $out : '', ''];
+}
+
+$hashPassword = makePassword();
+[$hashCode, $hashOut] = runHashScript($root, $hashPassword, $hashPassword);
+$hashLine = trim($hashOut);
+check($hashCode === 0 && substr_count(trim($hashOut), "\n") === 0 && password_verify($hashPassword, $hashLine), '해시 스크립트 결과가 password_verify를 통과');
+[$badCode, $badOut] = runHashScript($root, 'abc', 'abc');
+check($badCode !== 0 && !str_contains($badOut, '$2'), '형식이 아니면 해시를 출력하지 않음');
+[$mismatchCode, $mismatchOut] = runHashScript($root, $hashPassword, makePassword());
+check($mismatchCode !== 0 && !str_contains($mismatchOut, '$2'), '확인이 다르면 해시를 출력하지 않음');
+$hashPassword = '';
+$hashLine = '';
+$hashOut = '';
+
 function makePassword(): string
 {
     $specials = \Study114\Admin\AdminConsolePolicy::SPECIAL_CHARS;
