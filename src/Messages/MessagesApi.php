@@ -132,12 +132,10 @@ final class MessagesApi
 
     public static function fail(int $status, string $error, string $message): never
     {
-        http_response_code($status);
-        echo json_encode([
+        study114_json_error($status, [
             'ok'      => false,
             'error'   => $error,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        ]);
     }
 }

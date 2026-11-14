@@ -29,12 +29,12 @@ export function bindQuickMatchScreen(root) {
       fetch('/api/quick-match/settings.php', {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Study114-Soft-Error': '1' },
         body: JSON.stringify({ provider_id: data.provider_id, optional_toggles: toggles }),
       })
         .then((res) => res.json().then((saved) => ({ status: res.status, saved })))
         .then(({ status, saved }) => {
-          if (status === 409) {
+          if ((saved.http_status ?? status) === 409) {
             const when = formatNextChangeDay(saved.next_change_at);
             if (note) note.textContent = `${saved.message || '이번 주는 이미 저장했어요.'}${when ? ` 다음 변경일 ${when}` : ''}`;
             return;

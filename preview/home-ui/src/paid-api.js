@@ -4,6 +4,14 @@
  */
 
 const CREDENTIALS = { credentials: 'include' };
+const SOFT_ERROR_HEADER = { 'X-Study114-Soft-Error': '1' };
+
+function apiFetch(url, init = {}) {
+  return fetch(url, {
+    ...init,
+    headers: { ...SOFT_ERROR_HEADER, ...(init.headers || {}) },
+  });
+}
 
 export const PAID_ENDPOINTS = {
   roi: '/api/paid/roi.php',
@@ -22,7 +30,7 @@ async function parseJson(res) {
   if (!res.ok || data.ok === false) {
     const err = new Error(data.message || `HTTP ${res.status}`);
     err.code = data.error;
-    err.status = res.status;
+    err.status = data.http_status ?? res.status;
     err.missing = Array.isArray(data.missing) ? data.missing.map(String) : [];
     if (data.error === 'tier_fields_missing' && err.missing.length) {
       err.tierMessage = String(data.message || '');
@@ -43,7 +51,7 @@ export async function fetchRoiSummary(days = 7, studyRoomId = null) {
   const roomId = Number(studyRoomId);
   if (Number.isFinite(roomId) && roomId > 0) params.set('study_room_id', String(roomId));
   const qs = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`${PAID_ENDPOINTS.roi}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.roi}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -66,7 +74,7 @@ export async function fetchPaidStatus(days = 7, region = {}) {
     params.set('provider_id', String(region.providerId));
   }
   const qs = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`${PAID_ENDPOINTS.status}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.status}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -76,18 +84,18 @@ export async function fetchTierCheck(providerType, providerId) {
     provider_type: String(providerType),
     provider_id: String(providerId),
   });
-  const res = await fetch(`${PAID_ENDPOINTS.tierCheck}?${params}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.tierCheck}?${params}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 export async function fetchProviderNotices() {
-  const res = await fetch(PAID_ENDPOINTS.notices, { ...CREDENTIALS });
+  const res = await apiFetch(PAID_ENDPOINTS.notices, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 /** @param {number} noticeId */
 export async function markProviderNoticeRead(noticeId) {
-  const res = await fetch(PAID_ENDPOINTS.notices, {
+  const res = await apiFetch(PAID_ENDPOINTS.notices, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -101,7 +109,7 @@ export async function fetchPaidCatalog(providerType) {
     providerType === 'study_room' || providerType === 'tutor'
       ? `?provider_type=${encodeURIComponent(providerType)}`
       : '';
-  const res = await fetch(`${PAID_ENDPOINTS.catalog}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.catalog}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -110,7 +118,7 @@ export async function fetchPaidCatalog(providerType) {
  */
 /** 서버 결제 스위치. 실패하면 꺼진 것으로 본다. */
 export async function fetchPaymentsEnabled() {
-  const res = await fetch(PAID_ENDPOINTS.checkout, { ...CREDENTIALS });
+  const res = await apiFetch(PAID_ENDPOINTS.checkout, { ...CREDENTIALS });
   const data = await parseJson(res);
   return data.payments_enabled === true;
 }
@@ -144,7 +152,7 @@ export async function createPaidCheckout(productId, variant, ctx = {}) {
     body.primary_subject_id = Number(ctx.primarySubjectId);
   }
   // 클라이언트 금액·할인·무료혜택은 전송하지 않는다 (서버 PaidCatalog 재계산)
-  const res = await fetch(PAID_ENDPOINTS.checkout, {
+  const res = await apiFetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -159,7 +167,7 @@ export async function completePaidCheckout(orderRef, opts = {}) {
   if (opts.paymentId) {
     body.payment_id = String(opts.paymentId);
   }
-  const res = await fetch(PAID_ENDPOINTS.checkout, {
+  const res = await apiFetch(PAID_ENDPOINTS.checkout, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -178,14 +186,14 @@ export async function completePaidCheckout(orderRef, opts = {}) {
 /** @param {number} [limit] */
 export async function fetchPaidHistory(limit = 50) {
   const qs = limit > 0 ? `?limit=${limit}` : '';
-  const res = await fetch(`${PAID_ENDPOINTS.history}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.history}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
 /** @param {number|string} studyRoomId */
 export async function fetchPrimeWaitlist(studyRoomId) {
   const qs = `?study_room_id=${encodeURIComponent(String(studyRoomId))}`;
-  const res = await fetch(`${PAID_ENDPOINTS.waitlist}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.waitlist}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -194,7 +202,7 @@ export async function fetchPrimeWaitlist(studyRoomId) {
  * @param {{ slot_group?: string, region_label?: string, region_basis_type?: string, region_id?: number|string, complex_id?: number|string }} [payload]
  */
 export async function registerPrimeWaitlist(studyRoomId, payload = {}) {
-  const res = await fetch(PAID_ENDPOINTS.waitlist, {
+  const res = await apiFetch(PAID_ENDPOINTS.waitlist, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -214,7 +222,7 @@ export async function registerPrimeWaitlist(studyRoomId, payload = {}) {
 /** @param {string} orderRef */
 export async function fetchRefundEligibility(orderRef) {
   const qs = `?order_ref=${encodeURIComponent(orderRef)}`;
-  const res = await fetch(`${PAID_ENDPOINTS.refund}${qs}`, { ...CREDENTIALS });
+  const res = await apiFetch(`${PAID_ENDPOINTS.refund}${qs}`, { ...CREDENTIALS });
   return parseJson(res);
 }
 
@@ -223,7 +231,7 @@ export async function fetchRefundEligibility(orderRef) {
  * @param {{ reason_choice?: string, detail?: string }} [reason]
  */
 export async function submitRefund(orderRef, reason = {}) {
-  const res = await fetch(PAID_ENDPOINTS.refund, {
+  const res = await apiFetch(PAID_ENDPOINTS.refund, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -234,7 +242,7 @@ export async function submitRefund(orderRef, reason = {}) {
 
 /** @param {string} orderRef @param {string} confirmText */
 export async function withdrawRefund(orderRef, confirmText) {
-  const res = await fetch(PAID_ENDPOINTS.refund, {
+  const res = await apiFetch(PAID_ENDPOINTS.refund, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
@@ -245,7 +253,7 @@ export async function withdrawRefund(orderRef, confirmText) {
 
 /** @param {number|string} studyRoomId @param {number|string} waitlistId */
 export async function cancelPrimeWaitlist(studyRoomId, waitlistId) {
-  const res = await fetch(PAID_ENDPOINTS.waitlist, {
+  const res = await apiFetch(PAID_ENDPOINTS.waitlist, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     ...CREDENTIALS,
