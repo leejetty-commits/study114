@@ -94,6 +94,42 @@ final class AuthSession
         unset($_SESSION['auth'], $_SESSION['signup']);
     }
 
+    /** 잠금해제 성공 직후. 세션 쿠키 값이 바뀐다. */
+    public static function regenerate(): void
+    {
+        self::start();
+        session_regenerate_id(true);
+    }
+
+    public static function consoleUnlockedAt(): ?int
+    {
+        self::start();
+        $auth = $_SESSION['auth'] ?? null;
+        if (!is_array($auth) || !isset($auth['console_unlocked_at'])) {
+            return null;
+        }
+        $at = (int) $auth['console_unlocked_at'];
+
+        return $at > 0 ? $at : null;
+    }
+
+    public static function markConsoleUnlocked(): void
+    {
+        self::start();
+        if (!isset($_SESSION['auth']) || !is_array($_SESSION['auth'])) {
+            return;
+        }
+        $_SESSION['auth']['console_unlocked_at'] = time();
+    }
+
+    public static function clearConsoleUnlock(): void
+    {
+        self::start();
+        if (isset($_SESSION['auth']) && is_array($_SESSION['auth'])) {
+            unset($_SESSION['auth']['console_unlocked_at']);
+        }
+    }
+
     /**
      * @return array{
      *   user_id: int,

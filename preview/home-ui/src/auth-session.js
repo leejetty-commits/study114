@@ -177,6 +177,9 @@ export async function fetchSession() {
           oauth_role_pending: data.oauth_role_pending === true,
           admin_level: data.admin_level ?? null,
           must_change_password: Boolean(data.must_change_password),
+          ...(Object.prototype.hasOwnProperty.call(data, 'console_unlocked')
+            ? { console_unlocked: data.console_unlocked === true }
+            : {}),
           oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
           oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
           phone_verified: Boolean(data.phone_verified),
@@ -202,6 +205,9 @@ export async function fetchSession() {
       email_verified: Boolean(data.email_verified),
       admin_level: data.admin_level ?? null,
       must_change_password: Boolean(data.must_change_password),
+      ...(Object.prototype.hasOwnProperty.call(data, 'console_unlocked')
+        ? { console_unlocked: data.console_unlocked === true }
+        : {}),
       oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
       oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
       phone_verified: Boolean(data.phone_verified),

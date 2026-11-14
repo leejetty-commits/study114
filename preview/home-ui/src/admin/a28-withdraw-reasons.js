@@ -1,3 +1,4 @@
+import { adminFetch, adminHttpStatus } from './admin-fetch.js';
 import '../styles/admin-member-mail.css';
 import { withdrawReasonLabel } from '../withdraw-reason-copy.js';
 import { esc, renderPanel } from './a28-screens-shared.js';
@@ -149,9 +150,9 @@ export function bindWithdrawReasons(root) {
     if (body) body.innerHTML = `<p class="a28-help" role="status">${esc(C.loading)}</p>`;
     let html;
     try {
-      const res = await fetch(`${ENDPOINT}?days=${days}`, { credentials: 'include' });
+      const res = await adminFetch(`${ENDPOINT}?days=${days}`);
       const data = await res.json().catch(() => ({}));
-      html = res.ok && data.ok ? renderWithdrawReasonsBody(data) : `<p class="a28-help" role="alert">${esc(errorText(res.status))}</p>`;
+      html = res.ok && data.ok ? renderWithdrawReasonsBody(data) : `<p class="a28-help" role="alert">${esc(errorText(adminHttpStatus(res, data)))}</p>`;
     } catch {
       html = `<p class="a28-help" role="alert">${esc(C.loadFailed)}</p>`;
     }

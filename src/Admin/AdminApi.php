@@ -18,7 +18,7 @@ final class AdminApi
         if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
             self::cors();
             header('Access-Control-Allow-Methods: GET, POST, PATCH, OPTIONS');
-            header('Access-Control-Allow-Headers: Content-Type');
+            header('Access-Control-Allow-Headers: Content-Type, X-Study114-Soft-Error');
             http_response_code(204);
             exit;
         }
@@ -85,8 +85,11 @@ final class AdminApi
         }
     }
 
-    /** @return array{user_id: int, email: string, role_type: string, name: string} */
-    public static function requireAdmin(): array
+    /**
+     * @return array{user_id: int, email: string, role_type: string, name: string}
+     * $console false 는 console-unlock 상태 조회·잠금해제만.
+     */
+    public static function requireAdmin(bool $console = true): array
     {
         $auth = self::requireAuth();
         $roles = new AdminRoleService();
@@ -95,6 +98,13 @@ final class AdminApi
         }
         // admin_level·bootstrap 이메일은 콘솔 RBAC 전용. 가입완료(email_verified_at) 예외가 아니다.
         (new \Study114\Auth\EmailVerificationGate())->assertVerified((int) $auth['user_id']);
+        if ($console) {
+            try {
+                (new AdminConsolePasswordService())->assertApiAllowed((int) $auth['user_id']);
+            } catch (ConsoleGateException $e) {
+                self::fail($e->httpStatus, $e->error, $e->getMessage());
+            }
+        }
 
         return $auth;
     }
@@ -117,6 +127,8 @@ final class AdminApi
             self::fail(403, 'email_verify_required', $e->getMessage());
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
+        } catch (ConsoleGateException $e) {
+            self::fail($e->httpStatus, $e->error, $e->getMessage());
         } catch (Throwable $e) {
             error_log('[admin] ' . $e->getMessage());
             self::fail(500, 'server_error', $e->getMessage());
@@ -132,12 +144,10 @@ final class AdminApi
 
     public static function fail(int $status, string $error, string $message): never
     {
-        http_response_code($status);
-        echo json_encode([
+        study114_json_error($status, [
             'ok' => false,
             'error' => $error,
             'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        ]);
     }
 }
