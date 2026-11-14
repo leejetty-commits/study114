@@ -292,6 +292,32 @@ final class ProviderCheckoutRepository
         }
     }
 
+    /**
+     * 지급 불가 자동취소. paid_at은 바꾸지 않는다.
+     * pending·paid만. 이미 다른 상태면 false.
+     */
+    public function markAutoCancelled(string $orderRef, string $reason): bool
+    {
+        $error = 'auto_cancelled: ' . substr(trim($reason), 0, 80);
+        if ($this->hasColumn('fulfillment_status')) {
+            $stmt = $this->pdo->prepare(
+                "UPDATE provider_payment_orders
+                 SET status = 'cancelled', fulfillment_status = 'failed', fulfillment_error = ?
+                 WHERE order_ref = ? AND status IN ('pending', 'paid')"
+            );
+            $stmt->execute([$error, $orderRef]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "UPDATE provider_payment_orders
+                 SET status = 'cancelled'
+                 WHERE order_ref = ? AND status IN ('pending', 'paid')"
+            );
+            $stmt->execute([$orderRef]);
+        }
+
+        return $stmt->rowCount() > 0;
+    }
+
     public function markFulfillment(string $orderRef, string $status, ?string $error): void
     {
         if (!$this->hasColumn('fulfillment_status')) {
@@ -309,8 +335,9 @@ final class ProviderCheckoutRepository
     }
 
     /**
-     * 구매이력 전용. 결제 완료와 그 이후(환불 진행·환불 완료)만.
-     * pending·failed·cancelled·만료된 대기는 제외. 관리자 목록·정산·환불 계산은 이 메서드를 쓰지 않는다.
+     * 구매이력 전용. 결제 완료와 그 이후(환불 진행·환불 완료),
+     * 그리고 지급 불가로 자동취소된 주문만.
+     * pending·일반 cancelled·만료된 대기는 제외. 관리자 목록·정산·환불 계산은 이 메서드를 쓰지 않는다.
      *
      * @return list<array<string, mixed>>
      */
@@ -327,11 +354,17 @@ final class ProviderCheckoutRepository
         if ($this->hasColumn('fulfillment_status')) {
             $cols .= ', fulfillment_status, fulfillment_error';
         }
+        $where = "status IN ('paid', 'refund_requested', 'refunded')";
+        if ($this->hasColumn('fulfillment_status')) {
+            $where = "(" . $where
+                . " OR (status = 'cancelled' AND fulfillment_status = 'failed'"
+                . " AND fulfillment_error LIKE 'auto\\_cancelled:%'))";
+        }
         $stmt = $this->pdo->prepare(
             "SELECT {$cols}
              FROM provider_payment_orders
              WHERE user_id = ?
-               AND status IN ('paid', 'refund_requested', 'refunded')
+               AND {$where}
              ORDER BY COALESCE(paid_at, created_at) DESC, id DESC
              LIMIT {$limit}"
         );

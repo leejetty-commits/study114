@@ -1469,6 +1469,26 @@ export function bindPlansScreenEvents(root, rerender) {
         await hydrateProviderStatusStrict().catch(() => hydrateProviderStatus());
         await hydrateProviderNotices();
 
+        if (completed && completed.auto_cancelled === true) {
+          markHistoryCacheStale();
+          setCheckoutResult({
+            status: 'cancelled',
+            message: typeof completed.message === 'string' && completed.message
+              ? completed.message
+              : '선택한 상품을 지금 지급할 수 없어 결제를 자동으로 취소했어요. 카드사에 따라 환불까지 3~5영업일 걸릴 수 있어요.',
+            orderRef: completed.order_ref || created.order_ref,
+            productName: draft.productName,
+            optionLabel: draft.optionLabel,
+            providerLabel: draft.providerLabel,
+            providerType: draft.providerType,
+            providerId: draft.providerId,
+            chargeKrw: serverAmount,
+          });
+          clearCheckoutDraft();
+          window.location.hash = '#/plans/result';
+          return;
+        }
+
         appendHistoryRow({
           orderRef: completed.order_ref || created.order_ref,
           productName: `${draft.productName} · ${draft.optionLabel}`,
