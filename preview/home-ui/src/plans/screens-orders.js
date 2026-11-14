@@ -707,41 +707,76 @@ export function renderPlansResult() {
   }
 
   const ok = result.status === 'success';
+  const autoCancelled = result.auto_cancelled === true;
   const backOp =
     result.providerType === 'tutor'
       ? `#/mypage/registrations/tutors/${result.providerId || ''}/exposure`
       : `#/mypage/registrations/study-rooms/${result.providerId || ''}/inquiries`;
   const resultBadges = sanitizeBadgeCodes(result.providerType || '', result.badgeCodes || []);
-  const resultBadgeLines = resultBadges.length
-    ? resultBadges
-        .map((code) => `<p>홍보 배지 · ${esc(badgeDisplayName(code))}</p>`)
-        .join('')
-    : '<p>홍보 배지 없음</p>';
+  const refundCopy = result.startedOn || result.endsOn || (result.badgeCodes && result.badgeCodes.length)
+    ? POSITION_REFUND_SHORT
+    : MEMO_TICKET_REFUND_SHORT;
+  const row = (label, value) =>
+    `<div class="plans-result__row"><dt>${esc(label)}</dt><dd>${value}</dd></div>`;
+  const group = (rows) => (rows ? `<dl class="plans-result__rows">${rows}</dl>` : '');
+
+  const productRows = [
+    result.productName
+      ? row('상품', esc(`${result.productName}${result.optionLabel ? ` · ${result.optionLabel}` : ''}`))
+      : '',
+    result.startedOn || result.endsOn
+      ? row('이용 기간', esc(`${result.startedOn || '—'} ~ ${result.endsOn || '—'}`))
+      : '',
+  ].join('');
+  const applyRows = [
+    result.providerLabel ? row('적용 프로필', esc(result.providerLabel)) : '',
+    result.regionLabel ? row('적용 지역', esc(result.regionLabel)) : '',
+    resultBadges.length
+      ? row('홍보 배지', esc(resultBadges.map((code) => badgeDisplayName(code)).join(' · ')))
+      : '',
+  ].join('');
+  let goodsRow = '';
+  if (result.badgeSaleKrw != null && resultBadges.length && result.chargeKrw != null) {
+    const goodsWon = Number(result.chargeKrw) - Number(result.badgeSaleKrw);
+    if (Number.isFinite(goodsWon) && goodsWon >= 0) {
+      goodsRow = row('상품 금액', esc(formatKrw(goodsWon)));
+    }
+  }
+  const amountRows = [
+    goodsRow,
+    result.badgeSaleKrw != null && resultBadges.length
+      ? row('배지 소계', esc(formatKrw(result.badgeSaleKrw)))
+      : '',
+    result.chargeKrw != null
+      ? `<div class="plans-result__row plans-result__row--total"><dt>결제금액</dt><dd>${esc(formatKrw(result.chargeKrw))}</dd></div>`
+      : '',
+  ].join('');
+  const check = ok
+    ? `<svg class="plans-result__mark" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"></circle><path d="M9.5 16.5l4 4L22.5 11.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"></path></svg>`
+    : '';
 
   return `
-    <section class="mypage-panel">
-      <div class="mypage-info-box ${ok ? '' : 'is-warn'}">
-        <p><strong>${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</strong></p>
-        ${result.orderRef ? `<p>주문번호 <code>${esc(result.orderRef)}</code></p>` : ''}
-        ${result.productName ? `<p>${esc(result.productName)}${result.optionLabel ? ` · ${esc(result.optionLabel)}` : ''}</p>` : ''}
-        ${result.providerLabel ? `<p>적용 프로필: ${esc(result.providerLabel)}</p>` : ''}
-        ${result.regionLabel ? `<p>적용 지역: ${esc(result.regionLabel)}</p>` : ''}
-        ${result.startedOn || result.endsOn ? `<p>이용 기간 ${esc(result.startedOn || '—')} ~ ${esc(result.endsOn || '—')}</p>` : ''}
-        ${resultBadgeLines}
-        ${result.badgeSaleKrw != null && resultBadges.length ? `<p>배지 소계 ${formatKrw(result.badgeSaleKrw)}</p>` : ''}
-        ${result.chargeKrw != null ? `<p>결제금액 ${formatKrw(result.chargeKrw)}</p>` : ''}
-        <p>${esc(
-          result.startedOn || result.endsOn || (result.badgeCodes && result.badgeCodes.length)
-            ? POSITION_REFUND_SHORT
-            : MEMO_TICKET_REFUND_SHORT,
-        )}</p>
-        ${result.memoBundleGranted > 0 ? `<p>노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
-        ${result.message ? `<p class="mypage-muted">${esc(result.message)}</p>` : ''}
+    <section class="mypage-panel plans-result${ok ? '' : ' plans-result--fail'}">
+      <header class="plans-result__hero">
+        ${check}
+        <div class="plans-result__hero-copy">
+          <p class="plans-result__status">${esc(orderStatusLabel(result.status === 'success' ? 'paid' : result.status))}</p>
+          ${result.chargeKrw != null ? `<p class="plans-result__amount">${esc(formatKrw(result.chargeKrw))}</p>` : ''}
+        </div>
+        ${result.orderRef ? `<p class="plans-result__order">주문번호 ${esc(result.orderRef)}</p>` : ''}
+      </header>
+      <div class="plans-result__card">
+        ${group(productRows)}
+        ${group(applyRows)}
+        ${group(amountRows)}
       </div>
-      <div class="mypage-actions-row">
+      ${autoCancelled ? '' : `<p class="plans-result__refund">${esc(refundCopy)}</p>`}
+      ${result.memoBundleGranted > 0 ? `<p class="plans-result__note">노출상품 무료 쪽지 ${result.memoBundleGranted}회 — 본상품과 같은 기간이며 종료 시 함께 종료됩니다.</p>` : ''}
+      ${result.message ? `<p class="plans-result__note">${esc(result.message)}</p>` : ''}
+      <div class="plans-result__actions mypage-actions-row">
         <a href="#/mypage/plans" class="btn btn--primary" data-nav="/mypage/plans">구매이력 보기</a>
         ${ok ? `<a href="${backOp}" class="btn btn--secondary" data-nav="${backOp.slice(1)}">운영 화면으로</a>` : ''}
-        ${!ok ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
+        ${!ok && !autoCancelled ? `<a href="#/plans/checkout" class="btn btn--secondary" data-plans-nav="/plans/checkout">다시 결제</a>` : ''}
         <a href="#/plans" class="btn btn--secondary" data-plans-nav="/plans">상품센터</a>
       </div>
     </section>`;

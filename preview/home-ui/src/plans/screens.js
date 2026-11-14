@@ -1473,6 +1473,7 @@ export function bindPlansScreenEvents(root, rerender) {
           markHistoryCacheStale();
           setCheckoutResult({
             status: 'cancelled',
+            auto_cancelled: true,
             message: typeof completed.message === 'string' && completed.message
               ? completed.message
               : '선택한 상품을 지금 지급할 수 없어 결제를 자동으로 취소했어요. 카드사에 따라 환불까지 3~5영업일 걸릴 수 있어요.',
