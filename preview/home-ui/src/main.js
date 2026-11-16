@@ -263,7 +263,8 @@ function shouldPaintBeforeSession() {
   // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
   if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
-  if (screen === 'guest') return false;
+  // 비로그인 판정 전에도 게스트 홈 셸을 먼저 그린다. 역할 홈은 세션 뒤에 그린다.
+  if (screen === 'guest') return true;
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
@@ -524,6 +525,26 @@ function init() {
       if (!hit) return;
       const app = document.getElementById('app');
       if (app) app.innerHTML = '';
+    }, true);
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const link = target.closest('[data-util-href]');
+      const href = link?.getAttribute('data-util-href') || '';
+      const action = target.closest('[data-action]')?.getAttribute('data-action') || '';
+      const guestOnly =
+        href.includes('#/login') ||
+        href.includes('#/signup') ||
+        action === 'login-gate' ||
+        action === 'compare-guest-blocked' ||
+        action === 'search' ||
+        action === 'gnb-register_room' ||
+        action === 'gnb-register_tutor' ||
+        Boolean(target.closest('[data-prime-empty], [data-basic-empty], [data-pick-empty]'));
+      if (!guestOnly) return;
+      if (sessionChecked && !isLoggedIn()) return;
+      event.preventDefault();
+      event.stopPropagation();
     }, true);
     window.addEventListener('pagehide', () => {
       document.getElementById('app')?.replaceChildren();
