@@ -382,7 +382,7 @@ console.log('##### 프런트 (화면 소스·옵션) #####');
 }
 {
   const fm = fnBody(SRC.searchMap, 'renderFloatMap');
-  ok('P8·나 찾기 지도: GUEST_MAP_CENTER 를 naver-map-center 에서 가져온다', /import\s*\{[^}]*GUEST_MAP_CENTER[^}]*\}\s*from '\.\.\/\.\.\/shared\/naver-map-center\.js'/.test(SRC.searchMap));
+  ok('P8·나 찾기 지도: GUEST_MAP_CENTER 를 naver-map 에서 가져온다', /import\s*\{[^}]*GUEST_MAP_CENTER[^}]*\}\s*from '\.\.\/\.\.\/shared\/naver-map\.js'/.test(SRC.searchMap));
   ok('P8·나 찾기 지도(게스트): 중심 = GUEST_MAP_CENTER', /bannerStyle === 'guest'/.test(fm) && /GUEST_MAP_CENTER\.lat/.test(fm) && /GUEST_MAP_CENTER\.lng/.test(fm));
   ok('P8·나 찾기 지도(게스트): data-fit-bounds="false" → 줌 17 유지', /data-fit-bounds="false"/.test(fm));
   ok('P8 찾기 지도(회원): fitBounds 속성을 새로 붙이지 않음', /guestMap \? ' data-fit-bounds="false"' : ''/.test(fm));

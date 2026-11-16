@@ -95,7 +95,7 @@ import { mountHomePopup } from './home-popup/mount.js';
 import { consumePendingRoute, clearPendingRoute, peekPendingRoute } from '../../shared/pending-route.js';
 import { isAuthRedirectPending, redirectToEmailVerifyWait } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, hasPendingDeepIntent, resetDeepIntentResumeFlag } from './resume-deep-intent.js';
-import { closeDetailModal } from './detail-decision/close-detail-modal.js';
+import { closeDetailModal } from './detail-decision/detail-shell.js';
 import { closeCompareModal } from './compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
 
