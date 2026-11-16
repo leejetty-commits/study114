@@ -11,7 +11,7 @@ import { bindListSortControls } from '../../shared/list-sort.js';
 import { setGuestListPage } from './state.js';
 import { SECTION_HEADINGS, renderSectionHeading, renderSectionToolbar } from './section-headings.js';
 import { loadGuestBaseline, readGuestBaseline, readGuestAxisCounts } from '../../shared/location-display.js';
-import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
+import { GUEST_MAP_CENTER } from '../../shared/naver-map-center.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getHomeBasicPool,
@@ -281,11 +281,19 @@ export function bindGuestSectionEvents(root, rerender) {
     });
   }
 
-  bindStudyRoomMapSection(root, guestHeroMapItems(), {
-    regionLabel: readGuestBaseline().room || '',
-    lat: GUEST_MAP_CENTER.lat,
-    lng: GUEST_MAP_CENTER.lng,
-    fitBounds: false,
+  requestAnimationFrame(() => {
+    import('../../shared/naver-map.js')
+      .then(({ bindStudyRoomMapSection }) => {
+        bindStudyRoomMapSection(root, guestHeroMapItems(), {
+          regionLabel: readGuestBaseline().room || '',
+          lat: GUEST_MAP_CENTER.lat,
+          lng: GUEST_MAP_CENTER.lng,
+          fitBounds: false,
+        });
+      })
+      .catch((err) => {
+        console.warn('[naver-map]', err);
+      });
   });
   hydrateGuestRegionStats(root);
 

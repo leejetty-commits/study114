@@ -24,7 +24,7 @@ import { renderStudyRoomDetailBody } from './studyroom-detail.js';
 import { AUTH_UI_BASE } from '../data.js';
 import { toggleWishlist, toggleCompare, isWishlisted, isInCompare, isOwnProviderCard } from '../user-actions-state.js';
 import { lookupAllExposureItems } from '../exposure-lookup.js';
-import { bindStudyRoomMapSection } from '../../../shared/naver-map.js';
+import { closeDetailModal } from './close-detail-modal.js';
 import { renderRightRailBlock, bindRightRailEvents } from '../right-rail.js';
 import { isGuestPublicPath, loginUrl } from '../../../shared/route-access.js';
 import { openPublicMyshop } from '../myshop/navigate.js';
@@ -50,16 +50,7 @@ function shiftPublicCount(kind, id, delta, field) {
   }
 }
 
-export function closeDetailModal() {
-  const modal = document.getElementById(MODAL_ID);
-  modal?.querySelectorAll('[data-naver-map-mount]').forEach((mount) => {
-    /** @type {{ destroy?: () => void }|undefined} */ (mount)._mapController?.destroy?.();
-  });
-  modal?.remove();
-  document.body.style.overflow = '';
-  document.body.classList.remove('p24-detail-open', 'p24-detail-open--floating');
-  refreshBackToTop();
-}
+export { closeDetailModal };
 
 function itemTitle(kind, item) {
   if (kind === 'student') return String(item.public_display_name || '').trim() || '학습 요청';
@@ -421,7 +412,15 @@ export function openDetailModal({ kind, item, viewer, onRerender, sourceRoute = 
     const mapAccordion = wrap.querySelector('.p24-map-accordion');
     mapAccordion?.addEventListener('toggle', () => {
       if (!mapAccordion.open) return;
-      bindStudyRoomMapSection(wrap, [item], { regionLabel: item.location_label || '' });
+      requestAnimationFrame(() => {
+        import('../../../shared/naver-map.js')
+          .then(({ bindStudyRoomMapSection }) => {
+            bindStudyRoomMapSection(wrap, [item], { regionLabel: item.location_label || '' });
+          })
+          .catch((err) => {
+            console.warn('[naver-map]', err);
+          });
+      });
     });
   }
 
