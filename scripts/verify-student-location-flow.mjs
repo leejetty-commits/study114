@@ -730,10 +730,11 @@ const findSrc = [
 ].join('\n');
 const mapSrc = read('preview/search-ui/src/search-map.js');
 const naverSrc = read('preview/shared/naver-map.js');
+const centerSrc = read('preview/shared/naver-map-center.js');
 ok('찾기: 학생은 canonical 저장 선택에 쓰지 않음', /state\.role !== 'guest' && state\.role !== 'parent'\)/.test(findSrc));
 ok('찾기: 회원에게 GUEST_PLACE_PROMPT 를 쓰지 않음', !/GUEST_PLACE_PROMPT/.test(findSrc) && !/GUEST_PLACE_PROMPT/.test(mapSrc));
 ok('찾기: 지역 선택 :2070 은 라벨을 임시값에 저장', /writeStoredHopeRegion\('tutor', label\)/.test(findSrc) && !/writeStoredHopeRegion\('tutor', id\)/.test(findSrc));
-ok('지도: 게스트 대치역 중심·줌 17 유지', /GUEST_MAP_CENTER = \{ lat: 37\.494511, lng: 127\.063369 \}/.test(naverSrc) && /MAP_DEFAULT_ZOOM = 17/.test(naverSrc));
+ok('지도: 게스트 대치역 중심·줌 17 유지', /GUEST_MAP_CENTER = \{ lat: 37\.494511, lng: 127\.063369 \}/.test(centerSrc) && /MAP_DEFAULT_ZOOM = 17/.test(naverSrc) && naverSrc.includes("from './naver-map-center.js'"));
 ok('지도: 지역 기준 지도는 대치역 기본값 대신 지오코딩', /options\.geocodeRegion && center\.source === 'default'/.test(naverSrc));
 ok('새 문구에 「학부모」 없음', !/학부모/.test(read('preview/search-ui/src/student-saved-region.js')) && !/학부모/.test(String(loc.STUDENT_PLACE_PROMPT)));
 

@@ -8,7 +8,7 @@
  * - center: CanonicalLocation lat/lng 우선
  */
 
-import { bindStudyRoomMapSection, GUEST_MAP_CENTER } from '../../shared/naver-map.js';
+import { GUEST_MAP_CENTER } from '../../shared/naver-map-center.js';
 import {
   normalizeLocation,
   logLocationDebug,
@@ -255,10 +255,18 @@ export function bindSearchMapPinLinks(root, activeResultItems = []) {
     }
   };
 
-  bindStudyRoomMapSection(root, activeResultItems, {
-    regionLabel: map.getAttribute('data-region-label') || '',
-    lat: map.getAttribute('data-map-lat') != null ? Number(map.getAttribute('data-map-lat')) : null,
-    lng: map.getAttribute('data-map-lng') != null ? Number(map.getAttribute('data-map-lng')) : null,
-    onPinClick: focusCard,
+  requestAnimationFrame(() => {
+    import('../../shared/naver-map.js')
+      .then(({ bindStudyRoomMapSection }) => {
+        bindStudyRoomMapSection(root, activeResultItems, {
+          regionLabel: map.getAttribute('data-region-label') || '',
+          lat: map.getAttribute('data-map-lat') != null ? Number(map.getAttribute('data-map-lat')) : null,
+          lng: map.getAttribute('data-map-lng') != null ? Number(map.getAttribute('data-map-lng')) : null,
+          onPinClick: focusCard,
+        });
+      })
+      .catch((err) => {
+        console.warn('[naver-map]', err);
+      });
   });
 }

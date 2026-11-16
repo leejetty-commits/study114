@@ -31,7 +31,7 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://t1.kakaocdn.net",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://t1.kakaocdn.net https://oapi.map.naver.com",
         "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://*.tosspayments.com https://cdn.portone.io https://t1.kakaocdn.net",
         "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com https://t1.kakaocdn.net",
         "img-src 'self' data: blob: https:",
@@ -56,7 +56,7 @@ export default defineConfig({
     headers: {
       'Content-Security-Policy': [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://t1.kakaocdn.net",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.portone.io https://*.portone.io https://*.tosspayments.com https://t1.kakaocdn.net https://oapi.map.naver.com",
         "frame-src 'self' https://checkout-service.prod.iamport.co https://*.portone.io https://*.tosspayments.com https://cdn.portone.io https://t1.kakaocdn.net",
         "connect-src 'self' http://127.0.0.1:8080 http://localhost:8080 https://cdn.portone.io https://*.portone.io https://api.portone.io https://checkout-service.prod.iamport.co https://*.tosspayments.com https://t1.kakaocdn.net",
         "img-src 'self' data: blob: https:",

@@ -26,7 +26,7 @@ import { hydrateExposureBridge } from '@home-ui/exposure-bridge.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
-import { closeDetailModal } from '@home-ui/detail-decision/detail-shell.js';
+import { closeDetailModal } from '@home-ui/detail-decision/close-detail-modal.js';
 import { closeCompareModal } from '@home-ui/compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
 
