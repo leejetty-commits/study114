@@ -14,6 +14,9 @@ final class SiteFooterCopy
 
     public const COPYRIGHT = '© 2026 우동공과 · study114';
 
+    /** 공정거래위원회 사업자정보 확인. 사업자번호 471-29-01819. */
+    public const BIZ_CHECK_URL = 'https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819';
+
     /**
      * @return array{
      *   name: string,
