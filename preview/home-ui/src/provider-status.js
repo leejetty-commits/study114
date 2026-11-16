@@ -70,6 +70,13 @@ function applyProviderStatus(data) {
   }
 }
 
+/** 스냅샷으로 먼저 그린 뒤 status.php 가 같은 값이면 다시 그리지 않는다. */
+export function seedProviderStatus(data) {
+  if (!data || typeof data !== 'object') return;
+  apiMode = true;
+  applyProviderStatus(data);
+}
+
 /** checkout 직후·프로필 전환 시 오래된 ‘구매 가능’ 캐시를 버린다 */
 export function invalidateProviderStatus() {
   cached = null;

@@ -12,6 +12,8 @@ import {
 
   isMessagesApiMode,
 
+  peekUnreadHold,
+
   getThreadsCache,
 
   getThreadFromCache,
@@ -293,11 +295,10 @@ export function getMemoUsedTargets() {
 
 
 export function getUnreadCount() {
-
+  const held = peekUnreadHold();
+  if (held != null) return held;
   const all = isMessagesApiMode() ? getThreadsCache() : loadAll();
-
   return all.filter((t) => t.unread).length;
-
 }
 
 

@@ -8,6 +8,8 @@ import {
   noteSessionStudentBranch,
 } from './student-branch-store.js';
 import { AUTH_UI_BASE } from './preview-links.js';
+import { clearLastRole } from './last-role.js';
+import { clearSnapshotStorage } from './snap-clear.js';
 import {
   redirectToEmailVerifyWait,
   isUnverifiedAllowedAuthPath,
@@ -124,4 +126,9 @@ export async function chromeLogout() {
   currentUser = null;
   clearStoredStudentBranch();
   clearAuthClientResidue();
+  clearLastRole();
+  clearSnapshotStorage();
+  import('./session-snapshot.js')
+    .then((mod) => mod.forgetSnapshotBinding())
+    .catch(() => {});
 }

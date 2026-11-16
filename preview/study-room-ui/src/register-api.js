@@ -2,6 +2,8 @@
  * 5장 — 공부방 등록 API (study114_dev @ :8080 via Vite proxy)
  */
 
+import { invalidateRegistrationSnapshot } from '../../shared/session-snapshot.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 async function postJson(body) {
@@ -37,10 +39,12 @@ export async function loadRoom(studyRoomId = null) {
  * @param {number|null} studyRoomId
  */
 export async function saveStep(step, payload, studyRoomId = null) {
-  return postJson({
+  const data = await postJson({
     action: 'save',
     step,
     study_room_id: studyRoomId,
     payload,
   });
+  invalidateRegistrationSnapshot('studyRooms');
+  return data;
 }

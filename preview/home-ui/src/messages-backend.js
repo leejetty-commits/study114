@@ -14,6 +14,11 @@ import { hydrateProviderStatus } from './provider-status.js';
 
 let apiMode = false;
 
+/** 스냅샷에 적어 둔 미확인 수. 목록이 도착하기 전 홈 칸이 이 값을 쓴다. */
+let unreadHold = null;
+
+let threadsReady = true;
+
 /** @type {import('./messages/thread-store.js').MessageThread[]} */
 let threadsCache = [];
 
@@ -22,6 +27,32 @@ const threadDetailCache = new Map();
 
 export function isMessagesApiMode() {
   return apiMode;
+}
+
+/** @param {number} count */
+export function seedUnreadHold(count) {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 0) return;
+  unreadHold = Math.floor(n);
+  threadsReady = false;
+}
+
+/** 목록을 받기 전에만 스냅샷 수를 돌려준다. */
+export function peekUnreadHold() {
+  return unreadHold != null && !threadsReady ? unreadHold : null;
+}
+
+function releaseUnreadHold() {
+  unreadHold = null;
+  threadsReady = true;
+}
+
+/** 화면을 다시 그릴지 판정할 미확인 수. 쪽지 본문은 세지 않는다. */
+export function sessionUnreadCount() {
+  const held = peekUnreadHold();
+  if (held != null) return held;
+  if (!apiMode) return 0;
+  return threadsCache.filter((thread) => thread.unread).length;
 }
 
 function resetCache() {
@@ -36,11 +67,14 @@ export async function activateMessagesApi() {
   } catch (err) {
     warnMessages(err);
     resetCache();
+  } finally {
+    releaseUnreadHold();
   }
 }
 
 export function deactivateMessagesApi() {
   apiMode = false;
+  releaseUnreadHold();
   resetCache();
 }
 

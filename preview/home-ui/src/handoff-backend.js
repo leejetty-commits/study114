@@ -21,6 +21,11 @@ import { lookupAllExposureItems } from './exposure-lookup.js';
 
 let apiMode = false;
 
+/** 최근 본 개수. 목록이 도착하기 전 판정에만 쓴다. */
+let recentHold = null;
+
+let handoffReady = true;
+
 /** @type {{ wishlist: { study_room: number[], tutor: number[] }, compare: { study_room: number[], tutor: number[] } }} */
 const userActionsCache = {
   wishlist: { study_room: [], tutor: [] },
@@ -41,6 +46,62 @@ const favoriteCards = { study_room: new Map(), tutor: new Map() };
 
 export function isHandoffApiMode() {
   return apiMode;
+}
+
+function idList(list) {
+  const out = [];
+  const seen = new Set();
+  for (const raw of Array.isArray(list) ? list : []) {
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0 || seen.has(n)) continue;
+    seen.add(n);
+    out.push(n);
+  }
+  return out;
+}
+
+/** 스냅샷의 찜·비교 번호와 최근 본 개수로 홈을 먼저 맞춘다. */
+export function seedHandoffFromChrome(chrome) {
+  if (!chrome || typeof chrome !== 'object') return;
+  userActionsCache.wishlist.study_room = idList(chrome.wish?.study_room);
+  userActionsCache.wishlist.tutor = idList(chrome.wish?.tutor);
+  userActionsCache.compare.study_room = idList(chrome.compare?.study_room);
+  userActionsCache.compare.tutor = idList(chrome.compare?.tutor);
+  const recent = Number(chrome.recent);
+  recentHold = Number.isFinite(recent) && recent >= 0 ? Math.floor(recent) : null;
+  handoffReady = false;
+  apiMode = true;
+}
+
+/** 홈을 다시 그릴지 보는 찜·비교·최근 본 개수. */
+export function handoffPaintCounts() {
+  return {
+    wishRoom: userActionsCache.wishlist.study_room.length,
+    wishTutor: userActionsCache.wishlist.tutor.length,
+    compareRoom: userActionsCache.compare.study_room.length,
+    compareTutor: userActionsCache.compare.tutor.length,
+    recent: !handoffReady && recentHold != null ? recentHold : recentCache.length,
+  };
+}
+
+function finishHandoffHold() {
+  handoffReady = true;
+  recentHold = null;
+}
+
+/** 스냅샷에 넣는 찜·비교 번호와 최근 본 개수. 쪽지 본문은 넣지 않는다. */
+export function chromeHandoffSnapshot() {
+  return {
+    wish: {
+      study_room: [...userActionsCache.wishlist.study_room],
+      tutor: [...userActionsCache.wishlist.tutor],
+    },
+    compare: {
+      study_room: [...userActionsCache.compare.study_room],
+      tutor: [...userActionsCache.compare.tutor],
+    },
+    recent: recentCache.length,
+  };
 }
 
 function resetCaches() {
@@ -119,11 +180,16 @@ function mapReviewRow(row) {
 
 export async function activateHandoffApi() {
   apiMode = true;
-  await hydrateHandoffCache();
+  try {
+    await hydrateHandoffCache();
+  } finally {
+    finishHandoffHold();
+  }
 }
 
 export function deactivateHandoffApi() {
   apiMode = false;
+  finishHandoffHold();
   resetCaches();
 }
 

@@ -8,7 +8,7 @@ import { fetchRoiSummary } from './paid-api.js';
 import { searchApi } from '../../search-ui/src/search-api.js';
 import { getTutors } from './tutor-reg/store.js';
 import { hydrateRegistrationsCache, isRegistrationsApiMode } from './registrations-backend.js';
-import { isMessagesApiMode } from './messages-backend.js';
+import { isMessagesApiMode, peekUnreadHold } from './messages-backend.js';
 import { getUnreadCount } from './messages/thread-store.js';
 import { ensureTutorCityUnits, getTutorCityUnits } from './tutor-reg/city-units.js';
 import { activityLabelFromRegionId } from '../../shared/korea-sidos.js';
@@ -60,7 +60,7 @@ function inquiryText(status) {
 }
 
 function readUnread() {
-  if (!isMessagesApiMode()) return 0;
+  if (!isMessagesApiMode() && peekUnreadHold() == null) return 0;
   try {
     const n = Number(getUnreadCount());
     return Number.isFinite(n) && n > 0 ? n : 0;

@@ -3,13 +3,24 @@
  * handoff store API 모드 진입점
  */
 
-import { activateHandoffApi, deactivateHandoffApi } from './handoff-backend.js';
+import {
+  activateHandoffApi,
+  deactivateHandoffApi,
+  chromeHandoffSnapshot,
+  handoffPaintCounts,
+  seedHandoffFromChrome,
+} from './handoff-backend.js';
 import { deactivatePaidRoiApi } from './paid-backend.js';
-import { activateMessagesApi, deactivateMessagesApi } from './messages-backend.js';
-import { hydrateProviderStatus, resetProviderStatus } from './provider-status.js';
+import { activateMessagesApi, deactivateMessagesApi, seedUnreadHold, sessionUnreadCount } from './messages-backend.js';
+import { getProviderStatus, hydrateProviderStatus, resetProviderStatus, seedProviderStatus } from './provider-status.js';
 import { hydrateProviderNotices, resetProviderNotices } from './provider-notices.js';
 import { hydrateExposureBridge, resetExposureBridge } from './exposure-bridge.js';
-import { activateRegistrationsApi, deactivateRegistrationsApi } from './registrations-backend.js';
+import {
+  activateRegistrationsApi,
+  deactivateRegistrationsApi,
+  registrationsPaintSignature,
+  seedRegistrationsFromSnapshot,
+} from './registrations-backend.js';
 import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
 import { navigate, setActiveRole } from './state.js';
@@ -27,6 +38,8 @@ import {
   noteSessionStudentBranch,
 } from '../../shared/student-branch-store.js';
 import { clearAuthClientResidue } from '../../shared/chrome-session.js';
+import { clearLastRole, noteLastRole } from '../../shared/last-role.js';
+import { clearSnapshotStorage } from '../../shared/snap-clear.js';
 
 const CREDENTIALS = { credentials: 'include' };
 
@@ -236,25 +249,111 @@ function clearAuthRole() {
   noteAuthRoleType('');
 }
 
+/** @type {((snap: object) => void)|null} */
+let seedStudyRoomHome = null;
+
+/** 공부방 목록 시드는 홈·찾기 번들만 등록한다. 인증 화면 빌드에 목록 모듈을 넣지 않는다. */
+export function registerStudyRoomSnapshotSeed(seed) {
+  seedStudyRoomHome = seed;
+}
+
+function loadSnapshot() {
+  return import('../../shared/session-snapshot.js');
+}
+
+function dropSnapshot() {
+  clearSnapshotStorage();
+  loadSnapshot()
+    .then((mod) => mod.forgetSnapshotBinding())
+    .catch(() => {});
+}
+
+/** 결제 뒤 바뀌는 값만. 조회 시각처럼 매번 다른 필드는 빼서 지도를 유지한다. */
+function providerPaintView(status) {
+  if (!status || typeof status !== 'object') return null;
+  const slots = status.slots && typeof status.slots === 'object' ? status.slots : null;
+  return {
+    is_provider: !!status.is_provider,
+    tier: String(status.subscription_tier || 'free'),
+    prime: status.prime_active === true,
+    exposure: String(status.exposure?.state || ''),
+    memo: !!status.cold_memo?.can_send,
+    memoLeft: Number(status.cold_memo?.remaining || 0),
+    primeLeft: slots?.prime?.remaining ?? null,
+    pickLeft: slots?.pick?.remaining ?? null,
+  };
+}
+
+/** 등록·미확인 수·유료 상태·찜/비교/최근 본 개수. 하나라도 다르면 홈을 다시 그린다. */
+function sessionPaintSignature() {
+  return JSON.stringify({
+    registrations: registrationsPaintSignature(),
+    unread: sessionUnreadCount(),
+    provider: providerPaintView(getProviderStatus()),
+    handoff: handoffPaintCounts(),
+  });
+}
+
+function chromeFromCaches() {
+  const handoff = chromeHandoffSnapshot();
+  return {
+    unread: sessionUnreadCount(),
+    wish: handoff.wish,
+    compare: handoff.compare,
+    recent: handoff.recent,
+  };
+}
+
 /**
- * 쪽지·등록 등 부가 API 실패가 로그인 세션을 지우지 않게 격리.
- * deferExposurePool: 공부방찾기 첫 진입. 노출 풀 3건은 여기서 보내지 않는다.
+ * 공급자·쪽지·등록은 서로 응답을 기다리지 않는다.
+ * 등록·미확인 수·유료 상태·찜/비교/최근 본 개수가 같으면 false. 지도는 다시 만들지 않는다.
  * @param {{ deferExposurePool?: boolean }} [opts]
+ * @returns {Promise<boolean>}
  */
 async function hydrateSessionDependencies(opts = {}) {
-  await activateProviderApis(currentUser.role_type).catch((err) => {
-    console.warn('[auth] provider hydrate skipped', err);
+  const before = sessionPaintSignature();
+  await Promise.all([
+    activateProviderApis(currentUser.role_type).catch((err) => {
+      console.warn('[auth] provider hydrate skipped', err);
+    }),
+    activateMessagesApi().catch((err) => {
+      console.warn('[auth] messages hydrate skipped', err);
+    }),
+    activateRegistrationsApi().catch((err) => {
+      console.warn('[auth] registrations hydrate skipped', err);
+    }),
+  ]);
+  if (opts.deferExposurePool !== true) {
+    await hydrateExposureBridge().catch((err) => {
+      console.warn('[auth] exposure hydrate skipped', err);
+    });
+  }
+  const after = sessionPaintSignature();
+  const snapMod = await loadSnapshot();
+  const provider = getProviderStatus();
+  snapMod.patchSessionSnapshot({
+    ...(provider ? { providerStatus: provider } : {}),
+    chrome: chromeFromCaches(),
   });
-  await activateMessagesApi().catch((err) => {
-    console.warn('[auth] messages hydrate skipped', err);
-  });
-  await activateRegistrationsApi().catch((err) => {
-    console.warn('[auth] registrations hydrate skipped', err);
-  });
-  if (opts.deferExposurePool === true) return;
-  await hydrateExposureBridge().catch((err) => {
-    console.warn('[auth] exposure hydrate skipped', err);
-  });
+  return before !== after;
+}
+
+/** @param {AuthUser} user */
+async function seedCachesFromSnapshot(user) {
+  noteLastRole(user.role_type);
+  const snapMod = await loadSnapshot();
+  const snap = snapMod.takeMatchingSnapshot(user);
+  snapMod.bindSnapshotUser(user);
+  if (!snap) return;
+  if (snap.registrations) seedRegistrationsFromSnapshot(snap.registrations);
+  if (snap.providerStatus) seedProviderStatus(snap.providerStatus);
+  if (snap.chrome && typeof snap.chrome === 'object') {
+    seedUnreadHold(snap.chrome.unread);
+    seedHandoffFromChrome(snap.chrome);
+  }
+  if (user.role_type === 'study_room_owner' && seedStudyRoomHome && (snap.roomHomeList || snap.roi || snap.studentDemand)) {
+    await seedStudyRoomHome(snap);
+  }
 }
 
 /**
@@ -268,6 +367,8 @@ export async function initAuthSession(navigateHome = false, opts = {}) {
       sessionConfirmStatus = 'anonymous';
       currentUser = null;
       clearAuthRole();
+      clearLastRole();
+      dropSnapshot();
       deactivateProviderApis();
       deactivateMessagesApi();
       deactivateRegistrationsApi();
@@ -280,15 +381,16 @@ export async function initAuthSession(navigateHome = false, opts = {}) {
     sessionConfirmStatus = 'authenticated';
     const contextRoleType = user.oauth_role_pending === true ? '' : user.role_type;
     applyRoleContext(contextRoleType);
+    await seedCachesFromSnapshot(user);
     if (navigateHome && ROLE_HOME[contextRoleType]) {
       await hydrateSessionDependencies(opts);
       navigate(ROLE_HOME[contextRoleType]);
       return user;
     }
     // 부가 로딩이 끝나기 전에 역할 화면을 그리게, 호출자가 바로 받게 한다.
-    // 저장 지역 캐시가 채워진 뒤 찾기 화면이 한 번 다시 그려지게 알린다.
-    void hydrateSessionDependencies(opts).then(() => {
-      window.dispatchEvent(new CustomEvent('auth:session-hydrated'));
+    // 등록 목록이 그대로면 지도를 다시 만들지 않는다.
+    void hydrateSessionDependencies(opts).then((changed) => {
+      window.dispatchEvent(new CustomEvent('auth:session-hydrated', { detail: { changed: changed === true } }));
     });
     return user;
   } catch (err) {
@@ -312,6 +414,8 @@ export async function logout() {
   currentUser = null;
   sessionConfirmStatus = 'anonymous';
   clearAuthRole();
+  clearLastRole();
+  dropSnapshot();
   clearStoredStudentBranch();
   deactivateProviderApis();
   deactivateMessagesApi();

@@ -10,6 +10,7 @@ import {
 } from '../registrations-backend.js';
 import { getTutor, updateTutor } from './store.js';
 import { tutorBasicMissing, tutorBasicMissingMessage } from '../../../shared/tutor-basic-fields.js';
+import { invalidateRegistrationSnapshot } from '../../../shared/session-snapshot.js';
 
 async function postRegisterSave(step, tutorId, payload) {
   const res = await fetch('/api/tutor/register.php', {
@@ -25,6 +26,7 @@ async function postRegisterSave(step, tutorId, payload) {
     }
     throw new Error(data.message || `저장 실패 (${res.status})`);
   }
+  invalidateRegistrationSnapshot('tutors');
   return data;
 }
 
