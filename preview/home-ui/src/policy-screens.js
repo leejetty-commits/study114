@@ -1,6 +1,6 @@
 import { POLICY_PAGES, POLICY_SHORT_NOTICE, getPolicyPage } from './policy-copy.js';
 import { getPolicySlug } from './policy-router.js';
-import { ensurePublicSettings, peekPublicSettings } from './admin/site-settings-store.js';
+import { ensurePublicSettings, peekPublicSettings } from './admin/site-settings-public.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');

@@ -7,7 +7,7 @@ import {
   listActivePopupsForSurface,
   dismissPopup,
   ensurePublicSettings,
-} from './admin/site-settings-store.js';
+} from './admin/site-settings-public.js';
 import { getCurrentScreen, isAdminRoute, isMypageRoute, isMessagesRoute } from './state.js';
 import { isLoggedIn } from './auth-session.js';
 import { shouldSuppressOpsPopup } from './home-popup/gate.js';

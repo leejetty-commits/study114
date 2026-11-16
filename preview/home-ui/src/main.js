@@ -42,9 +42,6 @@ import './styles/inquiry-settings-catalog.css';
 import './styles/student-mypage-stage5b.css';
 import { bindCardTrustRailFit } from './exposure-render.js';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
-import { renderParent, bindParentEvents } from './screens/parent.js';
-import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
-import { renderTutor, bindTutorEvents } from './screens/tutor.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getCurrentScreen,
@@ -75,9 +72,6 @@ import {
   isRegisterIntroRoute,
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
-import { renderMypage, bindMypageEvents } from './mypage/index.js';
-import { renderPublicMyshop, bindPublicMyshopEvents } from './myshop/index.js';
-import { renderPlans, bindPlansEvents } from './plans/index.js';
 import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
@@ -90,7 +84,6 @@ import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
 import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
-import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { setConsoleUnlockRequiredHandler } from './admin/admin-fetch.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
@@ -102,8 +95,14 @@ import { closeDetailModal } from './detail-decision/detail-shell.js';
 import { closeCompareModal } from './compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
 
-/* 관리자·드문 화면만 동적 청크. plans·역할홈·마이페이지·쪽지·공개마이샵은 정적 유지. */
+/* 게스트 첫 화면에 없는 화면은 그 주소에서만 받는다. 해시 판별·plans 리다이렉트 표·인증·2차 비밀번호는 정적. */
 const loadAdminScreen = () => import('./admin/index.js');
+const loadParentScreen = () => import('./screens/parent.js');
+const loadStudyRoomScreen = () => import('./screens/study-room.js');
+const loadTutorScreen = () => import('./screens/tutor.js');
+const loadMypageScreen = () => import('./mypage/index.js');
+const loadPlansScreen = () => import('./plans/index.js');
+const loadMyshopScreen = () => import('./myshop/index.js');
 const loadGuideScreen = () => import('./guide/index.js');
 const loadConcernScreen = () => import('./concern/index.js');
 const loadPromoScreen = () => import('./promo/index.js');
@@ -111,6 +110,82 @@ const loadSupportScreen = () => import('./support/index.js');
 const loadPolicyScreen = () => import('./policy-index.js');
 const loadLibraryScreen = () => import('./library/index.js');
 const loadRegisterIntroScreen = () => import('./register-intro/index.js');
+
+/** @type {Promise<{ activateAdminApi: () => Promise<void>, deactivateAdminApi: () => void }>|null} */
+let adminBackendLoad = null;
+function loadAdminBackend() {
+  if (!adminBackendLoad) adminBackendLoad = import('./admin/admin-backend.js');
+  return adminBackendLoad;
+}
+async function activateAdminBackend() {
+  const mod = await loadAdminBackend();
+  await mod.activateAdminApi();
+}
+function deactivateAdminBackend() {
+  if (!adminBackendLoad) return;
+  adminBackendLoad.then((mod) => mod.deactivateAdminApi()).catch(() => {});
+}
+
+/** 첫 진입만 안내 문구. 이미 그려진 화면은 조각이 올 때까지 유지한다. */
+function paintRouteLoading(app) {
+  if (!app || app.childElementCount > 0) return;
+  app.innerHTML = '<p role="status" style="padding:1.5rem;font-family:system-ui,sans-serif">불러오는 중</p>';
+}
+
+const CHUNK_RELOAD_KEY = 'study114-chunk-reload';
+
+function isChunkLoadError(err) {
+  const msg = String(err instanceof Error ? err.message : err || '');
+  return (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('vite:preloadError')
+  );
+}
+
+/** 배포 직후 옛 조각 404는 같은 주소에서 한 번만 새로고침한다. */
+let chunkReloadPending = false;
+function reloadOnceForStaleChunk(err) {
+  if (!isChunkLoadError(err)) return false;
+  if (chunkReloadPending) return true;
+  const here = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === here) return false;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, here);
+  } catch {
+    return false;
+  }
+  chunkReloadPending = true;
+  window.location.reload();
+  return true;
+}
+
+function handleBootError(err) {
+  if (reloadOnceForStaleChunk(err)) return;
+  showBootError(err);
+}
+
+window.addEventListener('vite:preloadError', (event) => {
+  const err = event?.payload instanceof Error ? event.payload : new Error('vite:preloadError');
+  if (reloadOnceForStaleChunk(err)) event.preventDefault();
+});
+
+async function loadRouteModule(app, loader) {
+  paintRouteLoading(app);
+  try {
+    const mod = await loader();
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    } catch {
+      /* 성공 뒤에는 다음 배포도 한 번 새로고침할 수 있게 비운다. */
+    }
+    return mod;
+  } catch (err) {
+    if (reloadOnceForStaleChunk(err)) return new Promise(() => {});
+    throw err;
+  }
+}
 
 function hydrateNotices() {
   hydrateNoticeCenter().catch(() => {});
@@ -140,10 +215,20 @@ function dismissRouteOverlays() {
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
-  parent: { render: renderParent, bind: bindParentEvents },
-  studyRoom: { render: renderStudyRoom, bind: bindStudyRoomEvents },
-  tutor: { render: renderTutor, bind: bindTutorEvents },
 };
+
+const ROLE_SCREEN_LOADERS = {
+  parent: loadParentScreen,
+  studyRoom: loadStudyRoomScreen,
+  tutor: loadTutorScreen,
+};
+
+function roleScreenFromModule(key, mod) {
+  if (key === 'parent') return { render: mod.renderParent, bind: mod.bindParentEvents };
+  if (key === 'studyRoom') return { render: mod.renderStudyRoom, bind: mod.bindStudyRoomEvents };
+  if (key === 'tutor') return { render: mod.renderTutor, bind: mod.bindTutorEvents };
+  return null;
+}
 
 function applyPlansRedirects() {
   const hash = window.location.hash.slice(1) || '';
@@ -189,7 +274,8 @@ function shouldPaintBeforeSession() {
   // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
   if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
-  if (screen === 'guest') return false;
+  // 비로그인 판정 전에도 게스트 홈 셸을 먼저 그린다. 역할 홈은 세션 뒤에 그린다.
+  if (screen === 'guest') return true;
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
@@ -232,6 +318,8 @@ async function renderScreen(generation) {
     return;
   }
   if (isPlansRoute()) {
+    const { renderPlans, bindPlansEvents } = await loadRouteModule(app, loadPlansScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPlans();
     bindPlansEvents(app, render);
     mountOpsChrome(app);
@@ -303,6 +391,8 @@ async function renderScreen(generation) {
     return;
   }
   if (isMyshopRoute()) {
+    const { renderPublicMyshop, bindPublicMyshopEvents } = await loadRouteModule(app, loadMyshopScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPublicMyshop();
     bindPublicMyshopEvents(app, render);
     mountOpsChrome(app);
@@ -315,6 +405,8 @@ async function renderScreen(generation) {
       app.innerHTML = '';
       return;
     }
+    const { renderMypage, bindMypageEvents } = await loadRouteModule(app, loadMypageScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
     bindCardTrustRailFit(app);
@@ -323,7 +415,7 @@ async function renderScreen(generation) {
     return;
   }
   const key = getCurrentScreen();
-  if (!sessionChecked && SCREENS[key] && key !== 'guest') return;
+  if (!sessionChecked && ROLE_SCREEN_LOADERS[key]) return;
   const roleGate = guardRoleHomeAccess(key, isLoggedIn(), navRoleFromAuthUser(getAuthUser()));
   if (!roleGate.ok) {
     if (window.location.hash !== roleGate.redirectHash) {
@@ -331,7 +423,12 @@ async function renderScreen(generation) {
       return;
     }
   }
-  const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
+  let screen = SCREENS.guest;
+  if (roleGate.ok && ROLE_SCREEN_LOADERS[key]) {
+    const mod = await loadRouteModule(app, ROLE_SCREEN_LOADERS[key]);
+    if (generation !== renderGeneration) return;
+    screen = roleScreenFromModule(key, mod) || SCREENS.guest;
+  }
   app.innerHTML = screen.render();
   screen.bind(app, render);
   bindCardTrustRailFit(app);
@@ -440,6 +537,26 @@ function init() {
       const app = document.getElementById('app');
       if (app) app.innerHTML = '';
     }, true);
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (!target) return;
+      const link = target.closest('[data-util-href]');
+      const href = link?.getAttribute('data-util-href') || '';
+      const action = target.closest('[data-action]')?.getAttribute('data-action') || '';
+      const guestOnly =
+        href.includes('#/login') ||
+        href.includes('#/signup') ||
+        action === 'login-gate' ||
+        action === 'compare-guest-blocked' ||
+        action === 'search' ||
+        action === 'gnb-register_room' ||
+        action === 'gnb-register_tutor' ||
+        Boolean(target.closest('[data-prime-empty], [data-basic-empty], [data-pick-empty]'));
+      if (!guestOnly) return;
+      if (sessionChecked && !isLoggedIn()) return;
+      event.preventDefault();
+      event.stopPropagation();
+    }, true);
     window.addEventListener('pagehide', () => {
       document.getElementById('app')?.replaceChildren();
     });
@@ -450,7 +567,7 @@ function init() {
           sessionChecked = true;
           render();
         })
-        .catch((err) => showBootError(err));
+        .catch((err) => handleBootError(err));
     });
     window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
@@ -458,21 +575,21 @@ function init() {
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
       dismissRouteOverlays();
-      render().catch(showBootError);
+      render().catch(handleBootError);
     });
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
       if (isAdminUser() && getAuthUser()?.console_unlocked === true) {
-        await activateAdminApi().catch((err) => {
+        await activateAdminBackend().catch((err) => {
           console.warn('[admin] api disabled — static A28 fallback', err);
-          deactivateAdminApi();
+          deactivateAdminBackend();
         });
         await activateContentConfigApi().catch((err) => {
           console.warn('[content-config] api disabled — sessionStorage fallback', err);
           deactivateContentConfigApi();
         });
       } else if (!isAdminUser()) {
-        deactivateAdminApi();
+        deactivateAdminBackend();
         deactivateContentConfigApi();
       }
       hydrateNotices();
@@ -484,7 +601,7 @@ function init() {
       resetDeepIntentResumeFlag();
       resetConcernData();
       deactivateBoardApi();
-      deactivateAdminApi();
+      deactivateAdminBackend();
       deactivateContentConfigApi();
       resetNoticeCaches();
       hydrateNotices();
@@ -505,12 +622,12 @@ function init() {
       render();
     });
     if (shouldPaintBeforeSession()) {
-      render().catch(showBootError);
+      render().catch(handleBootError);
     }
     setTimeout(() => {
       bootReady = true;
       if (paintedHash !== null && window.location.hash !== paintedHash) {
-        render().catch(showBootError);
+        render().catch(handleBootError);
       }
     }, 0);
     const supportBoot = activateSupportApi().catch((err) => {
@@ -554,9 +671,9 @@ function init() {
           }
         }
         if (user && isAdminUser() && user.console_unlocked === true) {
-          await activateAdminApi().catch((err) => {
+          await activateAdminBackend().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);
-            deactivateAdminApi();
+            deactivateAdminBackend();
           });
           await activateContentConfigApi().catch((err) => {
             console.warn('[content-config] api disabled — sessionStorage fallback', err);
@@ -619,9 +736,9 @@ function init() {
         render();
         if (user) queueMicrotask(() => resumePendingDeepIntent());
       })
-      .catch((err) => showBootError(err));
+      .catch((err) => handleBootError(err));
   } catch (err) {
-    showBootError(err);
+    handleBootError(err);
   }
 }
 
