@@ -14,6 +14,7 @@ export function createFindState() {
     activeRegionLabel: '',
     studentLessonFormat: 'one_on_one',
     tutorRegionIndex: 0,
+    studyRoomPromoIndex: null,
     homeSelf: false,
   };
 }
@@ -32,6 +33,7 @@ export function resetFindState(findState) {
   findState.activeResultSource = null;
   findState.activeRegionLabel = '';
   findState.tutorRegionIndex = 0;
+  findState.studyRoomPromoIndex = null;
   findState.studentLessonFormat = 'one_on_one';
   findState.homeSelf = false;
   findState.hasRequestSummary = false;

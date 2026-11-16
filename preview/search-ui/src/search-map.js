@@ -111,8 +111,10 @@ function renderFloatMap(parts, items, ctx) {
       ctx.providerBanner ||
       readStudyRoomProviderHomeBanner({ parts, items, viewerRole: ctx.viewerRole });
     sub = banner.sub;
+    const studentId = /^\d+$/.test(String(ctx.studentRegionId || '')) ? String(ctx.studentRegionId) : '';
     statsHtml = `<dl class="hero-map__stats">
           <div><dt>공부방</dt><dd>${banner.roomCount}</dd></div>
+          <div><dt>학생</dt><dd data-study-room-student-count="${studentId}">—</dd></div>
         </dl>`;
     hint = banner.hint;
   } else if (bannerStyle === 'provider_room') {
@@ -153,10 +155,11 @@ function renderFloatMap(parts, items, ctx) {
       (region && !/대치|역삼/.test(region) ? region : '') ||
       memberPlacePrompt(ctx.viewerRole);
 
+  const wide = ctx.homeWide === true ? ' hero-map__banner--home-wide' : '';
   const bannerAside = ctx.hideMapBanner === true
     ? ''
     : `
-      <aside class="hero-map__banner" aria-label="지역 요약">
+      <aside class="hero-map__banner${wide}" aria-label="지역 요약">
         <h2 class="hero-map__dong"><span class="hero-map__chip"><img class="hero-map__chip-img" src="/assets/brand/udong-symbol.svg" alt="" />우리동네</span>${esc(heading)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
         ${statsHtml}
@@ -217,6 +220,8 @@ export function renderSearchMapBlock(activeResultItems = [], options = {}) {
     providerHome,
     providerBanner,
     hideMapBanner: options.hideMapBanner === true,
+    homeWide: options.homeWide === true,
+    studentRegionId: options.studentRegionId || '',
     roomCount: providerHome ? providerBanner.roomCount : items.length,
     lat: options.lat ?? parts.lat,
     lng: options.lng ?? parts.lng,
