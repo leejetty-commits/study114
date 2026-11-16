@@ -8,11 +8,14 @@
 /** @typedef {{ id: string|number, study_room_name?: string, title?: string, latitude?: string|number|null, longitude?: string|number|null, location_label?: string, region_label?: string, profile_status?: string }} StudyRoomMapItem */
 
 import { STUDY_ROOM_MAP_COPY } from '../home-ui/src/empty-state-copy.js';
-import { GUEST_MAP_CENTER } from './naver-map-center.js';
-
-export { GUEST_MAP_CENTER };
 
 /** @typedef {{ lat: number, lng: number, label?: string }} RegionCenter */
+
+/**
+ * 대치역, 위키데이터 Q100860 P625(조회 2026-10-01).
+ * 2026-10-02 한국어 위키백과 좌표 37.49444, 127.06333 과 약 9m 차이. 카카오 장소검색은 REST 키가 없어 대조하지 못했다.
+ */
+export const GUEST_MAP_CENTER = { lat: 37.494511, lng: 127.063369 };
 
 /** 네이버 신규 타일 최대 줌 21 − 4 (공식 문서 NaverStyleMapTypeOptions) */
 export const MAP_DEFAULT_ZOOM = 17;
@@ -144,56 +147,6 @@ export function resolveMapCenter(items, regionLabel = '', explicitCenter = {}, o
   return { lat: GUEST_MAP_CENTER.lat, lng: GUEST_MAP_CENTER.lng, zoom: MAP_DEFAULT_ZOOM, source: 'default' };
 }
 
-function sdkScriptUrl(clientId) {
-  return `${SDK_URL}?ncpKeyId=${encodeURIComponent(clientId)}&submodules=geocoder`;
-}
-
-function findSdkScript(src) {
-  const scripts = document.getElementsByTagName('script');
-  for (let i = 0; i < scripts.length; i += 1) {
-    const script = scripts[i];
-    if (script.getAttribute('src') === src || script.src === src) return script;
-  }
-  return null;
-}
-
-/** 우리가 방금 넣은 태그는 pending. 이미 끝난 태그만 완료로 본다. */
-function scriptAlreadyFinished(script) {
-  if (script.dataset.naverSdk === 'pending') return false;
-  if (script.dataset.naverSdk === 'done' || script.dataset.naverSdk === 'error') return true;
-  try {
-    const url = script.src;
-    if (!url || typeof performance === 'undefined' || typeof performance.getEntriesByName !== 'function') return false;
-    return performance.getEntriesByName(url).some((entry) => entry.entryType === 'resource' && entry.responseEnd > 0);
-  } catch {
-    return false;
-  }
-}
-
-function waitForSdkScript(script) {
-  if (typeof window !== 'undefined' && window.naver?.maps) return Promise.resolve(window.naver);
-  if (script.dataset.naverSdk === 'error') {
-    return Promise.reject(new Error('네이버 지도 SDK를 불러올 수 없습니다.'));
-  }
-  if (scriptAlreadyFinished(script)) {
-    if (window.naver?.maps) return Promise.resolve(window.naver);
-    return Promise.reject(new Error('네이버 지도 SDK 로드 실패'));
-  }
-  return new Promise((resolve, reject) => {
-    const finish = (err) => {
-      script.removeEventListener('load', onLoad);
-      script.removeEventListener('error', onError);
-      if (!err && window.naver?.maps) resolve(window.naver);
-      else if (!err) reject(new Error('네이버 지도 SDK 로드 실패'));
-      else reject(err);
-    };
-    const onLoad = () => finish(null);
-    const onError = () => finish(new Error('네이버 지도 SDK를 불러올 수 없습니다.'));
-    script.addEventListener('load', onLoad);
-    script.addEventListener('error', onError);
-  });
-}
-
 function loadNaverMapsSdk() {
   const clientId = getNaverMapClientId();
   if (!clientId) {
@@ -205,33 +158,16 @@ function loadNaverMapsSdk() {
   }
 
   if (!sdkPromise) {
-    const src = sdkScriptUrl(clientId);
     sdkPromise = new Promise((resolve, reject) => {
-      let script = findSdkScript(src);
-      if (script?.dataset.naverSdk === 'error') {
-        script.remove();
-        script = null;
-      }
-      if (!script) {
-        script = document.createElement('script');
-        script.src = src;
-        script.async = true;
-        script.dataset.naverSdk = 'pending';
-        document.head.appendChild(script);
-      }
-      waitForSdkScript(script).then(
-        (naverNs) => {
-          script.dataset.naverSdk = 'done';
-          resolve(naverNs);
-        },
-        (err) => {
-          script.dataset.naverSdk = 'error';
-          reject(err);
-        },
-      );
-    }).catch((err) => {
-      sdkPromise = null;
-      throw err;
+      const script = document.createElement('script');
+      script.src = `${SDK_URL}?ncpKeyId=${encodeURIComponent(clientId)}&submodules=geocoder`;
+      script.async = true;
+      script.onload = () => {
+        if (window.naver?.maps) resolve(window.naver);
+        else reject(new Error('네이버 지도 SDK 로드 실패'));
+      };
+      script.onerror = () => reject(new Error('네이버 지도 SDK를 불러올 수 없습니다.'));
+      document.head.appendChild(script);
     });
   }
 
