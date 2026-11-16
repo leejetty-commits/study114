@@ -2,8 +2,6 @@
  * 과외쌤 홍보 랜딩 카피 — promo v2 (293-5) 카피 — 293 최종 카피 B
  */
 
-import { quickMatchCatalogTutor } from './quick-match-content.js';
-
 export const TUTOR_PROMO = {
   meta: {
     path: '/promo/tutor',
@@ -42,7 +40,6 @@ export const TUTOR_PROMO = {
       ],
     },
     cardTypes: {
-      quickMatch: quickMatchCatalogTutor,
       eyebrow: '카드 종류',
       title: '기본은 무료, 노출은 고를 때만',
       lead: '프라임·픽은 홈·찾기 화면에서 프로필을 더 잘 발견하도록 돕는 선택 노출상품입니다.',

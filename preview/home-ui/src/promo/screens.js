@@ -1,7 +1,6 @@
 import { STUDY_ROOM_PROMO } from './study-room-content.js';
 import { TUTOR_PROMO } from './tutor-content.js';
 import { PARENT_PROMO } from './parent-content.js';
-import { renderQuickMatchCatalog, renderQuickMatchPage } from './quick-match-view.js';
 import { searchUiUrl } from '../../../shared/preview-links.js';
 import { signupUrl } from '../../../shared/route-access.js';
 import { getNavRole } from '../state.js';
@@ -84,7 +83,6 @@ function renderStudyRoomV2(c) {
       <h3 class="pv2-h2">${esc(c.cardTypes.title)}</h3>
       <p class="pv2-li" style="color:#B9C3D6">${esc(c.cardTypes.lead)}</p>
     </div>
-    ${c.cardTypes.quickMatch ? renderQuickMatchCatalog(c.cardTypes.quickMatch) : ''}
     <div class="pv2-cards">
       ${c.cardTypes.cards.map((card, i) => `<div class="pv2-c pv2-rv pv2-unfold${i > 0 ? ` pv2-d${i}` : ''} is-on">
         <span class="pv2-badge" style="background:${esc(card.badgeBg)};color:${esc(card.badgeFg)}">${esc(card.badge)}</span>
@@ -197,7 +195,6 @@ function renderTutorV2(c) {
       <h3 class="pv2-h2" style="margin-top:10px">${esc(c.cardTypes.title)}</h3>
       <p style="margin-top:10px;font-size:16px;color:#4B5563">${esc(c.cardTypes.lead)}</p>
     </div>
-    ${c.cardTypes.quickMatch ? renderQuickMatchCatalog(c.cardTypes.quickMatch) : ''}
     <div class="pv2-tg">
       ${c.cardTypes.cards.map((card, i) => `<div class="pv2-t pv2-rv pv2-unfold${i > 0 ? ` pv2-d${i}` : ''} is-on">
         <span class="pv2-badge" style="background:${esc(card.badgeBg)};color:${esc(card.badgeFg)}">${esc(card.badge)}</span>
@@ -373,7 +370,6 @@ export function renderPromoScreen(path) {
   const id = path.replace(/^\/promo\//, '').split('?')[0];
   if (id === 'tutor') return renderTutorPromo();
   if (id === 'parent') return renderParentPromo();
-  if (id === 'quick-match') return renderQuickMatchPage();
   return renderStudyRoomPromo();
 }
 

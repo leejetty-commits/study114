@@ -1866,7 +1866,7 @@ function bindPrimeMatchConsentEvents(root) {
 
 /** @param {HTMLElement} root @param {() => void} rerender */
 export function bindMypageScreenEvents(root, rerender) {
-  bindQuickMatchScreen(root, rerender);
+  bindQuickMatchScreen(root);
   const path = getMypagePath();
   if (path === '/mypage/account') {
     const role = sessionMypageRole();
