@@ -2,7 +2,7 @@
 
 지시서: `origin/docs/pre-open-site-2026-11-17` 의 `docs/worklog/grok-sync/docs/pre-open-site-2026-11-17.md`.
 기준: `origin/main` `3fab37196e26a7b51e87030b7dc94edd68fd8bfd`.
-브랜치: `work/pre-open-site-2026-11-17`. PR만. 머지·배포 없음.
+브랜치: `work/pre-open-site-2026-11-17`. 사용자 합격. 정적 사업자정보의 「· 전화」는 번호가 정해질 때까지 뺐다.
 
 ## 커밋
 
