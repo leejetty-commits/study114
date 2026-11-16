@@ -11,7 +11,6 @@ import {
 } from './runtime-config.js';
 import { buildPlansHref, parsePlansQuery } from './router.js';
 import { getPlansEffectiveRole } from './profiles.js';
-import { isTestAccountUser } from '../auth-session.js';
 import { setCheckoutDraft, getCheckoutDraft, getCheckoutResult } from './checkout-session.js';
 import {
   getHistoryRows,
@@ -567,9 +566,7 @@ export function renderPlansCheckout() {
   }
 
   const amt = resolveCheckoutAmount(draft.priceKrw);
-  const methods = (getPlanRuntimeSettings().payment_methods || []).filter(
-    (method) => method !== 'portone_test' || isTestAccountUser(),
-  );
+  const methods = getPlanRuntimeSettings().payment_methods;
   const isPosition = draft.productCode === 'prime' || draft.productCode === 'pick';
   const badgeCodes = isPosition ? sanitizeBadgeCodes(draft.providerType, draft.badgeCodes || []) : [];
   const badgeLines = badgeCodes.map((code) => {

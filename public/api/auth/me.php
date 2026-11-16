@@ -154,7 +154,6 @@ $me = [
     'phone_verified' => $phoneVerified,
     'needs_basic_register' => $needsBasicRegister,
     'student_branch' => $studentBranch,
-    'test_account' => \Study114\Auth\TestAccountAllowlist::contains((string) ($user['email'] ?? '')),
 ];
 if ($adminLevel !== null) {
     $me['console_unlocked'] = (new \Study114\Admin\AdminConsolePasswordService())->sessionIsActive();
