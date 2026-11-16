@@ -109,6 +109,11 @@ export function isAdminUser() {
   return Boolean(currentUser?.admin_level) || currentUser?.role_type === 'admin';
 }
 
+/** STUDY114_TEST_ACCOUNT_EMAILS 허용목록. 이메일 목록은 내려주지 않고 me.php 판정만 쓴다. */
+export function isTestAccountUser() {
+  return currentUser?.test_account === true;
+}
+
 function waitForSessionRetry(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -196,6 +201,7 @@ export async function fetchSession() {
           oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
           oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
           phone_verified: Boolean(data.phone_verified),
+          test_account: data.test_account === true,
         };
       }
       redirectToEmailVerifyWait();
@@ -224,6 +230,7 @@ export async function fetchSession() {
       oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
       oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
       phone_verified: Boolean(data.phone_verified),
+      test_account: data.test_account === true,
     };
   }
 }
