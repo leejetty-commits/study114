@@ -245,7 +245,7 @@ export function isGuestPublicPath(pathOrHash) {
   if (p.startsWith('/promo')) return true;
   if (p.startsWith('/search')) return true;
   if (p.startsWith('/mypage') || p.startsWith('/messages') || p.startsWith('/admin')) return false;
-  if (isPublicPlansCatalogPath(p)) return true;
+  if (p === '/plans' || isPublicPlansCatalogPath(p)) return true;
   if (p.startsWith('/plans')) return false;
   if (p.startsWith('/parent') || p.startsWith('/study-room') || p.startsWith('/tutor')) return false;
   return false;

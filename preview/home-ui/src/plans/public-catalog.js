@@ -5,6 +5,7 @@
  */
 
 import { getCatalogByFamily, formatKrw } from './runtime-config.js';
+import { refundShort, renderRefundDetailHtml } from '../refund-policy-copy.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -65,11 +66,22 @@ function buyButton(returnPath) {
   return `<button type="button" class="btn btn--primary plans-public__cta" data-plans-public-login data-plans-return="${esc(returnPath)}">로그인하고 구매하기</button>`;
 }
 
-function refundLink() {
+/**
+ * 짧은 환불 문구는 항상 보이고, 자세한 목록은 로그인 없이 펼친다.
+ * @param {'access'|'position'} family
+ */
+function refundPanel(family) {
+  const summary = family === 'access' ? '쪽지권 환불 자세히' : '노출상품 환불 자세히';
   return `
-    <p class="plans-public__refund">
-      <a href="#/support/faq/plans" data-nav="/support/faq/plans">환불 규정은 결제·상품 자주 묻는 질문에서 확인합니다.</a>
-    </p>`;
+    <section class="plans-public__refund" data-plans-public-refund="${family}">
+      <p class="plans-public__refund-short">${esc(refundShort(family))}</p>
+      <details class="plans-policy-acc">
+        <summary>${summary}</summary>
+        <div class="plans-policy-acc__body">
+          ${renderRefundDetailHtml(family)}
+        </div>
+      </details>
+    </section>`;
 }
 
 function productBlock(product, lead, returnPath) {
@@ -126,7 +138,7 @@ function renderPublicPositions(path) {
         <p class="plans-public__role">프라임·픽은 공부방·과외쌤 전용입니다.</p>
       </header>
       ${groups || '<p class="plans-sf-empty" role="status">상품 정보를 다시 불러와 주세요.</p>'}
-      ${refundLink()}
+      ${refundPanel('position')}
     </section>`;
 }
 
@@ -151,7 +163,31 @@ function renderPublicAccess(path) {
         <p class="plans-public__role">쪽지권은 공부방·과외쌤 전용입니다.</p>
       </header>
       ${cards || '<p class="plans-sf-empty" role="status">상품 정보를 다시 불러와 주세요.</p>'}
-      ${refundLink()}
+      ${refundPanel('access')}
+    </section>`;
+}
+
+/** 비로그인 상품홈. 가격표로 들어가는 카드와 환불 문구만 둔다. */
+export function renderPublicPlansHome() {
+  return `
+    <section class="plans-store plans-public" data-plans-public="home">
+      <header class="plans-sf-hero">
+        <p class="plans-public__eyebrow">유료 안내</p>
+        <h1 class="plans-public__title">유료상품</h1>
+        <p class="plans-public__role">프라임·픽과 쪽지권은 공부방·과외쌤 전용입니다. 가격은 로그인 없이 볼 수 있습니다.</p>
+      </header>
+      <div class="plans-public__entries">
+        <a class="plans-sf-panel plans-public__entry" href="#/plans/positions" data-plans-nav="/plans/positions">
+          <h2 class="plans-public__entry-title">노출상품</h2>
+          <p>프라임·픽의 이름, 기간, 가격</p>
+        </a>
+        <a class="plans-sf-panel plans-public__entry" href="#/plans/access" data-plans-nav="/plans/access">
+          <h2 class="plans-public__entry-title">쪽지권</h2>
+          <p>1회 즉시권·5회권·10회권의 이름, 기간, 가격</p>
+        </a>
+      </div>
+      ${refundPanel('position')}
+      ${refundPanel('access')}
     </section>`;
 }
 

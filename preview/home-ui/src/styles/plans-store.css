@@ -2344,8 +2344,31 @@ a.plans-chip:hover {
 .plans-public__cta {
   width: 100%;
 }
+.plans-public__entries {
+  display: grid;
+  gap: 0.75rem;
+}
+@media (min-width: 720px) {
+  .plans-public__entries {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.plans-public__entry {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  padding: 1rem 1.1rem;
+}
+.plans-public__entry-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.125rem;
+}
 .plans-public__refund {
   margin: 0.25rem 0 0;
+}
+.plans-public__refund-short {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
 }
 @media (max-width: 480px) {
   .plans-public__price {

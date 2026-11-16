@@ -19,7 +19,7 @@ import {
   getCatalogError,
   getCatalogState,
 } from './runtime-config.js';
-import { publicCatalogComplete, renderPublicPlansCatalog } from './public-catalog.js';
+import { publicCatalogComplete, renderPublicPlansCatalog, renderPublicPlansHome } from './public-catalog.js';
 
 /** 역할이 걸러진 캐시를 한 번만 전체 카탈로그로 다시 받는다. */
 let publicCatalogRefreshStarted = false;
@@ -115,6 +115,13 @@ export function renderPlans() {
   // 비로그인 가격표는 로그인 복귀용 pending을 지우지 않는다.
   if (loggedIn || !isPublicPlansCatalogPath(path)) clearPendingRoute();
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
+  if (!loggedIn && path.split('?')[0] === '/plans') {
+    return renderPlansShell(path, renderPublicPlansHome(), {
+      role: 'guest',
+      isGuest: true,
+      headerRole: 'guest',
+    });
+  }
   if (!loggedIn && isPublicPlansCatalogPath(path)) {
     return renderPublicCatalogShell(path);
   }
@@ -188,6 +195,10 @@ function bindPublicCatalogEvents(root, rerender) {
 
 export function bindPlansEvents(root, rerender) {
   const path = getPlansPath();
+  if (!isLoggedIn() && path.split('?')[0] === '/plans') {
+    bindPlansShellEvents(root, rerender);
+    return;
+  }
   if (!isLoggedIn() && isPublicPlansCatalogPath(path)) {
     bindPublicCatalogEvents(root, rerender);
     return;
