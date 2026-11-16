@@ -46,6 +46,8 @@ let studentSavedAt = 0;
 let roiSavedAt = 0;
 /** @type {Map<string, number>} */
 const studentCountByRegion = new Map();
+/** @type {Map<string, { items: object[], status: string, at: number }>} */
+const roomListByKey = new Map();
 
 /** @param {object|null|undefined} room */
 export function primarySavedRegion(room) {
@@ -471,6 +473,27 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   const promo = String(slot?.promo_label || '').trim() || studyRoomPromo1Label(room);
   const filters = studyRoomHomeSearchFilters(slot, promo);
   const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
+  const cached = roomListByKey.get(key);
+  if (cached && (cached.status === 'ready' || cached.status === 'no-region')) {
+    const changed = liveKey !== key || liveStatus !== cached.status;
+    liveKey = key;
+    liveItems = cached.items;
+    liveStatus = cached.status;
+    listSavedAt = cached.at;
+    bootPromise = Promise.resolve();
+    if (opts.viewsAfterList === true) {
+      bootPromise = ensureLifetimeViews(room?.id).then(() => {
+        if (liveKey === key && typeof rerender === 'function') rerender();
+      });
+      return bootPromise;
+    }
+    if (changed && typeof rerender === 'function') {
+      queueMicrotask(() => {
+        if (liveKey === key) rerender();
+      });
+    }
+    return bootPromise;
+  }
   if (bootPromise && liveKey === key) {
     if (opts.viewsAfterList === true) return bootPromise;
     const roomId = Number(room?.id);
@@ -488,31 +511,40 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   bootPromise = (async () => {
     const loadList = async () => {
       if (!(filters.region_id || filters.region_label || filters.complex_id)) {
+        const at = Date.now();
+        roomListByKey.set(key, { items: [], status: 'no-region', at });
+        if (liveKey !== key) return;
         liveItems = [];
         liveStatus = 'no-region';
+        listSavedAt = at;
         return;
       }
       try {
         const result = await searchApi('room', filters, { limit: 20, sort: 'latest' });
-        liveItems = (result.items || []).map(mapLiveRoom);
+        const items = (result.items || []).map(mapLiveRoom);
+        const at = Date.now();
+        roomListByKey.set(key, { items, status: 'ready', at });
+        if (liveKey !== key) return;
+        liveItems = items;
         liveStatus = 'ready';
-        listSavedAt = Date.now();
+        listSavedAt = at;
         rememberSnapshot({
           roomHomeList: { key, items: liveItems, status: liveStatus, at: listSavedAt },
         });
       } catch {
+        if (liveKey !== key) return;
         liveItems = [];
         liveStatus = 'error';
       }
     };
     if (opts.viewsAfterList === true) {
       await loadList();
-      if (typeof rerender === 'function') rerender();
+      if (liveKey === key && typeof rerender === 'function') rerender();
       await ensureLifetimeViews(room?.id);
       return;
     }
     await Promise.all([ensureLifetimeViews(room?.id), loadList()]);
-    if (typeof rerender === 'function') rerender();
+    if (liveKey === key && typeof rerender === 'function') rerender();
   })();
   return bootPromise;
 }
@@ -534,6 +566,7 @@ export function forgetStudyRoomHomeMemory() {
   viewsLoaded = false;
   roiSavedAt = 0;
   studentCountByRegion.clear();
+  roomListByKey.clear();
 }
 
 /**
@@ -571,6 +604,11 @@ export function seedStudyRoomHomeFromSnapshot(snap) {
     liveStatus = list.status === 'no-region' ? 'no-region' : 'ready';
     listSavedAt = Number(list.at);
     bootPromise = Promise.resolve();
+    roomListByKey.set(list.key, {
+      items: liveItems,
+      status: liveStatus,
+      at: listSavedAt,
+    });
   }
   const demand = snap.studentDemand;
   if (demand && isSnapshotFresh(demand.at) && typeof demand.key === 'string' && Array.isArray(demand.items)) {
