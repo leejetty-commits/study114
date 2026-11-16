@@ -322,33 +322,6 @@
     align-items: stretch;
   }
 }
-.home-shell--study_room .tutor-home-split {
-  grid-template-columns: minmax(0, 1fr);
-}
-@media (min-width: 720px) {
-  .home-shell--study_room .my-box--status {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: var(--space-4);
-    align-items: start;
-  }
-  .home-shell--study_room .my-box__row--1 {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .home-shell--study_room .my-box__row--2 {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  .home-shell--study_room .my-box__row--3 {
-    grid-column: 2;
-    grid-row: 1;
-  }
-  .home-shell--study_room .my-box__row--4 {
-    grid-column: 2;
-    grid-row: 2;
-  }
-}
 .my-box--status {
   border: 2px solid #1d4ed8;
   background: linear-gradient(165deg, #eff6ff 0%, #fff 38%);
