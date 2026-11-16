@@ -23,9 +23,7 @@ import {
   bootStudyRoomHome,
   bootStudyRoomStudentDemand,
   readStudyRoomMemberBox,
-  restoreStudyRoomHomePromoIndex,
   studyRoomPromoMapSlots,
-  writeStudyRoomHomePromoIndex,
 } from '../study-room-home-seed.js';
 
 const BOX = STUDY_ROOM_HOME_BOX_COPY;
@@ -107,7 +105,6 @@ function renderStudyRoomSelfHero() {
 }
 
 export function renderStudyRoom() {
-  restoreStudyRoomHomePromoIndex(previewState.studyRoomFind);
   applyStudyRoomHomePromo(previewState.studyRoomFind);
   const tab = previewState.studyRoomTab;
   const showMyBox = isProviderHomeSelfTab('study_room', tab);
@@ -152,7 +149,7 @@ export function bindStudyRoomEvents(root, rerender) {
   bindHomeNewsRow(root, { viewer: 'study_room', onRerender: rerender, sourceRoute: 'study_room' });
   const promoIndex = previewState.studyRoomFind.studyRoomPromoIndex;
   bootStudyRoomHome(rerender, Number.isInteger(promoIndex) ? { slotIndex: promoIndex } : {});
-  bootStudyRoomStudentDemand(rerender, { homePick: true, state: previewState.studyRoomFind });
+  bootStudyRoomStudentDemand(rerender);
 
   root.querySelectorAll('[data-study-room-promo]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -162,7 +159,6 @@ export function bindStudyRoomEvents(root, rerender) {
       const state = previewState.studyRoomFind;
       if (state.studyRoomPromoIndex === idx) return;
       state.studyRoomPromoIndex = idx;
-      writeStudyRoomHomePromoIndex(idx);
       state.searchExecuted = false;
       bootStudyRoomHome(rerender, { slotIndex: idx });
       rerender();

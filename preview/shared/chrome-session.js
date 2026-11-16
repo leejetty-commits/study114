@@ -106,7 +106,6 @@ const CLIENT_RESIDUE_KEYS = [
   'study114_study_room_id',
   'study114.regionRegister.seed',
   'study114.displayName.justSaved',
-  'study114.studyRoomHomePromoIndex',
 ];
 
 /** 로그아웃 뒤 같은 탭에 남는 가입 폼·표시 역할 저장값. */

@@ -3,7 +3,7 @@
  */
 
 import { searchUiUrl } from '../../shared/preview-links.js';
-import { studyRoomHomePromoDong, studyRoomHomePromoLabel } from './study-room-home-seed.js';
+import { peekStudyRoomPromo1, studyRoomPromo1Dong } from './study-room-home-seed.js';
 import { tutorHomePrimaryLabel } from './tutor-home-seed.js';
 import {
   renderCompactFindForm,
@@ -226,8 +226,8 @@ function tutorPrimaryPlace(findState) {
 
 function renderStudentDemandSnapshot(role = 'study_room', findState = null) {
   const tutorSnap = role === 'tutor';
-  const full = tutorSnap ? '' : studyRoomHomePromoLabel(findState);
-  const dong = tutorSnap ? tutorPrimaryPlace(findState) : studyRoomHomePromoDong(findState) || full || '우리동네';
+  const full = tutorSnap ? '' : peekStudyRoomPromo1();
+  const dong = tutorSnap ? tutorPrimaryPlace(findState) : studyRoomPromo1Dong() || full || '우리동네';
   const place = tutorSnap ? dong : full || dong;
   const findUrl = searchUiUrl('student', tutorSnap ? 'tutor' : 'study_room');
   return `
