@@ -184,10 +184,42 @@ export function guardRoleHomeAccess(screenKey, loggedIn, navRole = 'guest') {
 }
 
 /**
+ * 비로그인에게 이름·가격·기간·설명을 보여주는 상품 화면.
+ * 상품홈·결제·구매이력은 포함하지 않는다.
+ * @param {string} [pathOrHash]
+ */
+export function isPublicPlansCatalogPath(pathOrHash) {
+  const p = plansPathOnly(pathOrHash);
+  return p === '/plans/positions' || p === '/plans/access';
+}
+
+/**
+ * @param {string} [pathOrHash]
+ */
+function plansPathOnly(pathOrHash) {
+  let p = String(pathOrHash || '').trim();
+  if (!p) return '';
+  if (p.startsWith('http')) {
+    try {
+      const url = new URL(p);
+      p = url.hash || url.pathname;
+    } catch {
+      return '';
+    }
+  }
+  p = p.replace(/^#/, '');
+  const q = p.indexOf('?');
+  p = q === -1 ? p : p.slice(0, q);
+  if (!p.startsWith('/')) p = `/${p}`;
+  return p.replace(/\/$/, '') || '/';
+}
+
+/**
  * 비로그인(guest)이 카드·레일에서 바로 열 수 있는 공개 path.
  * 마이페이지·쪽지·제출함·유료계정·일반 자료실은 false → 로그인 게이트.
  * /community 목록·허브는 공개(본문/작성은 화면·API ACL).
  * /library/guides(PDF 안내)만 guest 목록 허용.
+ * 노출상품·쪽지권 가격표만 공개. 그 외 /plans 는 로그인 게이트.
  * @param {string} [pathOrHash]
  */
 export function isGuestPublicPath(pathOrHash) {
@@ -213,6 +245,7 @@ export function isGuestPublicPath(pathOrHash) {
   if (p.startsWith('/promo')) return true;
   if (p.startsWith('/search')) return true;
   if (p.startsWith('/mypage') || p.startsWith('/messages') || p.startsWith('/admin')) return false;
+  if (isPublicPlansCatalogPath(p)) return true;
   if (p.startsWith('/plans')) return false;
   if (p.startsWith('/parent') || p.startsWith('/study-room') || p.startsWith('/tutor')) return false;
   return false;

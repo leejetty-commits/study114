@@ -131,6 +131,10 @@ foreach ($rejects as [$pid, $var, $role]) {
 $export = PaidCatalog::export();
 check('export_version', $export['catalog_version'] === PaidCatalog::VERSION);
 check('export_has_products', count($export['products']) >= 10);
+$exportJson = json_encode($export, JSON_UNESCAPED_UNICODE);
+foreach (['user_id', 'email', 'order_ref', 'payment_id', 'password', 'access_token'] as $secretKey) {
+    check('export_no_' . $secretKey, !str_contains((string) $exportJson, '"' . $secretKey . '"'));
+}
 check('export_removed_20', in_array('20회권', $export['removed_skus'], true));
 
 $memoProduct = null;
