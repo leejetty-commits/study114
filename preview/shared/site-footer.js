@@ -29,6 +29,8 @@ export const SITE_FOOTER_LINKS = [
   { path: '/support/policies/terms', label: '이용약관' },
   { path: '/support/policies/privacy', label: '개인정보 처리방침', strong: true },
   { path: '/support/policies/platform', label: '플랫폼 고지' },
+  { path: '/plans/positions', label: '요금 안내' },
+  { path: '/plans', label: '환불정책' },
   { path: '/support', label: '고객센터', supportHome: true },
 ];
 

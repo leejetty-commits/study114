@@ -1,10 +1,12 @@
 import {
   guardPlansAccess,
   guardPlansPath,
+  isPublicPlansCatalogPath,
+  loginUrl,
   resolveAccessNavRole,
 } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
-import { clearPendingRoute } from '../../../shared/pending-route.js';
+import { clearPendingRoute, setPendingRoute } from '../../../shared/pending-route.js';
 import { renderPreviewToolbar, renderHeader, renderFooter } from '../layout.js';
 import { getAuthUser, isLoggedIn } from '../auth-session.js';
 import { getPlansPath, getNavRole } from '../state.js';
@@ -17,6 +19,10 @@ import {
   getCatalogError,
   getCatalogState,
 } from './runtime-config.js';
+import { publicCatalogComplete, renderPublicPlansCatalog, renderPublicPlansHome } from './public-catalog.js';
+
+/** 역할이 걸러진 캐시를 한 번만 전체 카탈로그로 다시 받는다. */
+let publicCatalogRefreshStarted = false;
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -72,6 +78,15 @@ function renderPlansLoginGate(message) {
   `;
 }
 
+function renderPublicCatalogShell(path) {
+  const products = getCatalogState()?.products;
+  const ready = isCatalogReady() && publicCatalogComplete(path, products);
+  const body = ready
+    ? renderPublicPlansCatalog(path)
+    : renderCatalogUnavailable(getCatalogError() || '상품 정보를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.');
+  return renderPlansShell(path, body, { role: 'guest', isGuest: true, headerRole: 'guest' });
+}
+
 function renderCatalogUnavailable(message) {
   return `
     <section class="mypage-panel plans-catalog-miss">
@@ -82,10 +97,34 @@ function renderCatalogUnavailable(message) {
     </section>`;
 }
 
+function currentPlansReturnPath() {
+  const raw = (window.location.hash || '').replace(/^#/, '');
+  const path = raw.startsWith('/') ? raw : `/${raw}`;
+  if (!isPublicPlansCatalogPath(path)) return '/plans/positions';
+  const q = path.indexOf('?');
+  if (q === -1) return path;
+  const params = new URLSearchParams(path.slice(q + 1));
+  params.delete('welcome');
+  const rest = params.toString();
+  return rest ? `${path.slice(0, q)}?${rest}` : path.slice(0, q);
+}
+
 export function renderPlans() {
-  // 유료상품 화면이 실제로 열리면 pending 복구는 완료된 것
-  clearPendingRoute();
+  const path = getPlansPath();
+  const loggedIn = isLoggedIn();
+  // 비로그인 가격표는 로그인 복귀용 pending을 지우지 않는다.
+  if (loggedIn || !isPublicPlansCatalogPath(path)) clearPendingRoute();
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
+  if (!loggedIn && path.split('?')[0] === '/plans') {
+    return renderPlansShell(path, renderPublicPlansHome(), {
+      role: 'guest',
+      isGuest: true,
+      headerRole: 'guest',
+    });
+  }
+  if (!loggedIn && isPublicPlansCatalogPath(path)) {
+    return renderPublicCatalogShell(path);
+  }
   const hubGate = guardPlansAccess(role);
   if (!hubGate.ok) {
     if (hubGate.mode === 'login_gate' || role === 'guest' || !isLoggedIn()) {
@@ -104,7 +143,6 @@ export function renderPlans() {
       </section>`;
   }
 
-  const path = getPlansPath();
   const pathGate = guardPlansPath(role, path);
   if (!pathGate.ok) {
     return renderPlansLoginGate(pathGate.message);
@@ -127,7 +165,44 @@ export function renderPlans() {
 }
 
 /** @param {HTMLElement} root @param {() => void} rerender */
+function bindPublicCatalogEvents(root, rerender) {
+  bindPlansShellEvents(root, rerender);
+  const path = getPlansPath();
+  root.querySelectorAll('[data-plans-public-login]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const attr = btn.getAttribute('data-plans-return') || '';
+      const target = isPublicPlansCatalogPath(attr) ? attr : currentPlansReturnPath();
+      setPendingRoute(target);
+      window.location.assign(loginUrl('plans', 'buy', target));
+    });
+  });
+  root.querySelectorAll('[data-plans-reload-catalog]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      publicCatalogRefreshStarted = false;
+      hydratePaidCatalog('', { force: true })
+        .then(() => rerender())
+        .catch(() => rerender());
+    });
+  });
+  if (!publicCatalogComplete(path, getCatalogState()?.products)) {
+    if (publicCatalogRefreshStarted) return;
+    publicCatalogRefreshStarted = true;
+    hydratePaidCatalog('', { force: true })
+      .then(() => rerender())
+      .catch(() => rerender());
+  }
+}
+
 export function bindPlansEvents(root, rerender) {
+  const path = getPlansPath();
+  if (!isLoggedIn() && path.split('?')[0] === '/plans') {
+    bindPlansShellEvents(root, rerender);
+    return;
+  }
+  if (!isLoggedIn() && isPublicPlansCatalogPath(path)) {
+    bindPublicCatalogEvents(root, rerender);
+    return;
+  }
   const role = resolveAccessNavRole(getAuthUser(), getNavRole());
   const hubGate = guardPlansAccess(role);
   if (!hubGate.ok) {
@@ -137,7 +212,6 @@ export function bindPlansEvents(root, rerender) {
     return;
   }
 
-  const path = getPlansPath();
   const pathGate = guardPlansPath(role, path);
   if (!pathGate.ok) {
     bindPlansShellEvents(root, rerender);

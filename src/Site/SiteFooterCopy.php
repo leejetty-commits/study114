@@ -47,6 +47,8 @@ final class SiteFooterCopy
             ['href' => '/#/support/policies/terms', 'label' => '이용약관'],
             ['href' => '/#/support/policies/privacy', 'label' => '개인정보 처리방침', 'strong' => true],
             ['href' => '/#/support/policies/platform', 'label' => '플랫폼 고지'],
+            ['href' => '/#/plans/positions', 'label' => '요금 안내'],
+            ['href' => '/#/plans', 'label' => '환불정책'],
             ['href' => '/#/support', 'label' => '고객센터'],
         ];
     }

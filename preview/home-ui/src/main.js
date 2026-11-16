@@ -76,7 +76,7 @@ import { readLastRoleHint } from '../../shared/last-role.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
 import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME, registerStudyRoomSnapshotSeed } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
-import { guardRoleHomeAccess } from '../../shared/route-access.js';
+import { guardRoleHomeAccess, isPublicPlansCatalogPath } from '../../shared/route-access.js';
 import { navRoleFromAuthUser } from './nav-config.js';
 import { parseHashQuery } from '../../shared/preview-links.js';
 import { presentLoginWelcome } from '../../shared/login-welcome.js';
@@ -769,6 +769,14 @@ function init() {
           const target = pending;
           if (!isRegisterIntroRoute()) {
             navigate(target);
+            return;
+          }
+        }
+        if (pending && isPublicPlansCatalogPath(pending)) {
+          clearPendingRoute();
+          const here = (window.location.hash.slice(1) || '').split('?')[0];
+          if (here !== pending.split('?')[0]) {
+            navigate(pending);
             return;
           }
         }
