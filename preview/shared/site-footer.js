@@ -35,6 +35,7 @@ export const SITE_FOOTER_LINKS = [
   { path: '/support/policies/platform', label: '플랫폼 고지' },
   { path: '/plans/positions', label: '유료상품' },
   { path: '/plans', label: '환불정책' },
+  { path: '/about', label: '서비스 소개' },
   { path: '/support', label: '고객센터', supportHome: true },
 ];
 
