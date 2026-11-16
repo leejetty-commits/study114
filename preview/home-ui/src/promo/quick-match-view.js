@@ -42,25 +42,22 @@ function stepsHtml(copy) {
   </div>`;
 }
 
-/** 제목·부제·설명·배지·안내 줄. 카탈로그·소개·마이페이지가 같이 쓴다. */
-function leadHtml(copy, tone) {
-  const toneHtml = tone ? `<p class="qm-tone">${esc(tone)}</p>` : '';
-  return `<div class="qm-lead">
-    ${titleHtml(copy)}
-    <p class="qm-sub">${esc(copy.subtitle)}</p>
-    <p class="qm-body">${esc(copy.body)}</p>
-    ${toneHtml}
-    ${badgesHtml(copy)}
-    <p class="qm-with">${esc(copy.withPrime)}</p>
-  </div>`;
-}
-
 /** 카탈로그 프라임 혜택 맨 앞 큰 칸. 카드 4장 그리드 앞에 둔다. */
 export function renderQuickMatchCatalog(copy) {
   const block = copy || QUICK_MATCH_INTRO;
+  const tone = block.toneNote ? `<p class="qm-tone">${esc(block.toneNote)}</p>` : '';
   return `<div class="pv2 qm-block qm-block--catalog">
-    ${leadHtml(block, block.toneNote)}
-    ${photoHtml(block)}
+    ${titleHtml(block)}
+    ${badgesHtml(block)}
+    <p class="qm-with">${esc(block.withPrime)}</p>
+    <div class="qm-hero">
+      <div>
+        <p class="qm-sub">${esc(block.subtitle)}</p>
+        <p class="qm-body">${esc(block.body)}</p>
+        ${tone}
+      </div>
+      ${photoHtml(block)}
+    </div>
     ${stepsHtml(block)}
   </div>`;
 }
@@ -72,7 +69,11 @@ export function renderQuickMatchIntro({ prime = false } = {}) {
   const ctaPath = prime ? copy.ctaSettingsPath : copy.ctaStartPath;
   const examples = copy.examples.map((item) => `<li>${esc(item)}</li>`).join('');
   return `<article class="pv2 qm-block qm-block--intro">
-    ${leadHtml(copy)}
+    ${titleHtml(copy)}
+    <p class="qm-sub">${esc(copy.subtitle)}</p>
+    <p class="qm-body">${esc(copy.body)}</p>
+    ${badgesHtml(copy)}
+    <p class="qm-with">${esc(copy.withPrime)}</p>
     ${photoHtml(copy)}
     ${stepsHtml(copy)}
     <section class="qm-examples-wrap">

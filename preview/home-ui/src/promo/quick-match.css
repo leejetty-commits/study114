@@ -12,23 +12,19 @@
   --pv2-mark: #f2b84b;
 }
 
-.pv2.qm-block .qm-title {
+.pv2 .qm-block .qm-title {
   font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.25;
-  margin: 0 0 1.35rem;
+  line-height: 1.2;
+  margin: 0 0 0.7rem;
   color: #0e1b33;
 }
 
-.qm-lead {
-  text-align: left;
-}
-
 .qm-sub {
-  margin: 0 0 1.15rem;
+  margin: 0 0 0.45rem;
   font-family: 'PV2 Gmarket Sans', var(--font-sans), sans-serif;
   font-weight: 500;
   font-size: clamp(16px, 2.2vw, 20px);
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .qm-body,
@@ -41,18 +37,17 @@
 }
 
 .qm-body {
-  margin: 0 0 1.35rem;
   font-size: 16px;
 }
 
 .qm-with {
-  margin: 0;
+  margin-top: 0.35rem;
   color: #7a4b00;
   font-weight: 700;
 }
 
 .qm-tone {
-  margin: -0.45rem 0 1.25rem;
+  margin-top: 0.45rem;
   font-size: 14px;
   color: #3e4a63;
 }
@@ -60,8 +55,8 @@
 .qm-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
-  margin: 0 0 1.15rem;
+  gap: 0.4rem;
+  margin: 0 0 0.35rem;
 }
 
 .qm-badge {
@@ -85,16 +80,16 @@
   border: 1px solid #f2b84b;
 }
 
-.qm-lead + .qm-photo,
-.qm-lead + .qm-hero {
-  margin-top: 1.75rem;
-}
-
 .qm-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: 1rem;
   align-items: center;
+  margin-top: 1rem;
+}
+
+.qm-block--intro .qm-photo {
+  margin-top: 1rem;
 }
 
 .qm-photo {
@@ -245,16 +240,6 @@
 .pv2--room .qm-block--catalog,
 .pv2--tutor .qm-block--catalog {
   margin-top: 1.5rem;
-}
-
-@media (min-width: 768px) {
-  .qm-lead {
-    text-align: center;
-  }
-
-  .qm-lead .qm-badges {
-    justify-content: center;
-  }
 }
 
 @container qm (max-width: 640px) {
