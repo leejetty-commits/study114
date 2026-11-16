@@ -65,17 +65,11 @@ function escAttr(s) {
  */
 function renderUtilBar(role, showAuth, user = null) {
   const loggedIn = !showAuth && Boolean(user);
-  const pendingVerify = loggedIn && user?.email_verified === false;
   const items = resolveUtilMenuItems(user, loggedIn);
-  const isAdmin = Boolean(user?.admin_level) || user?.role_type === 'admin';
   const displayLabel = user ? resolveAccountDisplayName(user) : '';
   const account =
     loggedIn
       ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
-      : '';
-  const adminLink =
-    isAdmin && loggedIn && !pendingVerify
-      ? `<button type="button" class="home-util__link home-util__link--admin" data-action="util-admin">관리자 콘솔</button>`
       : '';
   const base = items
     .map((item) => {
@@ -86,7 +80,7 @@ function renderUtilBar(role, showAuth, user = null) {
       return `<button type="button" class="home-util__link" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
-  return `${account}${adminLink}${base}`;
+  return `${account}${base}`;
 }
 
 /**
@@ -379,10 +373,6 @@ export function bindSiteChrome(root, handlers = {}) {
         if (action === 'util-guide') {
           if (navigateHome && isHomeUiHost()) navigateHome('/guide');
           else goSameTab(homeHashUrl('/guide'));
-          return;
-        }
-        if (action === 'util-admin') {
-          goHomePath('/admin');
           return;
         }
         if (action === 'util-mypage') {

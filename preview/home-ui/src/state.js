@@ -23,7 +23,7 @@ import {
 } from './support/router.js';
 import { getDefaultPolicyPath, normalizePolicyPath } from './policy-router.js';
 import { getDefaultLibraryPath, isInfoBoardPath, normalizeLibraryPath } from './library/library-router.js';
-import { getDefaultAdminPath, normalizeAdminPath, getAdminLegacyRedirect } from './admin/router.js';
+import { getDefaultAdminPath, normalizeAdminPath, getAdminLegacyRedirect } from './admin/route-match.js';
 import {
   getDefaultPlansPath,
   normalizePlansPath,

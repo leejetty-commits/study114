@@ -84,7 +84,6 @@ import { showEmailVerifyOverlay } from './email-verify-overlay.js';
 import { activateSupportApi, deactivateSupportApi } from './support/support-backend.js';
 import { activateBoardApi, boardKeysBlockedForRole, deactivateBoardApi, hydrateBoardCache, hydrateNoticeCenter, hydrateNoticeHome, resetNoticeCaches, isBoardApiMode, getNoticeHomePosts } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
-import { activateAdminApi, deactivateAdminApi } from './admin/admin-backend.js';
 import { setConsoleUnlockRequiredHandler } from './admin/admin-fetch.js';
 import { activateContentConfigApi, deactivateContentConfigApi } from './content-config-backend.js';
 import { mountOpsChrome } from './site-ops-chrome.js';
@@ -111,6 +110,21 @@ const loadSupportScreen = () => import('./support/index.js');
 const loadPolicyScreen = () => import('./policy-index.js');
 const loadLibraryScreen = () => import('./library/index.js');
 const loadRegisterIntroScreen = () => import('./register-intro/index.js');
+
+/** @type {Promise<{ activateAdminApi: () => Promise<void>, deactivateAdminApi: () => void }>|null} */
+let adminBackendLoad = null;
+function loadAdminBackend() {
+  if (!adminBackendLoad) adminBackendLoad = import('./admin/admin-backend.js');
+  return adminBackendLoad;
+}
+async function activateAdminBackend() {
+  const mod = await loadAdminBackend();
+  await mod.activateAdminApi();
+}
+function deactivateAdminBackend() {
+  if (!adminBackendLoad) return;
+  adminBackendLoad.then((mod) => mod.deactivateAdminApi()).catch(() => {});
+}
 
 /** 첫 진입만 안내 문구. 이미 그려진 화면은 조각이 올 때까지 유지한다. */
 function paintRouteLoading(app) {
@@ -156,20 +170,17 @@ window.addEventListener('vite:preloadError', (event) => {
   const err = event?.payload instanceof Error ? event.payload : new Error('vite:preloadError');
   if (reloadOnceForStaleChunk(err)) event.preventDefault();
 });
-window.addEventListener('load', () => {
-  window.setTimeout(() => {
-    try {
-      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-    } catch {
-      /* 저장소를 못 열면 다음 실패도 새로고침하지 않는다. */
-    }
-  }, 4000);
-});
 
 async function loadRouteModule(app, loader) {
   paintRouteLoading(app);
   try {
-    return await loader();
+    const mod = await loader();
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    } catch {
+      /* 성공 뒤에는 다음 배포도 한 번 새로고침할 수 있게 비운다. */
+    }
+    return mod;
   } catch (err) {
     if (reloadOnceForStaleChunk(err)) return new Promise(() => {});
     throw err;
@@ -569,16 +580,16 @@ function init() {
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
       if (isAdminUser() && getAuthUser()?.console_unlocked === true) {
-        await activateAdminApi().catch((err) => {
+        await activateAdminBackend().catch((err) => {
           console.warn('[admin] api disabled — static A28 fallback', err);
-          deactivateAdminApi();
+          deactivateAdminBackend();
         });
         await activateContentConfigApi().catch((err) => {
           console.warn('[content-config] api disabled — sessionStorage fallback', err);
           deactivateContentConfigApi();
         });
       } else if (!isAdminUser()) {
-        deactivateAdminApi();
+        deactivateAdminBackend();
         deactivateContentConfigApi();
       }
       hydrateNotices();
@@ -590,7 +601,7 @@ function init() {
       resetDeepIntentResumeFlag();
       resetConcernData();
       deactivateBoardApi();
-      deactivateAdminApi();
+      deactivateAdminBackend();
       deactivateContentConfigApi();
       resetNoticeCaches();
       hydrateNotices();
@@ -660,9 +671,9 @@ function init() {
           }
         }
         if (user && isAdminUser() && user.console_unlocked === true) {
-          await activateAdminApi().catch((err) => {
+          await activateAdminBackend().catch((err) => {
             console.warn('[admin] api disabled — static A28 fallback', err);
-            deactivateAdminApi();
+            deactivateAdminBackend();
           });
           await activateContentConfigApi().catch((err) => {
             console.warn('[content-config] api disabled — sessionStorage fallback', err);

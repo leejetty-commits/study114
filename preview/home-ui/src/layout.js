@@ -4,7 +4,7 @@ import { getDefaultMessagesPath } from './messages/router.js';
 import { readGuestBaseline } from '../../shared/location-display.js';
 import { GNB_MAIN, resolveGnbLink, searchUiUrl, navRoleFromAuthUser, isGnbItemVisible, canAccessPlansHub, resolveUtilMenuItems } from './nav-config.js';
 import { defaultSearchTabForRole } from '@search-ui/search-role-access.js';
-import { getAuthUser, isLoggedIn, isAdminUser, isEmailVerified, logout } from './auth-session.js';
+import { getAuthUser, isLoggedIn, isEmailVerified, logout } from './auth-session.js';
 import { resolveAccountDisplayName } from './auth/display-identity.js';
 import { ensureBackToTop, closeInquiryPanel, renderDrawerInquiryMarkup, bindDrawerInquiry } from '../../shared/back-to-top.js';
 import { isHandoffApiMode } from './handoff-backend.js';
@@ -95,12 +95,8 @@ export function renderPreviewToolbar() {
 function renderUtilBar(role, showAuth) {
   const authUser = getAuthUser();
   const loggedIn = isLoggedIn();
-  const pendingVerify = loggedIn && !isEmailVerified();
   const items = resolveUtilMenuItems(authUser, loggedIn);
   const onGuide = isGuideRoute();
-  const adminLink = isAdminUser() && !pendingVerify
-    ? `<button type="button" class="home-util__link home-util__link--admin" data-nav="/admin">관리자 콘솔</button>`
-    : '';
   const displayLabel = authUser ? resolveAccountDisplayName(authUser) : '';
   const account = authUser
     ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
@@ -118,7 +114,7 @@ function renderUtilBar(role, showAuth) {
       return `<button type="button" class="home-util__link${active}" data-action="${item.action}">${item.label}</button>`;
     })
     .join('');
-  return `${account}${adminLink}${base}`;
+  return `${account}${base}`;
 }
 
 function escAttr(s) {

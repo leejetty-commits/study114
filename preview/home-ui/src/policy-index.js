@@ -3,7 +3,7 @@ import { renderPolicyShell, bindPolicyShellEvents } from './policy-shell.js';
 import { renderPolicyScreen, bindPolicyScreenEvents } from './policy-screens.js';
 import { getPolicyPage } from './policy-copy.js';
 import { getPolicySlug } from './policy-router.js';
-import { peekPublicSettings } from './admin/site-settings-store.js';
+import { peekPublicSettings } from './admin/site-settings-public.js';
 
 export function renderPolicy() {
   const path = getPolicyPath();
