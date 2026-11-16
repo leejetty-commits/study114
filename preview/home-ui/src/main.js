@@ -42,9 +42,6 @@ import './styles/inquiry-settings-catalog.css';
 import './styles/student-mypage-stage5b.css';
 import { bindCardTrustRailFit } from './exposure-render.js';
 import { renderGuest, bindGuestEvents } from './screens/guest.js';
-import { renderParent, bindParentEvents } from './screens/parent.js';
-import { renderStudyRoom, bindStudyRoomEvents } from './screens/study-room.js';
-import { renderTutor, bindTutorEvents } from './screens/tutor.js';
 import { s114Alert } from '../../shared/confirm-dialog.js';
 import {
   getCurrentScreen,
@@ -75,9 +72,6 @@ import {
   isRegisterIntroRoute,
 } from './state.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
-import { renderMypage, bindMypageEvents } from './mypage/index.js';
-import { renderPublicMyshop, bindPublicMyshopEvents } from './myshop/index.js';
-import { renderPlans, bindPlansEvents } from './plans/index.js';
 import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
@@ -102,8 +96,14 @@ import { closeDetailModal } from './detail-decision/detail-shell.js';
 import { closeCompareModal } from './compare-modal.js';
 import '../../shared/dialog-drag-auto.js';
 
-/* 관리자·드문 화면만 동적 청크. plans·역할홈·마이페이지·쪽지·공개마이샵은 정적 유지. */
+/* 게스트 첫 화면에 없는 화면은 그 주소에서만 받는다. 해시 판별·plans 리다이렉트 표·인증·2차 비밀번호는 정적. */
 const loadAdminScreen = () => import('./admin/index.js');
+const loadParentScreen = () => import('./screens/parent.js');
+const loadStudyRoomScreen = () => import('./screens/study-room.js');
+const loadTutorScreen = () => import('./screens/tutor.js');
+const loadMypageScreen = () => import('./mypage/index.js');
+const loadPlansScreen = () => import('./plans/index.js');
+const loadMyshopScreen = () => import('./myshop/index.js');
 const loadGuideScreen = () => import('./guide/index.js');
 const loadConcernScreen = () => import('./concern/index.js');
 const loadPromoScreen = () => import('./promo/index.js');
@@ -111,6 +111,17 @@ const loadSupportScreen = () => import('./support/index.js');
 const loadPolicyScreen = () => import('./policy-index.js');
 const loadLibraryScreen = () => import('./library/index.js');
 const loadRegisterIntroScreen = () => import('./register-intro/index.js');
+
+/** 첫 진입만 안내 문구. 이미 그려진 화면은 조각이 올 때까지 유지한다. */
+function paintRouteLoading(app) {
+  if (!app || app.childElementCount > 0) return;
+  app.innerHTML = '<p role="status" style="padding:1.5rem;font-family:system-ui,sans-serif">불러오는 중</p>';
+}
+
+async function loadRouteModule(app, loader) {
+  paintRouteLoading(app);
+  return loader();
+}
 
 function hydrateNotices() {
   hydrateNoticeCenter().catch(() => {});
@@ -140,10 +151,20 @@ function dismissRouteOverlays() {
 
 const SCREENS = {
   guest: { render: renderGuest, bind: bindGuestEvents },
-  parent: { render: renderParent, bind: bindParentEvents },
-  studyRoom: { render: renderStudyRoom, bind: bindStudyRoomEvents },
-  tutor: { render: renderTutor, bind: bindTutorEvents },
 };
+
+const ROLE_SCREEN_LOADERS = {
+  parent: loadParentScreen,
+  studyRoom: loadStudyRoomScreen,
+  tutor: loadTutorScreen,
+};
+
+function roleScreenFromModule(key, mod) {
+  if (key === 'parent') return { render: mod.renderParent, bind: mod.bindParentEvents };
+  if (key === 'studyRoom') return { render: mod.renderStudyRoom, bind: mod.bindStudyRoomEvents };
+  if (key === 'tutor') return { render: mod.renderTutor, bind: mod.bindTutorEvents };
+  return null;
+}
 
 function applyPlansRedirects() {
   const hash = window.location.hash.slice(1) || '';
@@ -232,6 +253,8 @@ async function renderScreen(generation) {
     return;
   }
   if (isPlansRoute()) {
+    const { renderPlans, bindPlansEvents } = await loadRouteModule(app, loadPlansScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPlans();
     bindPlansEvents(app, render);
     mountOpsChrome(app);
@@ -303,6 +326,8 @@ async function renderScreen(generation) {
     return;
   }
   if (isMyshopRoute()) {
+    const { renderPublicMyshop, bindPublicMyshopEvents } = await loadRouteModule(app, loadMyshopScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderPublicMyshop();
     bindPublicMyshopEvents(app, render);
     mountOpsChrome(app);
@@ -315,6 +340,8 @@ async function renderScreen(generation) {
       app.innerHTML = '';
       return;
     }
+    const { renderMypage, bindMypageEvents } = await loadRouteModule(app, loadMypageScreen);
+    if (generation !== renderGeneration) return;
     app.innerHTML = renderMypage();
     bindMypageEvents(app, render);
     bindCardTrustRailFit(app);
@@ -323,7 +350,7 @@ async function renderScreen(generation) {
     return;
   }
   const key = getCurrentScreen();
-  if (!sessionChecked && SCREENS[key] && key !== 'guest') return;
+  if (!sessionChecked && ROLE_SCREEN_LOADERS[key]) return;
   const roleGate = guardRoleHomeAccess(key, isLoggedIn(), navRoleFromAuthUser(getAuthUser()));
   if (!roleGate.ok) {
     if (window.location.hash !== roleGate.redirectHash) {
@@ -331,7 +358,12 @@ async function renderScreen(generation) {
       return;
     }
   }
-  const screen = SCREENS[roleGate.ok ? key : 'guest'] || SCREENS.guest;
+  let screen = SCREENS.guest;
+  if (roleGate.ok && ROLE_SCREEN_LOADERS[key]) {
+    const mod = await loadRouteModule(app, ROLE_SCREEN_LOADERS[key]);
+    if (generation !== renderGeneration) return;
+    screen = roleScreenFromModule(key, mod) || SCREENS.guest;
+  }
   app.innerHTML = screen.render();
   screen.bind(app, render);
   bindCardTrustRailFit(app);
