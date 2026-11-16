@@ -118,9 +118,62 @@ function paintRouteLoading(app) {
   app.innerHTML = '<p role="status" style="padding:1.5rem;font-family:system-ui,sans-serif">불러오는 중</p>';
 }
 
+const CHUNK_RELOAD_KEY = 'study114-chunk-reload';
+
+function isChunkLoadError(err) {
+  const msg = String(err instanceof Error ? err.message : err || '');
+  return (
+    msg.includes('Failed to fetch dynamically imported module') ||
+    msg.includes('error loading dynamically imported module') ||
+    msg.includes('Importing a module script failed') ||
+    msg.includes('vite:preloadError')
+  );
+}
+
+/** 배포 직후 옛 조각 404는 같은 주소에서 한 번만 새로고침한다. */
+let chunkReloadPending = false;
+function reloadOnceForStaleChunk(err) {
+  if (!isChunkLoadError(err)) return false;
+  if (chunkReloadPending) return true;
+  const here = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  try {
+    if (sessionStorage.getItem(CHUNK_RELOAD_KEY) === here) return false;
+    sessionStorage.setItem(CHUNK_RELOAD_KEY, here);
+  } catch {
+    return false;
+  }
+  chunkReloadPending = true;
+  window.location.reload();
+  return true;
+}
+
+function handleBootError(err) {
+  if (reloadOnceForStaleChunk(err)) return;
+  showBootError(err);
+}
+
+window.addEventListener('vite:preloadError', (event) => {
+  const err = event?.payload instanceof Error ? event.payload : new Error('vite:preloadError');
+  if (reloadOnceForStaleChunk(err)) event.preventDefault();
+});
+window.addEventListener('load', () => {
+  window.setTimeout(() => {
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    } catch {
+      /* 저장소를 못 열면 다음 실패도 새로고침하지 않는다. */
+    }
+  }, 4000);
+});
+
 async function loadRouteModule(app, loader) {
   paintRouteLoading(app);
-  return loader();
+  try {
+    return await loader();
+  } catch (err) {
+    if (reloadOnceForStaleChunk(err)) return new Promise(() => {});
+    throw err;
+  }
 }
 
 function hydrateNotices() {
@@ -482,7 +535,7 @@ function init() {
           sessionChecked = true;
           render();
         })
-        .catch((err) => showBootError(err));
+        .catch((err) => handleBootError(err));
     });
     window.addEventListener('hashchange', (event) => {
       if (!bootReady) return;
@@ -490,7 +543,7 @@ function init() {
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
       dismissRouteOverlays();
-      render().catch(showBootError);
+      render().catch(handleBootError);
     });
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
@@ -537,12 +590,12 @@ function init() {
       render();
     });
     if (shouldPaintBeforeSession()) {
-      render().catch(showBootError);
+      render().catch(handleBootError);
     }
     setTimeout(() => {
       bootReady = true;
       if (paintedHash !== null && window.location.hash !== paintedHash) {
-        render().catch(showBootError);
+        render().catch(handleBootError);
       }
     }, 0);
     const supportBoot = activateSupportApi().catch((err) => {
@@ -651,9 +704,9 @@ function init() {
         render();
         if (user) queueMicrotask(() => resumePendingDeepIntent());
       })
-      .catch((err) => showBootError(err));
+      .catch((err) => handleBootError(err));
   } catch (err) {
-    showBootError(err);
+    handleBootError(err);
   }
 }
 
