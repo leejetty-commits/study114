@@ -13,6 +13,7 @@ import {
   getStudyRoomStudentLiveItems,
   peekStudyRoomPromo1,
   resolveStudyRoomMapQuery,
+  studyRoomHomePromoLabel,
   retryStudyRoomHome,
   retryStudyRoomStudentDemand,
   studyRoomPromo1Dong,
@@ -1583,7 +1584,7 @@ export function resolveActiveRegionLabel(tab, state, role) {
   if (promoHome) {
     const pinned =
       state.canonicalLocation?.source === 'address' || state.canonicalLocation?.source === 'url';
-    const promo = peekStudyRoomPromo1();
+    const promo = studyRoomHomePromoLabel(state);
     if (!pinned && promo) {
       return canonicalRegionLabel(promo, tab, state);
     }

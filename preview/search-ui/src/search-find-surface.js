@@ -1150,7 +1150,10 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
   }
 
   root.querySelector('[data-room-student-retry]')?.addEventListener('click', () => {
-    retryStudyRoomStudentDemand(rerender);
+    retryStudyRoomStudentDemand(
+      rerender,
+      state().studyRoomHome === true ? { homePick: true, state: state() } : {},
+    );
   });
   root.querySelector('[data-room-home-retry]')?.addEventListener('click', () => {
     const idx = state().studyRoomPromoIndex;

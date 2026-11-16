@@ -23,7 +23,7 @@ import {
 } from './registrations-backend.js';
 import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
-import { navigate, setActiveRole } from './state.js';
+import { navigate, previewState, setActiveRole } from './state.js';
 import { noteAuthRoleType } from './auth-role.js';
 import {
   basicRegisterPathForMe,
@@ -426,6 +426,7 @@ export async function logout() {
   deactivateBoardApi();
   resetConcernData();
   clearAuthClientResidue();
+  previewState.studyRoomFind.studyRoomPromoIndex = null;
   leaveMyRouteForGuest();
   window.dispatchEvent(new CustomEvent('auth:logout'));
 }
