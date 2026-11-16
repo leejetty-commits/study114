@@ -16,6 +16,7 @@ import {
   getStudyRoomStudentLiveItems,
   peekStudyRoomPromo1,
   resolveStudyRoomMapQuery,
+  readStudyRoomRegionStudentCount,
   retryStudyRoomHome,
   retryStudyRoomStudentDemand,
   studyRoomPromo1Dong,
@@ -311,7 +312,8 @@ export function renderCompactFindForm(tab, state, options = {}) {
           resultSource: resolveResultSource(state),
           bannerStyle: mapBannerStyle,
           providerHome: studyRoomPromoMap,
-          hideMapBanner: variant === 'home' && studyRoomPromoMap,
+          homeWide: variant === 'home' && studyRoomPromoMap,
+          studentRegionId: studyRoomMap?.region_id || '',
           lat: studyRoomPromoMap ? null : state.canonicalLocation?.lat ?? null,
           lng: studyRoomPromoMap ? null : state.canonicalLocation?.lng ?? null,
           viewerRole: role,
@@ -1151,8 +1153,17 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
     retryStudyRoomStudentDemand(rerender);
   });
   root.querySelector('[data-room-home-retry]')?.addEventListener('click', () => {
-    retryStudyRoomHome(rerender);
+    const idx = state().studyRoomPromoIndex;
+    retryStudyRoomHome(rerender, Number.isInteger(idx) ? { slotIndex: idx } : {});
   });
+  const studentCount = root.querySelector('[data-study-room-student-count]');
+  const studentRegionId = studentCount?.getAttribute('data-study-room-student-count') || '';
+  if (studentCount && /^\d+$/.test(studentRegionId)) {
+    readStudyRoomRegionStudentCount(studentRegionId).then((count) => {
+      if (count == null || !studentCount.isConnected) return;
+      studentCount.textContent = String(count);
+    });
+  }
   root.querySelector('[data-parent-feed-retry]')?.addEventListener('click', () => {
     retryStudentFindFeed(ctx.getTab(), state(), rerender);
   });
