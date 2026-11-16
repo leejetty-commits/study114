@@ -89,6 +89,7 @@ function baseFrom(current) {
     saved_at: Date.now(),
     registrations: same?.registrations && typeof same.registrations === 'object' ? same.registrations : {},
     providerStatus: same?.providerStatus ?? null,
+    chrome: same?.chrome && typeof same.chrome === 'object' ? same.chrome : null,
     roomHomeList: same?.roomHomeList,
     roi: same?.roi,
     studentDemand: same?.studentDemand,
@@ -106,6 +107,9 @@ export function patchSessionSnapshot(partial) {
   }
   if (Object.prototype.hasOwnProperty.call(partial, 'providerStatus')) {
     next.providerStatus = stripSecrets(partial.providerStatus);
+  }
+  if (Object.prototype.hasOwnProperty.call(partial, 'chrome')) {
+    next.chrome = stripSecrets(partial.chrome);
   }
   if (Object.prototype.hasOwnProperty.call(partial, 'roomHomeList')) next.roomHomeList = stripSecrets(partial.roomHomeList);
   if (Object.prototype.hasOwnProperty.call(partial, 'roi')) next.roi = stripSecrets(partial.roi);

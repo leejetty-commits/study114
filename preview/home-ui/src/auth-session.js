@@ -3,9 +3,15 @@
  * handoff store API 모드 진입점
  */
 
-import { activateHandoffApi, deactivateHandoffApi } from './handoff-backend.js';
+import {
+  activateHandoffApi,
+  deactivateHandoffApi,
+  chromeHandoffSnapshot,
+  handoffPaintCounts,
+  seedHandoffFromChrome,
+} from './handoff-backend.js';
 import { deactivatePaidRoiApi } from './paid-backend.js';
-import { activateMessagesApi, deactivateMessagesApi } from './messages-backend.js';
+import { activateMessagesApi, deactivateMessagesApi, seedUnreadHold, sessionUnreadCount } from './messages-backend.js';
 import { getProviderStatus, hydrateProviderStatus, resetProviderStatus, seedProviderStatus } from './provider-status.js';
 import { hydrateProviderNotices, resetProviderNotices } from './provider-notices.js';
 import { hydrateExposureBridge, resetExposureBridge } from './exposure-bridge.js';
@@ -262,14 +268,50 @@ function dropSnapshot() {
     .catch(() => {});
 }
 
+/** 결제 뒤 바뀌는 값만. 조회 시각처럼 매번 다른 필드는 빼서 지도를 유지한다. */
+function providerPaintView(status) {
+  if (!status || typeof status !== 'object') return null;
+  const slots = status.slots && typeof status.slots === 'object' ? status.slots : null;
+  return {
+    is_provider: !!status.is_provider,
+    tier: String(status.subscription_tier || 'free'),
+    prime: status.prime_active === true,
+    exposure: String(status.exposure?.state || ''),
+    memo: !!status.cold_memo?.can_send,
+    memoLeft: Number(status.cold_memo?.remaining || 0),
+    primeLeft: slots?.prime?.remaining ?? null,
+    pickLeft: slots?.pick?.remaining ?? null,
+  };
+}
+
+/** 등록·미확인 수·유료 상태·찜/비교/최근 본 개수. 하나라도 다르면 홈을 다시 그린다. */
+function sessionPaintSignature() {
+  return JSON.stringify({
+    registrations: registrationsPaintSignature(),
+    unread: sessionUnreadCount(),
+    provider: providerPaintView(getProviderStatus()),
+    handoff: handoffPaintCounts(),
+  });
+}
+
+function chromeFromCaches() {
+  const handoff = chromeHandoffSnapshot();
+  return {
+    unread: sessionUnreadCount(),
+    wish: handoff.wish,
+    compare: handoff.compare,
+    recent: handoff.recent,
+  };
+}
+
 /**
  * 공급자·쪽지·등록은 서로 응답을 기다리지 않는다.
- * 등록 목록이 바뀐 경우에만 true. 같으면 지도가 있는 화면을 다시 그리지 않는다.
+ * 등록·미확인 수·유료 상태·찜/비교/최근 본 개수가 같으면 false. 지도는 다시 만들지 않는다.
  * @param {{ deferExposurePool?: boolean }} [opts]
  * @returns {Promise<boolean>}
  */
 async function hydrateSessionDependencies(opts = {}) {
-  const before = registrationsPaintSignature();
+  const before = sessionPaintSignature();
   await Promise.all([
     activateProviderApis(currentUser.role_type).catch((err) => {
       console.warn('[auth] provider hydrate skipped', err);
@@ -281,17 +323,19 @@ async function hydrateSessionDependencies(opts = {}) {
       console.warn('[auth] registrations hydrate skipped', err);
     }),
   ]);
-  const provider = getProviderStatus();
-  if (provider) {
-    const snapMod = await loadSnapshot();
-    snapMod.patchSessionSnapshot({ providerStatus: provider });
-  }
   if (opts.deferExposurePool !== true) {
     await hydrateExposureBridge().catch((err) => {
       console.warn('[auth] exposure hydrate skipped', err);
     });
   }
-  return before !== registrationsPaintSignature();
+  const after = sessionPaintSignature();
+  const snapMod = await loadSnapshot();
+  const provider = getProviderStatus();
+  snapMod.patchSessionSnapshot({
+    ...(provider ? { providerStatus: provider } : {}),
+    chrome: chromeFromCaches(),
+  });
+  return before !== after;
 }
 
 /** @param {AuthUser} user */
@@ -303,6 +347,10 @@ async function seedCachesFromSnapshot(user) {
   if (!snap) return;
   if (snap.registrations) seedRegistrationsFromSnapshot(snap.registrations);
   if (snap.providerStatus) seedProviderStatus(snap.providerStatus);
+  if (snap.chrome && typeof snap.chrome === 'object') {
+    seedUnreadHold(snap.chrome.unread);
+    seedHandoffFromChrome(snap.chrome);
+  }
   if (user.role_type === 'study_room_owner' && seedStudyRoomHome && (snap.roomHomeList || snap.roi || snap.studentDemand)) {
     await seedStudyRoomHome(snap);
   }

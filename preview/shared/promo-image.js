@@ -5,6 +5,14 @@
  */
 
 import { bindDraggableDialog } from './draggable-dialog.js';
+import { clearSnapshotStorage } from './snap-clear.js';
+
+function dropSavedSnapshot() {
+  clearSnapshotStorage();
+  import('./session-snapshot.js')
+    .then((mod) => mod.forgetSnapshotBinding())
+    .catch(() => {});
+}
 
 export const PROMO_IMAGE_SPEC = {
   accept: 'image/jpeg,image/png,image/webp',
@@ -265,6 +273,7 @@ export async function uploadPromoImage(input) {
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '사진 업로드에 실패했습니다.');
   }
+  dropSavedSnapshot();
   return data.image;
 }
 
@@ -288,6 +297,7 @@ export async function recropPromoImage(input) {
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '썸네일 위치를 다시 적용하지 못했습니다.');
   }
+  dropSavedSnapshot();
   return data.image;
 }
 
@@ -310,6 +320,7 @@ export async function updatePromoImageCaption(input) {
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '사진 제목을 저장하지 못했습니다.');
   }
+  dropSavedSnapshot();
   return data.image;
 }
 
@@ -331,4 +342,5 @@ export async function deletePromoImage(input) {
   if (!res.ok || !data.ok) {
     throw new Error(data.message || '사진을 삭제하지 못했습니다.');
   }
+  dropSavedSnapshot();
 }
