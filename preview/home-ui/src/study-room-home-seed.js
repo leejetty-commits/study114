@@ -10,6 +10,13 @@ import { studyRoomBadges } from './exposure-format.js';
 import { studyRoomSearchCardFields } from './home-basic-live.js';
 import { searchApi } from '@search-ui/search-api.js';
 import { normalizeLocation } from '../../shared/location-display.js';
+import { isSnapshotFresh, onRegistrationSnapshotInvalidated } from '../../shared/snap-clear.js';
+
+function rememberSnapshot(partial) {
+  import('../../shared/session-snapshot.js')
+    .then((mod) => mod.patchSessionSnapshot(partial))
+    .catch(() => {});
+}
 
 /** @type {object[]|null} */
 let liveItems = null;
@@ -31,6 +38,12 @@ let lifetimeViews = null;
 /** @type {number|null} */
 let viewsRoomId = null;
 let viewsLoaded = false;
+/** @type {number} */
+let listSavedAt = 0;
+/** @type {number} */
+let studentSavedAt = 0;
+/** @type {number} */
+let roiSavedAt = 0;
 
 /** @param {object|null|undefined} room */
 export function primarySavedRegion(room) {
@@ -222,6 +235,17 @@ export function bootStudyRoomStudentDemand(rerender) {
       if (studentKey !== key) return;
       studentLive = result.items;
       studentStatus = result.status;
+      studentSavedAt = Date.now();
+      if (result.status === 'ready') {
+        rememberSnapshot({
+          studentDemand: {
+            key,
+            items: studentLive,
+            status: studentStatus,
+            at: studentSavedAt,
+          },
+        });
+      }
       if (typeof rerender === 'function') rerender();
     })
     .catch(() => {
@@ -352,7 +376,7 @@ async function ensureLifetimeViews(roomId) {
     viewsLoaded = true;
     return;
   }
-  if (viewsLoaded && viewsRoomId === id && lifetimeViews != null) return;
+  if (viewsLoaded && viewsRoomId === id && isSnapshotFresh(roiSavedAt)) return;
   viewsRoomId = id;
   try {
     const data = await fetchRoiSummary(7, id);
@@ -366,6 +390,10 @@ async function ensureLifetimeViews(roomId) {
     lifetimeViews = null;
   }
   viewsLoaded = true;
+  roiSavedAt = Date.now();
+  rememberSnapshot({
+    roi: { roomId: id, data: { lifetime_views: lifetimeViews }, at: roiSavedAt },
+  });
 }
 
 /**
@@ -426,6 +454,10 @@ export function bootStudyRoomHome(rerender, opts = {}) {
         const result = await searchApi('room', filters, { limit: 20, sort: 'latest' });
         liveItems = (result.items || []).map(mapLiveRoom);
         liveStatus = 'ready';
+        listSavedAt = Date.now();
+        rememberSnapshot({
+          roomHomeList: { key, items: liveItems, status: liveStatus, at: listSavedAt },
+        });
       } catch {
         liveItems = [];
         liveStatus = 'error';
@@ -442,3 +474,57 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   })();
   return bootPromise;
 }
+
+/** 지역 저장 뒤에는 같은 탭의 목록 메모리도 버린다. */
+export function forgetStudyRoomHomeMemory() {
+  bootPromise = null;
+  liveKey = '';
+  liveItems = null;
+  liveStatus = 'idle';
+  listSavedAt = 0;
+  studentBoot = null;
+  studentKey = '';
+  studentLive = null;
+  studentStatus = 'idle';
+  studentSavedAt = 0;
+  lifetimeViews = null;
+  viewsRoomId = null;
+  viewsLoaded = false;
+  roiSavedAt = 0;
+}
+
+/** TTL 안의 스냅샷으로 목록·조회수 초기값만 채운다. 같은 페이지 메모리는 그대로다. */
+export function seedStudyRoomHomeFromSnapshot(snap) {
+  if (!snap || typeof snap !== 'object') return;
+  const list = snap.roomHomeList;
+  if (list && isSnapshotFresh(list.at) && typeof list.key === 'string' && Array.isArray(list.items)) {
+    liveKey = list.key;
+    liveItems = list.items.map((item) => ({ ...item }));
+    liveStatus = list.status === 'no-region' ? 'no-region' : 'ready';
+    listSavedAt = Number(list.at);
+    bootPromise = Promise.resolve();
+  }
+  const demand = snap.studentDemand;
+  if (demand && isSnapshotFresh(demand.at) && typeof demand.key === 'string' && Array.isArray(demand.items)) {
+    studentKey = demand.key;
+    studentLive = demand.items.map((item) => ({ ...item }));
+    studentStatus = demand.status === 'error' || demand.status === 'no-region' ? demand.status : 'ready';
+    studentSavedAt = Number(demand.at);
+    studentBoot = Promise.resolve();
+  }
+  const roi = snap.roi;
+  if (roi && isSnapshotFresh(roi.at)) {
+    const roomId = Number(roi.roomId);
+    if (Number.isFinite(roomId) && roomId > 0) {
+      viewsRoomId = roomId;
+      const views = Number(roi.data?.lifetime_views);
+      lifetimeViews = Number.isFinite(views) ? views : null;
+      viewsLoaded = true;
+      roiSavedAt = Number(roi.at);
+    }
+  }
+}
+
+onRegistrationSnapshotInvalidated((kind) => {
+  if (kind === 'studyRooms' || kind === 'all') forgetStudyRoomHomeMemory();
+});

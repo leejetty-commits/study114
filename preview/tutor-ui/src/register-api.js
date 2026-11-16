@@ -1,3 +1,5 @@
+import { invalidateRegistrationSnapshot } from '../../shared/session-snapshot.js';
+
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 async function postJson(body) {
@@ -34,7 +36,9 @@ export async function loadTutor() {
 }
 
 export async function saveStep(step, payload, tutorId = null) {
-  return postJson({ action: 'save', step, tutor_id: tutorId, payload });
+  const data = await postJson({ action: 'save', step, tutor_id: tutorId, payload });
+  invalidateRegistrationSnapshot('tutors');
+  return data;
 }
 
 /** 기본정보와 과외지역 1을 한 요청으로 저장한다. tutor_id 가 없으면 지역 1 없이 행을 만들지 않는다. */

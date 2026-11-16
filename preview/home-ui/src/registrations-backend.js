@@ -12,6 +12,10 @@ import {
 } from './registrations-api.js';
 import { authRoleType } from './auth-role.js';
 
+function loadSnapshot() {
+  return import('../../shared/session-snapshot.js');
+}
+
 let apiMode = false;
 
 /** @type {object[]} */
@@ -54,24 +58,74 @@ function registrationListForRole(roleType) {
   return '';
 }
 
+/** 같은 계정 스냅샷으로 등록 목록을 먼저 채운다. 네트워크가 성공하면 그 값으로 바꾼다. */
+export function seedRegistrationsFromSnapshot(registrations) {
+  const reg = registrations && typeof registrations === 'object' ? registrations : null;
+  if (!reg) return;
+  apiMode = true;
+  if (Array.isArray(reg.studyRooms)) studyRoomsCache = reg.studyRooms.map((row) => ({ ...row }));
+  if (Array.isArray(reg.tutors)) tutorsCache = reg.tutors.map((row) => ({ ...row }));
+  if (Array.isArray(reg.students)) studentsCache = reg.students.map((row) => ({ ...row }));
+}
+
+/** 키 순서가 달라도 같은 등록 목록이면 같은 문자열이 되게 한다. */
+function stableValue(value) {
+  if (Array.isArray(value)) return value.map((item) => stableValue(item));
+  if (value && typeof value === 'object') {
+    /** @type {Record<string, unknown>} */
+    const out = {};
+    for (const key of Object.keys(value).sort()) out[key] = stableValue(value[key]);
+    return out;
+  }
+  return value;
+}
+
+/** 홈·찾기 재렌더를 지역 목록이 바뀔 때만 하게 하는 비교 문자열. */
+export function registrationsPaintSignature() {
+  return JSON.stringify(stableValue({
+    studyRooms: studyRoomsCache,
+    tutors: tutorsCache,
+    students: studentsCache,
+  }));
+}
+
+async function rememberRegistrationsSnapshot() {
+  const { patchSessionSnapshot } = await loadSnapshot();
+  patchSessionSnapshot({
+    registrations: {
+      studyRooms: studyRoomsCache,
+      tutors: tutorsCache,
+      students: studentsCache,
+    },
+  });
+}
+
+async function invalidateSavedRegistration(kind) {
+  const { invalidateRegistrationSnapshot } = await loadSnapshot();
+  invalidateRegistrationSnapshot(kind);
+}
+
 export async function hydrateRegistrationsCache() {
   const kind = registrationListForRole(authRoleType());
   if (kind !== 'students') studentsCache = [];
   if (kind !== 'studyRooms') studyRoomsCache = [];
   if (kind !== 'tutors') tutorsCache = [];
-  if (kind === 'students') {
-    const studentsRes = await listStudents().catch(() => ({ students: [] }));
-    studentsCache = (studentsRes.students ?? []).map((s) => ({ ...s }));
-    return;
-  }
-  if (kind === 'studyRooms') {
-    const roomsRes = await listStudyRooms().catch(() => ({ rooms: [] }));
-    studyRoomsCache = (roomsRes.rooms ?? []).map((r) => ({ ...r }));
-    return;
-  }
-  if (kind === 'tutors') {
-    const tutorsRes = await listTutors().catch(() => ({ tutors: [] }));
-    tutorsCache = (tutorsRes.tutors ?? []).map((t) => ({ ...t }));
+  try {
+    if (kind === 'students') {
+      const studentsRes = await listStudents();
+      studentsCache = (studentsRes.students ?? []).map((row) => ({ ...row }));
+    } else if (kind === 'studyRooms') {
+      const roomsRes = await listStudyRooms();
+      studyRoomsCache = (roomsRes.rooms ?? []).map((row) => ({ ...row }));
+    } else if (kind === 'tutors') {
+      const tutorsRes = await listTutors();
+      tutorsCache = (tutorsRes.tutors ?? []).map((row) => ({ ...row }));
+    } else {
+      return;
+    }
+    await rememberRegistrationsSnapshot();
+  } catch (err) {
+    console.warn('[registrations] hydrate kept previous cache', err);
   }
 }
 
@@ -127,9 +181,11 @@ export async function apiStudentAction(id, action, body = {}) {
   const data = await patchStudent(id, action, body);
   if (data.deleted) {
     removeStudent(id);
-    return data;
+  } else if (data.student) {
+    upsertStudent(data.student);
   }
-  if (data.student) upsertStudent(data.student);
+  await invalidateSavedRegistration('students');
+  await rememberRegistrationsSnapshot();
   return data;
 }
 
@@ -137,9 +193,11 @@ export async function apiStudyRoomAction(id, action, body = {}) {
   const data = await patchStudyRoom(id, action, body);
   if (data.deleted) {
     removeStudyRoom(id);
-    return data;
+  } else if (data.room) {
+    upsertStudyRoom(data.room);
   }
-  if (data.room) upsertStudyRoom(data.room);
+  await invalidateSavedRegistration('studyRooms');
+  await rememberRegistrationsSnapshot();
   return data;
 }
 
@@ -147,9 +205,11 @@ export async function apiTutorAction(id, action, body = {}) {
   const data = await patchTutor(id, action, body);
   if (data.deleted) {
     removeTutor(id);
-    return data;
+  } else if (data.tutor) {
+    upsertTutor(data.tutor);
   }
-  if (data.tutor) upsertTutor(data.tutor);
+  await invalidateSavedRegistration('tutors');
+  await rememberRegistrationsSnapshot();
   return data;
 }
 

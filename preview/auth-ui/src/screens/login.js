@@ -9,6 +9,7 @@ import {
 import { renderLoginBackdrop, renderLoginStageBelow } from '../login-stage.js';
 import { AUTH_WELCOME_COPY, loginFailureMessage } from '../../../shared/auth-welcome-copy.js';
 import { withLoginWelcome } from '../../../shared/login-welcome.js';
+import { noteLastRole } from '../../../shared/last-role.js';
 import { getChromeUser } from '../../../shared/chrome-session.js';
 import { homeHashUrl, roleHomeHashPath } from '../../../shared/site-nav-config.js';
 import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
@@ -152,6 +153,7 @@ export function bindLoginEvents(root) {
         !me.oauth_role_pending &&
         !me.needs_basic_register &&
         !needsVerify;
+      if (greet) noteLastRole(me.role_type);
       window.location.href = greet ? withLoginWelcome(next) : next;
     } catch (err) {
       const message = loginFailureMessage(err instanceof Error ? err.message : '');

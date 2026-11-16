@@ -3,6 +3,7 @@
 /** @typedef {'study_room' | 'tutor' | 'student'} ProviderHomeTab */
 /** @typedef {'free' | 'paid'} ProviderSubscription */
 
+import { clearSnapshotStorage } from '../../shared/snap-clear.js';
 import { getDefaultMypagePath, normalizeMypagePath, MYPAGE_LEGACY_ALIASES, getStudyRoomEntryPath, getTutorEntryPath } from './mypage/router.js';
 import { authRoleType, isStudyRoomAuth } from './auth-role.js';
 import { roleHomeHashPath } from './nav-config.js';
@@ -306,6 +307,10 @@ export function setActiveRole(role) {
     sessionStorage.setItem(ACTIVE_ROLE_KEY, role);
   }
   if (prev && role && prev !== role) {
+    clearSnapshotStorage();
+    import('../../shared/session-snapshot.js')
+      .then((mod) => mod.forgetSnapshotBinding())
+      .catch(() => {});
     window.dispatchEvent(new CustomEvent('auth:role-change', { detail: { from: prev, to: role } }));
   }
 }
@@ -945,6 +950,6 @@ export function getCurrentScreen() {
   if (isSupportRoute()) return 'support';
   if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';
-  const path = hash.startsWith('/') ? hash : `/${hash}`;
+  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
   return ROUTES[path] || 'guest';
 }

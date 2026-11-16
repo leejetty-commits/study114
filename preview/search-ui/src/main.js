@@ -21,7 +21,7 @@ import { bindSearchPageEvents, renderSearchPage } from './screens/search-page.js
 import { replaceSearchRightRail } from './layout.js';
 import { mountOpsChrome } from '@home-ui/site-ops-chrome.js';
 import { syncRoleFromHash } from './state.js';
-import { getSessionConfirmStatus, initAuthSession, isEmailVerified } from '@home-ui/auth-session.js';
+import { getSessionConfirmStatus, initAuthSession, isEmailVerified, registerStudyRoomSnapshotSeed } from '@home-ui/auth-session.js';
 import { hydrateExposureBridge } from '@home-ui/exposure-bridge.js';
 import { isAuthRedirectPending } from '../../shared/auth-redirect.js';
 import { resumePendingDeepIntent, resetDeepIntentResumeFlag } from '@home-ui/resume-deep-intent.js';
@@ -77,6 +77,10 @@ function render() {
 }
 
 function init() {
+  registerStudyRoomSnapshotSeed((snap) =>
+    import('@home-ui/study-room-home-seed.js').then((mod) => mod.seedStudyRoomHomeFromSnapshot(snap)),
+  );
+  import('../../shared/session-snapshot.js').catch(() => {});
   const hadHash = Boolean(window.location.hash);
   if (!hadHash) {
     window.location.hash = '#/search/room';
@@ -125,8 +129,9 @@ function init() {
     allowFindBoot = true;
     render();
   });
-  window.addEventListener('auth:session-hydrated', () => {
+  window.addEventListener('auth:session-hydrated', (event) => {
     if (!allowFindBoot) return;
+    if (event.detail?.changed === false) return;
     render();
   });
 }

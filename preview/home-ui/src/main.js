@@ -71,8 +71,10 @@ import {
   isMessagesRoute,
   isRegisterIntroRoute,
 } from './state.js';
+import { bindLayoutEvents, renderHomeShell } from './layout.js';
+import { readLastRoleHint } from '../../shared/last-role.js';
 import { PLANS_REDIRECTS } from './plans/router.js';
-import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME } from './auth-session.js';
+import { initAuthSession, getAuthUser, isAdminUser, isLoggedIn, isEmailVerified, ROLE_HOME, registerStudyRoomSnapshotSeed } from './auth-session.js';
 import { importNeighborhoodGreetingHandoff, pullNeighborhoodGreetings } from './neighborhood-greeting-ui.js';
 import { guardRoleHomeAccess } from '../../shared/route-access.js';
 import { navRoleFromAuthUser } from './nav-config.js';
@@ -223,6 +225,37 @@ const ROLE_SCREEN_LOADERS = {
   tutor: loadTutorScreen,
 };
 
+/** 마지막 역할 힌트 → 역할 홈 조각. 관리자는 역할 홈 조각이 없다. */
+const HINT_SCREEN = {
+  tutor: 'tutor',
+  study_room_owner: 'studyRoom',
+  guardian_student: 'parent',
+};
+
+function prefetchLastRoleScreen() {
+  const key = HINT_SCREEN[readLastRoleHint()];
+  const loader = key ? ROLE_SCREEN_LOADERS[key] : null;
+  if (!loader) return;
+  loader().catch(() => {});
+}
+
+/** 로그인 흔적이 있으면 지도 없는 헤더와 회색 칸만 둔다. */
+function paintNeutralShell() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = renderHomeShell(
+    'guest',
+    `<div class="home-session-wait" aria-busy="true">
+      <p class="home-session-wait__label">불러오는 중</p>
+      <div class="home-session-wait__bar"></div>
+      <div class="home-session-wait__block"></div>
+      <div class="home-session-wait__block home-session-wait__block--short"></div>
+    </div>`,
+    { showAuth: false, showRoleSwitch: false, sidebarHtml: '' },
+  );
+  bindLayoutEvents(app, () => {});
+}
+
 function roleScreenFromModule(key, mod) {
   if (key === 'parent') return { render: mod.renderParent, bind: mod.bindParentEvents };
   if (key === 'studyRoom') return { render: mod.renderStudyRoom, bind: mod.bindStudyRoomEvents };
@@ -274,8 +307,8 @@ function shouldPaintBeforeSession() {
   // 커뮤니티·고객센터는 세션 전에 그리면 비회원 헤더가 먼저 보인다.
   if (isCommunityRoute() || isSupportRoute()) return false;
   const screen = getCurrentScreen();
-  // 비로그인 판정 전에도 게스트 홈 셸을 먼저 그린다. 역할 홈은 세션 뒤에 그린다.
-  if (screen === 'guest') return true;
+  // 비로그인 손님만 게스트 홈을 먼저 그린다. 로그인 흔적이 있으면 지도 없는 칸만 둔다.
+  if (screen === 'guest') return !readLastRoleHint();
   return screen !== 'parent' && screen !== 'studyRoom' && screen !== 'tutor';
 }
 
@@ -415,6 +448,10 @@ async function renderScreen(generation) {
     return;
   }
   const key = getCurrentScreen();
+  if (!sessionChecked && key === 'guest' && readLastRoleHint()) {
+    paintNeutralShell();
+    return;
+  }
   if (!sessionChecked && ROLE_SCREEN_LOADERS[key]) return;
   const roleGate = guardRoleHomeAccess(key, isLoggedIn(), navRoleFromAuthUser(getAuthUser()));
   if (!roleGate.ok) {
@@ -460,6 +497,10 @@ function leaveLegacyAdminEntry() {
 function init() {
   try {
     if (leaveLegacyAdminEntry()) return;
+    registerStudyRoomSnapshotSeed((snap) =>
+      import('./study-room-home-seed.js').then((mod) => mod.seedStudyRoomHomeFromSnapshot(snap)),
+    );
+    import('../../shared/session-snapshot.js').catch(() => {});
     importNeighborhoodGreetingHandoff();
     if (!SHOW_PREVIEW_TOOLBAR) {
       document.documentElement.style.setProperty('--preview-toolbar-h', '0px');
@@ -618,11 +659,15 @@ function init() {
     window.addEventListener('auth:profile', () => {
       render();
     });
-    window.addEventListener('auth:session-hydrated', () => {
+    window.addEventListener('auth:session-hydrated', (event) => {
+      if (event.detail?.changed === false) return;
       render();
     });
+    prefetchLastRoleScreen();
     if (shouldPaintBeforeSession()) {
       render().catch(handleBootError);
+    } else if (getCurrentScreen() === 'guest' && readLastRoleHint()) {
+      paintNeutralShell();
     }
     setTimeout(() => {
       bootReady = true;

@@ -5,6 +5,7 @@ import {
 } from '../lifecycle-copy.js';
 import { TUTOR_REGISTER_URL, navRoleFromAuthUser, roleHomeHashPath } from '../nav-config.js';
 import { getNavRole, getMypagePath } from '../state.js';
+import { invalidateRegistrationSnapshot } from '../../../shared/session-snapshot.js';
 import { bindQuickMatchScreen, renderQuickMatchScreen } from './quick-match-screen.js';
 import { isStudyRoomAuth } from '../auth-role.js';
 import { WITHDRAW_REASON_COPY } from '../withdraw-reason-copy.js';
@@ -1850,6 +1851,7 @@ function bindPrimeMatchConsentEvents(root) {
               box.checked = next !== 1;
               throw new Error(saved.message || '저장하지 못했습니다.');
             }
+            invalidateRegistrationSnapshot('students');
             box.checked = Number(saved.student?.prime_match_opt_in) === 1;
           } catch (err) {
             showError(err instanceof Error ? err.message : '저장하지 못했습니다.');

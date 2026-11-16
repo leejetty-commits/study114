@@ -90,7 +90,7 @@ function renderMyStudyRoomBox() {
         </div>
       </div>
       <div class="my-box__row my-box__row--3 my-box__stats-row">
-        ${statCell('상태', esc(`쪽지 ${box.inquiry} · ${box.unread}개 미확인`))}
+        <span class="my-box__stat"><span class="my-box__stat-label">상태</span><strong class="my-box__stat-val" data-study-room-unread>${esc(`쪽지 ${box.inquiry} · ${box.unread}개 미확인`)}</strong></span>
         <p class="my-box__guide">${esc(studyRoomInquiryGuide())}</p>
       </div>
       <div class="my-box__row my-box__row--4 my-box__stats-row">
@@ -158,7 +158,22 @@ export function renderStudyRoom() {
   return renderHomeShell('study_room', content, { showAuth: false, showRoleSwitch: false });
 }
 
+let unreadSnapHook = false;
+
+function hookUnreadAfterSnapshot() {
+  if (unreadSnapHook) return;
+  unreadSnapHook = true;
+  window.addEventListener('auth:session-hydrated', (event) => {
+    if (event.detail?.changed !== false) return;
+    const el = document.querySelector('[data-study-room-unread]');
+    if (!el) return;
+    const box = readStudyRoomMemberBox();
+    el.textContent = `쪽지 ${box.inquiry} · ${box.unread}개 미확인`;
+  });
+}
+
 export function bindStudyRoomEvents(root, rerender) {
+  hookUnreadAfterSnapshot();
   bindLayoutEvents(root, rerender);
   bindHomeNewsRow(root, { viewer: 'study_room', onRerender: rerender, sourceRoute: 'study_room' });
   bootStudyRoomHome(rerender);

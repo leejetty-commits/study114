@@ -7,6 +7,7 @@ import {
   hydrateRegistrationsCache,
 } from '../registrations-backend.js';
 import { getStudyRoom, updateStudyRoom } from './store.js';
+import { invalidateRegistrationSnapshot } from '../../../shared/session-snapshot.js';
 
 async function postRegisterSave(step, roomId, payload) {
   const res = await fetch('/api/study-room/register.php', {
@@ -19,6 +20,7 @@ async function postRegisterSave(step, roomId, payload) {
   if (!res.ok || !data.ok) {
     throw new Error(data.message || `저장 실패 (${res.status})`);
   }
+  invalidateRegistrationSnapshot('studyRooms');
   return data;
 }
 
