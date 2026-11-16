@@ -297,8 +297,9 @@ function waitForGeocoder(naverNs, timeoutMs = 8000) {
 }
 
 /**
- * 동 이름 질의가 주소로 안 잡히면 시·군·구로 낮춰 한 번 더 찾는다.
- * 도로 번지 주소가 실패한 경우는 건드리지 않는다.
+ * 동 이름 질의가 주소로 안 잡히면 한 번 더 찾는다.
+ * 센텀동은 법정동이 아니라 「부산광역시 해운대구 센텀동」이 빈 주소 목록을 돌려준다.
+ * 그 경우만 센텀동로 41(우동 센텀)으로 다시 찾고, 그래도 없으면 시·군·구로 낮춘다.
  * @param {typeof naver} naverNs
  * @param {string} query
  */
@@ -306,10 +307,16 @@ async function geocodeMemberLabel(naverNs, query) {
   const first = await geocodeRegionAfterReady(naverNs, query);
   if (first) return first;
   const parts = String(query || '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length < 3) return null;
+  if (parts.length < 2) return null;
   const dong = parts[parts.length - 1];
   if (!/(동|읍|면|리|가)$/.test(dong)) return null;
-  return geocodeRegionCenter(naverNs, parts.slice(0, -1).join(' '));
+  const parent = parts.slice(0, -1).join(' ');
+  if (dong === '센텀동') {
+    const road = await geocodeRegionCenter(naverNs, `${parent} 센텀동로 41`);
+    if (road) return road;
+  }
+  if (parts.length >= 3) return geocodeRegionCenter(naverNs, parent);
+  return null;
 }
 
 /** 지도 좌표 기능이 준비된 뒤에 찾고, 실패하면 한 번만 다시 찾는다. */
