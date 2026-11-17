@@ -96,6 +96,7 @@ import {
   guestScopeFilters,
 } from '../../shared/location-display.js';
 import { openKakaoPostcode } from '../../shared/kakao-postcode.js';
+import { readLastRoleHint } from '../../shared/last-role.js';
 import { ensureRegionFromKakao } from '../../shared/region-ensure.js';
 
 /** 공부방 매퍼가 빠뜨리는 찜·비교·쪽지 집계를 검색 원본에서 다시 붙인다. */
@@ -625,6 +626,7 @@ let findCitiesFailRendered = false;
 function settleFindCitiesWaiters() {
   const waiters = [...findCitiesWaiters];
   findCitiesWaiters.clear();
+  if (!waiters.length) return;
   if (findCitiesStatus !== 'ready') {
     if (findCitiesFailRendered) return;
     findCitiesFailRendered = true;
@@ -700,7 +702,7 @@ export function bootFindTutorUnits(rerender) {
       .then((units) => {
         const waiters = [...findTutorUnitsWaiters];
         findTutorUnitsWaiters.clear();
-        if (findTutorUnitsStatus === 'ready' || !findTutorUnitsFailRendered) {
+        if (waiters.length && (findTutorUnitsStatus === 'ready' || !findTutorUnitsFailRendered)) {
           if (findTutorUnitsStatus !== 'ready') findTutorUnitsFailRendered = true;
           waiters.forEach((fn) => fn());
         }
@@ -1711,3 +1713,19 @@ export function resolveStudentSearchHope(state) {
   if (state.role === 'parent' && state.findSurface === 'search') return null;
   return 'tutor';
 }
+
+/** 11 B: 찾기 문서에서만, me.php를 보낸 다음 틱에 지역 목록 두 개를 미리 받는다. 요청 수는 같고 시점만 앞당긴다. */
+function isFindDocument() {
+  if (typeof window === 'undefined' || !window.location) return false;
+  if (typeof document === 'undefined' || !document.getElementById('app')) return false;
+  const path = String(window.location.pathname || '');
+  if (path.startsWith('/search')) return true;
+  const hashPath = String(window.location.hash || '').replace(/^#/, '').split('?')[0];
+  return hashPath === '/search' || hashPath.startsWith('/search/');
+}
+if (isFindDocument()) setTimeout(() => {
+  bootFindCities();
+  bootFindTutorUnits();
+  // 로그인 흔적이 없을 때만(손님일 가능성) 게스트 기준 위치를 미리 받는다. 화면은 세션 뒤에 그대로 그린다.
+  if (!readLastRoleHint()) loadGuestBaseline();
+}, 0);
