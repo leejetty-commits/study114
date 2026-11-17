@@ -46,6 +46,12 @@ let studentSavedAt = 0;
 let roiSavedAt = 0;
 /** @type {Map<string, number>} */
 const studentCountByRegion = new Map();
+/** @type {Map<string, { items: object[], status: string, at: number }>} */
+const roomListByKey = new Map();
+/** 홈 홍보 알약. 탭 이동·새로고침에는 남고, 로그아웃 때 지운다. */
+const HOME_PROMO_INDEX_KEY = 'study114.studyRoomHomePromoIndex';
+/** 홈에서 고른 알약으로 학생 목록을 받았는지. 학생찾기 부트는 대표를 유지한다. */
+let studentUseHomePick = false;
 
 /** @param {object|null|undefined} room */
 export function primarySavedRegion(room) {
@@ -95,6 +101,81 @@ export function pickOwnStudyRoom() {
 
 export function peekStudyRoomPromo1() {
   return studyRoomPromo1Label(pickOwnStudyRoom());
+}
+
+/**
+ * 세션에 남은 홍보 알약 번호. 슬롯이 아직 없으면 저장값은 그대로 둔다.
+ * @returns {number|null}
+ */
+export function readStudyRoomHomePromoIndex() {
+  let raw = '';
+  try {
+    raw = sessionStorage.getItem(HOME_PROMO_INDEX_KEY) || '';
+  } catch {
+    return null;
+  }
+  if (!/^\d+$/.test(raw)) return null;
+  const idx = Number(raw);
+  const slots = studyRoomPromoMapSlots();
+  if (!slots.length) return null;
+  const slot = slots[idx];
+  if (!slot || !String(slot.region_label || '').trim()) {
+    try {
+      sessionStorage.removeItem(HOME_PROMO_INDEX_KEY);
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+  return idx;
+}
+
+/** @param {number} idx */
+export function writeStudyRoomHomePromoIndex(idx) {
+  try {
+    sessionStorage.setItem(HOME_PROMO_INDEX_KEY, String(idx));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 메모리의 알약이 비었으면 세션 값을 되돌린다. @param {object} [state] */
+export function restoreStudyRoomHomePromoIndex(state) {
+  if (!state) return;
+  if (Number.isInteger(state.studyRoomPromoIndex) && state.studyRoomPromoIndex >= 0) return;
+  const idx = readStudyRoomHomePromoIndex();
+  if (idx != null) state.studyRoomPromoIndex = idx;
+}
+
+/**
+ * 홈에서 고른 홍보 슬롯. 없으면 null(대표로 폴백하는 쪽에서 처리).
+ * @param {object} [state]
+ */
+export function studyRoomHomePromoSlot(state) {
+  const fromState =
+    Number.isInteger(state?.studyRoomPromoIndex) && state.studyRoomPromoIndex >= 0
+      ? state.studyRoomPromoIndex
+      : null;
+  const idx = fromState != null ? fromState : readStudyRoomHomePromoIndex();
+  if (idx == null) return null;
+  const slot = studyRoomPromoMapSlots()[idx];
+  if (!slot || !String(slot.region_label || '').trim()) return null;
+  return slot;
+}
+
+/** 고른 알약의 홍보 라벨. 없으면 대표. @param {object} [state] */
+export function studyRoomHomePromoLabel(state) {
+  const slot = studyRoomHomePromoSlot(state);
+  const label = String(slot?.promo_label || slot?.region_label || '').trim();
+  return label || peekStudyRoomPromo1();
+}
+
+/** 고른 알약의 동 이름. 없으면 대표 동. @param {object} [state] */
+export function studyRoomHomePromoDong(state) {
+  const full = studyRoomHomePromoLabel(state);
+  if (!full) return '';
+  const dong = normalizeLocation({ raw: full }, 'room').dong;
+  return String(dong || '').trim();
 }
 
 /**
@@ -236,10 +317,13 @@ export function getStudyRoomStudentFeedStatus() {
 }
 
 /** 실패 후 같은 키로 다시 받을 수 있게 부트 가드를 푼다. */
-export function retryStudyRoomStudentDemand(rerender) {
+export function retryStudyRoomStudentDemand(rerender, opts = {}) {
   studentBoot = null;
   studentKey = '';
-  return bootStudyRoomStudentDemand(rerender);
+  return bootStudyRoomStudentDemand(rerender, {
+    homePick: opts.homePick === true || studentUseHomePick,
+    state: opts.state,
+  });
 }
 
 /** 홈 공부방 목록 실패 재시도. */
@@ -250,13 +334,19 @@ export function retryStudyRoomHome(rerender, opts = {}) {
 }
 
 /**
- * 홈 우리동네 학생과 학생찾기 진입이 같은 목록을 쓴다.
+ * 홈 우리동네 학생은 고른 홍보 알약의 동. 학생찾기 진입은 대표 동.
  * @param {() => void} [rerender]
+ * @param {{ homePick?: boolean, state?: object }} [opts]
  */
-export function bootStudyRoomStudentDemand(rerender) {
+export function bootStudyRoomStudentDemand(rerender, opts = {}) {
+  if (opts.homePick === true) studentUseHomePick = true;
   const room = pickOwnStudyRoom();
-  const promo = studyRoomPromo1Label(room);
-  const regionId = studyRoomPromo1RegionId();
+  const picked = studentUseHomePick ? studyRoomHomePromoSlot(opts.state) : null;
+  const pickedId = String(picked?.region_id || '').trim();
+  const promo = picked
+    ? String(picked.promo_label || picked.region_label || '').trim()
+    : studyRoomPromo1Label(room);
+  const regionId = /^\d+$/.test(pickedId) ? pickedId : studyRoomPromo1RegionId();
   const key = `${room?.id || 0}|${regionId}|${promo}`;
   if (studentBoot && studentKey === key) return studentBoot;
   studentKey = key;
@@ -471,6 +561,24 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   const promo = String(slot?.promo_label || '').trim() || studyRoomPromo1Label(room);
   const filters = studyRoomHomeSearchFilters(slot, promo);
   const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
+  const cached = roomListByKey.get(key);
+  if (cached && (cached.status === 'ready' || cached.status === 'no-region')) {
+    // 캐시 적중은 목록만 바꾼다. 다시 그리기는 키·상태가 바뀐 때 한 번만 예약한다.
+    // 조회수는 아래 기존 가드가 처리한다(그리기마다 새 then·rerender를 만들지 않는다).
+    const changed = liveKey !== key || liveStatus !== cached.status;
+    if (changed) {
+      liveKey = key;
+      liveItems = cached.items;
+      liveStatus = cached.status;
+      listSavedAt = cached.at;
+      bootPromise = Promise.resolve();
+      if (typeof rerender === 'function') {
+        queueMicrotask(() => {
+          if (liveKey === key) rerender();
+        });
+      }
+    }
+  }
   if (bootPromise && liveKey === key) {
     if (opts.viewsAfterList === true) return bootPromise;
     const roomId = Number(room?.id);
@@ -488,31 +596,40 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   bootPromise = (async () => {
     const loadList = async () => {
       if (!(filters.region_id || filters.region_label || filters.complex_id)) {
+        const at = Date.now();
+        roomListByKey.set(key, { items: [], status: 'no-region', at });
+        if (liveKey !== key) return;
         liveItems = [];
         liveStatus = 'no-region';
+        listSavedAt = at;
         return;
       }
       try {
         const result = await searchApi('room', filters, { limit: 20, sort: 'latest' });
-        liveItems = (result.items || []).map(mapLiveRoom);
+        const items = (result.items || []).map(mapLiveRoom);
+        const at = Date.now();
+        roomListByKey.set(key, { items, status: 'ready', at });
+        if (liveKey !== key) return;
+        liveItems = items;
         liveStatus = 'ready';
-        listSavedAt = Date.now();
+        listSavedAt = at;
         rememberSnapshot({
           roomHomeList: { key, items: liveItems, status: liveStatus, at: listSavedAt },
         });
       } catch {
+        if (liveKey !== key) return;
         liveItems = [];
         liveStatus = 'error';
       }
     };
     if (opts.viewsAfterList === true) {
       await loadList();
-      if (typeof rerender === 'function') rerender();
+      if (liveKey === key && typeof rerender === 'function') rerender();
       await ensureLifetimeViews(room?.id);
       return;
     }
     await Promise.all([ensureLifetimeViews(room?.id), loadList()]);
-    if (typeof rerender === 'function') rerender();
+    if (liveKey === key && typeof rerender === 'function') rerender();
   })();
   return bootPromise;
 }
@@ -534,6 +651,7 @@ export function forgetStudyRoomHomeMemory() {
   viewsLoaded = false;
   roiSavedAt = 0;
   studentCountByRegion.clear();
+  roomListByKey.clear();
 }
 
 /**
@@ -571,6 +689,11 @@ export function seedStudyRoomHomeFromSnapshot(snap) {
     liveStatus = list.status === 'no-region' ? 'no-region' : 'ready';
     listSavedAt = Number(list.at);
     bootPromise = Promise.resolve();
+    roomListByKey.set(list.key, {
+      items: liveItems,
+      status: liveStatus,
+      at: listSavedAt,
+    });
   }
   const demand = snap.studentDemand;
   if (demand && isSnapshotFresh(demand.at) && typeof demand.key === 'string' && Array.isArray(demand.items)) {

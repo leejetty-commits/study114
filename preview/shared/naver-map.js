@@ -296,6 +296,22 @@ function waitForGeocoder(naverNs, timeoutMs = 8000) {
   });
 }
 
+/**
+ * 동 이름 질의가 주소로 안 잡히면 시·군·구로 낮춰 한 번 더 찾는다.
+ * 도로 번지 주소가 실패한 경우는 건드리지 않는다.
+ * @param {typeof naver} naverNs
+ * @param {string} query
+ */
+async function geocodeMemberLabel(naverNs, query) {
+  const first = await geocodeRegionAfterReady(naverNs, query);
+  if (first) return first;
+  const parts = String(query || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 3) return null;
+  const dong = parts[parts.length - 1];
+  if (!/(동|읍|면|리|가)$/.test(dong)) return null;
+  return geocodeRegionCenter(naverNs, parts.slice(0, -1).join(' '));
+}
+
 /** 지도 좌표 기능이 준비된 뒤에 찾고, 실패하면 한 번만 다시 찾는다. */
 export async function geocodeRegionAfterReady(naverNs, label) {
   const ready = await waitForGeocoder(naverNs);
@@ -358,7 +374,9 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
         showStatus(promptStatus, 'info');
         return null;
       }
-      const found = await geocodeRegionAfterReady(naver, geocodeQuery);
+      const found = memberMap
+        ? await geocodeMemberLabel(naver, geocodeQuery)
+        : await geocodeRegionAfterReady(naver, geocodeQuery);
       if (!found) {
         showStatus(failStatus, 'error');
         return null;
