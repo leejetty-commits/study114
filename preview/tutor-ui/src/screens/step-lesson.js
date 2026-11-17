@@ -26,11 +26,15 @@ import {
   skipDetailRegistration,
 } from '../layout.js';
 
-function feeCountBox(s, embed) {
+function feeCountBox(s, embed, basicHref = '') {
   const weeklyMode = s.fee_basis_type !== 'monthly_by_total_sessions';
   if (weeklyMode) {
     const shown = lessonWeeklyLabel(s.lessons_per_week) || '선택';
-    const hint = embed ? '기본정보 탭에서 수정' : '마이페이지에서 수정';
+    const hint = embed && basicHref
+      ? `<a href="#${basicHref}" data-p21-nav="${basicHref}">기본정보 탭에서 수정</a>`
+      : embed
+        ? '기본정보 탭에서 수정'
+        : `<a href="${mypageRegistrationsUrl()}">마이페이지에서 수정</a>`;
     return `
       <div class="form-group" data-trc-field="lessons_per_week">
         <span class="form-label">주 회수</span>
@@ -136,7 +140,7 @@ export function renderLessonFormHtml(opts = {}) {
           <span class="form-label form-label--required">산정방식</span>
           <div class="form-radio-group">${feeBasis}</div>
         </div>
-        ${feeCountBox(s, embed)}
+        ${feeCountBox(s, embed, opts.basicHref)}
       </div>
       <div class="form-group" data-trc-field="fee_description">
         <label class="form-label" for="fee_description">가격 설명</label>

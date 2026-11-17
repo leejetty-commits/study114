@@ -173,3 +173,184 @@ body.register-edit-open {
 .tutor-lesson-step .form-radio__label {
   white-space: nowrap;
 }
+
+/* 14b tutor-ui 상세등록. 14 마이페이지와 같은 값. 단계 버튼·안내 상자는 그대로. */
+.register-card.register-flow form[data-form="lesson"],
+.register-card.register-flow form[data-form="contact"] {
+  box-sizing: border-box;
+  max-width: 64rem;
+  margin: 0;
+  padding: var(--space-6);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-surface);
+  background: var(--product-panel);
+}
+.register-card.register-flow form[data-form="lesson"] .register-section-title,
+.register-card.register-flow form[data-form="contact"] .register-section-title {
+  margin: 0 0 var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
+}
+.register-card.register-flow form[data-form="lesson"] .register-section-title ~ .register-section-title,
+.register-card.register-flow form[data-form="contact"] .register-section-title ~ .register-section-title {
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--gray-200);
+}
+.register-card.register-flow form[data-form="lesson"] > .form-hint,
+.register-card.register-flow form[data-form="contact"] > .form-hint {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+.register-card.register-flow form[data-form="lesson"] .form-group,
+.register-card.register-flow form[data-form="contact"] .form-group {
+  margin: 0;
+}
+.register-card.register-flow form[data-form="lesson"] .form-label,
+.register-card.register-flow form[data-form="contact"] .form-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: var(--space-2);
+}
+.register-card.register-flow form[data-form="lesson"] .form-hint,
+.register-card.register-flow form[data-form="contact"] .form-hint {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--gray-500);
+}
+.register-card.register-flow form[data-form="lesson"] .form-radio:has(input:checked),
+.register-card.register-flow form[data-form="contact"] .form-radio:has(input:checked) {
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-light);
+}
+.register-card.register-flow form[data-form="lesson"] .form-check,
+.register-card.register-flow form[data-form="contact"] .form-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-height: 44px;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-control);
+  background: var(--product-panel);
+}
+.register-card.register-flow form[data-form="lesson"] .form-check:has(input:checked),
+.register-card.register-flow form[data-form="contact"] .form-check:has(input:checked) {
+  border-color: var(--brand-blue);
+  background: var(--brand-blue-light);
+}
+.register-card.register-flow form[data-form="lesson"] .form-check input,
+.register-card.register-flow form[data-form="contact"] .form-check input {
+  accent-color: var(--brand-blue);
+}
+.register-card.register-flow form[data-form="lesson"] .register-check-grid,
+.register-card.register-flow form[data-form="contact"] .register-check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-2);
+}
+.register-card.register-flow form[data-form="lesson"] .form-input--readonly,
+.register-card.register-flow form[data-form="contact"] .form-input--readonly {
+  display: block;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-weight: 600;
+}
+.register-card.register-flow form[data-form="lesson"] [data-trc-field="subjects"] > .form-hint:first-child,
+.register-card.register-flow form[data-form="contact"] [data-trc-field="subjects"] > .form-hint:first-child {
+  display: block;
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.register-card.register-flow form[data-form="lesson"] [data-action="add-subject"],
+.register-card.register-flow form[data-form="contact"] [data-action="add-subject"] {
+  width: 100%;
+  height: 44px;
+  min-height: 44px;
+  border-style: dashed;
+  border-color: var(--gray-300);
+  background: var(--product-panel);
+  color: var(--gray-700);
+}
+.register-card.register-flow form[data-form="lesson"] .form-label--required::after,
+.register-card.register-flow form[data-form="contact"] .form-label--required::after {
+  color: #dc2626;
+}
+.register-card.register-flow form[data-form="lesson"] .form-label--tier::after,
+.register-card.register-flow form[data-form="contact"] .form-label--tier::after {
+  color: #0b2545;
+}
+@media (min-width: 1024px) {
+  .register-card.register-flow form[data-form="lesson"],
+  .register-card.register-flow form[data-form="contact"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-6);
+    align-items: start;
+  }
+  .register-card.register-flow form[data-form="lesson"] .register-grid-2,
+  .register-card.register-flow form[data-form="contact"] .register-grid-2 {
+    display: contents;
+  }
+  .register-card.register-flow form[data-form="lesson"] > *,
+  .register-card.register-flow form[data-form="contact"] > *,
+  .register-card.register-flow form[data-form="lesson"] .register-grid-2 > *,
+  .register-card.register-flow form[data-form="contact"] .register-grid-2 > * {
+    grid-column: 1 / -1;
+  }
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="student_target"],
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="student_count_group"],
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="fee_basis"],
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="lessons_per_week"],
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="monthly_session_count"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="university"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="major_name"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="main_material_note"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="feature_1"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="feature_2"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="feature_3"],
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="contact_time_note"] {
+    grid-column: auto;
+  }
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="age_band"] .form-radio-group,
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="age_band"] .form-radio-group {
+    display: grid;
+    grid-template-columns: repeat(4, max-content);
+    justify-content: start;
+  }
+}
+@media (max-width: 1023px) {
+  .register-card.register-flow form[data-form="lesson"],
+  .register-card.register-flow form[data-form="contact"] {
+    padding: var(--space-4);
+  }
+  .register-card.register-flow form[data-form="lesson"].register-form-narrow,
+  .register-card.register-flow form[data-form="contact"].register-form-narrow {
+    max-width: none;
+  }
+  .register-card.register-flow form[data-form="lesson"] .register-grid-2,
+  .register-card.register-flow form[data-form="contact"] .register-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .register-card.register-flow form[data-form="lesson"] [data-trc-field="age_band"] .form-radio-group,
+  .register-card.register-flow form[data-form="contact"] [data-trc-field="age_band"] .form-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 430px) {
+  .register-card.register-flow form[data-form="lesson"] .register-check-grid,
+  .register-card.register-flow form[data-form="contact"] .register-check-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

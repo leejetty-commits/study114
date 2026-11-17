@@ -113,7 +113,7 @@ function detailFormsHtml(tutor, section) {
         <span class="p19-field__label">프로필 사진</span>
         ${renderTutorProfilePhotoEditor(tutor)}
       </div>`
-    : renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true });
+    : renderLessonFormHtml({ includeStepNav: false, includeFooterActions: false, embed: true, basicHref: tutorSectionPath(tutor.id, 'basic') });
   return `
     ${renderReturnBanner(tutor.id)}
     <div class="mp-room-embed register-flow" data-embed-section="${detail2 ? 'detail2' : 'detail'}" data-embed-tutor-id="${tutor.id || 0}">
