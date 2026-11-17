@@ -3,8 +3,6 @@
  * 우측 레일 카드 문구는 홈 배너 진입용이라 여기서 바꾸지 않는다.
  */
 
-import { quickMatchCatalogRoom } from './quick-match-content.js';
-
 export const STUDY_ROOM_PROMO = {
   meta: {
     path: '/promo/study-room',
@@ -39,7 +37,6 @@ export const STUDY_ROOM_PROMO = {
       },
     },
     cardTypes: {
-      quickMatch: quickMatchCatalogRoom,
       eyebrow: '기능 ② 카드 종류',
       title: '무료로 시작하고, 필요할 때만 올립니다',
       lead: '프라임·픽은 홈·찾기 화면에서 더 잘 발견되도록 돕는 선택 노출상품입니다.',

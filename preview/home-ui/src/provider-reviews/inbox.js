@@ -142,8 +142,8 @@ function reviewOriginTabs(active) {
 export function renderReviewInboxPlaceholder() {
   const origin = reviewsNavFromLocation().origin === 'quick_match' ? 'quick_match' : 'general';
   return `
-    ${reviewOriginTabs(origin)}
     <section class="review-inbox mp-card" data-review-inbox data-mode="list" data-lane="all">
+      ${reviewOriginTabs(origin)}
       <div data-review-inbox-body><p class="review-sheet__empty mp-card__empty">불러오는 중…</p></div>
     </section>`;
 }

@@ -23,7 +23,7 @@ import {
 } from './registrations-backend.js';
 import { deactivateBoardApi } from './board/board-backend.js';
 import { resetConcernData } from './concern/store.js';
-import { navigate, previewState, setActiveRole } from './state.js';
+import { navigate, setActiveRole } from './state.js';
 import { noteAuthRoleType } from './auth-role.js';
 import {
   basicRegisterPathForMe,
@@ -107,11 +107,6 @@ export function isLoggedIn() {
 
 export function isAdminUser() {
   return Boolean(currentUser?.admin_level) || currentUser?.role_type === 'admin';
-}
-
-/** STUDY114_TEST_ACCOUNT_EMAILS 허용목록. 이메일 목록은 내려주지 않고 me.php 판정만 쓴다. */
-export function isTestAccountUser() {
-  return currentUser?.test_account === true;
 }
 
 function waitForSessionRetry(ms) {
@@ -201,7 +196,6 @@ export async function fetchSession() {
           oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
           oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
           phone_verified: Boolean(data.phone_verified),
-          test_account: data.test_account === true,
         };
       }
       redirectToEmailVerifyWait();
@@ -230,7 +224,6 @@ export async function fetchSession() {
       oauth_providers: Array.isArray(data.oauth_providers) ? data.oauth_providers : [],
       oauth_provider_labels: Array.isArray(data.oauth_provider_labels) ? data.oauth_provider_labels : [],
       phone_verified: Boolean(data.phone_verified),
-      test_account: data.test_account === true,
     };
   }
 }
@@ -433,7 +426,6 @@ export async function logout() {
   deactivateBoardApi();
   resetConcernData();
   clearAuthClientResidue();
-  previewState.studyRoomFind.studyRoomPromoIndex = null;
   leaveMyRouteForGuest();
   window.dispatchEvent(new CustomEvent('auth:logout'));
 }

@@ -34,15 +34,6 @@ export const PROMO_LANDINGS = [
     shareText: '과외지역과 주력 과목으로, 프로필을 분명하게 보여 주세요 — 우동공과',
   },
   {
-    id: 'quick-match',
-    path: '/promo/quick-match',
-    title: '실시간 퀵매칭',
-    audience: '공부방·과외쌤',
-    status: 'live',
-    railHint: '프라임 혜택 소개',
-    shareText: '새로운 방식의 매칭이 시작됩니다 — 우동공과',
-  },
-  {
     id: 'parent',
     path: '/promo/parent',
     title: '우리동네 학생',

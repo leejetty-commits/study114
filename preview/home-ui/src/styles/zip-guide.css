@@ -603,76 +603,10 @@
   :is(.guide-app, .concern-app, .support-app) .nav-select { min-height: 44px; font-size: 15px; }
 }
 
-/* 안내글 글머리 (2026-11-15) — 이용안내·고객센터·유료상품 본문 문단 */
-:is(.guide-app, .support-app, .home-app--plans-hub, .plans-layout) {
+/* 안내글 글머리 (2026-11-15) — 이용안내·고객센터 본문 문단 */
+:is(.guide-app, .support-app) {
   --s114-bullet-size: 4px;
   --s114-bullet-color: var(--uds-muted, #9ca3af);
-}
-:is(.home-app--plans-hub, .plans-layout) :is(
-  .cinema-lead,
-  .home-core,
-  .entry-desc,
-  .badge-aux__desc,
-  .faq-cta-block > p,
-  .plans-public__role,
-  .plans-public__entry > p,
-  .plans-sf-panel__lead,
-  .plans-public__tagline,
-  .plans-public__refund-short,
-  .plans-hero__lead,
-  .plans-hero__sub,
-  .plans-cta__lead,
-  .plans-highlight__body,
-  .plans-card__tagline,
-  .plans-card__hook,
-  .plans-guide__cols p,
-  .plans-result__refund,
-  .plans-result__note,
-  .plans-badge-select__note,
-  .plans-order-summary__note,
-  .plans-purchase-check > p,
-  .plans-basic-free > p,
-  .plans-access-aux > p:not(.plans-access-aux__links),
-  .refund-policy-detail > p:not(:has(strong))
-) {
-  position: relative;
-  padding-left: 0.9em;
-}
-:is(.home-app--plans-hub, .plans-layout) :is(
-  .cinema-lead,
-  .home-core,
-  .entry-desc,
-  .badge-aux__desc,
-  .faq-cta-block > p,
-  .plans-public__role,
-  .plans-public__entry > p,
-  .plans-sf-panel__lead,
-  .plans-public__tagline,
-  .plans-public__refund-short,
-  .plans-hero__lead,
-  .plans-hero__sub,
-  .plans-cta__lead,
-  .plans-highlight__body,
-  .plans-card__tagline,
-  .plans-card__hook,
-  .plans-guide__cols p,
-  .plans-result__refund,
-  .plans-result__note,
-  .plans-badge-select__note,
-  .plans-order-summary__note,
-  .plans-purchase-check > p,
-  .plans-basic-free > p,
-  .plans-access-aux > p:not(.plans-access-aux__links),
-  .refund-policy-detail > p:not(:has(strong))
-)::before {
-  content: "";
-  position: absolute;
-  left: 0.15em;
-  top: 0.72em;
-  width: var(--s114-bullet-size);
-  height: var(--s114-bullet-size);
-  background: var(--s114-bullet-color);
-  border-radius: 1px;
 }
 :is(.guide-frame__body, .sup-frame__body) > p.section-lead:not(.section-lead--plain),
 .guide-app .guide-frame__body > p:not([class]),

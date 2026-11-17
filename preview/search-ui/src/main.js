@@ -83,11 +83,7 @@ function init() {
   import('../../shared/session-snapshot.js').catch(() => {});
   const hadHash = Boolean(window.location.hash);
   if (!hadHash) {
-    const path = window.location.pathname.replace(/\/+$/, '');
-    const tabPath = path === '/search/tutor' || path === '/search/student' || path === '/search/room'
-      ? path
-      : '/search/room';
-    window.location.hash = `#${tabPath}`;
+    window.location.hash = '#/search/room';
   }
   // 빈 해시를 채운 직후의 hashchange는 첫 셸과 같은 해시라 다시 그리지 않는다.
   let bootReady = hadHash;
