@@ -614,7 +614,7 @@ function init() {
         action === 'search' ||
         Boolean(target.closest('[data-prime-empty], [data-basic-empty], [data-pick-empty]'));
       if (!guestOnly) return;
-      if (sessionChecked && !isLoggedIn()) return;
+      if (sessionChecked) return;
       event.preventDefault();
       event.stopPropagation();
     }, true);
