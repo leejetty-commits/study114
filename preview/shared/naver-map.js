@@ -181,14 +181,25 @@ function loadNaverMapsSdk() {
  * @param {string} label
  * @returns {Promise<{ lat: number, lng: number }|null>}
  */
+function geocodeBucket(service) {
+  if (!service || typeof service.geocode !== 'function') return null;
+  if (!Object.prototype.hasOwnProperty.call(service, '__study114Geocode')) {
+    Object.defineProperty(service, '__study114Geocode', {
+      value: { done: new Map(), inflight: new Map() },
+    });
+  }
+  return service.__study114Geocode;
+}
+
 export function geocodeRegionCenter(naverNs, label) {
-  return new Promise((resolve) => {
-    const service = naverNs?.maps?.Service;
-    const query = String(label || '').trim();
-    if (!query || typeof service?.geocode !== 'function') {
-      resolve(null);
-      return;
-    }
+  const query = String(label || '').trim();
+  const service = naverNs?.maps?.Service;
+  const bucket = geocodeBucket(service);
+  if (!query || !bucket) return Promise.resolve(null);
+  if (bucket.done.has(query)) return Promise.resolve(bucket.done.get(query));
+  const pending = bucket.inflight.get(query);
+  if (pending) return pending;
+  const promise = new Promise((resolve) => {
     try {
       service.geocode({ query }, (status, response) => {
         if (status !== service.Status?.OK) {
@@ -198,12 +209,18 @@ export function geocodeRegionCenter(naverNs, label) {
         const addr = response?.v2?.addresses?.[0];
         const lat = parseCoord(addr?.y);
         const lng = parseCoord(addr?.x);
-        resolve(lat != null && lng != null ? { lat, lng } : null);
+        const found = lat != null && lng != null ? { lat, lng } : null;
+        if (found) bucket.done.set(query, found);
+        resolve(found);
       });
     } catch {
       resolve(null);
     }
+  }).finally(() => {
+    bucket.inflight.delete(query);
   });
+  bucket.inflight.set(query, promise);
+  return promise;
 }
 
 /**
@@ -277,6 +294,12 @@ function delay(ms) {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function mapMountStale(mountEl, generation) {
+  if (mountEl?.isConnected === false) return true;
+  if (generation != null && mountEl?._mapGeneration !== generation) return true;
+  return false;
 }
 
 function waitForGeocoder(naverNs, timeoutMs = 8000) {
@@ -366,6 +389,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   try {
     const naver = options.naver || await loadNaverMapsSdk();
+    if (mapMountStale(mountEl, options.mapGeneration)) return null;
     const promptStatus = memberMap ? STUDY_ROOM_MAP_COPY.unplaced : options.promptStatus || REGION_PROMPT_MAP_STATUS;
     const failStatus = memberMap ? STUDY_ROOM_MAP_COPY.notFound : REGION_GEOCODE_FAIL_STATUS;
     // 빈 문자열은 명시적이다. 단지 주소가 없을 때 홍보 라벨로 바꾸지 않는다.
@@ -379,6 +403,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       const found = memberMap
         ? await geocodeMemberLabel(naver, geocodeQuery)
         : await geocodeRegionAfterReady(naver, geocodeQuery);
+      if (mapMountStale(mountEl, options.mapGeneration)) return null;
       if (!found) {
         showStatus(failStatus, 'error');
         return null;
@@ -386,6 +411,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
       center = { ...found, zoom: clampNeighborhoodZoom(options.regionZoom ?? MAP_DEFAULT_ZOOM), source: 'geocode' };
     }
     // 로그인 회원 지도(공부방 홈·찾기·상세)는 대치역 기본 중심으로 열지 않는다.
+    if (mapMountStale(mountEl, options.mapGeneration)) return null;
     if (memberMap && center.source === 'default') {
       showStatus(promptStatus, 'info');
       return null;
@@ -541,6 +567,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
     return controller;
   } catch (err) {
+    if (mapMountStale(mountEl, options.mapGeneration)) return null;
     const msg = err instanceof Error ? err.message : '지도를 불러올 수 없습니다.';
     showStatus(`${msg} · 리스트는 계속 이용할 수 있습니다.`, 'error');
     console.warn('[naver-map]', err);
@@ -560,6 +587,8 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
 
   const prev = /** @type {{ destroy?: () => void }|undefined} */ (mount._mapController);
   prev?.destroy?.();
+  const generation = (Number(mount._mapGeneration) || 0) + 1;
+  mount._mapGeneration = generation;
 
   const latAttr = section?.getAttribute('data-map-lat');
   const lngAttr = section?.getAttribute('data-map-lng');
@@ -589,8 +618,10 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
     zoomFloor: section?.getAttribute('data-zoom-floor') != null ? Number(section.getAttribute('data-zoom-floor')) : options.zoomFloor,
     naver: options.naver,
     onPinClick: options.onPinClick,
+    mapGeneration: generation,
   });
 
+  if (mount._mapGeneration !== generation) return null;
   mount._mapController = controller;
   return controller;
 }
