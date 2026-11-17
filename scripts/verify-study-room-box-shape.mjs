@@ -155,7 +155,7 @@ ok('(a) 래퍼는 남음', html.includes('home-mkt-wrap'));
 
 ok('(b) 배지·4행', box.includes('my-box__badge') && box.includes(COPY.badge) && ['--1', '--2', '--3', '--4'].every((n) => box.includes(`my-box__row${n}`)));
 ok('(b) 과목 칸 없음', !box.includes('my-box__stat-label">과목'));
-ok('(b) 이름·상태·조회 —·등록', box.includes('한빛공부방') && box.includes('쪽지 받음 · 0개 미확인') && box.includes('my-box__stat-label">조회') && box.includes('my-box__stat-val">—') && box.includes('2024-05-06'));
+ok('(b) 이름·상태·조회 —·등록', box.includes('한빛공부방') && box.includes('쪽지 받는 중') && !box.includes('미확인') && box.includes('my-box__stat-label">조회') && box.includes('my-box__stat-val">—') && box.includes('2024-05-06'));
 ok('(b) 홍보지역 안내', box.includes(COPY.regionGuide));
 ok('(b) 쪽지설정 메뉴가 있어 3행 전체 안내', STUDY_ROOM_TOP_TABS.some((t) => t.key === 'inquiries' && t.label === '쪽지설정') && box.includes(COPY.inquiryGuide));
 ok('(b) 화면은 메뉴를 코드로 가른다', screenSrc.includes('STUDY_ROOM_TOP_TABS.some') && screenSrc.includes('BOX.inquiryGuide') && screenSrc.includes('BOX.messagesGuide'));

@@ -85,6 +85,15 @@ function statCell(label, value) {
   return `<span class="my-box__stat"><span class="my-box__stat-label">${label}</span><strong class="my-box__stat-val">${value}</strong></span>`;
 }
 
+/** 쪽지 상태 한 줄. 안 읽은 쪽지(1개 이상)는 받는 중·끔 모두 붙인다. (11-17 종현) */
+function tutorInquiryStatusText(box) {
+  const n = Number(box.unread) > 0 ? Number(box.unread) : 0;
+  const unreadText = n >= 1 ? `안 읽은 쪽지 ${n}개` : '';
+  if (box.inquiry === '쪽지 안받음') return unreadText ? `쪽지 받지 않음 · ${unreadText}` : '쪽지 받지 않음';
+  if (box.inquiry === '쪽지 받음') return unreadText ? `쪽지 받는 중 · ${unreadText}` : '쪽지 받는 중';
+  return unreadText || '—';
+}
+
 /** 좌측: 내 현황 (시트 4행 가로) */
 function renderMyTutorStatusBox() {
   const mypagePath = getDefaultMypagePath('tutor');
@@ -99,7 +108,7 @@ function renderMyTutorStatusBox() {
       <p class="my-box__guide">과외지역을 수정하려면 '마이페이지-내 등록-기본등록'에서 해 주세요.</p>`,
     statsRow1: [
       statCell('과목', escTutor(box.subject)),
-      statCell('상태', escTutor(`${box.inquiry} · ${box.unread}개 미확인`)),
+      statCell('상태', escTutor(tutorInquiryStatusText(box))),
       `<p class="my-box__guide">쪽지설정을 수정하려면 마이페이지-내 등록-쪽지설정에서 해 주세요. 쪽지는 '쪽지 후기함'에서 확인하세요.</p>`,
     ].join(''),
     statsRow2: [
