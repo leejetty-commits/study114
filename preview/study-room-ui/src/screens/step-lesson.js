@@ -8,6 +8,7 @@ import {
   getSubjectOptions,
 } from '../state.js';
 import { syncLessonFromForm } from '../form-collect.js';
+import { wonToCheonwonInput } from '../../../shared/fee-cheonwon.js';
 import { SCHOOL_LEVEL_FORM_OPTIONS, gradeOptionHtml, bindSchoolGradePairs } from '../../../shared/school-grade.js';
 import { lessonDurationOptions, lessonDurationSelectValue } from '../../../shared/lesson-duration-options.js';
 import { lessonWeeklyOptions, lessonWeeklySelectValue } from '../../../shared/lesson-weekly-options.js';
@@ -167,7 +168,10 @@ function renderClassCard(row, idx, total) {
           </div>
           <div class="form-group">
             <label class="form-label">월 수업료</label>
-            <input class="form-input" data-field="monthly_fee" value="${esc(row.monthly_fee)}" placeholder="예: 350천원" />
+            <div class="register-fee-manwon">
+              <input class="form-input" data-field="monthly_fee" value="${esc(wonToCheonwonInput(row.monthly_fee_amount))}" placeholder="숫자" inputmode="decimal" min="1" />
+              <span class="register-fee-manwon__unit">천원</span>
+            </div>
           </div>
           <div class="register-grid-3__spacer" aria-hidden="true"></div>
         </div>
@@ -186,6 +190,18 @@ function renderClassCard(row, idx, total) {
 
 /** 픽·프라임 카드 항목은 *만. 저장은 막지 않는다. */
 export function lessonSaveGuard() {
+  return '';
+}
+
+function classFeeInputError(form) {
+  if (!form) return '';
+  const nodes = form.querySelectorAll('[data-class-idx] [data-field="monthly_fee"]');
+  for (const input of nodes) {
+    const text = String(input.value || '').trim();
+    if (text === '') continue;
+    const n = Number(text.replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(n) || n < 1) return '월 수업료는 1 이상 입력해 주세요.';
+  }
   return '';
 }
 
@@ -377,6 +393,8 @@ export function bindLessonEvents(root, opts = {}) {
 
   saveBtn?.addEventListener('click', () => {
     withSaving(saveBtn, async () => {
+      const feeErr = classFeeInputError(form);
+      if (feeErr) throw new Error(feeErr);
       persistForm(form);
       await saveCurrentStep(registerState, 'lesson');
       registerState.detailLessonSaved = true;
@@ -391,6 +409,8 @@ export function bindLessonEvents(root, opts = {}) {
 
   nextBtn?.addEventListener('click', () => {
     withSaving(nextBtn, async () => {
+      const feeErr = classFeeInputError(form);
+      if (feeErr) throw new Error(feeErr);
       persistForm(form);
       await saveAndNavigate(registerState, 'lesson', '/register/facility');
       registerState.detailLessonSaved = true;

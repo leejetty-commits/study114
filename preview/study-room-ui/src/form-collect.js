@@ -3,6 +3,7 @@
 import { emptyRoomState, TEACHING_STYLE_OPTIONS, getSubjectOptions } from './state.js';
 import { businessCoordsForSave } from '../../shared/study-room-basic-form.js';
 import { promoChannelPayload, syncPromoFieldsFromForm } from '../../shared/promo-links.js';
+import { cheonwonInputToWon, wonToCheonwonInput } from '../../shared/fee-cheonwon.js';
 
 const LESSON_EXTRA_MARK = 'lesson_extra';
 
@@ -156,6 +157,8 @@ function normalizeClass(row) {
     attendance_days: days,
     lessons_per_week: String(row?.lessons_per_week || ''),
     monthly_fee: String(row?.monthly_fee || ''),
+    monthly_fee_amount:
+      row?.monthly_fee_amount == null || row?.monthly_fee_amount === '' ? '' : String(row.monthly_fee_amount),
     fee_note: String(row?.fee_note || ''),
     lesson_note: String(row?.lesson_note || ''),
   };
@@ -299,6 +302,9 @@ export function syncLessonFromForm(form, state) {
     const days = [...row.querySelectorAll('[data-field="attendance_days"]:checked')].map((el) =>
       String(el.value),
     );
+    const feeRaw = String(row.querySelector('[data-field="monthly_fee"]')?.value ?? '').trim();
+    const feeWon = feeRaw === '' ? '' : cheonwonInputToWon(feeRaw);
+    const feeCheon = feeWon === '' ? '' : wonToCheonwonInput(feeWon);
     state.classes.push({
       class_name: String(row.querySelector('[data-field="class_name"]')?.value ?? ''),
       school_level: String(row.querySelector('[data-field="school_level"]')?.value ?? ''),
@@ -307,7 +313,8 @@ export function syncLessonFromForm(form, state) {
       subject_custom: custom,
       attendance_days: days,
       lessons_per_week: String(row.querySelector('[data-field="lessons_per_week"]')?.value ?? ''),
-      monthly_fee: String(row.querySelector('[data-field="monthly_fee"]')?.value ?? ''),
+      monthly_fee: feeCheon === '' ? '' : `${feeCheon}천원`,
+      monthly_fee_amount: feeWon,
       fee_note: String(row.querySelector('[data-field="fee_note"]')?.value ?? ''),
       lesson_note: String(row.querySelector('[data-field="lesson_note"]')?.value ?? ''),
     });

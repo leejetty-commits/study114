@@ -215,7 +215,7 @@ export function buildShopViewModel(s, room = {}) {
     const grade = blank(c.grade_band);
     const days = formatAttendanceDays(c.attendance_days);
     const perWeek = formatWeeklyCount(c.lessons_per_week);
-    const classFee = formatClassFee(c.monthly_fee ?? c.fee);
+    const classFee = formatClassFee(c.monthly_fee_amount);
     const feeNote = blank(c.fee_note);
     const note = blank(c.lesson_note);
     if (!title && !subj && !classFee && !note) continue;
