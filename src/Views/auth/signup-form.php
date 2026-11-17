@@ -64,7 +64,7 @@ require __DIR__ . '/../partials/errors.php';
     <a href="/auth/signup/role" class="btn btn--secondary btn--block">이전</a>
   </div>
 </form>
-<script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
 (function () {
   var btn = document.getElementById('signup-search-address');

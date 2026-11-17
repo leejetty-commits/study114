@@ -53,7 +53,7 @@ $profileGender = (string) ($profileGender ?? study114_old($old, 'gender', ''));
     <button type="submit" class="btn btn--primary btn--block">저장 · 다음</button>
   </div>
 </form>
-<script src="https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script src="https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
 (function () {
   function openPost(onComplete) {

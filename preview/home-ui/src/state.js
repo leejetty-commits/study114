@@ -213,21 +213,6 @@ export function isMessagesRoute() {
   return path === '/messages' || (path.startsWith('/messages/') && !path.startsWith('/mypage/'));
 }
 
-export function isAboutRoute() {
-  const hash = window.location.hash.slice(1) || '';
-  const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];
-  return path === '/about';
-}
-
-export function bootstrapAboutRoute() {
-  const { pathname, hash, origin, search } = window.location;
-  if (!hash && (pathname === '/about' || pathname === '/about/')) {
-    window.location.replace(`${origin}/${search}#/about`);
-    return true;
-  }
-  return false;
-}
-
 export function isSupportRoute() {
   const hash = window.location.hash.slice(1) || '';
   const path = hash.startsWith('/') ? hash : `/${hash}`;
@@ -963,7 +948,6 @@ export function getCurrentScreen() {
   if (isCommunityRoute()) return 'community';
   if (isPromoRoute()) return 'promo';
   if (isSupportRoute()) return 'support';
-  if (isAboutRoute()) return 'about';
   if (isPolicyRoute()) return 'policy';
   const hash = window.location.hash.slice(1) || '/guest';
   const path = (hash.startsWith('/') ? hash : `/${hash}`).split('?')[0];

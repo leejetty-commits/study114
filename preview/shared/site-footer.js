@@ -25,17 +25,12 @@ export const SITE_FOOTER_COMPANY = {
   phone: '',
 };
 
-/** 공정거래위원회 사업자정보 확인. 사업자번호 471-29-01819. */
-export const SITE_FOOTER_BIZ_CHECK_URL =
-  'https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819';
-
 export const SITE_FOOTER_LINKS = [
   { path: '/support/policies/terms', label: '이용약관' },
   { path: '/support/policies/privacy', label: '개인정보 처리방침', strong: true },
   { path: '/support/policies/platform', label: '플랫폼 고지' },
-  { path: '/plans/positions', label: '유료상품' },
+  { path: '/plans/positions', label: '요금 안내' },
   { path: '/plans', label: '환불정책' },
-  { path: '/about', label: '서비스 소개' },
   { path: '/support', label: '고객센터', supportHome: true },
 ];
 
@@ -86,7 +81,7 @@ function renderCompanyBlock(company) {
   if (String(company.bizNo || '').trim()) {
     line2.push({
       label: '사업자등록번호',
-      valueHtml: `${esc(company.bizNo)} <a class="site-footer__biz-check" href="${SITE_FOOTER_BIZ_CHECK_URL}" target="_blank" rel="noopener noreferrer">사업자정보확인</a>`,
+      valueHtml: esc(company.bizNo),
     });
   }
   if (String(company.mailOrder || '').trim()) {
@@ -130,9 +125,6 @@ function escAttr(s) {
  *   company — 기본 SITE_FOOTER_COMPANY. null 이면 회사정보 숨김(관리자 등 예외용).
  */
 export function renderSiteFooter(opts = {}) {
-  if (typeof document !== 'undefined') {
-    document.getElementById('site-biz-static')?.remove();
-  }
   const homeBase = (opts.homeBase || HOME_UI_BASE).replace(/\/$/, '');
   const absolute = opts.linkMode === 'absolute';
   const company =

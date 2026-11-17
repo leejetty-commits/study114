@@ -44,8 +44,6 @@ let listSavedAt = 0;
 let studentSavedAt = 0;
 /** @type {number} */
 let roiSavedAt = 0;
-/** @type {Map<string, number>} */
-const studentCountByRegion = new Map();
 
 /** @param {object|null|undefined} room */
 export function primarySavedRegion(room) {
@@ -98,43 +96,19 @@ export function peekStudyRoomPromo1() {
 }
 
 /**
- * 지도에 쓰는 홍보 슬롯. 대표(region_label 있는 것) 다음 홍보2·3.
- * @param {object|null|undefined} [room]
- * @returns {object[]}
- */
-export function studyRoomPromoMapSlots(room) {
-  const own = room === undefined ? pickOwnStudyRoom() : room;
-  const primary = primarySavedRegion(own);
-  /** @type {object[]} */
-  const slots = [];
-  if (primary && String(primary.region_label || '').trim()) slots.push(primary);
-  for (const slot of studyRoomSecondaryPromoRegions(own)) slots.push(slot);
-  return slots;
-}
-
-/**
- * @param {object|null|undefined} slot
- * @returns {{ basis: 'dong'|'complex'|'', promo_label: string, complex_address: string|null, region_id: string }}
- */
-function slotToMap(slot) {
-  if (!slot) return { basis: '', promo_label: '', complex_address: null, region_id: '' };
-  const basis = String(slot.region_basis_type || '') === 'complex' ? 'complex' : 'dong';
-  const promo = String(slot.promo_label || '').trim();
-  const regionId = String(slot.region_id ?? '').trim();
-  const region_id = /^\d+$/.test(regionId) ? regionId : '';
-  if (basis !== 'complex') return { basis, promo_label: promo, complex_address: null, region_id };
-  const raw = slot.complex_address == null ? '' : String(slot.complex_address).trim();
-  return { basis, promo_label: promo, complex_address: raw || null, region_id };
-}
-
-/**
  * 대표 슬롯의 지도 질의 재료. 저장된 region_basis_type 을 그대로 싣는다.
  * 동 기준의 complex_address 는 null. 단지 기준은 비어 있으면 null(다른 라벨로 채우지 않음).
  * @param {object|null|undefined} [room] 생략하면 내 공부방
- * @returns {{ basis: 'dong'|'complex'|'', promo_label: string, complex_address: string|null, region_id: string }}
+ * @returns {{ basis: 'dong'|'complex'|'', promo_label: string, complex_address: string|null }}
  */
 export function peekStudyRoomPromo1MapSlot(room) {
-  return slotToMap(primarySavedRegion(room === undefined ? pickOwnStudyRoom() : room));
+  const slot = primarySavedRegion(room === undefined ? pickOwnStudyRoom() : room);
+  if (!slot) return { basis: '', promo_label: '', complex_address: null };
+  const basis = String(slot.region_basis_type || '') === 'complex' ? 'complex' : 'dong';
+  const promo = String(slot.promo_label || '').trim();
+  if (basis !== 'complex') return { basis, promo_label: promo, complex_address: null };
+  const raw = slot.complex_address == null ? '' : String(slot.complex_address).trim();
+  return { basis, promo_label: promo, complex_address: raw || null };
 }
 
 /** 단지 주소가 없거나 미등록 표식이면 다른 값으로 대체하지 않는다. */
@@ -159,17 +133,12 @@ export function studyRoomGeocodeQuery(slot) {
 }
 
 /**
- * 홈은 고른 홍보 슬롯. 고르지 않았으면 대표 슬롯.
- * 찾기만 URL·직접 고른 주소·다른 지역 검색을 그 라벨로 지오코딩한다.
+ * 홈 지도는 항상 대표 슬롯. 찾기만 URL·직접 고른 주소·다른 지역 검색을 그 라벨로 지오코딩한다.
  * @param {object} [state]
  * @param {'home'|'search'} [variant]
  */
 export function resolveStudyRoomMapQuery(state = {}, variant = 'home') {
-  const onHome = variant !== 'search';
-  const idx = state?.studyRoomPromoIndex;
-  const pickedSlot =
-    onHome && Number.isInteger(idx) && idx >= 0 ? studyRoomPromoMapSlots()[idx] : null;
-  const slot = pickedSlot ? slotToMap(pickedSlot) : peekStudyRoomPromo1MapSlot();
+  const slot = peekStudyRoomPromo1MapSlot();
   const source = String(state?.canonicalLocation?.source || '');
   const active = String(state?.activeRegionLabel || '').trim();
   const display = String(state?.canonicalLocation?.displayLabel || '').trim();
@@ -178,7 +147,6 @@ export function resolveStudyRoomMapQuery(state = {}, variant = 'home') {
   const searchedElsewhere = state?.searchExecuted === true && active !== '' && active !== slot.promo_label;
   if (onFind && (urlOrAddress || searchedElsewhere)) {
     const label = active || display;
-    const pickedId = String(state?.canonicalLocation?.regionId || '').trim();
     return {
       basis: slot.basis,
       promo_label: slot.promo_label,
@@ -186,7 +154,6 @@ export function resolveStudyRoomMapQuery(state = {}, variant = 'home') {
       query: label,
       blocked: label === '',
       picked: true,
-      region_id: /^\d+$/.test(pickedId) ? pickedId : '',
     };
   }
   const built = studyRoomGeocodeQuery(slot);
@@ -197,7 +164,6 @@ export function resolveStudyRoomMapQuery(state = {}, variant = 'home') {
     query: built.query,
     blocked: built.blocked,
     picked: false,
-    region_id: slot.region_id || '',
   };
 }
 
@@ -356,12 +322,7 @@ export function applyStudyRoomHomePromo(state) {
   if (source === 'address' || source === 'url') {
     return state.activeRegionLabel || '';
   }
-  const promoIndex = state.studyRoomPromoIndex;
-  const pickedPromo =
-    Number.isInteger(promoIndex) && promoIndex >= 0 ? studyRoomPromoMapSlots()[promoIndex] : null;
-  const promo = pickedPromo
-    ? String(pickedPromo.promo_label || pickedPromo.region_label || '').trim()
-    : peekStudyRoomPromo1();
+  const promo = peekStudyRoomPromo1();
   if (!promo) {
     if (!state.activeRegionLabel || /대치/.test(String(state.activeRegionLabel))) {
       state.activeRegionLabel = '';
@@ -460,15 +421,12 @@ export function studyRoomHomeSearchFilters(slot, promo = '') {
  * 홍보1 지역 공부방 목록(프라임 베스트 3 포함)과 조회수를 한 번 채운다.
  * viewsAfterList 는 찾기 첫 진입만. 목록이 끝난 뒤에 조회수를 받는다. 홈은 같이 받는다.
  * @param {() => void} rerender
- * @param {{ viewsAfterList?: boolean, slotIndex?: number }} [opts]
+ * @param {{ viewsAfterList?: boolean }} [opts]
  */
 export function bootStudyRoomHome(rerender, opts = {}) {
   const room = pickOwnStudyRoom();
-  const slotIndex = opts.slotIndex;
-  const picked =
-    Number.isInteger(slotIndex) && slotIndex >= 0 ? studyRoomPromoMapSlots(room)[slotIndex] : null;
-  const slot = picked || primarySavedRegion(room);
-  const promo = String(slot?.promo_label || '').trim() || studyRoomPromo1Label(room);
+  const promo = studyRoomPromo1Label(room);
+  const slot = primarySavedRegion(room);
   const filters = studyRoomHomeSearchFilters(slot, promo);
   const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
   if (bootPromise && liveKey === key) {
@@ -533,32 +491,6 @@ export function forgetStudyRoomHomeMemory() {
   viewsRoomId = null;
   viewsLoaded = false;
   roiSavedAt = 0;
-  studentCountByRegion.clear();
-}
-
-/**
- * 고른 홍보 지역의 학생 수. 기존 search.php total 만 쓴다.
- * region-stats.php 는 게스트 대치·강남 고정이고 로그인 화면은 그 함수를 쓰지 않는다.
- * 목록 길이(limit 20)는 세지 않는다. 실패하면 null 이고 화면은 대시를 유지한다.
- * @param {string} regionId
- * @returns {Promise<number|null>}
- */
-export function readStudyRoomRegionStudentCount(regionId) {
-  const id = String(regionId || '').trim();
-  if (!/^\d+$/.test(id)) return Promise.resolve(null);
-  if (studentCountByRegion.has(id)) return Promise.resolve(studentCountByRegion.get(id));
-  return searchApi(
-    'student',
-    { preferred_lesson_type: 'study_room', preferred_studyroom_region_id: id },
-    { limit: 1, sort: 'latest' },
-  )
-    .then((result) => {
-      const total = Number(result?.total);
-      if (!Number.isFinite(total)) return null;
-      studentCountByRegion.set(id, total);
-      return total;
-    })
-    .catch(() => null);
 }
 
 /** TTL 안의 스냅샷으로 목록·조회수 초기값만 채운다. 같은 페이지 메모리는 그대로다. */
