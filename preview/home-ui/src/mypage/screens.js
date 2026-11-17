@@ -1071,7 +1071,7 @@ function renderAccount(role, profile) {
   return `
     <section class="account-settings">
       <header class="account-settings__hero">
-        <p class="account-settings__eyebrow">사이트에 보이는 이름</p>
+        <p class="account-settings__eyebrow">내 계정 이름</p>
         <h2 class="account-settings__name" data-display-name-current>${displayShown}</h2>
         <p class="account-settings__lead">계정 이름·집주소·로그인·보안을 한곳에서 관리합니다.</p>
         ${
@@ -1083,8 +1083,8 @@ function renderAccount(role, profile) {
 
       <article class="account-card">
         <div class="account-card__head">
-          <h3 class="account-card__title">표시 정보</h3>
-          <p class="account-card__desc">마이페이지·헤더에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.</p>
+          <h3 class="account-card__title">계정 이름</h3>
+          <p class="account-card__desc">상단 로그인 표시와 인사말에 보이는 이름입니다. 로그인 계정·소셜 연동은 그대로 유지됩니다.</p>
         </div>
         <div class="account-card__body">
           <div class="account-identity" data-display-name-summary>
