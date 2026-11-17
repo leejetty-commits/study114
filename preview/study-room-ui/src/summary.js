@@ -14,10 +14,16 @@ import {
 import { lessonDurationLabel } from '../../shared/lesson-duration-options.js';
 import { lessonWeeklyLabel } from '../../shared/lesson-weekly-options.js';
 import { formatPrimaryAudienceLabel, lessonPlaceNameLabel } from '../../shared/study-room-basic-form.js';
+import { wonToCheonwonInput } from '../../shared/fee-cheonwon.js';
 
 function str(v) {
   if (v === null || v === undefined) return '';
   return String(v).trim();
+}
+
+function classFeeSummary(row) {
+  const cheon = wonToCheonwonInput(row?.monthly_fee_amount);
+  return cheon ? `${cheon}천원` : '';
 }
 
 function labelOf(list, value) {
@@ -77,7 +83,7 @@ function classRows(s) {
       { label: `${prefix}과목`, value: str(row?.subject_name) },
       { label: `${prefix}출석요일`, value: weekdayLabel(row?.attendance_days) },
       { label: `${prefix}주 회수`, value: lessonWeeklyLabel(row?.lessons_per_week) },
-      { label: `${prefix}월 수업료`, value: str(row?.monthly_fee) },
+      { label: `${prefix}월 수업료`, value: classFeeSummary(row) },
       { label: `${prefix}수업료 설명`, value: str(row?.fee_note) },
       { label: `${prefix}수업 참고사항`, value: str(row?.lesson_note) },
     ];

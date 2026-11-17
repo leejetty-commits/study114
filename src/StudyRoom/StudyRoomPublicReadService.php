@@ -426,6 +426,9 @@ final class StudyRoomPublicReadService
                 'attendance_days'  => array_values(array_map('strval', $days)),
                 'lessons_per_week' => (string) ($cls['lessons_per_week'] ?? ''),
                 'monthly_fee'      => $fee,
+                'monthly_fee_amount' => isset($cls['monthly_fee_amount']) && $cls['monthly_fee_amount'] !== null && $cls['monthly_fee_amount'] !== ''
+                    ? (int) $cls['monthly_fee_amount']
+                    : null,
                 'fee_note'         => trim((string) ($cls['fee_note'] ?? '')),
                 'lesson_note'      => $note,
             ];
@@ -467,6 +470,9 @@ final class StudyRoomPublicReadService
                 'attendance_days'  => array_values(array_map('strval', $days)),
                 'lessons_per_week' => (string) ($cls['lessons_per_week'] ?? ''),
                 'monthly_fee'      => $fee,
+                'monthly_fee_amount' => isset($cls['monthly_fee_amount']) && $cls['monthly_fee_amount'] !== null && $cls['monthly_fee_amount'] !== ''
+                    ? (int) $cls['monthly_fee_amount']
+                    : null,
                 'fee_note'         => trim((string) ($cls['fee_note'] ?? '')),
                 'lesson_note'      => $note,
             ];

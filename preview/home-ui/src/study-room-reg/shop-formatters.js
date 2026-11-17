@@ -90,13 +90,12 @@ export function formatMonthlyFeeBand(monthlyFeeCheonwon, priceAmount) {
 }
 
 export function formatClassFee(raw) {
-  const t = blank(raw);
-  if (!t) return '';
-  const man = t.match(/(\d+(?:\.\d+)?)\s*만/);
-  if (man) return `월 ${Math.round(Number(man[1]) * 10)}천원`;
-  if (/천원/.test(t)) return t.startsWith('월') ? t : `월 ${t}`;
-  const n = t.replace(/[^\d.]/g, '');
-  return n ? `월 ${n}천원` : '';
+  if (raw == null || raw === '') return '';
+  const won = Number(raw);
+  if (!Number.isFinite(won) || won <= 0) return '';
+  const cheon = Math.round(won / 1000);
+  if (cheon < 1) return '';
+  return `월 ${cheon}천원`;
 }
 
 export function formatMinutesPerLesson(v) {

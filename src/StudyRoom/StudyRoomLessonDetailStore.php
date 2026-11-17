@@ -74,6 +74,12 @@ final class StudyRoomLessonDetailStore
                   KEY idx_src_room (study_room_id, sort_order)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
             );
+            $this->addColumn(
+                $pdo,
+                'study_room_classes',
+                'monthly_fee_amount',
+                "INT UNSIGNED NULL COMMENT '월 수업료(원)' AFTER monthly_fee"
+            );
             self::$ready[$key] = true;
             return true;
         } catch (Throwable $e) {
@@ -291,8 +297,8 @@ final class StudyRoomLessonDetailStore
         $stmt = $pdo->prepare(
             'INSERT INTO study_room_classes
              (study_room_id, class_name, school_level, grade_band, subject_name, subject_custom,
-              attendance_days, lessons_per_week, monthly_fee, fee_note, lesson_note, sort_order)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+              attendance_days, lessons_per_week, monthly_fee, monthly_fee_amount, fee_note, lesson_note, sort_order)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $order = 0;
         foreach ($items as $row) {
@@ -307,6 +313,12 @@ final class StudyRoomLessonDetailStore
             $days = $this->daysToCsv($row['attendance_days'] ?? []);
             $week = $this->weeklyToDb($row['lessons_per_week'] ?? '');
             $fee = trim((string) ($row['monthly_fee'] ?? ''));
+            $feeAmount = $row['monthly_fee_amount'] ?? null;
+            if ($feeAmount === '' || $feeAmount === false) {
+                $feeAmount = null;
+            } elseif ($feeAmount !== null) {
+                $feeAmount = (int) $feeAmount;
+            }
             $feeNote = trim((string) ($row['fee_note'] ?? ''));
             $note = $this->nullIfEmpty($row['lesson_note'] ?? '');
             if (
@@ -333,6 +345,7 @@ final class StudyRoomLessonDetailStore
                 $days,
                 $week,
                 $fee,
+                $feeAmount,
                 $feeNote,
                 $note,
                 $order,
@@ -370,14 +383,25 @@ final class StudyRoomLessonDetailStore
     public function loadClasses(PDO $pdo, int $roomId): array
     {
         try {
-            $stmt = $pdo->prepare(
-                'SELECT class_name, school_level, grade_band, subject_name, subject_custom,
-                        attendance_days, lessons_per_week, monthly_fee, fee_note, lesson_note
-                 FROM study_room_classes
-                 WHERE study_room_id = ?
-                 ORDER BY sort_order ASC, id ASC'
-            );
-            $stmt->execute([$roomId]);
+            try {
+                $stmt = $pdo->prepare(
+                    'SELECT class_name, school_level, grade_band, subject_name, subject_custom,
+                            attendance_days, lessons_per_week, monthly_fee, monthly_fee_amount, fee_note, lesson_note
+                     FROM study_room_classes
+                     WHERE study_room_id = ?
+                     ORDER BY sort_order ASC, id ASC'
+                );
+                $stmt->execute([$roomId]);
+            } catch (Throwable) {
+                $stmt = $pdo->prepare(
+                    'SELECT class_name, school_level, grade_band, subject_name, subject_custom,
+                            attendance_days, lessons_per_week, monthly_fee, fee_note, lesson_note
+                     FROM study_room_classes
+                     WHERE study_room_id = ?
+                     ORDER BY sort_order ASC, id ASC'
+                );
+                $stmt->execute([$roomId]);
+            }
         } catch (Throwable) {
             return [];
         }
@@ -393,6 +417,9 @@ final class StudyRoomLessonDetailStore
                 'attendance_days' => $daysRaw === '' ? [] : array_values(array_filter(explode(',', $daysRaw))),
                 'lessons_per_week' => $row['lessons_per_week'] !== null ? (string) $row['lessons_per_week'] : '',
                 'monthly_fee' => (string) ($row['monthly_fee'] ?? ''),
+                'monthly_fee_amount' => isset($row['monthly_fee_amount']) && $row['monthly_fee_amount'] !== null && $row['monthly_fee_amount'] !== ''
+                    ? (int) $row['monthly_fee_amount']
+                    : null,
                 'fee_note' => (string) ($row['fee_note'] ?? ''),
                 'lesson_note' => (string) ($row['lesson_note'] ?? ''),
             ];

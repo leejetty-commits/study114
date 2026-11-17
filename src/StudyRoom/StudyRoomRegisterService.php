@@ -2358,6 +2358,21 @@ final class StudyRoomRegisterService
             foreach ($rowDays as $d) {
                 $classDays[(string) $d] = true;
             }
+            $amountText = trim((string) ($row['monthly_fee_amount'] ?? ''));
+            $feePhrase = '';
+            $feeAmount = null;
+            if ($amountText !== '') {
+                if (!preg_match('/^\d+$/', $amountText)) {
+                    throw new InvalidArgumentException('월 수업료는 1 이상 입력해 주세요.');
+                }
+                $won = (int) $amountText;
+                $cheon = (int) round($won / 1000);
+                if ($cheon < 1) {
+                    throw new InvalidArgumentException('월 수업료는 1 이상 입력해 주세요.');
+                }
+                $feeAmount = $cheon * 1000;
+                $feePhrase = $cheon . '천원';
+            }
             $normalizedClasses[] = [
                 'class_name' => trim((string) ($row['class_name'] ?? '')),
                 'school_level' => trim((string) ($row['school_level'] ?? '')),
@@ -2366,7 +2381,8 @@ final class StudyRoomRegisterService
                 'subject_custom' => trim((string) ($row['subject_custom'] ?? '')),
                 'attendance_days' => $rowDays,
                 'lessons_per_week' => trim((string) ($row['lessons_per_week'] ?? '')),
-                'monthly_fee' => trim((string) ($row['monthly_fee'] ?? '')),
+                'monthly_fee' => $feePhrase,
+                'monthly_fee_amount' => $feeAmount,
                 'fee_note' => trim((string) ($row['fee_note'] ?? '')),
                 'lesson_note' => trim((string) ($row['lesson_note'] ?? '')),
             ];
