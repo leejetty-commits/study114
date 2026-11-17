@@ -1,3 +1,4 @@
+import '../styles/screen/promo-v2.css';
 import './quick-match.css';
 import { QUICK_MATCH_INTRO } from './quick-match-content.js';
 import { getProviderStatus } from '../provider-status.js';

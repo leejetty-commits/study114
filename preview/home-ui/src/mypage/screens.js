@@ -88,6 +88,8 @@ import { renderPlansHistory, schedulePlansStatusHydrate, resetPlansStatusSync, p
 import { parsePlansQuery } from '../plans/router.js';
 import { getPlansEffectiveRole, resolveSelectedProfile } from '../plans/profiles.js';
 import { getHistoryRows, loadHistoryRows, orderStatusLabel } from '../plans/history-mock.js';
+import { resolveGnbLink } from '../../../shared/preview-links.js';
+import { parentBranch } from '../../../shared/site-nav-config.js';
 import { PASSWORD_RULE_HINT, validatePassword } from '../../../shared/password-policy.js';
 import { renderPasswordField, bindPasswordToggles } from '../../../shared/password-field.js';
 import { bindInputFill, refreshInputFill } from '../../../shared/input-fill.js';
@@ -554,11 +556,24 @@ function renderStudentReview(role) {
     </section>`;
 }
 
+function recentExploreHref(role) {
+  if (role === 'study_room' || role === 'tutor') return resolveGnbLink('student_parent', role)?.url || null;
+  if (role === 'parent') {
+    const b = parentBranch();
+    if (b === 'tutor') return resolveGnbLink('find_tutor', role)?.url || null;
+    if (b === 'study_room') return resolveGnbLink('find_room', role)?.url || null;
+  }
+  return null;
+}
+
 function renderRecentEmpty(role) {
   const copy = getEmptyCopy('recent');
   const dest = getDefaultMypagePath(role);
+  const exploreUrl = recentExploreHref(role);
   const cta = copy.cta
-    ? `<a href="#${esc(dest)}" class="btn btn--secondary btn--sm" data-mypage-nav="${esc(dest)}">${esc(copy.cta)}</a>`
+    ? exploreUrl
+      ? `<a href="${esc(exploreUrl)}" class="btn btn--secondary btn--sm">${esc(copy.cta)}</a>`
+      : `<a href="#${esc(dest)}" class="btn btn--secondary btn--sm" data-mypage-nav="${esc(dest)}">${esc(copy.cta)}</a>`
     : '';
   return `
     <section class="mp-card">

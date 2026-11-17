@@ -1,3 +1,5 @@
+import '../styles/screen/plans-theme.css';
+import '../styles/screen/plans-store.css';
 /**
  * 34장 — 상품센터 화면 (P18-01~07)
  * 기존 plans-catalog / paid-backend 자산 재사용

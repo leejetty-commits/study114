@@ -42,6 +42,12 @@ function assertHtaccess(text) {
     ok('FilesMatch covers Vite hashed chunks <name>-<hash>.js|css (not blanket *.(js|css))');
   }
 
+  if (!text.includes('^[A-Za-z0-9._-]+-[A-Za-z0-9_-]{8}\\.woff2$')) {
+    fail('woff2 FilesMatch 블록 존재');
+  } else {
+    ok('woff2 FilesMatch 블록 존재');
+  }
+
   if (!text.includes('no-cache, no-store, must-revalidate')) {
     fail('current HTML no-store policy missing (must remain active this round)');
   } else {

@@ -6,8 +6,8 @@ export default defineConfig({
   base: resolveViteBase('/'),
   root: '.',
   build: {
-    // 341: 관리자·드문 화면 JS만 나눈다. CSS는 엔트리 하나로 유지.
-    cssCodeSplit: false,
+    // 10: 홍보·유료상품 전용 CSS는 그 화면 조각으로. main.js import 줄은 빈 파일을 가리킴
+    cssCodeSplit: true,
   },
   resolve: {
     alias: {
