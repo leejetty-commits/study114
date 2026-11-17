@@ -14,6 +14,7 @@ import {
   logLocationDebug,
   memberPlacePrompt,
   readGuestBaseline,
+  OPPOSITE_PLACE_PROMPT,
 } from '../../shared/location-display.js';
 import { peekStudyRoomPromo1 } from '@home-ui/study-room-home-seed.js';
 import { getBasicPool, getPrimeOccupied } from '@home-ui/exposure-render.js';
@@ -155,10 +156,20 @@ function renderFloatMap(parts, items, ctx) {
       (region && !/대치|역삼/.test(region) ? region : '') ||
       memberPlacePrompt(ctx.viewerRole);
 
+  // 학생 반대 분기(과외 분기 → 공부방찾기)에서 지역이 비었을 때만. 241·255·256, 11-17 종현.
+  const oppositeEmpty =
+    student && !parts.dong && !region && memberPlacePrompt(ctx.viewerRole) === OPPOSITE_PLACE_PROMPT;
+  const promptAttr = oppositeEmpty ? ' data-map-prompt="opposite"' : '';
+
   const wide = ctx.homeWide === true ? ' hero-map__banner--home-wide' : '';
   const bannerAside = ctx.hideMapBanner === true
     ? ''
-    : `
+    : oppositeEmpty
+      ? `
+      <aside class="hero-map__banner${wide}" aria-label="지역 요약">
+        <p class="hero-map__sub">지역을 선택해 주세요</p>
+      </aside>`
+      : `
       <aside class="hero-map__banner${wide}" aria-label="지역 요약">
         <h2 class="hero-map__dong"><span class="hero-map__chip"><img class="hero-map__chip-img" src="/assets/brand/udong-symbol.svg" alt="" />우리동네</span>${esc(heading)}</h2>
         <p class="hero-map__sub">${esc(sub)}</p>
@@ -167,7 +178,7 @@ function renderFloatMap(parts, items, ctx) {
       </aside>`;
 
   return `
-    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr}${floorAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
+    <section class="hero-map hero-map--float-rail${extraClass}" aria-label="공부방 지도" data-study-room-map data-map-variant="${variant}" data-region-label="${esc(region)}"${latAttr}${lngAttr}${fitAttr}${geocodeAttr}${floorAttr}${promptAttr} data-result-source="${esc(resultSource)}" data-result-items="activeResultItems"${allowFallback}>
       <div class="hero-map__canvas">
         <div class="hero-map__surface hero-map__surface--naver" aria-label="${esc(region)} 공부방 지도">
           <div class="naver-map-mount-host" data-naver-map-mount></div>

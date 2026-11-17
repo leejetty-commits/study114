@@ -8,6 +8,7 @@
 /** @typedef {{ id: string|number, study_room_name?: string, title?: string, latitude?: string|number|null, longitude?: string|number|null, location_label?: string, region_label?: string, profile_status?: string }} StudyRoomMapItem */
 
 import { STUDY_ROOM_MAP_COPY } from '../home-ui/src/empty-state-copy.js';
+import { OPPOSITE_PLACE_PROMPT } from './location-display.js';
 
 /** @typedef {{ lat: number, lng: number, label?: string }} RegionCenter */
 
@@ -333,6 +334,7 @@ export async function geocodeRegionAfterReady(naverNs, label) {
  *   geocodeRegion?: boolean,
  *   regionZoom?: number|null,
  *   onPinClick?: (id: string) => void,
+ *   promptStatus?: string,
  * }} [options]
  */
 export async function mountStudyRoomMap(mountEl, options = {}) {
@@ -364,7 +366,7 @@ export async function mountStudyRoomMap(mountEl, options = {}) {
 
   try {
     const naver = options.naver || await loadNaverMapsSdk();
-    const promptStatus = memberMap ? STUDY_ROOM_MAP_COPY.unplaced : REGION_PROMPT_MAP_STATUS;
+    const promptStatus = memberMap ? STUDY_ROOM_MAP_COPY.unplaced : options.promptStatus || REGION_PROMPT_MAP_STATUS;
     const failStatus = memberMap ? STUDY_ROOM_MAP_COPY.notFound : REGION_GEOCODE_FAIL_STATUS;
     // 빈 문자열은 명시적이다. 단지 주소가 없을 때 홍보 라벨로 바꾸지 않는다.
     const geocodeQuery = options.geocodeQuery != null ? String(options.geocodeQuery).trim() : String(regionLabel || '').trim();
@@ -581,6 +583,7 @@ export async function bindStudyRoomMapSection(root, items, options = {}) {
         ? section.getAttribute('data-geocode-query')
         : undefined,
     memberMap: options.memberMap === true || section?.getAttribute('data-member-map') === 'true',
+    promptStatus: section?.getAttribute('data-map-prompt') === 'opposite' ? OPPOSITE_PLACE_PROMPT : undefined,
     pinAnchorsCenter: options.pinAnchorsCenter === false || section?.getAttribute('data-pin-center') === 'false' ? false : true,
     regionZoom: section?.getAttribute('data-map-zoom') != null ? Number(section.getAttribute('data-map-zoom')) : null,
     zoomFloor: section?.getAttribute('data-zoom-floor') != null ? Number(section.getAttribute('data-zoom-floor')) : options.zoomFloor,
