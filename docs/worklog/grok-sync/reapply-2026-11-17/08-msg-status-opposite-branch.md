@@ -114,7 +114,7 @@ function tutorInquiryStatusText(box) {
 - 현재위치 줄(`search-find-surface.js` 158·208·425행)은 이미 256대로 반대 분기 문구를 쓴다. 그대로 둔다.
 
 지금 문제(과외 분기 학생 → 공부방찾기, 지역 없음):
-- 지도 위 박스: `search-map.js` 152~156행 `heading`이 `memberPlacePrompt('parent')` = 「아래 검색창에서…」를 지역 이름용 큰 제목(`hero-map__dong`)에 넣는다. 아래 `hint` 99행 = 「내 지역 · 표시할 공부방이 없습니다」.
+- 지도 위 박스: `search-map.js` 151~157행 `heading`이 `memberPlacePrompt('parent')` = 「아래 검색창에서…」를 지역 이름용 큰 제목(`hero-map__dong`)에 넣는다. 아래 `hint` 99행 = 「내 지역 · 표시할 공부방이 없습니다」.
 - 지도 칸: `naver-map.js` 367행 `promptStatus` = `REGION_PROMPT_MAP_STATUS` 「희망지역을 등록하면 지도가 그 지역으로 이동합니다.」 → 255·256 위반(반대 분기에서 희망지역 등록 유도).
 
 바꾼 뒤(반대 분기 + 지역 없음일 때만):
@@ -134,7 +134,7 @@ import {
 } from '../../shared/location-display.js';
 ```
 
-`renderFloatMap` 안, `const heading = …;`(152~156행) 바로 아래에 추가:
+`renderFloatMap` 안, `const heading = …;`(151~157행) 바로 아래에 추가:
 ```js
   // 학생 반대 분기(과외 분기 → 공부방찾기)에서 지역이 비었을 때만. 241·255·256, 11-17 종현.
   const oppositeEmpty =
@@ -167,7 +167,7 @@ import {
       </aside>`;
 ```
 
-172행 `<section …>` 속성 끝에 `${promptAttr}` 추가(`${floorAttr}` 바로 뒤):
+170행 `<section …>` 속성 끝에 `${promptAttr}` 추가(`${floorAttr}` 바로 뒤):
 ```js
 …${geocodeAttr}${floorAttr}${promptAttr} data-result-source=…
 ```
@@ -189,7 +189,7 @@ import { OPPOSITE_PLACE_PROMPT } from './location-display.js';
     const promptStatus = memberMap ? STUDY_ROOM_MAP_COPY.unplaced : options.promptStatus || REGION_PROMPT_MAP_STATUS;
 ```
 
-`bindStudyRoomMapSection`의 `mountStudyRoomMap(mount, { … })`(570~591행)에서 `memberMap:` 줄 바로 아래 한 줄 추가:
+`bindStudyRoomMapSection`의 `mountStudyRoomMap(mount, { … })`(570~591행, `memberMap`은 583행)에서 `memberMap:` 줄 바로 아래 한 줄 추가:
 ```js
     promptStatus: section?.getAttribute('data-map-prompt') === 'opposite' ? OPPOSITE_PLACE_PROMPT : undefined,
 ```
