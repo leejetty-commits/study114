@@ -122,12 +122,6 @@
   line-height: 1.4;
 }
 
-.hero-map--float-rail .hero-map__banner.hero-map__banner--home-wide {
-  left: 1rem;
-  right: 1rem;
-  width: auto;
-}
-
 @media (max-width: 719px) {
   .hero-map--float-rail .hero-map__banner {
     position: relative !important;
@@ -138,12 +132,6 @@
     border: none;
     border-bottom: 1px solid #e5e7eb;
     box-shadow: none;
-  }
-
-  .hero-map--float-rail .hero-map__banner.hero-map__banner--home-wide {
-    left: auto;
-    right: auto;
-    width: 100%;
   }
 }
 
