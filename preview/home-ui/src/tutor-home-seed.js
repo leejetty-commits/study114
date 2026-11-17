@@ -143,6 +143,49 @@ export function tutorHomePrimaryIndex() {
   return idx >= 0 ? idx : 0;
 }
 
+/** 과외쌤 홈 과외지역 배지. 탭 이동·새로고침에는 남고, 로그아웃 때 지운다. */
+const TUTOR_HOME_PROMO_INDEX_KEY = 'study114.tutorHomePromoIndex';
+
+export function readTutorHomePromoIndex() {
+  let raw = '';
+  try {
+    raw = sessionStorage.getItem(TUTOR_HOME_PROMO_INDEX_KEY) || '';
+  } catch {
+    return null;
+  }
+  if (!/^\d+$/.test(raw)) return null;
+  const idx = Number(raw);
+  if (idx < 0 || idx > 2) return null;
+  if (homeRegions === null) return null;
+  const slot = Array.isArray(homeRegions) ? homeRegions[idx] : null;
+  const regionId = String(slot?.regionId || '').trim();
+  const label = String(slot?.label || '').trim();
+  if (!regionId || !label) {
+    try {
+      sessionStorage.removeItem(TUTOR_HOME_PROMO_INDEX_KEY);
+    } catch {
+      /* ignore */
+    }
+    return null;
+  }
+  return idx;
+}
+
+export function writeTutorHomePromoIndex(idx) {
+  try {
+    sessionStorage.setItem(TUTOR_HOME_PROMO_INDEX_KEY, String(idx));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** 고른 배지의 라벨. 고르지 않았으면 빈 문자열. */
+export function tutorHomeSelectedLabel() {
+  const idx = readTutorHomePromoIndex();
+  if (idx == null) return '';
+  return tutorHomeRegionLabel(idx);
+}
+
 export function tutorHomeRegionsReady() {
   return homeRegions !== null;
 }
@@ -257,10 +300,16 @@ async function loadTutorHomeTutors(regionId) {
  * 활동지역 조회(bootTutorHome)가 끝나기 전에는 요청하지 않는다 — 그 boot 의 rerender 가 여기를 다시 부른다.
  * rerender 는 .then 안에서만 부른다(같은 틱에 부르면 다시 그리기가 이 함수를 다시 불러 반복한다).
  * @param {() => void} [rerender]
+ * @param {{ slotIndex?: number }} [opts]
  */
-export function bootTutorHomeTutors(rerender) {
+export function bootTutorHomeTutors(rerender, opts = {}) {
   if (!tutorHomeRegionsReady()) return null;
-  const regionId = tutorHomeRegionId(tutorHomePrimaryIndex());
+  const raw = Number(opts.slotIndex);
+  const picked =
+    Number.isInteger(raw) && raw >= 0 && raw <= 2 && tutorHomeRegionId(raw)
+      ? raw
+      : tutorHomePrimaryIndex();
+  const regionId = tutorHomeRegionId(picked);
   if (tutorBoot && tutorKey === regionId) return tutorBoot;
   tutorKey = regionId;
   tutorLive = null;

@@ -452,15 +452,22 @@ table {
   border-color: var(--role-accent-soft);
 }
 
-.home-shell--tutor .my-box__region-pill.is-primary,
-.home-shell--tutor .my-box__region-pill.is-active {
-  border-color: var(--role-accent);
+.home-shell--tutor .my-box__region-pill.is-primary {
+  border-color: var(--gray-300);
+  color: var(--gray-700);
+  background: #fff;
+  box-shadow: none;
+}
+
+.home-shell--tutor .my-box__region-pill.is-primary .tutor-region-tabs__primary {
   color: var(--role-accent);
-  background: var(--role-accent-soft);
 }
 
 .home-shell--tutor .my-box__region-pill.is-active {
-  box-shadow: 0 0 0 2px var(--role-accent-soft);
+  border: 2px solid var(--role-accent);
+  color: var(--role-accent);
+  background: #fff;
+  box-shadow: none;
 }
 
 .home-shell--study_room .my-box--status {

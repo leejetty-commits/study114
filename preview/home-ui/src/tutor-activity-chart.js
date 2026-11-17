@@ -5,7 +5,7 @@
  */
 
 import { searchApi } from '@search-ui/search-api.js';
-import { readTutorHomeRegions } from './tutor-home-seed.js';
+import { readTutorHomePromoIndex, readTutorHomeRegions, tutorHomePrimaryIndex } from './tutor-home-seed.js';
 
 function esc(s) {
   return String(s ?? '')
@@ -94,7 +94,9 @@ export function bootTutorActivityCounts(rerender) {
  * @param {{ activeIndex?: number, interactive?: boolean }} [opts]
  */
 export function renderTutorActivityBars(opts = {}) {
-  void opts;
+  const active = Number.isInteger(opts.activeIndex)
+    ? opts.activeIndex
+    : (readTutorHomePromoIndex() ?? tutorHomePrimaryIndex());
   const slots = citySlots();
   const key = slotKey(slots);
   const pending = key !== readyKey;
@@ -114,8 +116,9 @@ export function renderTutorActivityBars(opts = {}) {
       const sPct = studentKnown ? Math.round((row.studentCount / maxVal) * 100) : 0;
       const tutorText = pending ? '…' : tutorKnown ? String(row.tutorCount) : '—';
       const studentText = pending ? '…' : studentKnown ? String(row.studentCount) : '—';
+      const on = row.index === active;
       return `
-      <div class="act-bars__row" role="listitem">
+      <div class="act-bars__row${on ? ' is-active' : ''}" role="listitem"${on ? ' aria-current="true"' : ''}>
         <span class="act-bars__region">${esc(row.label)}${row.primary ? '<em>대표</em>' : ''}</span>
         <span class="act-bars__pair">
           <span class="act-bars__metric" title="과외쌤">

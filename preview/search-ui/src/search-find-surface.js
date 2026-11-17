@@ -31,6 +31,7 @@ import {
   getTutorStudentFeedStatus,
   getTutorHomeTutorLiveItems,
   getTutorHomeTutorFeedStatus,
+  writeTutorHomePromoIndex,
 } from '@home-ui/tutor-home-seed.js';
 import { renderSearchMapBlock, bindSearchMapPinLinks } from './search-map.js';
 import { renderSearchTierResults } from './search-tier-render.js';
@@ -934,6 +935,7 @@ export function bindFindSurfaceEvents(root, rerender, ctx) {
       if (ctx.role === 'tutor' && ctx.getTab() === 'student') {
         if (resolveTutorStudentRegionIndex(state()) === idx) return;
         state().tutorStudentRegionIndex = idx;
+        if (state().tutorStudentSnap === true) writeTutorHomePromoIndex(idx);
         state().activeRegionLabel = canonicalRegionLabel(tutorHomeRegionLabel(idx), 'student', state());
         rerender();
         return;
