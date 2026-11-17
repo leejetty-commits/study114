@@ -46,6 +46,8 @@ let studentSavedAt = 0;
 let roiSavedAt = 0;
 /** @type {Map<string, number>} */
 const studentCountByRegion = new Map();
+/** 11 C: 같은 지역 학생 수를 받는 중이면 그 약속을 같이 쓴다. 끝나면 지운다. */
+const studentCountPending = new Map();
 /** @type {Map<string, { items: object[], status: string, at: number }>} */
 const roomListByKey = new Map();
 /** 홈 홍보 알약. 탭 이동·새로고침에는 남고, 로그아웃 때 지운다. */
@@ -651,6 +653,7 @@ export function forgetStudyRoomHomeMemory() {
   viewsLoaded = false;
   roiSavedAt = 0;
   studentCountByRegion.clear();
+  studentCountPending.clear();
   roomListByKey.clear();
 }
 
@@ -665,7 +668,9 @@ export function readStudyRoomRegionStudentCount(regionId) {
   const id = String(regionId || '').trim();
   if (!/^\d+$/.test(id)) return Promise.resolve(null);
   if (studentCountByRegion.has(id)) return Promise.resolve(studentCountByRegion.get(id));
-  return searchApi(
+  const pending = studentCountPending.get(id);
+  if (pending) return pending;
+  const request = searchApi(
     'student',
     { preferred_lesson_type: 'study_room', preferred_studyroom_region_id: id },
     { limit: 1, sort: 'latest' },
@@ -676,7 +681,12 @@ export function readStudyRoomRegionStudentCount(regionId) {
       studentCountByRegion.set(id, total);
       return total;
     })
-    .catch(() => null);
+    .catch(() => null)
+    .finally(() => {
+      if (studentCountPending.get(id) === request) studentCountPending.delete(id);
+    });
+  studentCountPending.set(id, request);
+  return request;
 }
 
 /** TTL 안의 스냅샷으로 목록·조회수 초기값만 채운다. 같은 페이지 메모리는 그대로다. */
