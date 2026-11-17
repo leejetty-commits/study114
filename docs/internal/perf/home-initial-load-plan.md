@@ -1,6 +1,6 @@
 # 홈화면 초기 로딩속도 개선 방안
 
-작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `6f959b53`(PR #248 배포, Deploy to dothome run 44136692462). 0장 측정값은 그 전 `a738c84c` 기준
+작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `3046a9b3`(PR #249 배포, Deploy to dothome run 44144621185). 0장 측정값은 그 전 `a738c84c` 기준
 성격: 내부 문서. 코드 변경 없음. 숫자는 이 문서에 출처를 적은 것만 쓴다.
 대상: 처음 오는 손님이 보는 비로그인 홈 `https://study114.net/`과, 메뉴로 이어지는 찾기·상세등록 첫 화면.
 
@@ -76,8 +76,10 @@
 - H 공부방상세등록 `register.php` `masters`와 `load`를 동시에(`preview/study-room-ui/src/main.js` 185~188행만, `Promise.all`). 종현 동의 2026-11-18. `loadSavedRoom()`은 `initChromeSession()` 뒤에만 시작한다. home-ui·search-ui·tutor-ui `main.js`는 금지.
 - 확인만: PHP 세션 잠금(아래 1.2.6).
 
-#### 1.1.10 오픈 전 진행 중 — 지시서 11 (찾기 세 화면, 지시서 10 배포 뒤 시작)
-`docs/worklog/grok-sync/reapply-2026-11-17/11-find-speed-preopen.md`. **main.js 한 줄도 안 바꾼다.** 머지되면 "구현함"으로 옮긴다.
+#### 1.1.10 지시서 11 — PR #249 (찾기 세 화면, 2026-11-18, main `3046a9b3`) 구현함
+`docs/worklog/grok-sync/reapply-2026-11-17/11-find-speed-preopen.md`. 커밋 A `1d1cb4f9`, B `12c9d696`, C `cc201493`, 기록 `ae368da9`. Deploy to dothome run 44144621185. main.js와 금지 파일은 바뀌지 않았다.
+- **Cursor 측정(비로그인 9회 중앙값, 운영 API)**: 첫 그림 공부방찾기 584→136, 과외쌤찾기 520→132, 학생찾기 560→124 ms. 마지막 그림 1,109→785, 997→678, 1,047→724 ms. me.php·첫 글자는 늦어지지 않았다. render 4→4, search 1→1, regions 3→3(요청 수 같음).
+- **남은 확인(종현, 운영)**: 세 역할 로그인 후 찾기 세 탭 일반·시크릿, 지역 바꾸기, 로그아웃 후 다른 역할, 공부방 로그인 공부방찾기 본문 목록, 공부방 홈 학생 수.
 - A `preview/search-ui/index.html` `#app` 안에 역할과 무관한 회색 칸 + 「불러오는 중…」. 하얀 화면이 me.php를 기다리지 않는다. 진짜 첫 글자 시각은 같다. 박스 비로그인 측정 첫 그림 244~348 → 36~68 ms(dist 끼워 넣기 기준).
 - B `search-find-place.js`: cities·tutor_units를 me.php 보낸 다음 틱에 미리, 로그인 흔적이 없을 때만 게스트 기준 위치(region-stats)도 미리. 요청 수 같음. 박스 비로그인 목록까지 다 그린 시각 1,095~1,206 → 674~715 ms, me.php 9회 중앙값 변화 없음.
 - C `study-room-home-seed.js` 학생 수(limit 1) 받는 중이면 같이 쓰기. 공부방 로그인 공부방찾기 search.php 6 → 4~5 예상(로그인 측정은 D).
