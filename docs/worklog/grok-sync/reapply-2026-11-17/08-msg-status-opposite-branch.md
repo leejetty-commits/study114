@@ -29,7 +29,7 @@ npm run build:dothome
 
 규칙:
 - 쪽지 받는 중: `쪽지 받는 중`. 안 읽은 쪽지가 1개 이상일 때만 뒤에 ` · 안 읽은 쪽지 N개`.
-- 쪽지 끔(paused·not_accepting): `쪽지 받지 않음`.
+- 쪽지 끔(paused·not_accepting): `쪽지 받지 않음`. 안 읽은 쪽지가 1개 이상 남아 있으면 ` · 안 읽은 쪽지 N개`를 붙인다(11-17 종현 동의: 끄기 전 쪽지를 놓치지 않게).
 - 상태를 아직 모름(등록 정보 없음, 지금 `—`): 안 읽은 쪽지가 있으면 `안 읽은 쪽지 N개`, 없으면 `—`.
 
 나오는 곳은 3곳이다(`rg "미확인" preview` 확인, 다른 화면 없음).
@@ -41,11 +41,11 @@ npm run build:dothome
 `statCell` 함수(40~42행) 바로 아래에 추가:
 
 ```js
-/** 쪽지 상태 한 줄. 받는 중일 때만 안 읽은 쪽지(1개 이상)를 붙인다. (11-17 종현) */
+/** 쪽지 상태 한 줄. 안 읽은 쪽지(1개 이상)는 받는 중·끔 모두 붙인다. (11-17 종현) */
 function inquiryStatusText(box) {
-  if (box.inquiry === '안받음') return '쪽지 받지 않음';
   const n = Number(box.unread) > 0 ? Number(box.unread) : 0;
   const unreadText = n >= 1 ? `안 읽은 쪽지 ${n}개` : '';
+  if (box.inquiry === '안받음') return unreadText ? `쪽지 받지 않음 · ${unreadText}` : '쪽지 받지 않음';
   if (box.inquiry === '받음') return unreadText ? `쪽지 받는 중 · ${unreadText}` : '쪽지 받는 중';
   return unreadText || '—';
 }
@@ -76,11 +76,11 @@ function inquiryStatusText(box) {
 `statCell` 함수(84~86행) 바로 아래에 추가:
 
 ```js
-/** 쪽지 상태 한 줄. 받는 중일 때만 안 읽은 쪽지(1개 이상)를 붙인다. (11-17 종현) */
+/** 쪽지 상태 한 줄. 안 읽은 쪽지(1개 이상)는 받는 중·끔 모두 붙인다. (11-17 종현) */
 function tutorInquiryStatusText(box) {
-  if (box.inquiry === '쪽지 안받음') return '쪽지 받지 않음';
   const n = Number(box.unread) > 0 ? Number(box.unread) : 0;
   const unreadText = n >= 1 ? `안 읽은 쪽지 ${n}개` : '';
+  if (box.inquiry === '쪽지 안받음') return unreadText ? `쪽지 받지 않음 · ${unreadText}` : '쪽지 받지 않음';
   if (box.inquiry === '쪽지 받음') return unreadText ? `쪽지 받는 중 · ${unreadText}` : '쪽지 받는 중';
   return unreadText || '—';
 }
@@ -214,7 +214,7 @@ import { OPPOSITE_PLACE_PROMPT } from './location-display.js';
 A 추가:
 1. 공부방 홈 박스 「상태」: 쪽지 받음 + 안 읽은 쪽지 0 → `쪽지 받는 중`만. 「미확인」 글자 없음.
 2. 안 읽은 쪽지 1개 이상(다른 계정으로 쪽지 1통 보내 두기) → `쪽지 받는 중 · 안 읽은 쪽지 N개`. 쪽지함에서 읽은 뒤 홈으로 오면 `쪽지 받는 중`.
-3. 마이페이지 쪽지설정에서 끔 → 홈 `쪽지 받지 않음`. 다시 켬 → `쪽지 받는 중`.
+3. 마이페이지 쪽지설정에서 끔 → 홈 `쪽지 받지 않음`(안 읽은 쪽지가 있으면 `쪽지 받지 않음 · 안 읽은 쪽지 N개`). 다시 켬 → `쪽지 받는 중`.
 4. 과외쌤 홈 박스 같은 3가지.
 5. PC·폭 390에서 상태 줄이 옆 칸과 겹치지 않음(#231 2단 정렬 유지).
 
