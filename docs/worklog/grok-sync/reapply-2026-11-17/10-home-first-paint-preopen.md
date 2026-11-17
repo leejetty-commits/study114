@@ -1,13 +1,13 @@
-# 10 오픈 전 비로그인 홈 첫 화면 가볍게 (폰트 캐시 · CSS 일부 분리 · 로고 이미지 · 최근열람 버튼)
+# 10 오픈 전 비로그인 홈 첫 화면 가볍게 (폰트 캐시 · CSS 일부 분리 · 로고 이미지 · 최근열람 버튼 · 상세등록 정보글 미룸)
 
 작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `a738c84c` (PR #247 배포, run 44118863662)
 상태: 지시서. 코드 변경 없음. Cursor가 PR만 연다. 머지 금지.
-목표: 금요일(2026-11-20) 오픈 전에, **처음 오는 비로그인 손님**이 보는 홈(`https://study114.net/`)의 내려받는 양을 줄이고, 다시 올 때 폰트를 다시 받지 않게 한다. 로그인·세션·지도 순서는 건드리지 않는다.
+목표: 금요일(2026-11-20) 오픈 전에, **처음 오는 비로그인 손님**이 보는 홈(`https://study114.net/`)의 내려받는 양을 줄이고, 다시 올 때 폰트를 다시 받지 않게 한다. 같이, 공부방상세등록(`/register/room/`) 오른쪽 정보글 3건은 폼이 먼저 그린 뒤에 받는다. 로그인·세션·지도 순서는 건드리지 않는다.
 
 ## 명령
 
 ```
-git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E 커밋 분리, B는 확인만). 허용 파일 밖·모든 main.js·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. 수락 표(전후 전송량·첫 글자·LCP)와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교 후 PR만, 머지 금지.
+git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E·F 커밋 분리, B는 확인만). 허용 파일 밖·모든 main.js·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. 수락 표(전후 전송량·첫 글자·LCP)와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교, 공부방상세등록 폼 첫 그림 전후와 정보글 표시 확인 후 PR만, 머지 금지.
 ```
 
 ## 허용 파일 (이것만)
@@ -29,6 +29,7 @@ git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2
 | C | `scripts/verify-paid-renewal.mjs` | `plans-store.css`를 읽는 줄을 원래 파일 + `screen/plans-store.css` 합친 값으로 |
 | D | `preview/home-ui/public/assets/brand/logo-wordmark-2026.png`, `public/assets/brand/logo-wordmark-2026.png`, `preview/auth-ui/public/assets/brand/logo-wordmark-2026.png` | 같은 이름으로 크기만 줄임 (세 벌 같은 파일) |
 | E | `preview/home-ui/src/mypage/screens.js` | `renderRecentEmpty` 안 「탐색하기」 주소만 |
+| F | `preview/study-room-ui/src/layout.js` | 공부방상세등록 오른쪽 정보글 요청을 폼이 그린 뒤로 |
 | 기록 | `docs/worklog/2026/11/2026-11-18-home-first-paint-preopen.md` | 결과 기록 |
 
 `main.js`(home-ui·search-ui·study-room-ui·tutor-ui 전부), `auth-session.js`, 세션·엔트리 순서, `loadNaverMapsSdk` 시점(#235), capture 클릭 처리, 위 표에 없는 CSS·JS는 한 줄도 바꾸지 않는다.
@@ -203,6 +204,33 @@ function recentExploreHref(role) {
 
 수락: 과외쌤·공부방 계정 최근열람(빈 상태) 「탐색하기」 → 학생찾기. 학생(과외 분기) → 과외쌤찾기, 학생(공부방 분기) → 공부방찾기. 「내 등록」은 예전과 같은 곳.
 
+## F. 공부방상세등록 오른쪽 정보글은 폼이 그린 뒤에
+
+커밋: `10 perf(register): 공부방상세등록 정보글은 폼 그린 뒤에`
+
+허용 파일: `preview/study-room-ui/src/layout.js`만. `origin/main`에서 경로를 확인했다. **홈 정보글 레일은 바꾸지 않는다.** `home-ui`의 `right-rail.js`·`library/info-rail.js`·홈 `layout.js`, `tutor-ui`(과외쌤상세등록의 같은 호출), 모든 `main.js`는 한 줄도 건드리지 않는다.
+
+이미 있는 장치: `renderRegisterRightRail`이 `deferRailFetch`를 받는다(`preview/home-ui/src/right-rail.js` 1227~1233행). 이게 `renderInfoRailBanners`의 `deferFetch`로 넘어가서, 배너 제목과 「받는 중」만 그리고 `posts.php`는 보내지 않는다(`info-rail.js` 25~26, 149~150행). 등록 레일은 `tone: 'entry'`라 안내 칸(요청 없음)과 정보글 배너만 있다. 찾기 레일의 고민글(concern-hot)은 이 화면에 없다. 찾기 앱은 같은 장치를 `search-ui/src/layout.js`의 `replaceSearchRightRail`로 이미 쓰고 있다. 그 파일을 고치지 말고, 같은 방식만 따른다.
+
+하는 일:
+
+1. `renderRegisterShell` 181행. 로그인되어 레일을 그릴 때만 `deferRailFetch: true`를 넣는다.
+
+```js
+${showPromo ? renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: HOME_UI_BASE, deferRailFetch: true }) : ''}
+```
+
+2. 같은 파일에 찾기 앱 `replaceSearchRightRail`과 같은 함수를 둔다. **export하지 않는다**(`main.js`가 부르지 않는다). `[data-right-rail-slot="register_right_rail"]`을, `deferRailFetch` 없이 다시 그린 마크업으로 갈아끼우고 `bindRightRailEvents(next)`를 부른다. 칸이 없거나(비로그인·마이페이지 임베드) 노드를 못 바꾸면 `false`만 반환하고 끝낸다. import는 이미 있는 `renderRegisterRightRail`·`bindRightRailEvents`만 쓴다.
+
+3. `bindGlobalEvents`에서, 기존 `bindRightRailEvents(root)`와 `requestAnimationFrame(() => syncSiteHeaderOffset(root))`는 그대로 둔다. 그 뒤에 **두 번째 애니메이션 프레임**(첫 그림이 나간 뒤)에서만 2번 함수를 부른다. 그 시점에 `root.isConnected`가 아니면(이미 다른 화면으로 옮김) 호출하지 않는다. 첫 번째 rAF나 `bindGlobalEvents` 본문에서 요청을 시작하면 안 된다.
+
+위험과 막는 법:
+- `deferRailFetch: true`만 넣고 2·3을 빼면 정보글이 「받는 중」에 머문다. 예전 점검 E3와 같은 증상이다. 수락에서 글이 결국 보이는지 반드시 본다.
+- 과외쌤상세등록(`tutor-ui/src/layout.js`의 같은 호출)은 이번 범위가 아니다. 같이 고치지 않는다.
+- 마이페이지 임베드(`renderRegisterCardFrame`)에는 레일이 없다. 레일을 넣지 않는다. 상세정보1·2의 `embed` 분기는 `bindGlobalEvents`를 부르지 않는데, 그쪽에도 레일이 없으니 그대로 둔다.
+
+수락: 공부방 로그인, 기본정보·상세정보1·상세정보2를 일반 창과 시크릿 창에서 **메뉴를 눌러** 연다. 멈춤 없음. 폼이 화면에 나타난 뒤에 정보글 요청이 시작되는지 Network로 전후 시각을 잰다. 정보글은 결국 보인다(데스크톱·좁은 폭).
+
 ---
 
 ## 확인만 (수정 금지): PHP 세션 잠금
@@ -229,13 +257,15 @@ Cursor가 할 일(코드 수정 없이 보고만):
 5. `npm run build:dothome` 성공. 「Verify bundle」은 main에서 이미 실패 중인 두 항목(관리자 CSS·과외쌤 카드) 외 새 실패 0. `npm run verify:paid-renewal` 통과. `node scripts/check-cache-headers.mjs` 통과.
 6. search-ui·study-room-ui·tutor-ui·auth-ui 빌드 CSS가 전과 같다(해시 비교).
 7. 최근열람 「탐색하기」 E 수락 4가지.
-8. 운영 로그인을 Cursor가 못 하면 "미확인"으로 적고 멈추지 않는다. 종현이 배포 뒤 운영에서 2·3·7을 본다.
+8. 공부방상세등록 F 수락: 공부방 로그인, 기본정보·상세정보1·상세정보2를 일반 창과 시크릿 창에서 **메뉴를 눌러** 연다. 멈춤 없음. 폼이 화면에 나타난 뒤에 정보글 요청이 시작되는지 Network로 전후 시각을 잰다. 정보글은 결국 보인다(데스크톱·좁은 폭).
+9. 운영 로그인을 Cursor가 못 하면 "미확인"으로 적고 멈추지 않는다. 종현이 배포 뒤 운영에서 2·3·7·8을 본다.
 
 ## 예상 이득 (약속 아님, 박스 조사 기준)
 
 - 첫 방문: 엔트리 CSS gzip 약 −17 KB(107.6 → 90.2), 로고 약 −9 KB. 첫 글자·LCP는 큰 변화가 없을 수 있다. 첫 방문의 큰 덩어리는 폰트 약 1 MB와 지도이고, 둘 다 오픈 후 항목이다.
 - 재방문(4시간 뒤): 폰트 약 1 MB를 다시 받지 않는다. 오픈 전에 할 수 있는 것 중 가장 큰 효과다.
+- 공부방상세등록: 정보글 3건(약 700 ms, 지시서 09 조사)이 폼 첫 그림과 같이 나가지 않는다. 폼이 먼저 보이고, 글은 그 뒤에 뜬다.
 
 ## 되돌리기
 
-커밋별 `git revert`. C는 `vite.config.js`·CSS 파일·import 줄이 한 커밋이라 한 번에 되돌아간다. A는 `.htaccess` 블록 하나.
+커밋별 `git revert`. C는 `vite.config.js`·CSS 파일·import 줄이 한 커밋이라 한 번에 되돌아간다. A는 `.htaccess` 블록 하나. F는 `preview/study-room-ui/src/layout.js` 하나.
