@@ -1,7 +1,7 @@
-# 15. 공부방 마이페이지 — 비밀번호 실패 안내, 홍보지역 2·3 지우기, 경력 최소 1
+# 15. 공부방 마이페이지 — 비밀번호 실패 안내, 홍보지역 2·3 지우기, 경력 최소 1, 계정 이름 문구
 
 기준: `origin/main` `410588ab` (PR #250 뒤). 작성: 우동공과3(검수). 코드 변경 없음. 문서만.
-PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
+PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3·5) 반영.
 
 **수업 그룹별 월 수업료를 숫자+천원으로 바꾸는 일은 이 문서가 아니라 15b**에서 한다. 스키마·기존 서술 값·공개 화면이 걸려 범위가 넓다. 15b는 **이 15 PR이 머지되고 운영 확인이 끝난 뒤** 시작한다(`StudyRoomRegisterService.php`를 이어서 고친다).
 
@@ -14,7 +14,8 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
    - `preview/shared/study-room-basic-form.js` `renderPromoSlot()` 172~176행(툴바에 제목·대표만, 지우기 없음), 358~360행 안내, 191~198행 readonly 주소칸, `collectStudyRoomBasicFields` 774~793행, `validateStudyRoomBasicFields` 852행
    - `src/StudyRoom/StudyRoomRegisterService.php` `syncSavedRegions` 1087~1191행(1101행 `DELETE` 후 빈 칸 `continue`, 1189행 홍보1 필수), `saveCareer` 948~991행, `optionalInt` 2519~2531행(하한 없음)
    - `preview/study-room-ui/src/screens/step-facility.js` 112~117행 `type="number"`만 있고 `min` 없음
-3. 고칠 줄 목록(파일:함수:줄)과 홍보 2·3 차단 문구를 **먼저 보고**한다.
+   - `preview/home-ui/src/mypage/screens.js` 계정 설정: 1074행 눈썹 「사이트에 보이는 이름」, 1076행 안내 「표시명·집주소·로그인·보안을 한곳에서 관리합니다.」, 1079행 토스트 「사이트 표시명이 저장되었습니다.」, 1086~1087행 카드 제목 「표시 정보」·설명, 1092행 라벨 「사이트 표시명」, 1095행 「표시명 수정」, 1100행 필드 라벨 「사이트 표시명」, 1102행 기존 힌트, 1106행·1686행 「표시명 저장」, 1648행 「사이트 표시명은 2자 이상이어야 합니다.」. `name="display_name"`, `#mypage-display-name`, `data-action="toggle-display-name"`, `data-form="change-display-name"`, 세션 키 `study114.displayName.justSaved`는 그대로인지 확인한다.
+3. 고칠 줄 목록(파일:함수:줄)과 홍보 2·3 차단 문구, 계정 이름 문구 대응표를 **먼저 보고**한다.
 4. 문서와 다르거나, 애매하거나, **허용 파일 밖을 고쳐야 할 것 같으면 멈추고 보고한다. 고치지 않는다.**
 
 ## 목적 (11-18 종현)
@@ -22,6 +23,7 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 - 비밀번호 변경이 규칙에 걸려도 「변경 실패 (HTTP 422)」처럼 번호가 보인다. **규칙은 그대로** 두고, 실패는 한글 안내만 보여 준다.
 - 홍보지역 1은 필수, 2·3은 선택인데 한 번 넣은 2·3을 지울 수 없다. **지우기**를 2·3에만 둔다. 그 칸에 **이용 중인 프라임·픽 구독** 또는 **프라임 예약대기**(상태가 `registered`·`notified`)가 있으면 화면과 서버 모두 막는다.
 - 상세정보2 교습경력·학원경력에 마이너스를 넣을 수 있다. **값이 있을 때만 최소 1.** 빈 칸은 그대로 허용. 1을 미리 채워 넣지 않는다.
+- 계정 설정의 「사이트 표시명」이 와 닿지 않는다. 화면에 보이는 글자만 「내 계정 이름」으로 바꾼다. API·필드 이름·키는 그대로다.
 
 ## 지금 구조 (직접 읽음, `410588ab`)
 
@@ -45,6 +47,39 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 
 - 마이페이지 상세정보2는 `study-room-ui` `step-facility.js` 폼을 그대로 쓴다(`study-room-reg/embedded-panels.js`가 불러 옴). `type="number"`만 있고 `min`이 없다.
 - 서버 `optionalInt`는 빈 값만 null, `(int)`만 해서 음수도 통과한다. 스키마는 `SMALLINT UNSIGNED NULL`. 0=신입 규정은 없다. 빈 값(null)은 선택 항목이다.
+
+### D. 계정 설정 「사이트 표시명」 문구 (`410588ab` `screens.js`)
+
+마이페이지 → 계정/설정. 사용자가 보는 글자만 해당한다.
+
+| 위치 | 지금 | 바꿀 글자 |
+|---|---|---|
+| 안내(1076) | 표시명·집주소·로그인·보안을 한곳에서 관리합니다. | 계정 이름·집주소·로그인·보안을 한곳에서 관리합니다. |
+| 저장 토스트(1079) | 사이트 표시명이 저장되었습니다. | 내 계정 이름이 저장되었습니다. |
+| 요약 라벨(1092) | 사이트 표시명 | 내 계정 이름 |
+| 버튼(1095) | 표시명 수정 | 이름 수정 |
+| 필드 라벨(1100) | 사이트 표시명 | 내 계정 이름 |
+| 저장 버튼(1106, 1686행 복구) | 표시명 저장 | 이름 저장 |
+| 클라이언트 오류(1648) | 사이트 표시명은 2자 이상이어야 합니다. | 내 계정 이름은 2자 이상이어야 합니다. |
+
+같은 폼의 저장 버튼·짧은 오류도 「표시명」이 남아 있으면 어색해서 같이 바꾼다.
+
+이번엔 그대로 둔다: 1074행 「사이트에 보이는 이름」, 1086행 「표시 정보」, 1087행 카드 설명, 1102행 「예: 카카오 과외쌤, 종현 과외쌤 — 2~50자 · 이메일 형태 불가」.
+
+힌트를 **추가**한다(기존 2~50자 힌트는 남김): 「상단 「로그인: ○○○」 표시와 인사말에만 보여요. 공부방명·과외쌤 이름은 등록 정보에서 바꿔요.」
+
+`name="display_name"`, `id="mypage-display-name"`, `data-*`, 세션 키, `POST /api/auth/profile.php` 요청 본문 키는 바꾸지 않는다.
+
+서버(`ProfileDisplayNameService.php`, `public/api/auth/profile.php`) 문구는 이번 범위가 아니다. 서버가 거절하면 옛 「사이트 표시명」 문구가 그대로 보일 수 있다.
+
+#### 검사 스크립트 (직접 검색, `410588ab`)
+
+아래 **정확한 화면 문구**를 `scripts/`에서 찾아 보면 **한 파일도 없다.** `사이트 표시명`, `표시명 수정`, `표시명·집주소`, `사이트 표시명이 저장되었습니다.`, `표시명 저장`.
+
+관련 있는 검사:
+- `scripts/verify-input-fill-rule.mjs` H5(566~578행): 선택자 `[data-form="change-display-name"]`, `#mypage-display-name`만 쓴다. **이 선택자·id를 바꾸면 실패한다.** 테스트 제목에 「표시명」이 있어도 화면 글자는 검사하지 않는다.
+- `scripts/verify-tutor-basic-required.mjs` 469행: 과외쌤 기본정보의 `표시명</span>`을 본다. **계정 설정과 다른 화면**이다. 과외쌤 파일은 고치지 않는다.
+- 그 외 verify의 「표시명」은 주석, 테스트 제목, 또는 `tutor_display_name` 같은 필드 이름이다. 이번 문구 변경과 무관하다.
 
 ## 바꿀 것
 
@@ -82,9 +117,17 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 1. `preview/study-room-ui/src/screens/step-facility.js` 112~117행: 두 칸에 `min="1"` `step="1"`. `required`는 넣지 않는다. 기본값 1을 value에 미리 넣지 않는다. 라벨은 그대로.
 2. `StudyRoomRegisterService.php` `saveCareer`: `career_years`·`academy_career_years`는 빈 값이면 지금처럼 null. 값이 있는데 1 미만(0, 음수)이면 거절. 예: 「교습경력은 1 이상 입력해 주세요.」 / 「학원경력은 1 이상 입력해 주세요.」 `optionalInt` 공용 함수 자체를 바꾸면 다른 칸에 영향이 있으니, 경력 두 칸만 따로 검사한다.
 
+### D. 계정 이름 문구 (`preview/home-ui/src/mypage/screens.js`만, 보이는 글자만)
+
+1. 위 대응표대로 바꾼다. 저장 버튼은 1106행과 저장 후 1686행 `submitBtn.textContent = '표시명 저장'`을 함께 「이름 저장」으로 맞춘다.
+2. 필드 라벨 아래(기존 2~50자 힌트 **위 또는 아래**, 기존 힌트는 삭제하지 않음)에 힌트를 추가한다.
+   `상단 「로그인: ○○○」 표시와 인사말에만 보여요. 공부방명·과외쌤 이름은 등록 정보에서 바꿔요.`
+3. `name`, `id`, `data-action`, `data-form`, 세션 키, fetch URL, JSON 키 `display_name`은 그대로. 이 폼 저장 실패 폴백(1668행)에 HTTP 번호가 있으면 1번과 같이 한글만 쓴다.
+4. `src/Auth/**`, `public/api/auth/profile.php`, SSOT 문서는 수정 금지.
+
 ## 허용 파일 (이것만)
 
-1. `preview/home-ui/src/mypage/screens.js` — 비밀번호 실패 문구(A)만
+1. `preview/home-ui/src/mypage/screens.js` — 비밀번호 실패 문구(A)와 계정 이름 화면 문구(D)만
 2. `preview/shared/study-room-basic-form.js` — 홍보 2·3 지우기·유료/대기 안내(B-1)만
 3. `src/StudyRoom/StudyRoomRegisterService.php` — `syncSavedRegions` 저장 전 차단(B-2)과 `saveCareer` 경력 하한(C)만. 다른 메서드 금지
 4. `preview/study-room-ui/src/screens/step-facility.js` — 경력 두 칸 `min`/`step`만
@@ -95,7 +138,7 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 - **모든 `main.js`.**
 - `preview/tutor-ui/**`, `preview/home-ui/src/tutor-reg/**`(특히 `embedded-panels.js`, `screens.js`).
 - `preview/home-ui/src/styles/mypage-ops-register.css`와 지시서 14·14b 허용 파일.
-- `preview/shared/*.css`, `password-policy.js`, `src/Auth/**`, `public/api/auth/password/**`, `src/Paid/**`, `preview/home-ui/src/paid-api.js`(import만 허용).
+- `preview/shared/*.css`, `password-policy.js`, `src/Auth/**`(표시명 서버 문구 포함), `public/api/auth/password/**`, `public/api/auth/profile.php`, `src/Paid/**`, `preview/home-ui/src/paid-api.js`(import만 허용).
 - 수업 그룹 교습비·`step-lesson.js`·스키마(그건 15b).
 - 비밀번호 규칙 완화, 테스트 계정 비밀번호를 문서·채팅·커밋에 적기, 운영 SQL 실행.
 
@@ -109,6 +152,8 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 | `optionalInt`를 바꿔 다른 칸이 깨짐 | 경력 두 칸만 별도 검사. |
 | 과외쌤 마이페이지(14)가 바뀜 | 과외쌤 파일·`mypage-ops-register.css` 금지. 수락에서 과외쌤 메뉴 확인. |
 | paid-api 응답 모양이 문서와 다름 | 0단계에서 응답 키를 확인하고, 다르면 멈추고 보고. |
+| 계정 이름 선택자를 바꿔 입력칸 색 검사가 실패 | `#mypage-display-name`, `[data-form="change-display-name"]` 유지. `verify-input-fill-rule` H5를 돌린다. |
+| 과외쌤 「표시명」 기본정보 검사가 실패 | 과외쌤 파일·`tutor_display_name` 화면은 손대지 않음. |
 
 ## 수락
 
@@ -117,9 +162,10 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 3. 홍보 2·3에 값이 있는 공부방: 지우기 → 칸이 비고, 저장 뒤 다시 열면 비어 있다. 홍보1은 지우기 버튼이 없다. 홍보1만 남긴 채 저장이 된다. 찾기·홈에서 지운 지역 목록에 안 나오고, 대표 위치 글자는 홍보1 그대로다.
 4. 홍보 2 또는 3에 이용 중인 프라임·픽 또는 예약대기가 있으면: 지우기를 눌러도 칸이 남고 한글 안내가 보인다. 저장으로 비워도 서버가 같은 취지의 한글로 거절한다. (해당 구독이 있는 계정으로. 없으면 PR에 「해당 계정 없음」을 적고, 서버 분기는 코드 검토·로컬로 확인했다고 적는다.)
 5. 상세정보2: 교습경력·학원경력에 -1·0을 넣고 저장하면 거절. 빈 칸은 저장된다. 1 이상은 저장되고 다시 열면 같다. 마이페이지와 공부방상세등록 화면을 모두 본다(같은 `step-facility.js`).
-6. 빌드 `npm run build:dothome`. Verify bundle은 지금 실패 중인 4건 말고 새 실패가 없어야 한다.
-7. **마지막 확인:** `git diff --stat origin/main...HEAD`에 위 허용 파일만 나와야 한다. 다른 파일이 보이면 PR을 열지 말고 멈추고 보고. 결과를 PR 본문에 붙인다.
-8. PR 본문에 0단계 보고, 계정별 표(통과/실패, 캡처 경로). 비밀번호는 적지 않는다.
+6. 계정/설정(공부방·과외쌤·학생, 일반·시크릿): 「내 계정 이름」「이름 수정」「계정 이름·집주소…」가 보이고, 「사이트 표시명」「표시명 수정」은 이 화면에 없다. 힌트 「상단 「로그인: ○○○」 표시와 인사말에만 보여요. 공부방명·과외쌤 이름은 등록 정보에서 바꿔요.」가 있다. 기존 2~50자 힌트도 있다. 이름을 저장하면 「내 계정 이름이 저장되었습니다.」 토스트. 상단 「로그인: ○○○」이 새 이름과 같다. 공부방명·과외쌤 등록 이름은 그대로다. 1자만 넣고 저장하면 「내 계정 이름은 2자 이상이어야 합니다.」
+7. 빌드 `npm run build:dothome`. Verify bundle은 지금 실패 중인 4건 말고 새 실패가 없어야 한다. `verify-input-fill-rule` H5(계정 표시명 입력칸 색)가 작업 전과 같아야 한다.
+8. **마지막 확인:** `git diff --stat origin/main...HEAD`에 위 허용 파일만 나와야 한다. 다른 파일이 보이면 PR을 열지 말고 멈추고 보고. 결과를 PR 본문에 붙인다.
+9. PR 본문에 0단계 보고, 계정별 표(통과/실패, 캡처 경로). 비밀번호는 적지 않는다.
 
 ## 다음
 
@@ -127,7 +173,7 @@ PR만 연다. 머지 금지. 11-18 종현 결정(1·2·3) 반영.
 
 ## Cursor 한 줄 명령
 
-`최신 origin/main에서 docs/worklog/grok-sync/reapply-2026-11-17/15-study-room-mypage-fixes.md 그대로 실행. 먼저 0단계 진단을 보고하고, 애매하거나 허용 파일 밖을 고쳐야 하면 멈추고 보고해. 모든 main.js, tutor 파일, mypage-ops-register.css, 지시서 14 파일, Auth/비밀번호 규칙, 교습비(15b) 수정 금지. 수락을 공부방·과외쌤·학생 계정으로 일반·시크릿 창에서 확인하고, git diff --stat에 허용 파일만 있는지 확인한 뒤 PR만 올려줘. 머지는 하지 마.`
+`최신 origin/main에서 docs/worklog/grok-sync/reapply-2026-11-17/15-study-room-mypage-fixes.md 그대로 실행. 먼저 0단계 진단을 보고하고, 애매하거나 허용 파일 밖을 고쳐야 하면 멈추고 보고해. 모든 main.js, tutor 파일, mypage-ops-register.css, 지시서 14 파일, Auth/비밀번호 규칙, profile.php, 교습비(15b) 수정 금지. 계정 설정은 보이는 글자만 바꾸고 name·id·data·API 키는 그대로. 수락을 공부방·과외쌤·학생 계정으로 일반·시크릿 창에서 확인하고, git diff --stat에 허용 파일만 있는지 확인한 뒤 PR만 올려줘. 머지는 하지 마.`
 
 ## 되돌리기
 
