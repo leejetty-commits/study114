@@ -3,6 +3,7 @@ import {
   renderAdminHideOwnerLine,
 } from '../lifecycle-copy.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { showP24Toast } from '../detail-decision/detail-utils.js';
 import {
   parseTutorRegPath,
   tutorHubPath,
@@ -710,7 +711,6 @@ export function bindTutorRegEvents(root, rerender) {
       try {
         if (kind === 'basic') {
           await persistTutorBasicForm(form);
-          basicSaveFlash = '저장되었습니다.';
           markTutorBasicClean(form);
         }
         if (kind !== 'basic') await s114Alert('저장되었습니다.');
@@ -720,6 +720,7 @@ export function bindTutorRegEvents(root, rerender) {
           return;
         }
         rerender();
+        if (kind === 'basic') showP24Toast('저장되었습니다.');
       } catch (err) {
         if (kind === 'basic') {
           basicSaveFlash = '';
