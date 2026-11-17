@@ -1,6 +1,6 @@
 # 홈화면 초기 로딩속도 개선 방안
 
-작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `a738c84c`(PR #247 배포, Deploy to dothome run 44118863662)
+작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `6f959b53`(PR #248 배포, Deploy to dothome run 44136692462). 0장 측정값은 그 전 `a738c84c` 기준
 성격: 내부 문서. 코드 변경 없음. 숫자는 이 문서에 출처를 적은 것만 쓴다.
 대상: 처음 오는 손님이 보는 비로그인 홈 `https://study114.net/`과, 메뉴로 이어지는 찾기·상세등록 첫 화면.
 
@@ -63,8 +63,10 @@
 - Pretendard 폰트 자체 호스팅(`8844df1c`, 2026-10-06). 외부 폰트 서버를 거치지 않는다. 7개 `@font-face` 모두 `font-display: swap`이 이미 있다(글자가 폰트를 기다리지 않음).
 - 카카오채널 홈페이지 주소는 이미 `https://study114.net`(www 없음, 종현 확인 11-18).
 
-#### 1.1.9 오픈 전 진행 중 — 지시서 10 「오픈 전 진행 중(지시서 10)」
-`docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md`. 머지되면 이 칸을 "구현함"으로 옮긴다.
+#### 1.1.9 지시서 10 — PR #248 (2026-11-18 02:24 KST 머지, main `6f959b53`, Deploy to dothome run 44136692462)
+`docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md`. 커밋 A `0700cf9a` · C `4caa5fe0` · D `747bf57f` · E `f9e1e58c` · F `0dee6d22` · G `e88fe009` · H `65fe68b1` · 기록 `6f021184`. 우동공과3 diff 검수 합격(허용 파일 안, `main.js`는 study-room-ui 185~188행만).
+- **근거(Cursor 빌드·로컬)**: 엔트리 CSS 568,923 B(gzip 90,128). 홈 빌드에 Medium 없음, 폰트 3종 합 807,532 B. `verify:paid-renewal` 38 통과, 캐시 헤더 검사 통과. 로컬 비로그인 첫 글자 데스크톱 208 ms·LCP 308 ms, 모바일 680 ms·1,164 ms(로컬이라 운영 값과 비교 불가).
+- **운영 확인 남음**: 폰트 응답이 1년 캐시로 바뀌었는지(안 바뀌면 Cloudflare에서 Pretendard Regular·SemiBold·Bold 주소만 비우기), 로그인 세 모드 클릭, 최근열람 4갈래, 상세등록 정보글·저장, 유료상품·구매이력·퀵매칭 모양. 운영 첫 글자·LCP 재측정 후 0장 표에 전후로 적는다.
 - A 해시 폰트 1년 캐시: 지금 Pretendard가 `max-age=14400`(4시간)이라, 4시간 뒤 재방문마다 다시 받는다. G 뒤에는 남은 3종(약 789 KB).
 - C 홍보 v2·유료상품 CSS를 그 화면 조각으로: 박스 시험 빌드 엔트리 CSS 676 → 569 kB(gzip 107.6 → 90.2 kB). home-ui `main.js`는 그대로.
 - D 헤더 워드마크 866×281(18.8 KB) → 표시 크기 3배로.
@@ -74,7 +76,7 @@
 - H 공부방상세등록 `register.php` `masters`와 `load`를 동시에(`preview/study-room-ui/src/main.js` 185~188행만, `Promise.all`). 종현 동의 2026-11-18. `loadSavedRoom()`은 `initChromeSession()` 뒤에만 시작한다. home-ui·search-ui·tutor-ui `main.js`는 금지.
 - 확인만: PHP 세션 잠금(아래 1.2.6).
 
-#### 1.1.10 오픈 전 진행 중 — 지시서 11 (찾기 세 화면, 지시서 10 머지 뒤)
+#### 1.1.10 오픈 전 진행 중 — 지시서 11 (찾기 세 화면, 지시서 10 배포 뒤 시작)
 `docs/worklog/grok-sync/reapply-2026-11-17/11-find-speed-preopen.md`. **main.js 한 줄도 안 바꾼다.** 머지되면 "구현함"으로 옮긴다.
 - A `preview/search-ui/index.html` `#app` 안에 역할과 무관한 회색 칸 + 「불러오는 중…」. 하얀 화면이 me.php를 기다리지 않는다. 진짜 첫 글자 시각은 같다. 박스 비로그인 측정 첫 그림 244~348 → 36~68 ms(dist 끼워 넣기 기준).
 - B `search-find-place.js`: cities·tutor_units를 me.php 보낸 다음 틱에 미리, 로그인 흔적이 없을 때만 게스트 기준 위치(region-stats)도 미리. 요청 수 같음. 박스 비로그인 목록까지 다 그린 시각 1,095~1,206 → 674~715 ms, me.php 9회 중앙값 변화 없음.
