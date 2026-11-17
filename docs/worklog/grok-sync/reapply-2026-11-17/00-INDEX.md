@@ -19,6 +19,7 @@
 | 2 | **`07-228-229-230-combined.md`** | #228 알약·지도 + 멈춤 수정, #229 지오코딩, #230 탭 기억 **한 PR** | `git revert 7dfe7c66` → 수정 1곳 커밋 → `git revert 738fc840` → `git revert 815b7ff2` | 없음(11-17 `365f94ae` 위 확인) | 대기 가능 |
 | 5 | `05-231-plans-bullets.md` | #231 공부방 박스 정렬·유료상품 글머리 | `git revert 3bb8d42b` | 없음 | 대기 가능 |
 | 6 | `06-232-233-quickmatch.md` | #232·#233 퀵매칭 소개 | `git revert e3af6dca` 후 `git revert f1242b39` | 없음 | 대기 가능 |
+| 8 | `08-msg-status-opposite-branch.md` | 새 작업(다시 넣기 아님): 쪽지 상태 문구 + 학생 반대 분기 공부방찾기 지역 없음 박스·지도 안내 | 수정 5파일(`c4f673c6` 기준) | — | 오픈 전 |
 
 순서를 바꾸지 않는다. 02·03·04는 따로 넣지 않고 07 한 문서로 넣는다(알약 기능이 반만 나가지 않게, 11-17 종현 지적). 02·03·04는 원인·위험 설명용 참고로만 남긴다. #228·#229·#230은 같은 파일(`study-room-home-seed.js`, `naver-map.js`)을 이어서 고쳤다. 앞의 것이 없으면 뒤의 revert가 충돌한다.
 
@@ -29,6 +30,7 @@
    (02·03·04 단독 실행 금지. 참고용.)
 5. `…/05-231-plans-bullets.md 그대로 실행. PR만, 머지 금지.`
 6. `…/06-232-233-quickmatch.md 그대로 실행. PR만, 머지 금지.`
+8. `…/08-msg-status-opposite-branch.md 그대로 실행. 허용 파일 밖·main.js·CSS 수정 금지. A·B 커밋 분리. PR만, 머지 금지.`
 
 (…은 `docs/worklog/grok-sync/reapply-2026-11-17`. 문서는 브랜치 `origin/docs/reapply-2026-11-17`에 있다. `git fetch` 후 `git show origin/docs/reapply-2026-11-17:<경로>`로 읽는다.)
 
