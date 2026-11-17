@@ -584,14 +584,20 @@ function init() {
       const link = target.closest('[data-util-href]');
       const href = link?.getAttribute('data-util-href') || '';
       const action = target.closest('[data-action]')?.getAttribute('data-action') || '';
+      // 상세등록 GNB는 세션 확정 전에만 막는다. 로그인 뒤에는 통과한다.
+      if (action === 'gnb-register_room' || action === 'gnb-register_tutor') {
+        if (!sessionChecked) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        return;
+      }
       const guestOnly =
         href.includes('#/login') ||
         href.includes('#/signup') ||
         action === 'login-gate' ||
         action === 'compare-guest-blocked' ||
         action === 'search' ||
-        action === 'gnb-register_room' ||
-        action === 'gnb-register_tutor' ||
         Boolean(target.closest('[data-prime-empty], [data-basic-empty], [data-pick-empty]'));
       if (!guestOnly) return;
       if (sessionChecked && !isLoggedIn()) return;
