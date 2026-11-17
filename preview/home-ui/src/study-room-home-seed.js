@@ -475,24 +475,21 @@ export function bootStudyRoomHome(rerender, opts = {}) {
   const key = `${room?.id || 0}|${filters.region_id || ''}|${filters.complex_id || ''}|${filters.region_label || ''}`;
   const cached = roomListByKey.get(key);
   if (cached && (cached.status === 'ready' || cached.status === 'no-region')) {
+    // 캐시 적중은 목록만 바꾼다. 다시 그리기는 키·상태가 바뀐 때 한 번만 예약한다.
+    // 조회수는 아래 기존 가드가 처리한다(그리기마다 새 then·rerender를 만들지 않는다).
     const changed = liveKey !== key || liveStatus !== cached.status;
-    liveKey = key;
-    liveItems = cached.items;
-    liveStatus = cached.status;
-    listSavedAt = cached.at;
-    bootPromise = Promise.resolve();
-    if (opts.viewsAfterList === true) {
-      bootPromise = ensureLifetimeViews(room?.id).then(() => {
-        if (liveKey === key && typeof rerender === 'function') rerender();
-      });
-      return bootPromise;
+    if (changed) {
+      liveKey = key;
+      liveItems = cached.items;
+      liveStatus = cached.status;
+      listSavedAt = cached.at;
+      bootPromise = Promise.resolve();
+      if (typeof rerender === 'function') {
+        queueMicrotask(() => {
+          if (liveKey === key) rerender();
+        });
+      }
     }
-    if (changed && typeof rerender === 'function') {
-      queueMicrotask(() => {
-        if (liveKey === key) rerender();
-      });
-    }
-    return bootPromise;
   }
   if (bootPromise && liveKey === key) {
     if (opts.viewsAfterList === true) return bootPromise;
