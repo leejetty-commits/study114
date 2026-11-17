@@ -1,0 +1,313 @@
+/* 퀵매칭 소개·카탈로그 칸. 홈 엔트리 CSS 파일에는 넣지 않는다. */
+
+.qm-block {
+  container-type: inline-size;
+  container-name: qm;
+  background: #f5f1e6;
+  color: #0e1b33;
+  border-radius: 16px;
+  padding: 1.35rem 1.15rem 1.2rem;
+  word-break: keep-all;
+  --pv2-hand: #f2b84b;
+  --pv2-mark: #f2b84b;
+}
+
+.pv2.qm-block .qm-title {
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.25;
+  margin: 0 0 1.35rem;
+  color: #0e1b33;
+}
+
+.qm-lead {
+  text-align: left;
+}
+
+.qm-sub {
+  margin: 0 0 1.15rem;
+  font-family: 'PV2 Gmarket Sans', var(--font-sans), sans-serif;
+  font-weight: 500;
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.5;
+}
+
+.qm-body,
+.qm-with,
+.qm-tone,
+.qm-free,
+.qm-pick {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.qm-body {
+  margin: 0 0 1.35rem;
+  font-size: 16px;
+}
+
+.qm-with {
+  margin: 0;
+  color: #7a4b00;
+  font-weight: 700;
+}
+
+.qm-tone {
+  margin: -0.45rem 0 1.25rem;
+  font-size: 14px;
+  color: #3e4a63;
+}
+
+.qm-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0 0 1.15rem;
+}
+
+.qm-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.qm-badge--new {
+  background: #f2b84b;
+  color: #0e1b33;
+}
+
+.qm-badge--prime {
+  background: #fff;
+  color: #0e1b33;
+  border: 1px solid #f2b84b;
+}
+
+.qm-lead + .qm-photo,
+.qm-lead + .qm-hero {
+  margin-top: 1.75rem;
+}
+
+.qm-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1rem;
+  align-items: center;
+}
+
+.qm-photo {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0e1b33;
+}
+
+.qm-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.qm-bubble {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.7rem;
+  max-width: 14rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 12px 12px 12px 4px;
+  background: #fff;
+  color: #0e1b33;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  box-shadow: 0 8px 18px rgba(14, 27, 51, 0.18);
+  transform-origin: left bottom;
+}
+
+.qm-steps-wrap {
+  margin-top: 1.15rem;
+}
+
+.qm-kicker {
+  margin: 0 0 0.7rem;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #7a4b00;
+}
+
+.qm-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qm-steps::before {
+  content: '';
+  position: absolute;
+  top: 22px;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: #f2b84b;
+}
+
+.qm-step {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+}
+
+.qm-step__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #0e1b33;
+  color: #f2b84b;
+}
+
+.qm-step__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.qm-step__title {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.qm-examples-wrap {
+  margin-top: 1.2rem;
+}
+
+.qm-h {
+  margin: 0 0 0.5rem;
+  font-family: 'PV2 Gmarket Sans', var(--font-sans), sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.qm-examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.qm-examples li {
+  padding: 0.28rem 0.6rem;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #e4d7b8;
+  font-size: 13px;
+}
+
+.qm-free {
+  margin-top: 1rem;
+  font-weight: 700;
+}
+
+.qm-cta-row {
+  margin: 0.75rem 0 0;
+}
+
+.pv2 .qm-cta {
+  height: 40px;
+  padding: 0 1rem;
+  background: #0e1b33;
+  color: #f5f1e6;
+}
+
+.qm-pick {
+  margin-top: 0.75rem;
+  font-size: 13px;
+  color: #3e4a63;
+}
+
+.pv2--room .qm-block--catalog,
+.pv2--tutor .qm-block--catalog {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .qm-lead {
+    text-align: center;
+  }
+
+  .qm-lead .qm-badges {
+    justify-content: center;
+  }
+}
+
+@container qm (max-width: 640px) {
+  .qm-hero,
+  .qm-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .qm-steps::before {
+    top: 22px;
+    bottom: 22px;
+    left: 21px;
+    right: auto;
+    width: 2px;
+    height: auto;
+  }
+
+  .qm-step {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .qm-bubble {
+    animation: qm-pop 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+
+  .qm-step {
+    animation: qm-rise 0.5s ease both;
+  }
+
+  .qm-step:nth-child(1) { animation-delay: 0.15s; }
+  .qm-step:nth-child(2) { animation-delay: 0.45s; }
+  .qm-step:nth-child(3) { animation-delay: 0.75s; }
+}
+
+@keyframes qm-pop {
+  0% { transform: scale(0); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes qm-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qm-bubble,
+  .qm-step {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

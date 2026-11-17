@@ -5,6 +5,7 @@ import { guardMypageAccess } from '../../../shared/route-access.js';
 import { renderGuestLoginGatePanel, bindGuestGateLinks } from '../../../shared/guest-gate-ui.js';
 import { renderPreviewToolbar, renderHeader, renderFooter, renderAppShellWithPromo } from '../layout.js';
 import { renderMypageShell, bindMypageShellEvents } from './shell.js';
+import { clearQuickMatchServerPrime } from './quick-match-screen.js';
 import { renderMypageScreen, bindMypageScreenEvents, hydrateMypageReviewPanel } from './screens.js';
 import { bindStudentReviewEvents } from '../student-review-ui.js';
 import { ensureStudentStore, bindStudentRegEvents } from '../student-reg/index.js';
@@ -70,6 +71,7 @@ export function renderMypage() {
     }
   }
   const path = getMypagePath();
+  if (path !== '/mypage/quick-match') clearQuickMatchServerPrime();
   const body = renderMypageScreen(path);
   return renderMypageShell(path, body);
 }

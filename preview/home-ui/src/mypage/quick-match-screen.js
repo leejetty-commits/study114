@@ -1,23 +1,63 @@
+import { getProviderStatus } from '../provider-status.js';
+
 const NOT_PRIME_TITLE = '프라임에서 함께 제공되고 있는 서비스입니다';
 const NOT_PRIME_BODY = '지금 광고 중인 프라임이 없어요. 프라임으로 지역을 광고하면, 조건이 맞는 학생이 등록할 때 쪽지로 알려 드려요.';
+
+/** 서버 재확인 전 null. true면 설정 화면, false면 소개. */
+let serverPrime = /** @type {boolean|null} */ (null);
+
+export function noteQuickMatchServerPrime(active) {
+  serverPrime = active === true;
+}
+
+export function clearQuickMatchServerPrime() {
+  serverPrime = null;
+}
+
+/** 비프라임 소개를 본문에 보여주는 동안 우측 배너레일을 숨긴다. */
+export function quickMatchShowsIntro() {
+  if (serverPrime === true) return false;
+  if (serverPrime === false) return true;
+  return getProviderStatus()?.prime_active !== true;
+}
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
 }
 
 export function renderQuickMatchScreen() {
+  if (quickMatchShowsIntro()) {
+    return `
+    <div class="qm-screen qm-screen--intro" data-quick-match>
+      <div data-quick-match-body><p class="mp-card__empty">불러오는 중…</p></div>
+    </div>`;
+  }
   return `
     <section class="mp-card qm-screen" data-quick-match>
       <div data-quick-match-body><p class="mp-card__empty">불러오는 중…</p></div>
     </section>`;
 }
 
-export function bindQuickMatchScreen(root) {
+function mountIntro(body) {
+  import('../promo/quick-match-view.js')
+    .then((mod) => {
+      if (!body.isConnected) return;
+      body.innerHTML = mod.renderQuickMatchIntro({ prime: false });
+      mod.bindQuickMatchIntroLinks(body);
+    })
+    .catch(() => {
+      if (!body.isConnected) return;
+      body.innerHTML = '<p class="mp-card__empty">소개를 불러오지 못했어요.</p>';
+    });
+}
+
+export function bindQuickMatchScreen(root, rerender) {
   const host = root.querySelector('[data-quick-match]');
   if (!host || host.dataset.bound === '1') return;
   host.dataset.bound = '1';
   const body = host.querySelector('[data-quick-match-body]');
   if (!body) return;
+  if (quickMatchShowsIntro()) mountIntro(body);
   const show = (data) => {
     body.innerHTML = paint(data);
     const form = body.querySelector('[data-quick-match-save]');
@@ -54,13 +94,35 @@ export function bindQuickMatchScreen(root) {
   fetch('/api/quick-match/settings.php', { credentials: 'include' })
     .then((res) => res.json().then((data) => ({ ok: res.ok, data })))
     .then(({ ok, data }) => {
+      if (!body.isConnected) return;
+      if (data && typeof data.prime_active === 'boolean') {
+        const before = quickMatchShowsIntro();
+        noteQuickMatchServerPrime(data.prime_active === true);
+        if (typeof rerender === 'function' && quickMatchShowsIntro() !== before) {
+          rerender();
+          return;
+        }
+      }
       if (!ok || data.ok === false) {
+        if (quickMatchShowsIntro()) {
+          mountIntro(body);
+          return;
+        }
         body.innerHTML = `<p class="mp-card__empty">${esc(data.message || '화면을 열 수 없어요.')}</p>`;
+        return;
+      }
+      if (!data.prime_active) {
+        mountIntro(body);
         return;
       }
       show(data);
     })
     .catch(() => {
+      if (!body.isConnected) return;
+      if (quickMatchShowsIntro()) {
+        mountIntro(body);
+        return;
+      }
       body.innerHTML = '<p class="mp-card__empty">화면을 열 수 없어요.</p>';
     });
 }
