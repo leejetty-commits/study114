@@ -1,13 +1,13 @@
-# 10 오픈 전 비로그인 홈 첫 화면 가볍게 (폰트 캐시 · CSS 일부 분리 · 로고 이미지 · 최근열람 버튼 · 상세등록 정보글 미룸)
+# 10 오픈 전 비로그인 홈 첫 화면 가볍게 (폰트 캐시 · Medium 빼기 · CSS 일부 분리 · 로고 이미지 · 최근열람 버튼 · 상세등록 정보글 미룸 · 등록정보 동시 요청)
 
 작성: 우동공과3(검수) · 2026-11-18 · 기준 `origin/main` `a738c84c` (PR #247 배포, run 44118863662)
 상태: 지시서. 코드 변경 없음. Cursor가 PR만 연다. 머지 금지.
-목표: 금요일(2026-11-20) 오픈 전에, **처음 오는 비로그인 손님**이 보는 홈(`https://study114.net/`)의 내려받는 양을 줄이고, 다시 올 때 폰트를 다시 받지 않게 한다. 같이, 공부방상세등록(`/register/room/`) 오른쪽 정보글 3건은 폼이 먼저 그린 뒤에 받는다. 로그인·세션·지도 순서는 건드리지 않는다.
+목표: 금요일(2026-11-20) 오픈 전에, **처음 오는 비로그인 손님**이 보는 홈(`https://study114.net/`)의 내려받는 양을 줄이고, 다시 올 때 폰트를 다시 받지 않게 한다. Pretendard Medium(500)을 빼서 첫 방문 폰트를 약 263 KB 줄인다(종현 동의 2026-11-18). 같이, 공부방상세등록(`/register/room/`) 오른쪽 정보글 3건은 폼이 먼저 그린 뒤에 받고, 같은 화면의 `register.php` `masters`와 `load`는 한꺼번에 보낸다. 로그인·세션·지도 순서는 건드리지 않는다. `main.js` 금지는 유지하되, **H만** `preview/study-room-ui/src/main.js` 185~188행 예외다.
 
 ## 명령
 
 ```
-git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E·F 커밋 분리, B는 확인만). 허용 파일 밖·모든 main.js·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. 수락 표(전후 전송량·첫 글자·LCP)와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교, 공부방상세등록 폼 첫 그림 전후와 정보글 표시 확인 후 PR만, 머지 금지.
+git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2026-11-17/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E·F·G·H 커밋 분리, B는 확인만). 허용 파일 밖·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. main.js는 home-ui·search-ui·tutor-ui 금지. study-room-ui/src/main.js는 H의 185~188행(register.php masters와 load를 Promise.all로 동시 요청)만 예외이고 그 파일의 다른 줄은 금지. 수락 표(전후 전송량·첫 글자·LCP)와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교, 공부방상세등록 폼 첫 그림 전후와 정보글 표시, G 굵기 화면 비교, H 네트워크 겹침·신규·기존 저장 확인 후 PR만, 머지 금지.
 ```
 
 ## 허용 파일 (이것만)
@@ -30,9 +30,12 @@ git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2
 | D | `preview/home-ui/public/assets/brand/logo-wordmark-2026.png`, `public/assets/brand/logo-wordmark-2026.png`, `preview/auth-ui/public/assets/brand/logo-wordmark-2026.png` | 같은 이름으로 크기만 줄임 (세 벌 같은 파일) |
 | E | `preview/home-ui/src/mypage/screens.js` | `renderRecentEmpty` 안 「탐색하기」 주소만 |
 | F | `preview/study-room-ui/src/layout.js` | 공부방상세등록 오른쪽 정보글 요청을 폼이 그린 뒤로 |
+| G | `preview/shared/fonts/pretendard.css` | Medium(500) `@font-face` 블록만 삭제 |
+| G | `preview/shared/fonts/Pretendard-Medium.subset.woff2` | 파일 삭제(다른 굵기·OFL.txt는 그대로) |
+| H | `preview/study-room-ui/src/main.js` | 185~188행만. `masters`와 `load`를 `Promise.all`로 동시에. **main.js 금지의 유일한 예외** |
 | 기록 | `docs/worklog/2026/11/2026-11-18-home-first-paint-preopen.md` | 결과 기록 |
 
-`main.js`(home-ui·search-ui·study-room-ui·tutor-ui 전부), `auth-session.js`, 세션·엔트리 순서, `loadNaverMapsSdk` 시점(#235), capture 클릭 처리, 위 표에 없는 CSS·JS는 한 줄도 바꾸지 않는다.
+`main.js`는 home-ui·search-ui·tutor-ui를 한 줄도 바꾸지 않는다. study-room-ui의 `main.js`는 **H의 185~188행만** 바꿀 수 있고, 그 파일의 다른 줄(`loadMasters`·`loadSavedRoom` 본문, 189행 이후 환영·이동·`render`)은 금지다. `auth-session.js`, 세션·엔트리 순서, `loadNaverMapsSdk` 시점(#235), capture 클릭 처리, 위 표에 없는 CSS·JS는 한 줄도 바꾸지 않는다.
 
 ---
 
@@ -62,7 +65,7 @@ git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2
 - 캐시: Pretendard 4종과 홍보 폰트 모두 `cache-control: max-age=14400`(4시간). JS·CSS는 `public, max-age=31536000, immutable`.
   - 원인: `public/.htaccess`의 장기 캐시 블록이 `^[A-Za-z0-9_-]+-[A-Za-z0-9_-]+\.(js|css)$`만 잡는다. 폰트는 서버가 Cache-Control을 안 보내서 Cloudflare 기본값 4시간이 붙는다.
   - 결과: 4시간이 지난 재방문(다음 날 다시 오는 손님)마다 폰트 약 1 MB를 다시 받는다.
-- CSS 안 `font-weight` 사용 횟수: 700 358회, 600 285회, 800 92회, 500 48회, 400 20회 등. 500·600 파일을 빼면 화면 굵기가 바뀐다.
+- CSS 안 `font-weight` 사용 횟수: 700 358회, 600 285회, 800 92회, 500 48회, 400 20회 등. `preview/**/*.css`에서 `font-weight: 500` 또는 `var(--fw-medium)` 규칙은 69개( `pretendard.css`의 `@font-face`와 홍보 전용 `promo-v2.css`의 Gmarket은 제외). 종현이 2026-11-18에 Medium(500) 빼기를 동의했다. 69개 규칙은 그대로 두고, 브라우저가 400(Regular)으로 그린다. 600은 그대로 둔다.
 
 ### 2. CSS
 
@@ -126,16 +129,16 @@ git fetch 후 origin/docs/reapply-2026-11-17의 docs/worklog/grok-sync/reapply-2
 - 패턴 확인: `Pretendard-{Regular,Medium,SemiBold,Bold}.subset-<8자>.woff2`는 맞고, `gmarket-sans-bold.woff2`·`gmarket-sans-medium.woff2`·`nanum-pen.woff2`는 안 맞아야 한다. `node -e`로 정규식을 7개 이름에 돌려 결과를 기록에 붙인다.
 - `scripts/check-cache-headers.mjs`: `assertHtaccess`에 "woff2 FilesMatch 블록 존재" OK/FAIL 한 줄. 기존 검사는 그대로.
 - HTML·이미지·API 캐시는 바꾸지 않는다.
-- 배포 뒤: Cloudflare에 이미 저장된 폰트는 그 저장이 끝날 때까지 옛 헤더(4시간)로 나갈 수 있다. Cursor는 CF를 건드리지 않는다. 기록에 "배포 뒤 몇 시간 안에 `curl -sI https://study114.net/assets/Pretendard-Regular.subset-BZqc2FCe.woff2`가 1년으로 바뀌는지 확인, 늦으면 종현이 CF 대시보드에서 폰트 4개 주소만 Purge" 라고 적는다.
+- 배포 뒤: Cloudflare에 이미 저장된 폰트는 그 저장이 끝날 때까지 옛 헤더(4시간)로 나갈 수 있다. Cursor는 CF를 건드리지 않는다. 기록에 "배포 뒤 몇 시간 안에 `curl -sI https://study114.net/assets/Pretendard-Regular.subset-BZqc2FCe.woff2`가 1년으로 바뀌는지 확인, 늦으면 종현이 CF 대시보드에서 남은 Pretendard 3종(Regular·SemiBold·Bold) 주소만 Purge" 라고 적는다. Medium은 G에서 빠지므로 요청되지 않는다.
 
-수락: 운영 배포 뒤 4개 Pretendard 주소가 `public, max-age=31536000, immutable`, 홍보 폰트 3개는 그대로.
+수락: 운영 배포 뒤 남은 Pretendard 3종 주소가 `public, max-age=31536000, immutable`, 비로그인 홈은 Medium을 내려받지 않음(G), 홍보 폰트 3개는 그대로.
 
 ## B. 폰트 표시 (확인만, 이번 PR에서 수정 없음)
 
 - `font-display: swap`은 7개 모두 이미 있다. 추가할 것 없음.
 - **preload는 넣지 않는다.** 글자는 swap으로 먼저 보이고, 260 KB짜리 폰트를 미리 받게 하면 느린 모바일에서 JS·CSS(첫 화면을 그리는 파일)와 대역폭을 다툰다.
 - 홍보 폰트 3개 선언은 C에서 `promo-v2.css`와 함께 엔트리 CSS에서 빠진다(홈에서 내려받지는 않던 것이라 CSS 글자 수만 준다).
-- Pretendard 500(Medium)·600(SemiBold) 빼기, 글자 범위별 분할(unicode-range)은 화면 굵기·파일 구조가 바뀌어 **종현 결정·오픈 후**. 내부문서 1.2에 적었다.
+- Pretendard 500(Medium) 빼기는 종현 동의(2026-11-18)로 이 지시서 **G**에서 한다. 600(SemiBold) 빼기와 글자 범위별 분할(unicode-range)은 화면 굵기·파일 구조가 바뀌어 **오픈 후**. 내부문서 1.2.1에 적었다.
 
 ## C. 홍보·유료상품 전용 CSS를 엔트리에서 빼기
 
@@ -231,6 +234,76 @@ ${showPromo ? renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: H
 
 수락: 공부방 로그인, 기본정보·상세정보1·상세정보2를 일반 창과 시크릿 창에서 **메뉴를 눌러** 연다. 멈춤 없음. 폼이 화면에 나타난 뒤에 정보글 요청이 시작되는지 Network로 전후 시각을 잰다. 정보글은 결국 보인다(데스크톱·좁은 폭).
 
+
+## G. Pretendard Medium(500) @font-face 빼기
+
+커밋: `10 perf(font): Pretendard Medium(500) @font-face 제거`
+
+허용 파일: `preview/shared/fonts/pretendard.css`, `preview/shared/fonts/Pretendard-Medium.subset.woff2`(삭제). `origin/main` `a738c84c`에서 경로와 내용을 확인했다. 홈·찾기·등록·로그인 앱이 모두 `preview/home-ui/src/styles/tokens.css` 6행 `@import '../../../shared/fonts/pretendard.css'`로 이 파일을 쓴다.
+
+`origin/main`의 `preview/shared/fonts/pretendard.css` 10~16행(이 블록만 지운다):
+
+```css
+@font-face {
+  font-family: 'Pretendard';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('./Pretendard-Medium.subset.woff2') format('woff2');
+}
+```
+
+하는 일:
+
+1. 위 500 `@font-face` 블록만 삭제한다. 400·600·700 블록과 주석(1행, OFL)은 그대로 둔다.
+2. `preview/shared/fonts/Pretendard-Medium.subset.woff2` 파일을 삭제한다(원본 268,324 B, 약 263 KB). 같은 폴더의 Regular·SemiBold·Bold woff2와 `OFL.txt`는 지우지 않는다.
+
+하지 말 것:
+
+- 69개 `font-weight: 500` / `font-weight: var(--fw-medium)` / `var(--fw-medium, 500)` 규칙은 **한 줄도 바꾸지 않는다.** (`preview/**/*.css`에서 `pretendard.css`의 `@font-face`와 홍보 전용 `promo-v2.css`를 뺀 개수. `--fw-medium: 500` 토큰 정의는 규칙이 아니다.)
+- `preview/home-ui/src/styles/tokens.css`의 `--fw-medium: 500`은 그대로 둔다. 규칙이 500을 가리키면 브라우저가 없는 500을 400으로 그린다.
+- 홍보 전용 `PV2 Gmarket Sans` 500은 다른 폰트다. `promo-v2.css`와 `/assets/promo/fonts/gmarket-sans-medium.woff2`는 건드리지 않는다.
+
+화면 영향(조사): 비로그인 홈에서 500을 쓰는 글자는 로고 옆 작은 글 「우리동네 공부방과외」, 오른쪽 레일(방 이름·더보기·베스트·공지·정보글 제목), 바닥글 링크 정도다. 메뉴와 버튼은 600·700이라 그대로다. 500이 빠지면 그 글자는 Regular(400)로 조금 얇아 보일 수 있다. 종현이 큰 디자인 문제는 없을 것으로 보고 동의했다.
+
+수락: 비로그인 홈 Network에 `Pretendard-Medium`이 없고, 폰트 합계가 약 263 KB 준다(1,052 → 약 789 KB). 고치기 전후 스크린샷을 나란히 둔다. 대상은 홈 태그라인 「우리동네 공부방과외」, 오른쪽 레일, 바닥글, 로그인·가입 라벨, 마이페이지 탭·왼쪽 메뉴, 찾기 카드, 등록 폼 라벨이다. 공부방·과외쌤·학생 모두. 레이아웃이 밀리거나 넘치지 않는다.
+
+## H. 공부방상세등록 register.php `masters`와 `load`를 동시에
+
+커밋: `10 perf(register): register.php masters와 load를 동시에`
+
+허용 파일: `preview/study-room-ui/src/main.js`만. **이 지시서에서 main.js 금지의 유일한 예외**이며, 바꿀 수 있는 것은 아래 부트 사슬(185~188행)뿐이다. `home-ui`·`search-ui`·`tutor-ui`의 `main.js`는 금지. `register-api.js`는 바꾸지 않는다.
+
+`origin/main` `a738c84c`의 `preview/study-room-ui/src/main.js` 185~188행(현재 코드):
+
+```js
+  const mastersReady = loadMasters();
+  initChromeSession()
+    .then(() => mastersReady)
+    .then(() => loadSavedRoom())
+```
+
+이미 있는 동작: `loadMasters()`(137~148행)는 `initChromeSession()`과 같이 시작한다(주석: 「masters 는 세션과 병렬. 실패해도 저장값 불러오기는 이어간다」). `fetchMasters()`는 `register.php` `action: 'masters'`(약 48 KB)다. 그다음 `mastersReady`가 끝난 뒤에야 `loadSavedRoom()`(154~179행)이 `register.php` `action: 'load'`(약 4 KB)를 보낸다. 이 줄 서기가 고칠 지점이다.
+
+`loadSavedRoom` 주석(151~152행): `initChromeSession()`이 끝난 뒤에만 호출한다. guest/intro면 저장값을 넣지 않는다. **세션이 끝나기 전에 `loadSavedRoom()`을 시작하지 않는다.**
+
+하는 일: 세션이 끝난 뒤 `masters` 완료를 기다리지 말고, 남은 `masters`와 `load`를 함께 보낸다. 결과는 둘 다 끝난 뒤에 지금과 같은 189행 `then`으로 넘어간다.
+
+```js
+  const mastersReady = loadMasters();
+  initChromeSession()
+    .then(() => Promise.all([mastersReady, loadSavedRoom()]))
+    .then(() => {
+```
+
+지키는 것:
+
+- `loadMasters`·`loadSavedRoom` 본문은 그대로 둔다. `loadMasters`는 성공 시 `apiMasters`에 넣고, 실패해도 `.catch(() => {})`로 이어간다. `loadSavedRoom`은 try/catch로 `null`을 반환한다. 바깥 `.catch`(221행)도 그대로다. 이 두 함수가 이미 오류를 삼키므로 `Promise.all`이 한쪽 실패로 깨지지 않는다. 잡기를 빼지 않는다.
+- 적용 대상이 다르다(`apiMasters`와 `registerState`). 화면을 그리는 189행 이후는 둘 다 끝난 뒤에만 실행되므로, 지금처럼 마스터를 먼저 넣고 `load`를 넣는 순서와 같은 그림이 나온다. 189행 이후(환영 인사, `chromeReady`, 기본정보 완료 시 lesson 이동 205~217행, `render`)는 한 줄도 바꾸지 않는다.
+- `loadMasters()`를 세션과 같이 시작하는 185행은 유지한다.
+
+수락: 공부방상세등록을 메뉴로 열었을 때 Network 시간줄에서 `register.php`의 `masters`와 `load`가 겹친다(`load`가 `masters` 끝을 기다리지 않음). 기본정보·상세정보1·상세정보2가 열리고 저장된다. 저장값이 없는 새 이용자와 이미 저장한 이용자 모두, 일반 창과 시크릿 창. 멈춤 없음.
+
 ---
 
 ## 확인만 (수정 금지): PHP 세션 잠금
@@ -258,14 +331,16 @@ Cursor가 할 일(코드 수정 없이 보고만):
 6. search-ui·study-room-ui·tutor-ui·auth-ui 빌드 CSS가 전과 같다(해시 비교).
 7. 최근열람 「탐색하기」 E 수락 4가지.
 8. 공부방상세등록 F 수락: 공부방 로그인, 기본정보·상세정보1·상세정보2를 일반 창과 시크릿 창에서 **메뉴를 눌러** 연다. 멈춤 없음. 폼이 화면에 나타난 뒤에 정보글 요청이 시작되는지 Network로 전후 시각을 잰다. 정보글은 결국 보인다(데스크톱·좁은 폭).
-9. 운영 로그인을 Cursor가 못 하면 "미확인"으로 적고 멈추지 않는다. 종현이 배포 뒤 운영에서 2·3·7·8을 본다.
+9. G 수락: 비로그인 홈에서 Medium을 받지 않음. 홈 태그라인 「우리동네 공부방과외」, 오른쪽 레일, 바닥글, 로그인·가입 라벨, 마이페이지 탭·왼쪽 메뉴, 찾기 카드, 등록 폼 라벨의 전후 스크린샷(공부방·과외쌤·학생). 레이아웃 밀림·넘침 없음.
+10. H 수락: Network에서 `register.php` `masters`와 `load`가 겹침. 기본정보·상세정보1·상세정보2 열기·저장이 신규(저장 없음)·기존 이용자, 일반·시크릿 모두 정상. 멈춤 없음.
+11. 운영 로그인을 Cursor가 못 하면 "미확인"으로 적고 멈추지 않는다. 종현이 배포 뒤 운영에서 2·3·7·8·9·10을 본다.
 
 ## 예상 이득 (약속 아님, 박스 조사 기준)
 
-- 첫 방문: 엔트리 CSS gzip 약 −17 KB(107.6 → 90.2), 로고 약 −9 KB. 첫 글자·LCP는 큰 변화가 없을 수 있다. 첫 방문의 큰 덩어리는 폰트 약 1 MB와 지도이고, 둘 다 오픈 후 항목이다.
-- 재방문(4시간 뒤): 폰트 약 1 MB를 다시 받지 않는다. 오픈 전에 할 수 있는 것 중 가장 큰 효과다.
-- 공부방상세등록: 정보글 3건(약 700 ms, 지시서 09 조사)이 폼 첫 그림과 같이 나가지 않는다. 폼이 먼저 보이고, 글은 그 뒤에 뜬다.
+- 첫 방문: Medium 빼기 약 −263 KB(폰트 1,052 → 약 789 KB). 엔트리 CSS gzip 약 −17 KB(107.6 → 90.2), 로고 약 −9 KB. 첫 글자·LCP는 CSS·로고만으로는 큰 변화가 없을 수 있으나, Medium을 빼면 첫 방문 내려받는 양이 눈에 띄게 준다.
+- 재방문(4시간 뒤): 남은 Pretendard 3종(약 789 KB)을 다시 받지 않는다(A, 1년 캐시).
+- 공부방상세등록: 정보글 3건(약 700 ms, 지시서 09 조사)이 폼 첫 그림과 같이 나가지 않는다. 폼이 먼저 보이고, 글은 그 뒤에 뜬다. `masters`와 `load`는 겹쳐 나가서, 줄 서서 기다리던 시간만큼 줄어들 수 있다.
 
 ## 되돌리기
 
-커밋별 `git revert`. C는 `vite.config.js`·CSS 파일·import 줄이 한 커밋이라 한 번에 되돌아간다. A는 `.htaccess` 블록 하나. F는 `preview/study-room-ui/src/layout.js` 하나.
+커밋별 `git revert`. C는 `vite.config.js`·CSS 파일·import 줄이 한 커밋이라 한 번에 되돌아간다. A는 `.htaccess` 블록 하나. F는 `preview/study-room-ui/src/layout.js` 하나. G는 `pretendard.css`와 Medium woff2 복구. H는 `preview/study-room-ui/src/main.js`의 해당 사슬만.

@@ -21,7 +21,7 @@
 | 6 | `06-232-233-quickmatch.md` | #232·#233 퀵매칭 소개 | `git revert e3af6dca` 후 `git revert f1242b39` | 없음 | 대기 가능 |
 | 8 | `08-msg-status-opposite-branch.md` | 새 작업(다시 넣기 아님): 쪽지 상태 문구 + 학생 반대 분기 공부방찾기 지역 없음 박스·지도 안내 | 수정 5파일(`c4f673c6` 기준) | — | 오픈 전 |
 | 9 | `09-perf-safe-preopen.md` | 새 작업: 찾기 노출 풀이 목록과 한꺼번에 나가지 않게 + 지도 지오코드 재사용·끊긴 마운트 중단 | 수정 3파일(`c8b90545` 기준) | — | 오픈 전 |
-| 10 | `10-home-first-paint-preopen.md` | 새 작업: 비로그인 홈 첫 화면 가볍게(해시 폰트 1년 캐시, 홍보·유료상품 CSS 조각 분리, 로고 축소, 최근열람 「탐색하기」, 공부방상세등록 정보글은 폼 그린 뒤) + 세션 잠금 확인만 | 수정 약 17파일(`a738c84c` 기준), main.js 0 | — | 오픈 전 |
+| 10 | `10-home-first-paint-preopen.md` | 새 작업: 비로그인 홈 첫 화면 가볍게(해시 폰트 1년 캐시, Pretendard Medium(500) 빼기, 홍보·유료상품 CSS 조각 분리, 로고 축소, 최근열람 「탐색하기」, 공부방상세등록 정보글은 폼 그린 뒤, register.php masters와 load 동시) + 세션 잠금 확인만 | 수정 약 19파일(`a738c84c` 기준), main.js는 study-room-ui H 예외만 | — | 오픈 전 |
 
 순서를 바꾸지 않는다. 02·03·04는 따로 넣지 않고 07 한 문서로 넣는다(알약 기능이 반만 나가지 않게, 11-17 종현 지적). 02·03·04는 원인·위험 설명용 참고로만 남긴다. #228·#229·#230은 같은 파일(`study-room-home-seed.js`, `naver-map.js`)을 이어서 고쳤다. 앞의 것이 없으면 뒤의 revert가 충돌한다.
 
@@ -34,7 +34,7 @@
 6. `…/06-232-233-quickmatch.md 그대로 실행. PR만, 머지 금지.`
 8. `…/08-msg-status-opposite-branch.md 그대로 실행. 허용 파일 밖·main.js·CSS 수정 금지. A·B 커밋 분리. PR만, 머지 금지.`
 9. `…/09-perf-safe-preopen.md 그대로 실행. 허용 파일 밖·main.js·CSS·세션·지도 SDK 지연 로딩 수정 금지. A·B 커밋 분리. PR만, 머지 금지.`
-10. `…/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E·F 커밋 분리, B는 확인만). 허용 파일 밖·모든 main.js·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. 전후 전송량·첫 글자·LCP 표와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교, 공부방상세등록 폼 첫 그림 전후와 정보글 표시 확인 후 PR만, 머지 금지.`
+10. `…/10-home-first-paint-preopen.md 그대로 실행(A·C·D·E·F·G·H 커밋 분리, B는 확인만). 허용 파일 밖·세션·지도 SDK 로딩 시점·capture 클릭 수정 금지. main.js는 home-ui·search-ui·tutor-ui 금지. study-room-ui/src/main.js는 H의 185~188행(register.php masters와 load를 Promise.all로 동시 요청)만 예외이고 그 파일의 다른 줄은 금지. 전후 전송량·첫 글자·LCP 표와 세 모드 일반·시크릿 실클릭, 비로그인 전 페이지 화면 비교, 공부방상세등록 폼 첫 그림 전후와 정보글 표시, G 굵기 화면 비교, H 네트워크 겹침·신규·기존 저장 확인 후 PR만, 머지 금지.`
 
 (…은 `docs/worklog/grok-sync/reapply-2026-11-17`. 문서는 브랜치 `origin/docs/reapply-2026-11-17`에 있다. `git fetch` 후 `git show origin/docs/reapply-2026-11-17:<경로>`로 읽는다.)
 
@@ -42,7 +42,7 @@
 
 1. PR 하나 = 지시서 하나. 머지는 검수 뒤. 한 번에 한 작업.
 2. 문서의 「허용 파일」 밖은 한 줄도 바꾸지 않는다. 포맷 정리·리팩터·주석 손질도 금지.
-3. `preview/home-ui/src/main.js`의 라우팅·capture 클릭 가로채기·hashchange·부트 순서는 어떤 지시서에서도 건드리지 않는다.
+3. `preview/home-ui/src/main.js`의 라우팅·capture 클릭 가로채기·hashchange·부트 순서는 어떤 지시서에서도 건드리지 않는다. 지시서 10 H만 `preview/study-room-ui/src/main.js` 185~188행을 예외로 허용한다. home-ui·search-ui·tutor-ui의 `main.js`와 study-room-ui `main.js`의 다른 줄은 금지다.
 4. 빌드: `npm run build:dothome`. 실패하면 멈추고 보고.
 5. 「Verify bundle」은 main에서 이미 관리자 CSS·과외쌤 카드 항목이 실패 중이다. 그 두 항목 외에 새로 실패하는 항목이 있으면 멈추고 보고.
 6. revert 커밋 메시지는 git 기본값(`Reapply "…"`) 그대로 둔다.
