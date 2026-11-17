@@ -1,0 +1,72 @@
+# 되돌린 PR 다시 넣기 — 순서·명령 (2026-11-17)
+
+기준: `origin/main` `4c1d05d6`(PR #239). #234는 `git revert 19b7a430`로 따로 먼저 들어간다고 본다.
+작성: 우동공과3(검수). 코드 변경 없음. 문서만.
+
+## 확인한 것
+
+- 박스 작업트리에서 아래 순서로 `git revert <revert 커밋>`을 차례로 쌓아 봤다. **8개 모두 충돌 없음.**
+- 다 쌓은 결과는 멈춤 전 상태(`78e53ae6`, #236 직후)와 코드가 같다. 다른 점은 #239의 `main.js` 수정(상세등록 GNB)과 revert 기록 문서뿐이다.
+- 운영 CSP(Cloudflare)에 `t1.kakaocdn.net`이 이미 있다(script·frame·connect). #227의 우편번호 주소 변경은 그대로 써도 된다.
+
+## 순서
+
+| 순서 | 문서 | 대상 | 명령 | 충돌 | 오픈(11-20) |
+|---|---|---|---|---|---|
+| 0 | (별도) | #234 오픈 전 정리 | `git revert 19b7a430` | 없음 | 필수 |
+| 1 | `01-227-biz-about.md` | #227 사업자정보·서비스 소개·푸터 | `git revert a0c93484` | 없음 | **필수 (이니시스 심사)** |
+| 2 | `02-228-pills-map-fixed.md` | #228 알약·지도 + **멈춤 수정** | `git revert 7dfe7c66` + 수정 1곳 | 없음 | 대기 가능 |
+| 3 | `03-229-geocode.md` | #229 지오코딩 시군구 폴백 | `git revert 738fc840` | 없음 | 대기 가능 |
+| 4 | `04-230-promo-tab-memory.md` | #230 알약 탭 기억 | `git revert 815b7ff2` | 없음 | 대기 가능 |
+| 5 | `05-231-plans-bullets.md` | #231 공부방 박스 정렬·유료상품 글머리 | `git revert 3bb8d42b` | 없음 | 대기 가능 |
+| 6 | `06-232-233-quickmatch.md` | #232·#233 퀵매칭 소개 | `git revert e3af6dca` 후 `git revert f1242b39` | 없음 | 대기 가능 |
+
+순서를 바꾸지 않는다. #228·#229·#230은 같은 파일(`study-room-home-seed.js`, `naver-map.js`)을 이어서 고쳤다. 앞의 것이 없으면 뒤의 revert가 충돌한다.
+
+## Cursor 한 줄 명령
+
+1. `origin/main에서 docs/worklog/grok-sync/reapply-2026-11-17/01-227-biz-about.md 그대로 실행. 문서에 없는 파일 수정 금지. PR만, 머지 금지.`
+2. `…/02-228-pills-map-fixed.md 그대로 실행. 수정은 문서의 한 블록만. PR만, 머지 금지.`
+3. `…/03-229-geocode.md 그대로 실행. PR만, 머지 금지.`
+4. `…/04-230-promo-tab-memory.md 그대로 실행. PR만, 머지 금지.`
+5. `…/05-231-plans-bullets.md 그대로 실행. PR만, 머지 금지.`
+6. `…/06-232-233-quickmatch.md 그대로 실행. PR만, 머지 금지.`
+
+(…은 `docs/worklog/grok-sync/reapply-2026-11-17`. 문서는 브랜치 `origin/docs/reapply-2026-11-17`에 있다. `git fetch` 후 `git show origin/docs/reapply-2026-11-17:<경로>`로 읽는다.)
+
+## 모든 지시서 공통 규칙
+
+1. PR 하나 = 지시서 하나. 머지는 검수 뒤. 한 번에 한 작업.
+2. 문서의 「허용 파일」 밖은 한 줄도 바꾸지 않는다. 포맷 정리·리팩터·주석 손질도 금지.
+3. `preview/home-ui/src/main.js`의 라우팅·capture 클릭 가로채기·hashchange·부트 순서는 어떤 지시서에서도 건드리지 않는다.
+4. 빌드: `npm run build:dothome`. 실패하면 멈추고 보고.
+5. 「Verify bundle」은 main에서 이미 관리자 CSS·과외쌤 카드 항목이 실패 중이다. 그 두 항목 외에 새로 실패하는 항목이 있으면 멈추고 보고.
+6. revert 커밋 메시지는 git 기본값(`Reapply "…"`) 그대로 둔다.
+
+## 공통 수락 점검 (로그인 실클릭, 모든 지시서)
+
+주소창 직접 입력이 아니라 **화면의 메뉴를 눌러서** 확인한다. 11-17 상세등록 멈춤은 주소 직접 진입으로는 통과했다.
+
+계정: 공부방 · 과외쌤 · 학생 각 1개(비밀번호는 문서·채팅에 적지 않는다).
+
+1. 각 계정으로 로그인 → 그 계정 GNB에 **보이는 메뉴 전부**를 차례로 누른다: 홈, 공부방찾기, 과외쌤찾기, 학생찾기, 공부방상세등록, 과외쌤상세등록, 유료상품, 커뮤니티, 고객센터.
+   - 역할에 없는 메뉴는 안 보이는 게 정상이다. 학생은 GNB에 유료상품이 없다(SSOT `06-phase1-menu-structure.md` §유료상품: `guardian_student` 숨김).
+2. 홈 → 찾기 → 브라우저 뒤로 → 홈. 각 계정 1회.
+3. 공부방: 홈 → 공부방찾기 → 홈 → 공부방찾기(두 번째 진입은 캐시 경로다. 11-17 멈춤이 여기서 났다).
+4. 과외쌤: 유료상품 → 과외쌤상세등록.
+5. 매 화면에서 멈춤 없음: 3초 안에 화면이 바뀌고, F12가 열리고, 스크롤된다.
+6. 멈춤 계측(권장): 콘솔에 아래를 붙이고 위 1~3을 돈 뒤 `__renderCount`를 본다. 화면 하나당 한 자릿수면 정상. 계속 오르면 실패.
+   ```js
+   (()=>{let n=0;window.__renderCount=0;new MutationObserver(()=>{window.__renderCount=++n}).observe(document.getElementById('app'),{childList:true});})()
+   ```
+   → 화면을 바꾼 뒤 5초 가만히 두고 `__renderCount`를 두 번 읽는다. 두 값이 같아야 한다.
+7. 결과를 PR 본문에 계정별 표로 적는다(통과/실패, 캡처 경로). 비밀번호·토큰은 적지 않는다.
+
+## 되돌리기(공통)
+
+머지 뒤 문제가 생기면 그 PR의 merge 커밋만 `git revert -m 1 <merge>`로 새 PR. force push·reset 금지.
+
+## 검토에서 찾은 위험(요약)
+
+- #228: 캐시 적중 + `viewsAfterList` 경로가 화면을 그릴 때마다 다시 그리기를 예약해서 무한 반복. 직접 읽고 확인했다. 수정안은 02 문서.
+- 아직 main에 있는 #224 `main.js` capture 가로채기: 로그인 뒤에도 `data-action="search"`, 빈 프라임·픽·베이직 카드 안 클릭을 막는다. 90 문서에서 정리.
