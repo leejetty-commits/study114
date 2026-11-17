@@ -1,3 +1,4 @@
+import '../styles/screen/promo-v2.css';
 export { renderPromo, bindPromoEvents } from './shell.js';
 export { getDefaultPromoPath, normalizePromoPath } from './router.js';
 export { PROMO_LANDINGS, listLivePromoLandings } from './catalog.js';

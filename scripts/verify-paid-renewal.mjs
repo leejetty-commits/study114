@@ -31,7 +31,7 @@ const waitlistPhp = read('public/api/paid/waitlist.php');
 const waitlistSvc = read('src/Paid/ProviderWaitlistService.php');
 const ticketSvc = read('src/Paid/ProviderTicketService.php');
 const mypageScreens = read('preview/home-ui/src/mypage/screens.js');
-const css = read('preview/home-ui/src/styles/plans-store.css');
+const css = read('preview/home-ui/src/styles/plans-store.css') + '\n' + read('preview/home-ui/src/styles/screen/plans-store.css');
 
 // --- 라우트 책임 ---
 ok(
