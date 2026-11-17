@@ -41,6 +41,15 @@ function statCell(label, value) {
   return `<span class="my-box__stat"><span class="my-box__stat-label">${label}</span><strong class="my-box__stat-val">${value}</strong></span>`;
 }
 
+/** 쪽지 상태 한 줄. 안 읽은 쪽지(1개 이상)는 받는 중·끔 모두 붙인다. (11-17 종현) */
+function inquiryStatusText(box) {
+  const n = Number(box.unread) > 0 ? Number(box.unread) : 0;
+  const unreadText = n >= 1 ? `안 읽은 쪽지 ${n}개` : '';
+  if (box.inquiry === '안받음') return unreadText ? `쪽지 받지 않음 · ${unreadText}` : '쪽지 받지 않음';
+  if (box.inquiry === '받음') return unreadText ? `쪽지 받는 중 · ${unreadText}` : '쪽지 받는 중';
+  return unreadText || '—';
+}
+
 /** 쪽지설정 탭이 있으면 그 문장을 포함하고, 없으면 쪽지 후기함 안내만 쓴다. */
 function studyRoomInquiryGuide() {
   const hasInquiryMenu = STUDY_ROOM_TOP_TABS.some((tab) => tab.key === 'inquiries' && tab.label === '쪽지설정');
@@ -89,7 +98,7 @@ function renderMyStudyRoomBox() {
         </div>
       </div>
       <div class="my-box__row my-box__row--3 my-box__stats-row">
-        <span class="my-box__stat"><span class="my-box__stat-label">상태</span><strong class="my-box__stat-val" data-study-room-unread>${esc(`쪽지 ${box.inquiry} · ${box.unread}개 미확인`)}</strong></span>
+        <span class="my-box__stat"><span class="my-box__stat-label">상태</span><strong class="my-box__stat-val" data-study-room-unread>${esc(inquiryStatusText(box))}</strong></span>
         <p class="my-box__guide">${esc(studyRoomInquiryGuide())}</p>
       </div>
       <div class="my-box__row my-box__row--4 my-box__stats-row">
@@ -142,7 +151,7 @@ function hookUnreadAfterSnapshot() {
     const el = document.querySelector('[data-study-room-unread]');
     if (!el) return;
     const box = readStudyRoomMemberBox();
-    el.textContent = `쪽지 ${box.inquiry} · ${box.unread}개 미확인`;
+    el.textContent = inquiryStatusText(box);
   });
 }
 
