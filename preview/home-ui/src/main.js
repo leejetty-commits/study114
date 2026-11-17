@@ -57,6 +57,8 @@ import {
   bootstrapPromoRoute,
   isSupportRoute,
   bootstrapSupportRoute,
+  isAboutRoute,
+  bootstrapAboutRoute,
   isPolicyRoute,
   bootstrapPolicyRoute,
   isLibraryRoute,
@@ -109,6 +111,7 @@ const loadGuideScreen = () => import('./guide/index.js');
 const loadConcernScreen = () => import('./concern/index.js');
 const loadPromoScreen = () => import('./promo/index.js');
 const loadSupportScreen = () => import('./support/index.js');
+const loadAboutScreen = () => import('./about.js');
 const loadPolicyScreen = () => import('./policy-index.js');
 const loadLibraryScreen = () => import('./library/index.js');
 const loadRegisterIntroScreen = () => import('./register-intro/index.js');
@@ -314,7 +317,7 @@ function shouldPaintBeforeSession() {
 
 async function renderScreen(generation) {
   // 공개 마이샵·가이드는 미인증 로그인 유저도 열람 가능 (공통 쇼케이스)
-  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute()) {
+  if (isLoggedIn() && !isEmailVerified() && !isGuideRoute() && !isMyshopRoute() && !isAboutRoute()) {
     redirectToEmailVerifyWait();
     return;
   }
@@ -364,6 +367,15 @@ async function renderScreen(generation) {
     if (generation !== renderGeneration) return;
     app.innerHTML = renderLibrary();
     bindLibraryEvents(app, render);
+    mountOpsChrome(app);
+    mountHomePopup(app);
+    return;
+  }
+  if (isAboutRoute()) {
+    const { renderAbout, bindAboutEvents } = await loadRouteModule(app, loadAboutScreen);
+    if (generation !== renderGeneration) return;
+    app.innerHTML = renderAbout();
+    bindAboutEvents(app, render);
     mountOpsChrome(app);
     mountHomePopup(app);
     return;
@@ -512,6 +524,7 @@ function init() {
     bootstrapCommunityRoute();
     bootstrapPromoRoute();
     bootstrapSupportRoute();
+    bootstrapAboutRoute();
     bootstrapPolicyRoute();
     bootstrapLibraryRoute();
     bootstrapAdminRoute();
@@ -548,6 +561,7 @@ function init() {
           path.startsWith('/admin/') ||
           path === '/plans' ||
           path.startsWith('/plans/') ||
+          path === '/about' ||
           path === '/myshop' ||
           path.startsWith('/myshop/');
         if (!deep) {
@@ -741,6 +755,7 @@ function init() {
           isPlansRoute() ||
           isRegisterIntroRoute() ||
           isSupportRoute() ||
+          isAboutRoute() ||
           isGuideRoute() ||
           isMyshopRoute() ||
           isMypageRoute() ||

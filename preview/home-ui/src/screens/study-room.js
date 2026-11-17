@@ -11,7 +11,6 @@ import {
   isProviderHomeSelfTab,
 } from '../provider-home.js';
 import { bindFindSurfaceEvents, refreshActiveResultItems } from '@search-ui/search-find-surface.js';
-import { readStudyRoomProviderHomeBanner } from '@search-ui/search-map.js';
 import { bindGuestListPagination } from '../list-pagination.js';
 import { renderHomeMarketingBanner } from '../home-marketing-banner.js';
 import { bindHomeNewsRow, renderHomeNewsRow } from '../home-news-row.js';
@@ -24,10 +23,7 @@ import {
   bootStudyRoomHome,
   bootStudyRoomStudentDemand,
   readStudyRoomMemberBox,
-  primarySavedRegion,
-  resolveStudyRoomMapQuery,
-  pickOwnStudyRoom,
-  studyRoomSecondaryPromoRegions,
+  studyRoomPromoMapSlots,
 } from '../study-room-home-seed.js';
 
 const BOX = STUDY_ROOM_HOME_BOX_COPY;
@@ -49,23 +45,24 @@ function studyRoomInquiryGuide() {
   return hasInquiryMenu ? BOX.inquiryGuide : BOX.messagesGuide;
 }
 
+function isPrimaryPromoSlot(slot) {
+  return Boolean(slot && (slot.is_primary === true || slot.is_primary === 1 || slot.is_primary === '1'));
+}
+
 function renderStudyRoomRegionPills() {
-  const room = pickOwnStudyRoom();
-  const primary = primarySavedRegion(room);
-  const primaryLabel = String(primary?.region_label || '').trim();
-  const pills = [];
-  if (primaryLabel) pills.push({ label: primaryLabel, primary: true });
-  for (const slot of studyRoomSecondaryPromoRegions(room)) {
-    const label = String(slot.region_label || '').trim();
-    if (label) pills.push({ label, primary: false });
-  }
-  return pills
-    .map(
-      (region) => `
-    <span class="my-box__region-pill${region.primary ? ' is-primary' : ''}">
-      ${esc(region.label)}${region.primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}
-    </span>`,
-    )
+  const slots = studyRoomPromoMapSlots();
+  const stored = previewState.studyRoomFind.studyRoomPromoIndex;
+  const active = Number.isInteger(stored) ? stored : 0;
+  return slots
+    .map((slot, idx) => {
+      const label = String(slot.region_label || '').trim();
+      if (!label) return '';
+      const primary = isPrimaryPromoSlot(slot);
+      const cls = ['my-box__region-pill', primary ? 'is-primary' : '', active === idx ? 'is-active' : '']
+        .filter(Boolean)
+        .join(' ');
+      return `<button type="button" class="${cls}" data-study-room-promo="${idx}" role="tab" aria-selected="${active === idx}">${esc(label)}${primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}</button>`;
+    })
     .join('');
 }
 
@@ -100,36 +97,10 @@ function renderMyStudyRoomBox() {
     </aside>`;
 }
 
-function renderStudyRoomAreaCard() {
-  const state = previewState.studyRoomFind;
-  const mapQuery = resolveStudyRoomMapQuery(state, 'home');
-  const regionLabel = mapQuery.picked ? mapQuery.query : mapQuery.promo_label;
-  const items = Array.isArray(state.activeResultItems) ? state.activeResultItems : [];
-  const status = readStudyRoomProviderHomeBanner({
-    items,
-    regionLabel,
-    lat: null,
-    lng: null,
-    viewerRole: 'study_room',
-  });
-  return `
-    <aside class="my-box my-box--status" aria-label="지역 요약" data-study-room-area-status>
-      <div class="my-box__row my-box__row--1">
-        <strong class="my-box__name">${esc(status.heading)}</strong>
-      </div>
-      <p class="my-box__guide">${esc(status.sub)}</p>
-      <div class="my-box__row my-box__stats-row">
-        <span class="my-box__stat"><span class="my-box__stat-label">공부방</span><strong class="my-box__stat-val">${esc(status.roomCount)}</strong></span>
-      </div>
-      <p class="my-box__guide">${esc(status.hint)}</p>
-    </aside>`;
-}
-
 function renderStudyRoomSelfHero() {
   return `
     <section class="tutor-home-split" aria-label="공부방 홈 현황">
       ${renderMyStudyRoomBox()}
-      ${renderStudyRoomAreaCard()}
     </section>`;
 }
 
@@ -176,8 +147,23 @@ export function bindStudyRoomEvents(root, rerender) {
   hookUnreadAfterSnapshot();
   bindLayoutEvents(root, rerender);
   bindHomeNewsRow(root, { viewer: 'study_room', onRerender: rerender, sourceRoute: 'study_room' });
-  bootStudyRoomHome(rerender);
+  const promoIndex = previewState.studyRoomFind.studyRoomPromoIndex;
+  bootStudyRoomHome(rerender, Number.isInteger(promoIndex) ? { slotIndex: promoIndex } : {});
   bootStudyRoomStudentDemand(rerender);
+
+  root.querySelectorAll('[data-study-room-promo]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const raw = btn.getAttribute('data-study-room-promo') || '';
+      if (!/^\d+$/.test(raw)) return;
+      const idx = Number(raw);
+      const state = previewState.studyRoomFind;
+      if (state.studyRoomPromoIndex === idx) return;
+      state.studyRoomPromoIndex = idx;
+      state.searchExecuted = false;
+      bootStudyRoomHome(rerender, { slotIndex: idx });
+      rerender();
+    });
+  });
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'study_room',
