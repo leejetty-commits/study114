@@ -950,6 +950,15 @@ final class StudyRoomRegisterService
     {
         $this->ensureCareerTrustColumns($pdo);
 
+        $careerYears = $this->optionalInt($input, 'career_years');
+        $academyYears = $this->optionalInt($input, 'academy_career_years');
+        if ($careerYears !== null && $careerYears < 1) {
+            throw new InvalidArgumentException('교습경력은 1 이상 입력해 주세요.');
+        }
+        if ($academyYears !== null && $academyYears < 1) {
+            throw new InvalidArgumentException('학원경력은 1 이상 입력해 주세요.');
+        }
+
         $stmt = $pdo->prepare(
 
             'UPDATE study_rooms SET
@@ -986,9 +995,9 @@ final class StudyRoomRegisterService
 
         $stmt->execute([
 
-            $this->optionalInt($input, 'career_years'),
+            $careerYears,
 
-            $this->optionalInt($input, 'academy_career_years'),
+            $academyYears,
 
             $this->clipOptionalString($input, 'university_name', 100),
 
@@ -1097,6 +1106,94 @@ final class StudyRoomRegisterService
         }
 
 
+
+        $kept = [];
+        foreach (array_values($slots) as $idx => $slot) {
+            if ($idx > 2 || !is_array($slot)) {
+                continue;
+            }
+            $regionId = isset($slot['region_id']) && $slot['region_id'] !== '' ? (int) $slot['region_id'] : 0;
+            $complexId = isset($slot['complex_id']) && $slot['complex_id'] !== '' ? (int) $slot['complex_id'] : 0;
+            $basis = isset($slot['region_basis_type']) && in_array($slot['region_basis_type'], ['dong', 'complex'], true)
+                ? $slot['region_basis_type']
+                : ($complexId > 0 ? 'complex' : 'dong');
+            if ($basis === 'complex') {
+                if ($complexId > 0) {
+                    $kept['c:' . $complexId] = true;
+                }
+            } elseif ($regionId > 0) {
+                $kept['d:' . $regionId] = true;
+            }
+        }
+
+        $existingStmt = $pdo->prepare(
+            'SELECT slot, region_id, complex_id, region_basis_type
+             FROM study_room_regions
+             WHERE study_room_id = ? AND slot IN (2, 3)'
+        );
+        $existingStmt->execute([$roomId]);
+        $existingRows = $existingStmt->fetchAll(PDO::FETCH_ASSOC);
+        $subStmt = $pdo->prepare(
+            "SELECT 1 FROM provider_position_subscriptions
+             WHERE provider_type = 'study_room' AND provider_id = ?
+               AND sku_code IN ('prime', 'pick')
+               AND CURDATE() < end_exclusive_on
+               AND (
+                 (? = 'complex' AND complex_id = ?)
+                 OR (? <> 'complex' AND region_id = ? AND (complex_id IS NULL OR complex_id = 0))
+               )
+             LIMIT 1"
+        );
+        $hitSub = false;
+        $hitWait = false;
+        foreach (is_array($existingRows) ? $existingRows : [] as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $complexId = isset($row['complex_id']) ? (int) $row['complex_id'] : 0;
+            $regionId = isset($row['region_id']) ? (int) $row['region_id'] : 0;
+            $basis = (($row['region_basis_type'] ?? '') === 'complex' || $complexId > 0) ? 'complex' : 'dong';
+            if ($basis === 'complex') {
+                if ($complexId <= 0 || isset($kept['c:' . $complexId])) {
+                    continue;
+                }
+            } elseif ($regionId <= 0 || isset($kept['d:' . $regionId])) {
+                continue;
+            }
+            $subStmt->execute([$roomId, $basis, $complexId, $basis, $regionId]);
+            if ($subStmt->fetchColumn()) {
+                $hitSub = true;
+                continue;
+            }
+            try {
+                $waitStmt = $pdo->prepare(
+                    "SELECT 1 FROM study_room_exposure_waitlists
+                     WHERE study_room_id = ?
+                       AND exposure_type = 'prime'
+                       AND payment_status IN ('registered', 'notified')
+                       AND (
+                         (? = 'complex' AND complex_id = ?)
+                         OR (? <> 'complex' AND region_id = ? AND (complex_id IS NULL OR complex_id = 0))
+                       )
+                     LIMIT 1"
+                );
+                $waitStmt->execute([$roomId, $basis, $complexId, $basis, $regionId]);
+                if ($waitStmt->fetchColumn()) {
+                    $hitWait = true;
+                }
+            } catch (PDOException $e) {
+                $state = (string) ($e->errorInfo[0] ?? '');
+                if ($state !== '42S02') {
+                    throw $e;
+                }
+            }
+        }
+        if ($hitSub) {
+            throw new InvalidArgumentException('이 홍보지역에는 이용 중인 프라임 또는 픽이 있어 지울 수 없습니다. 기간이 끝난 뒤에 지울 수 있습니다.');
+        }
+        if ($hitWait) {
+            throw new InvalidArgumentException('이 홍보지역에는 프라임 예약대기가 있어 지울 수 없습니다. 대기를 취소한 뒤에 지울 수 있습니다.');
+        }
 
         $pdo->prepare('DELETE FROM study_room_regions WHERE study_room_id = ?')->execute([$roomId]);
 
