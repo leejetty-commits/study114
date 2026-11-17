@@ -184,8 +184,7 @@ function init() {
 
   const mastersReady = loadMasters();
   initChromeSession()
-    .then(() => mastersReady)
-    .then(() => loadSavedRoom())
+    .then(() => Promise.all([mastersReady, loadSavedRoom()]))
     .then(() => {
       presentLoginWelcome(getChromeUser()?.name, isChromeLoggedIn());
       chromeReady = true;
