@@ -149,11 +149,35 @@ ok('cards_same_ids', emptyPool.ids === filledPool.ids && emptyPool.ids === '11,1
 ok('cards_same_tiers', emptyPool.tiers === filledPool.tiers && emptyPool.tiers === 'basic,pick,prime', emptyPool.tiers);
 bridge.resetExposureBridge();
 
+function setPlace(pathname, hash) {
+  globalThis.location.pathname = pathname;
+  globalThis.location.hash = hash;
+  globalThis.location.href = `http://127.0.0.1:5176${pathname}${hash}`;
+}
+
+setPlace('/', '#/study-room');
 await freshMember();
 await auth.initAuthSession(false);
+await new Promise((r) => setTimeout(r, 0));
 ok('before_member_count_3', searches.length === 3, String(searches.length));
 ok('before_member_parallel_3', maxInFlight === 3, String(maxInFlight));
 console.log(`COUNT before member simultaneous ${maxInFlight} total ${searches.length}`);
+await new Promise((r) => setTimeout(r, 50));
+
+setPlace('/', '#/search/room');
+await freshMember();
+await auth.initAuthSession(false);
+ok('find_immediate_0', searches.length === 0, String(searches.length));
+await new Promise((r) => setTimeout(r, 500));
+ok('find_idle_count_3', searches.length === 3, String(searches.length));
+ok('find_idle_not_parallel', maxInFlight === 1, String(maxInFlight));
+ok(
+  'find_idle_bodies',
+  searches.map((s) => `${s.tab}:${s.limit}:${s.sort}:${s.page}:${JSON.stringify(s.filters)}`).join('|') ===
+    'room:3:latest:1:{}|tutor:2:latest:1:{}|student:2:latest:1:{}',
+  searches.map((s) => `${s.tab}:${s.limit}`).join(','),
+);
+console.log(`COUNT find idle max ${maxInFlight} total ${searches.length}`);
 
 await freshMember();
 await auth.initAuthSession(false, { deferExposurePool: true });

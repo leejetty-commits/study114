@@ -16,6 +16,16 @@ import { studentSearchCardFields, studyRoomSearchCardFields, tutorSearchCardFiel
 export const REAL_DB_CAP = { study_room: 3, tutor: 2, student: 2 };
 
 let bridged = false;
+let fillState = 'idle';
+
+function isFindSpa() {
+  const loc = typeof window !== 'undefined' ? window.location : undefined;
+  if (!loc) return false;
+  const path = String(loc.pathname || '');
+  if (path.startsWith('/search')) return true;
+  const hashPath = String(loc.hash || '').replace(/^#/, '').split('?')[0];
+  return hashPath === '/search' || hashPath.startsWith('/search/');
+}
 
 /** @param {object} item */
 function mapRoomItem(item) {
@@ -97,12 +107,29 @@ export function isExposureBridged() {
 }
 
 /**
- * 로그인 노출 풀. 기본은 세 탭을 동시에 받는다.
- * sequential 은 공부방찾기 첫 진입만: 목록 요청 뒤에 한 탭씩 받는다.
+ * 로그인 노출 풀. 홈은 세 탭을 동시에 받는다.
+ * 찾기 SPA에서 sequential 없이 부르면 바로 돌아오고, 쉬는 뒤에 한 탭씩 보낸다.
+ * sequential 은 그 자리에서 한 탭씩 받고 끝날 때까지 기다린다.
  * @param {{ sequential?: boolean }} [opts]
  */
 export async function hydrateExposureBridge(opts = {}) {
   if (!isLoggedIn() || bridged) return;
+  if (opts.sequential !== true && isFindSpa()) {
+    if (fillState !== 'idle') return;
+    fillState = 'scheduled';
+    const run = () => {
+      if (fillState !== 'scheduled') return;
+      hydrateExposureBridge({ sequential: true }).catch((err) => {
+        console.warn('[exposure-bridge]', err);
+      });
+    };
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 200 });
+    else setTimeout(run, 0);
+    return;
+  }
+  if (fillState === 'running') return;
+  if (fillState === 'scheduled' && opts.sequential !== true) return;
+  fillState = 'running';
   try {
     const loads = [
       () => searchPreviewTab('room', REAL_DB_CAP.study_room),
@@ -124,11 +151,14 @@ export async function hydrateExposureBridge(opts = {}) {
     bridged = true;
   } catch (err) {
     console.warn('[exposure-bridge]', err);
+  } finally {
+    fillState = 'idle';
   }
 }
 
 export function resetExposureBridge() {
   bridged = false;
+  fillState = 'idle';
   EXPOSURE_STUDY_ROOMS.length = 0;
   EXPOSURE_TUTORS.length = 0;
   EXPOSURE_STUDENTS.length = 0;
