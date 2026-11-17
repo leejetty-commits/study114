@@ -178,7 +178,7 @@ export function renderRegisterShell(content, options = {}) {
         <div class="home-main">
           ${renderRegisterCardInner(content, { stepKey, title, subtitle, headingActions })}
         </div>
-        ${showPromo ? renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: HOME_UI_BASE }) : ''}
+        ${showPromo ? renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: HOME_UI_BASE, deferRailFetch: true }) : ''}
       </div>
       ${renderSiteFooter({ linkMode: 'absolute', homeBase: HOME_UI_BASE })}
     </div>
@@ -248,6 +248,21 @@ export async function skipDetailRegistration() {
   window.location.assign(mypageRegistrationsUrl());
 }
 
+function replaceRegisterRightRail(root) {
+  if (!root || typeof root.querySelector !== 'function') return false;
+  const current = root.querySelector('[data-right-rail-slot="register_right_rail"]');
+  if (!current || typeof current.replaceWith !== 'function') return false;
+  const doc = current.ownerDocument;
+  if (!doc || typeof doc.createElement !== 'function') return false;
+  const tpl = doc.createElement('template');
+  tpl.innerHTML = renderRegisterRightRail({ navRole: getChromeNavRole(), homeBase: HOME_UI_BASE }).trim();
+  const next = tpl.content && tpl.content.firstElementChild;
+  if (!next) return false;
+  current.replaceWith(next);
+  bindRightRailEvents(next);
+  return true;
+}
+
 export function bindGlobalEvents(root) {
   root.querySelectorAll('[data-nav]').forEach((el) => {
     el.addEventListener('click', (e) => {
@@ -265,6 +280,12 @@ export function bindGlobalEvents(root) {
   ensureSiteHeaderOffsetListeners();
   syncSiteHeaderOffset(root);
   requestAnimationFrame(() => syncSiteHeaderOffset(root));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      if (!root.isConnected) return;
+      replaceRegisterRightRail(root);
+    });
+  });
 }
 
 export function bindFormNav(root, prevPath, nextPath) {
