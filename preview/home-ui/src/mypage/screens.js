@@ -1073,10 +1073,10 @@ function renderAccount(role, profile) {
       <header class="account-settings__hero">
         <p class="account-settings__eyebrow">사이트에 보이는 이름</p>
         <h2 class="account-settings__name" data-display-name-current>${displayShown}</h2>
-        <p class="account-settings__lead">표시명·집주소·로그인·보안을 한곳에서 관리합니다.</p>
+        <p class="account-settings__lead">계정 이름·집주소·로그인·보안을 한곳에서 관리합니다.</p>
         ${
           justSaved
-            ? '<p class="account-settings__toast" role="status">사이트 표시명이 저장되었습니다.</p>'
+            ? '<p class="account-settings__toast" role="status">내 계정 이름이 저장되었습니다.</p>'
             : ''
         }
       </header>
@@ -1089,21 +1089,22 @@ function renderAccount(role, profile) {
         <div class="account-card__body">
           <div class="account-identity" data-display-name-summary>
             <div class="account-identity__row">
-              <span class="account-identity__label">사이트 표시명</span>
+              <span class="account-identity__label">내 계정 이름</span>
               <strong class="account-identity__value" data-display-name-current>${displayShown}</strong>
             </div>
-            <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-display-name">표시명 수정</button>
+            <button type="button" class="btn btn--secondary btn--sm" data-action="toggle-display-name">이름 수정</button>
           </div>
           <div class="account-identity-edit" data-display-name-edit hidden>
             <form data-form="change-display-name" class="account-form" autocomplete="off">
               <div class="form-group">
-                <label class="form-label form-label--required" for="mypage-display-name">사이트 표시명</label>
+                <label class="form-label form-label--required" for="mypage-display-name">내 계정 이름</label>
                 <input class="form-input" type="text" id="mypage-display-name" name="display_name" maxlength="50" required value="${displayValue}" />
                 <p class="form-hint">예: 카카오 과외쌤, 종현 과외쌤 — 2~50자 · 이메일 형태 불가</p>
+                <p class="form-hint">상단 「로그인: ○○○」 표시와 인사말에만 보여요. 공부방명·과외쌤 이름은 등록 정보에서 바꿔요.</p>
               </div>
               <p class="form-error" data-display-name-error hidden role="alert"></p>
               <div class="account-form__actions">
-                <button type="submit" class="btn btn--primary btn--sm">표시명 저장</button>
+                <button type="submit" class="btn btn--primary btn--sm">이름 저장</button>
                 <button type="button" class="btn btn--ghost btn--sm" data-action="cancel-display-name">취소</button>
               </div>
             </form>
@@ -1388,7 +1389,7 @@ function bindPasswordChangeEvents(root) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        throw new Error(data.message || `변경 실패 (HTTP ${res.status})`);
+        throw new Error(data.message || '비밀번호를 변경하지 못했습니다. 규칙을 확인해 주세요.');
       }
       form.reset();
       if (successEl) {
@@ -1645,7 +1646,7 @@ function bindDisplayNameEvents(root, rerender) {
     if (displayName.length < 2) {
       if (errorEl) {
         errorEl.hidden = false;
-        errorEl.textContent = '사이트 표시명은 2자 이상이어야 합니다.';
+        errorEl.textContent = '내 계정 이름은 2자 이상이어야 합니다.';
       }
       return;
     }
@@ -1665,7 +1666,7 @@ function bindDisplayNameEvents(root, rerender) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
-        throw new Error(data.message || `저장 실패 (HTTP ${res.status})`);
+        throw new Error(data.message || '이름을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.');
       }
       try {
         sessionStorage.setItem('study114.displayName.justSaved', '1');
@@ -1683,7 +1684,7 @@ function bindDisplayNameEvents(root, rerender) {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = '표시명 저장';
+        submitBtn.textContent = '이름 저장';
       }
     }
   });

@@ -110,11 +110,11 @@ export function renderFacilityFormHtml(opts = {}) {
       <div class="register-grid-3">
         <div class="form-group">
           <label class="form-label" for="career_years">교습경력 (년)</label>
-          <input class="form-input" type="number" id="career_years" name="career_years" value="${esc(s.career_years)}" />
+          <input class="form-input" type="number" id="career_years" name="career_years" min="1" step="1" value="${esc(s.career_years)}" />
         </div>
         <div class="form-group">
           <label class="form-label" for="academy_career_years">학원경력 (년)</label>
-          <input class="form-input" type="number" id="academy_career_years" name="academy_career_years" value="${esc(s.academy_career_years)}" />
+          <input class="form-input" type="number" id="academy_career_years" name="academy_career_years" min="1" step="1" value="${esc(s.academy_career_years)}" />
         </div>
         <div class="register-grid-3__spacer" aria-hidden="true"></div>
       </div>

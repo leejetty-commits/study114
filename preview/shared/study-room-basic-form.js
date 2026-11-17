@@ -42,6 +42,11 @@ import { complexNameFromKakao } from './complex-name-from-kakao.js';
 import { renderMainSubjectSelect } from './main-subjects.js';
 import { refreshInputFill } from './input-fill.js';
 import { s114Alert } from './confirm-dialog.js';
+import { fetchPaidStatus } from '../home-ui/src/paid-api.js';
+
+const PROMO_SUB_BLOCK =
+  '이 홍보지역에는 이용 중인 프라임 또는 픽이 있어 지울 수 없습니다. 기간이 끝난 뒤에 지울 수 있습니다.';
+const PROMO_CHECK_FAIL = '지금 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.';
 
 function esc(s) {
   return String(s ?? '')
@@ -173,6 +178,7 @@ function renderPromoSlot(slot, idx, opts = {}) {
       <div class="register-region-slot__toolbar">
         <strong>${esc(heading)}</strong>
         ${req && !hope ? '<span class="register-region-slot__primary-mark">대표지역</span>' : ''}
+        ${idx > 0 && !hope && slotFilled(slot) ? '<button type="button" class="btn btn--ghost btn--sm" data-action="clear-promo-slot">지우기</button>' : ''}
       </div>
       <div class="chip-group register-region-slot__basis" data-slot-basis-group>
         <label class="chip">
@@ -244,6 +250,7 @@ function renderPromoSlot(slot, idx, opts = {}) {
           : '',
       )}</p>
       ${idx === 0 && !hope ? '<p class="form-hint form-hint--accent" data-promo1-mismatch hidden></p>' : ''}
+      ${idx > 0 && !hope ? '<p class="form-error" data-promo-clear-error hidden role="alert"></p>' : ''}
     </div>`;
 }
 
@@ -289,6 +296,7 @@ export function renderStudyRoomBasicFields(opts = {}) {
 
   return `
     <div class="register-basic-fields" data-study-room-basic-form>
+      <p class="form-error" data-basic-save-error hidden role="alert"></p>
       <div class="form-group">
         <span class="form-label form-label--required">교습형태</span>
         <p class="form-hint">공부방과 교습소 중 하나를 고르세요</p>
@@ -561,6 +569,126 @@ function slotBasisOf(slotEl) {
   return slotEl.querySelector('input[name^="slot_basis_"]:checked')?.value || 'dong';
 }
 
+function studyRoomIdForPaid() {
+  try {
+    const n = Number(sessionStorage.getItem('study114_study_room_id'));
+    if (Number.isFinite(n) && n > 0) return n;
+  } catch {
+    /* 세션을 못 읽으면 구독이 없는 신규 등록으로 본다 */
+  }
+  return 0;
+}
+
+function positionMatchesSlot(pos, slot, roomId) {
+  if (!pos || typeof pos !== 'object') return false;
+  const sku = String(pos.sku || '');
+  if (sku !== 'prime' && sku !== 'pick') return false;
+  if (String(pos.provider_type || '') !== 'study_room') return false;
+  if (String(pos.provider_id || '') !== String(roomId)) return false;
+  if (slot.basis === 'complex') {
+    const cid = String(slot.complexId || '').trim();
+    if (!cid || cid === '0') return false;
+    return String(pos.complex_id ?? '') === cid;
+  }
+  const rid = String(slot.regionId || '').trim();
+  if (!rid || rid === '0') return false;
+  const posBasis = String(pos.region_basis_type || '');
+  const posComplex = String(pos.complex_id ?? '').trim();
+  if (posBasis === 'complex' || (posComplex !== '' && posComplex !== '0')) return false;
+  return String(pos.region_id ?? '') === rid;
+}
+
+async function promoSlotClearBlocked(slotEl) {
+  const roomId = studyRoomIdForPaid();
+  if (!roomId) return '';
+  let status;
+  try {
+    status = await fetchPaidStatus(7, { providerType: 'study_room', providerId: roomId });
+  } catch {
+    return PROMO_CHECK_FAIL;
+  }
+  const positions = status?.exposure?.positions;
+  if (!Array.isArray(positions)) return PROMO_CHECK_FAIL;
+  const slot = {
+    basis: slotBasisOf(slotEl),
+    regionId: slotEl.querySelector('[data-field="region_id"]')?.value || '',
+    complexId: slotEl.querySelector('[data-field="complex_id"]')?.value || '',
+  };
+  return positions.some((pos) => positionMatchesSlot(pos, slot, roomId)) ? PROMO_SUB_BLOCK : '';
+}
+
+function showPromoClearError(slotEl, message) {
+  const err = slotEl.querySelector('[data-promo-clear-error]');
+  if (!err) return;
+  err.hidden = false;
+  err.textContent = message;
+}
+
+function clearPromoSlot(slotEl) {
+  slotEl.querySelectorAll('[data-field]').forEach((el) => {
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+    el.value = el.getAttribute('data-field') === 'region_basis_type' ? 'dong' : '';
+  });
+  const dong = slotEl.querySelector('input[name^="slot_basis_"][value="dong"]');
+  if (dong instanceof HTMLInputElement) dong.checked = true;
+  syncSlotSearchPanels(slotEl);
+  const resolved = slotEl.querySelector('[data-slot-resolved]');
+  if (resolved) resolved.textContent = '';
+  const err = slotEl.querySelector('[data-promo-clear-error]');
+  if (err) {
+    err.hidden = true;
+    err.textContent = '';
+  }
+  const btn = slotEl.querySelector('[data-action="clear-promo-slot"]');
+  if (btn instanceof HTMLElement) btn.hidden = true;
+  refreshInputFill(slotEl);
+}
+
+function basicFormIsShown(el) {
+  let node = el.parentElement;
+  while (node) {
+    if (node.hidden) return false;
+    node = node.parentElement;
+  }
+  return true;
+}
+
+let registerSaveHooked = false;
+
+function hookRegisterSaveError() {
+  if (registerSaveHooked || typeof window === 'undefined' || typeof window.fetch !== 'function') return;
+  registerSaveHooked = true;
+  const orig = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    const res = await orig(input, init);
+    try {
+      const url = typeof input === 'string' ? input : input instanceof Request ? input.url : '';
+      if (!String(url).includes('/api/study-room/register.php')) return res;
+      const method = String((init && init.method) || (input instanceof Request ? input.method : 'GET')).toUpperCase();
+      if (method !== 'POST') return res;
+      const raw = init && typeof init.body === 'string' ? init.body : '';
+      if (!/"step"\s*:\s*"(basic|basic_all|location)"/.test(raw)) return res;
+      const data = await res.clone().json().catch(() => null);
+      if (data && data.ok === false && data.message) {
+        const message = String(data.message);
+        document.querySelectorAll('[data-basic-save-error]').forEach((el) => {
+          if (!basicFormIsShown(el)) return;
+          el.hidden = false;
+          el.textContent = message;
+        });
+      } else if (data && data.ok === true) {
+        document.querySelectorAll('[data-basic-save-error]').forEach((el) => {
+          el.hidden = true;
+          el.textContent = '';
+        });
+      }
+    } catch {
+      /* 문구 표시 실패는 저장 결과를 바꾸지 않는다 */
+    }
+    return res;
+  };
+}
+
 const PROMO1_MISMATCH_COPY =
   '수업은 개설주소에서만 진행됩니다. 지금 바꾼 건 홍보·찾기 대표 지역입니다.';
 
@@ -653,6 +781,7 @@ function fillPromo1FromOpening(form, result, region) {
  * @param {{ regions?: Array<{id:number,label:string}>, getRegions?: () => Array<{id:number,label:string}>, onRegion?: (region: object) => void }} opts
  */
 export function bindStudyRoomBasicFields(root, opts = {}) {
+  hookRegisterSaveError();
   const form = root.matches?.('[data-study-room-basic-form]')
     ? root
     : root.querySelector('[data-study-room-basic-form]') || root;
@@ -718,6 +847,26 @@ export function bindStudyRoomBasicFields(root, opts = {}) {
         await search(btn.getAttribute('data-address-search') || '');
       } catch (err) {
         void s114Alert(err instanceof Error ? err.message : '주소 검색을 열 수 없습니다.');
+      }
+    });
+  });
+
+  form.querySelectorAll('[data-action="clear-promo-slot"]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const slotEl = btn.closest('[data-region-slot]');
+      if (!slotEl) return;
+      const idx = Number(slotEl.getAttribute('data-region-slot'));
+      if (idx !== 1 && idx !== 2) return;
+      if (btn instanceof HTMLButtonElement) btn.disabled = true;
+      try {
+        const blocked = await promoSlotClearBlocked(slotEl);
+        if (blocked) {
+          showPromoClearError(slotEl, blocked);
+          return;
+        }
+        clearPromoSlot(slotEl);
+      } finally {
+        if (btn instanceof HTMLButtonElement && !btn.hidden) btn.disabled = false;
       }
     });
   });
