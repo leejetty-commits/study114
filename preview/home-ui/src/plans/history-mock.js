@@ -9,6 +9,7 @@ import {
   UNKNOWN_PAYMENT_METHOD_LABEL,
   UNKNOWN_PRODUCT_LABEL,
 } from '../mypage/mypage-copy.js';
+import { isTestAccountUser } from '../auth-session.js';
 
 const STORAGE_KEY = 'study114-plans-history-mock';
 
@@ -103,6 +104,7 @@ function normalizeStatus(status) {
 
 /** @param {string} method */
 export function paymentMethodLabel(method) {
+  if (method === 'portone_test' && !isTestAccountUser()) return PAYMENT_METHOD_LABELS.card;
   return PAYMENT_METHOD_LABELS[method] || UNKNOWN_PAYMENT_METHOD_LABEL;
 }
 

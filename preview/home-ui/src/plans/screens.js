@@ -24,6 +24,7 @@ import {
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
+import { isTestAccountUser } from '../auth-session.js';
 import {
   getCatalogByFamily,
   getProductConfig,
@@ -454,6 +455,7 @@ function renderAccessCard(product, profile, role, remaining = {}, opts = {}) {
 }
 
 function renderTestModeToggle() {
+  if (!isTestAccountUser()) return '';
   const on = isPlansTestMode();
   return `
     <label class="plans-test-mode">
