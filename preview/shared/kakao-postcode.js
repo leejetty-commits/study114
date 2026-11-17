@@ -1,12 +1,12 @@
 import { s114Alert } from './confirm-dialog.js';
 /**
  * 카카오(Daum) 우편번호 — 주소 자동완성 · 지번→도로명 매핑
- * Key 불필요 · https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js
+ * Key 불필요 · https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js
  *
  * 페이지 안 레이어는 검색 입력 때 줄어드는 문제가 있어, OS 팝업으로 연다.
  */
 
-const SCRIPT_SRC = 'https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
+const SCRIPT_SRC = 'https://t1.kakaocdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js';
 
 /** @type {Promise<void>|null} */
 let loadPromise = null;

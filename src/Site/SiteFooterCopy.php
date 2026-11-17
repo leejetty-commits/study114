@@ -14,6 +14,9 @@ final class SiteFooterCopy
 
     public const COPYRIGHT = '© 2026 우동공과 · study114';
 
+    /** 공정거래위원회 사업자정보 확인. 사업자번호 471-29-01819. */
+    public const BIZ_CHECK_URL = 'https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819';
+
     /**
      * @return array{
      *   name: string,
@@ -47,8 +50,9 @@ final class SiteFooterCopy
             ['href' => '/#/support/policies/terms', 'label' => '이용약관'],
             ['href' => '/#/support/policies/privacy', 'label' => '개인정보 처리방침', 'strong' => true],
             ['href' => '/#/support/policies/platform', 'label' => '플랫폼 고지'],
-            ['href' => '/#/plans/positions', 'label' => '요금 안내'],
+            ['href' => '/#/plans/positions', 'label' => '유료상품'],
             ['href' => '/#/plans', 'label' => '환불정책'],
+            ['href' => '/#/about', 'label' => '서비스 소개'],
             ['href' => '/#/support', 'label' => '고객센터'],
         ];
     }

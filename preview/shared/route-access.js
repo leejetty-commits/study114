@@ -236,6 +236,7 @@ export function isGuestPublicPath(pathOrHash) {
   if (!p.startsWith('/')) p = `/${p}`;
 
   if (p === '/' || p === '/guest') return true;
+  if (p === '/about') return true;
   if (p.startsWith('/support')) return true;
   if (p === '/library/guides' || p.startsWith('/library/guides/')) return true;
   if (p.startsWith('/library')) return false;
