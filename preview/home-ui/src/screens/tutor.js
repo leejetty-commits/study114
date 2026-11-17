@@ -26,6 +26,9 @@ import {
   bootTutorHomeTutors,
   readTutorMemberBox,
   readTutorHomeRegions,
+  readTutorHomePromoIndex,
+  writeTutorHomePromoIndex,
+  tutorHomePrimaryIndex,
 } from '../tutor-home-seed.js';
 import { getDefaultMypagePath } from '../mypage/router.js';
 
@@ -48,14 +51,21 @@ function renderTutorRegionPills() {
   const loaded = readTutorHomeRegions();
   const regions = Array.isArray(loaded) ? loaded.slice(0, 3) : [];
   while (regions.length < 3) regions.push({ label: '', primary: false });
+  const active = readTutorHomePromoIndex() ?? tutorHomePrimaryIndex();
   return regions
-    .map((region) => {
+    .map((region, idx) => {
       const label = region.label || (loaded ? '미선택' : '…');
       const primary = !!region.primary && !!region.label;
-      return `
-    <span class="my-box__region-pill${primary ? ' is-primary' : ''}">
-      ${escTutor(label)}${primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}
+      if (!region.label) {
+        return `
+    <span class="my-box__region-pill">
+      ${escTutor(label)}
     </span>`;
+      }
+      const cls = ['my-box__region-pill', primary ? 'is-primary' : '', active === idx ? 'is-active' : '']
+        .filter(Boolean)
+        .join(' ');
+      return `<button type="button" class="${cls}" data-tutor-home-promo="${idx}" role="tab" aria-selected="${active === idx}">${escTutor(region.label)}${primary ? '<span class="tutor-region-tabs__primary">대표</span>' : ''}</button>`;
     })
     .join('');
 }
@@ -145,6 +155,8 @@ function renderTutorSelfHero() {
 }
 
 export function renderTutor() {
+  const savedPromo = readTutorHomePromoIndex();
+  if (savedPromo != null) previewState.tutorFind.tutorStudentRegionIndex = savedPromo;
   const tab = previewState.tutorTab;
   const showMyBox = isProviderHomeSelfTab('tutor', tab);
 
@@ -172,8 +184,25 @@ export function bindTutorEvents(root, rerender) {
   if (previewState.tutorTab === 'student') {
     bootTutorStudentDemand(resolveTutorStudentRegionIndex(previewState.tutorFind), rerender);
   } else {
-    bootTutorHomeTutors(rerender);
+    const slotIndex = readTutorHomePromoIndex();
+    if (slotIndex != null) bootTutorHomeTutors(rerender, { slotIndex });
+    else bootTutorHomeTutors(rerender);
   }
+
+  root.querySelectorAll('[data-tutor-home-promo]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const raw = btn.getAttribute('data-tutor-home-promo') || '';
+      if (!/^\d+$/.test(raw)) return;
+      const idx = Number(raw);
+      const current = readTutorHomePromoIndex() ?? tutorHomePrimaryIndex();
+      if (current === idx) return;
+      writeTutorHomePromoIndex(idx);
+      previewState.tutorFind.tutorStudentRegionIndex = idx;
+      previewState.tutorFind.searchExecuted = false;
+      bootTutorHomeTutors(rerender, { slotIndex: idx });
+      rerender();
+    });
+  });
 
   bindProviderHomeTabEvents(root, rerender, {
     role: 'tutor',

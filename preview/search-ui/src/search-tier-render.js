@@ -25,10 +25,10 @@ import {
   renderListSortSelect,
   sortListItems,
 } from '../../shared/list-sort.js';
-import { tutorHomePrimaryLabel } from '@home-ui/tutor-home-seed.js';
+import { tutorHomePrimaryLabel, tutorHomeSelectedLabel } from '@home-ui/tutor-home-seed.js';
 
 function tutorPrimaryRegionLabel() {
-  return tutorHomePrimaryLabel();
+  return tutorHomeSelectedLabel() || tutorHomePrimaryLabel();
 }
 
 /**
