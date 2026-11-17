@@ -6,6 +6,7 @@
 import { registerState, apiMasters, isTutorBasicComplete } from '@tutor-ui/state.js';
 import { fetchMasters, loadTutor } from '@tutor-ui/register-api.js';
 import { s114Alert } from '../../../shared/confirm-dialog.js';
+import { showP24Toast } from '../detail-decision/detail-utils.js';
 import {
   applyTutorToState,
   syncLessonFromForm,
@@ -117,14 +118,14 @@ function detailFormsHtml(tutor, section) {
     ${renderReturnBanner(tutor.id)}
     <div class="mp-room-embed register-flow" data-embed-section="${detail2 ? 'detail2' : 'detail'}" data-embed-tutor-id="${tutor.id || 0}">
       ${form}
-      <div class="register-embed-actions">
+      <div class="register-embed-actions tde-actionbar">
         <button type="button" class="btn btn--secondary" data-action="cancel-detail">취소</button>
-        <button type="button" class="btn btn--secondary" data-action="save-detail">저장</button>
+        <button type="button" class="btn btn--primary" data-action="save-detail">저장</button>
       </div>
-      <div class="register-embed-actions">
-        <a class="btn btn--secondary" href="#${esc(publish)}" data-p21-nav="${esc(publish)}">등록점검</a>
-        <a class="btn btn--secondary" href="#${esc(hub)}" data-p21-nav="${esc(hub)}">마이프로필</a>
-      </div>
+      <nav class="tde-links" aria-label="등록 바로가기">
+        <a class="tde-link" href="#${esc(publish)}" data-p21-nav="${esc(publish)}">등록점검</a>
+        <a class="tde-link" href="#${esc(hub)}" data-p21-nav="${esc(hub)}">마이프로필</a>
+      </nav>
     </div>`;
 }
 
@@ -244,12 +245,12 @@ export function bindEmbeddedTutorDetail(root, rerender) {
           /* 저장은 끝났고 목록 캐시만 실패 */
         }
       }
-      await s114Alert('저장되었습니다.');
       if (isReturnToRegistrationCheck()) {
         window.location.hash = tutorSectionPath(tutorId, 'publish');
         return;
       }
       rerender();
+      showP24Toast('저장되었습니다.');
     });
   });
 }
