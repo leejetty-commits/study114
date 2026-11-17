@@ -12,6 +12,7 @@ import {
 } from './router.js';
 import { renderMypageNoticeStrip, bindMypageNoticeStrip } from './mypage-notice-strip.js';
 import { getProviderStatus } from '../provider-status.js';
+import { quickMatchShowsIntro } from './quick-match-screen.js';
 
 function esc(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -80,7 +81,10 @@ export function renderMypageShell(currentPath, bodyHtml) {
   const displayInitial = String(displayName || roleLabel || '우').trim().charAt(0) || '우';
   const accountPrimary = displayName;
   const accountSecondary = '';
-  const railSlotKey = currentPath.startsWith('/mypage/registrations')
+  const hideQuickMatchRail = currentPath === '/mypage/quick-match' && quickMatchShowsIntro();
+  const railSlotKey = hideQuickMatchRail
+    ? null
+    : currentPath.startsWith('/mypage/registrations')
     ? 'register_right_rail'
     : currentPath.startsWith('/mypage/plans')
       ? 'plans_right_rail'
@@ -99,9 +103,12 @@ export function renderMypageShell(currentPath, bodyHtml) {
     const active = navItemIsActive(item, currentPath);
     const emph = item.emphasis?.includes(role) ? ' is-emphasis' : '';
     const lines = !item.labels?.[role] && item.labelLines ? item.labelLines : null;
-    const label = lines
+    const labelText = lines
       ? `<span class="mypage-nav__label">${lines.map((line) => `<span class="mypage-nav__label-line">${esc(line)}</span>`).join('')}</span>`
       : `<span class="mypage-nav__label">${esc(mypageNavLabel(item, role))}</span>`;
+    const label = item.path === '/mypage/quick-match'
+      ? `<span class="qm-nav__labelwrap">${labelText}<span class="qm-nav__new">NEW</span></span>`
+      : labelText;
     const primeOn = item.path === '/mypage/quick-match' && getProviderStatus()?.prime_active === true;
     const qmClass = item.path === '/mypage/quick-match' ? (primeOn ? ' is-qm is-prime' : ' is-qm is-muted') : '';
     const iconHtml = item.icon === 'event'
