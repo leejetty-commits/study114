@@ -480,12 +480,6 @@ body {
   bottom: calc(1.25rem + 2.75rem + 8px);
 }
 
-@media (max-width: 768px) {
-  .back-to-bottom {
-    display: inline-flex;
-  }
-}
-
 /* ── 문의하기 FAB — 「맨 위로」자리 위 고정(숨김 시에도 자리 차지 안 함) ── */
 .inquiry-fab {
   --inquiry-fab-gap: 8px;
@@ -508,13 +502,6 @@ body {
   opacity: 1;
   transform: translateY(0);
   pointer-events: auto;
-}
-
-/* 모바일: 맨 아래로 자리 위 */
-@media (max-width: 768px) {
-  .inquiry-fab {
-    bottom: calc(1.25rem + 2 * (2.75rem + 8px));
-  }
 }
 
 .inquiry-fab__toggle {
