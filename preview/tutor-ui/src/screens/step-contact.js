@@ -93,7 +93,6 @@ export function renderContactFormHtml(opts = {}) {
           <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
           <span class="form-check__label">증빙서류 제출 가능</span>
         </label>
-        <p class="form-hint">파일은 마이페이지 제출함에서 올립니다. 픽·프라임 카드의 「제출자료 n개」가 여기서 나옵니다.</p>
         <a class="register-mypage-link" href="${mypageSubmissionBoardUrl()}">제출함 열기</a>
       </div>
       <div class="form-group" data-trc-field="teaching_style_badges">
