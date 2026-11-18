@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /adm
+Disallow: /bbs/
+Disallow: /auth/
+Disallow: /uploads/
 
 Sitemap: https://study114.net/sitemap.xml

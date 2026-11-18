@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://study114.net/</loc></url>
-  <url><loc>https://study114.net/search/room</loc></url>
-  <url><loc>https://study114.net/search/tutor</loc></url>
-  <url><loc>https://study114.net/search/student</loc></url>
-  <url><loc>https://study114.net/auth/</loc></url>
-  <url><loc>https://study114.net/register/room/</loc></url>
-  <url><loc>https://study114.net/register/tutor/</loc></url>
+  <url><loc>https://study114.net/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://study114.net/info/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://study114.net/info/study-room/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://study114.net/info/tutor/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://study114.net/info/parents/</loc><lastmod>2026-11-19</lastmod></url>
+  <url><loc>https://study114.net/search/</loc><lastmod>2026-11-19</lastmod></url>
 </urlset>
