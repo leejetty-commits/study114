@@ -794,14 +794,19 @@ table {
 
   .site-footer__links,
   .home-footer__links {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 4px;
+    row-gap: 0;
     width: 100%;
   }
 
   .site-footer__links a,
   .home-footer__links a {
-    width: 100%;
-    min-height: var(--btn-h);
+    width: auto;
+    min-height: 40px;
+    padding: 0 var(--space-2);
   }
 }
 
