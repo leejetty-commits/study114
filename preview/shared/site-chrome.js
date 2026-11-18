@@ -69,7 +69,7 @@ function renderUtilBar(role, showAuth, user = null) {
   const displayLabel = user ? resolveAccountDisplayName(user) : '';
   const account =
     loggedIn
-      ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
+      ? `<a href="${String(HOME_UI_BASE).replace(/\/$/, '')}/#/mypage/account" class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</a>`
       : '';
   const base = items
     .map((item) => {
