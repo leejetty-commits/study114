@@ -108,6 +108,7 @@ final class TutorHubRepository
             'university_name'          => $row['university_name'] !== null ? (string) $row['university_name'] : null,
             'major_name'               => $row['major_name'] !== null ? (string) $row['major_name'] : null,
             'university_status'        => $row['university_status'] !== null ? (string) $row['university_status'] : null,
+            'career_year_band'         => $row['career_year_band'] !== null ? (string) $row['career_year_band'] : null,
             'proof_document_available' => (bool) ($row['proof_document_available'] ?? false),
             'has_primary_region'       => $primaryRegion !== null,
             'has_primary_subject'      => $this->primarySubject($tutorId) !== '',
