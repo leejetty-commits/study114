@@ -76,3 +76,31 @@
 
 - #228: 캐시 적중 + `viewsAfterList` 경로가 화면을 그릴 때마다 다시 그리기를 예약해서 무한 반복. 직접 읽고 확인했다. 수정안은 02 문서.
 - 아직 main에 있는 #224 `main.js` capture 가로채기(595~605줄): 로그인 뒤에도 빈 프라임·픽·베이직 카드 안 클릭(「유료상품 보기」)을 막는다. 코드상 확실, 운영 실클릭 확인 필요. 수정은 `if (sessionChecked && !isLoggedIn()) return;` → `if (sessionChecked) return;` 한 줄. 이 예외는 「main.js 금지」 규칙의 유일한 예외이고, 종현 승인 뒤 별도 PR로만 한다. 상세는 90 문서.
+
+## 이어진 지시서 (12 이후, 2026-11-19 덧붙임)
+
+위 표의 기존 행은 그대로 둔다. 아래는 그 뒤에 머지되거나 실행된 것만 적는다.
+
+| 순서 | 문서 | 상태 |
+|---|---|---|
+| 12 | `12-admin-stats-min.md` | 머지 #266 `bd8f9fc8` |
+| 12b | `12b-admin-stats-region-levels.md` | 머지 #267 `b60ef7b4` |
+| 12c | `12c-region-sidanwi-check.sql` · `12c-region-sidanwi-fix.sql` | PR 없음. 운영 regions의 「시 단위」 동 행 15행(id 4~18, 17개 시·도 중 서울·부산 제외) 삭제, 참조 0건 확인 후, 2026-11-19 종현 실행. 원인은 예전 SidoRegionEnsure(7a320f70), 67b9a63e 이후 재생성 없음. SQL 주석의 「2행」은 초기 오기다. |
+| 13 | `13-tutor-home-badge.md` | 머지 #250 `410588ab` |
+| 14 | `14-tutor-mypage-detail-design.md` | 머지 #251 `5a87ab72` |
+| 14b | `14b-tutor-reg-design-link.md` | 머지 #255 `44e20309` |
+| 14c | `14c-tutor-subject-edit-link.md` | 머지 #256 `f94483fd` |
+| 14d | `14d-promo-channel-gap.md` | 머지 #258 `140bc16e` |
+| 15 | `15-study-room-mypage-fixes.md` | 머지 #252 `4b2137b4` |
+| 15b | `15b-study-room-class-fee-cheonwon.md` | 머지 #254 `d4899eb4` |
+| 17 | `17-mobile-audit.md` | 점검 기록. 코드 PR 아님. 결과 표는 그 파일 맨 아래 |
+| 17b | `17b-plans-hub-cinema-height.md` | 머지 #259 `72f91e97` |
+| 17c | `17c-hash-scroll-nav-static.md` | 머지 #260 `97bfd295` |
+| 17d | `17d-remove-768-bottom-fab.md` | 머지 #263 `64d4ddf1` |
+| 17g | `17g-tutor-career-band.md` | 머지 #264 `46678bdf` |
+| 17h | `17h-tutor-proof-label.md` | 머지 #265 `8b52282c`. 종현 화면 확인 2026-11-19 |
+| 19 | `19-seo-min.md` | 머지 #268 `4f3a8bbe`. Part C(서치어드바이저 제출)는 안 함 |
+| 19c | 네이버 소유 확인 파일 | 머지 #269 `656bf4aa`. `public/naverb39818efee5937224bf70d033f379a23.html` 한 줄 |
+| — | `16` `16b` `90-REVIEW` | 미착수. 이 동기화에서 시작하지 않음 |
+
+같은 기간에 색인 표 밖에 머지된 화면 수정: #253 계정 이름 `defd0016`, #261 로그인 인사 `fbb0788a`, #262 푸터 링크 `cd334c0f`.
