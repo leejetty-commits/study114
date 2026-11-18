@@ -17,7 +17,7 @@ import {
   apiResetNoticeSeed,
 } from './support-backend.js';
 import { isOperationalBoardApiActive } from '../operational-board-store.js';
-import { isBoardApiMode } from '../board/board-backend.js';
+import { fetchNoticeHomeLimited, isBoardApiMode } from '../board/board-backend.js';
 
 const KEY = 'study114-support-notices-v1';
 
@@ -82,7 +82,9 @@ export function listNoticesForHome() {
  * @param {number} [limit] 없으면 서버가 거른 전체 목록
  */
 export async function fetchHomeViewNotices(limit) {
-  const data = await fetchBoardPosts('notice', limit ? { view: 'home', limit } : { view: 'home' });
+  const data = Number(limit) === 3
+    ? await fetchNoticeHomeLimited()
+    : await fetchBoardPosts('notice', limit ? { view: 'home', limit } : { view: 'home' });
   return mapNoticeRows(data.posts);
 }
 

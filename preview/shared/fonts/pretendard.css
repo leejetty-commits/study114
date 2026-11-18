@@ -10,15 +10,7 @@
 @font-face {
   font-family: 'Pretendard';
   font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-  src: url('./Pretendard-SemiBold.subset.woff2') format('woff2');
-}
-
-@font-face {
-  font-family: 'Pretendard';
-  font-style: normal;
-  font-weight: 700;
+  font-weight: 600 700;
   font-display: swap;
   src: url('./Pretendard-Bold.subset.woff2') format('woff2');
 }
