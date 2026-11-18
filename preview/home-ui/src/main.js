@@ -635,8 +635,19 @@ function init() {
       // 부트가 넣은 같은 주소 hashchange만 건너뛴다.
       // 공부방 상단탭은 load 뒤에 같은 주소로 화면을 다시 그린다.
       if (event.isTrusted && window.location.hash === paintedHash) return;
+      const oldMark = typeof event.oldURL === 'string' ? event.oldURL.indexOf('#') : -1;
+      const newMark = typeof event.newURL === 'string' ? event.newURL.indexOf('#') : -1;
+      const oldHash = oldMark >= 0 ? event.oldURL.slice(oldMark) : '';
+      const newHash = newMark >= 0 ? event.newURL.slice(newMark) : '';
       dismissRouteOverlays();
-      render().catch(handleBootError);
+      render()
+        .then(() => {
+          if (oldHash === newHash) return;
+          if (!newHash.startsWith('#/')) return;
+          if (window.location.hash !== newHash) return;
+          window.scrollTo(0, 0);
+        })
+        .catch(handleBootError);
     });
     window.addEventListener('auth:login', async () => {
       sessionChecked = true;
