@@ -20,7 +20,7 @@
 - `preview/shared/fonts/pretendard.css`: 400(:2-8) · **600(:10-16, `Pretendard-SemiBold.subset.woff2`)** · 700(:18-24) 세 블록.
 - 이 CSS는 `preview/home-ui/src/styles/tokens.css:6` 한 곳에서만 불러오고, 홈·찾기·가입·공부방·과외쌤 다섯 앱이 모두 tokens.css를 쓴다.
 - SemiBold woff2를 부르는 곳은 pretendard.css:15 한 곳뿐(`scripts/`의 jsdelivr 주소 3개는 스크린샷 도구라 무관).
-- 600 사용: `font-weight: 600`이 **314회 / 50개 파일**(CSS + JS 인라인 6줄), 그리고 `var(--fw-semibold)` 21회 / 3개 파일(`design-system.css`, `home-right-rail.css`, `udx-std-apply.css`). `--fw-semibold: 600`은 `tokens.css:105`.
+- 600 사용: `font-weight: 600`이 **309회 / 46개 파일**(`origin/main` 의 `preview` 기준, JS 인라인 2줄: `signup-terms.js:65`, `confirm-dialog.js:52`. 초기 기재 314회/50파일/6줄은 오기, Cursor 0단계 2026-11-19 정정), 그리고 `var(--fw-semibold)` 21회 / 3개 파일(`design-system.css`, `home-right-rail.css`, `udx-std-apply.css`). `--fw-semibold: 600`은 `tokens.css:105`.
 - 참고: 700은 368회, 500은 56회, 400은 25회.
 - 운영 홈에서 SemiBold 파일이 실제로 받아진다(`/assets/Pretendard-SemiBold.subset-*.woff2`, 200).
 - 앞선 예: 지시서 10 G에서 Medium(500)을 같은 방식으로 뺐다(500 → 400 파일로 그려짐).
@@ -29,7 +29,7 @@
 - **600은 Bold(700) 파일로 그린다.** Regular(400)로 그리면 브라우저가 가짜 굵게(합성)를 만들어 더 지저분해진다.
 - 방법: 600 블록을 지우고, 700 블록을 `font-weight: 600 700;`(범위)로 바꾼다. 결과적으로 600 글자는 Bold 글꼴로 나온다(블록만 지워도 CSS 규칙상 700으로 가지만, 범위로 적어 뜻을 분명히 한다).
 - `preview/shared/fonts/Pretendard-SemiBold.subset.woff2`는 지운다(10 G와 같음). 빌드 산출물 이름이 해시라 옛 CSS가 옛 파일을 찾는 일은 없다.
-- 314곳의 `font-weight: 600` 규칙은 **고치지 않는다.**
+- 309곳의 `font-weight: 600` 규칙은 **고치지 않는다.**
 - 위험: 600 글자(메뉴·버튼·카드 제목 등)가 조금 더 굵고 넓어진다. 그래서 줄바꿈·말줄임이 새로 생기는지 스크린샷으로 본다.
 
 ### B. 중복 요청 (운영 비로그인 홈, 요청 추적으로 확인)
@@ -57,7 +57,7 @@
 
 1. `git fetch` 후 `origin/main` 커밋을 적는다. ce7e0ccd가 아니면 위 줄 번호를 다시 본다.
 2. 「확인된 사실」을 한 줄씩 「확인됨 / 다름(파일:줄)」으로 보고한다. 특히:
-   - 600 사용 횟수(314회/50파일, var 21회/3파일).
+   - 600 사용 횟수(309회/46파일, var 21회/3파일).
    - 로컬 빌드 홈(비로그인)에서 공지 home·인사 요청이 2번씩인지와 각 출처(호출 스택).
    - search.php 3번의 본문이 서로 다른지.
 3. B의 고칠 방법(함수 이름·바뀌는 줄)을 짧게 적어 보고한다.
@@ -79,7 +79,7 @@
 | 7 | `preview/home-ui/src/home-news-row.js` | 수정 — 꼭 필요할 때만(0단계에서 필요 여부 보고) |
 | 8 | `docs/worklog/2026/11/2026-11-19-20-speed-font-dedupe.md` | 새 작업 기록 |
 
-**손대지 않는 것:** `preview/home-ui/src/main.js`, 다른 모든 CSS·JS(600 규칙 314곳 포함), `tokens.css`, Bold·Regular woff2, `public/**`, `src/**`(PHP), `scripts/**`, `.github/workflows/*`, `docs/internal/perf/home-initial-load-plan.md`.
+**손대지 않는 것:** `preview/home-ui/src/main.js`, 다른 모든 CSS·JS(600 규칙 309곳 포함), `tokens.css`, Bold·Regular woff2, `public/**`, `src/**`(PHP), `scripts/**`, `.github/workflows/*`, `docs/internal/perf/home-initial-load-plan.md`.
 - `docs/internal/perf/home-initial-load-plan.md`는 **main에 없고 docs 브랜치에만 있다.** 1.1·1.2 갱신은 머지 뒤 봇이 docs 브랜치에서 한다.
 
 ---
