@@ -94,6 +94,11 @@ export function renderLessonFormHtml(opts = {}) {
   const includeStepNav = opts.includeStepNav !== false;
   const includeFooterActions = opts.includeFooterActions ?? !includeStepNav;
   const embed = opts.embed === true;
+  const subjectEditHint = embed && opts.basicHref
+    ? `<a href="#${opts.basicHref}" data-p21-nav="${opts.basicHref}">기본정보 탭에서 수정</a>`
+    : embed
+      ? '기본정보 탭에서 수정'
+      : `<a href="${mypageRegistrationsUrl()}">마이페이지에서 수정</a>`;
   const s = registerState;
   const places = TUTOR_PLACE_OPTIONS.map(
     (p) => `
@@ -115,7 +120,7 @@ export function renderLessonFormHtml(opts = {}) {
     <form data-form="lesson" class="tutor-lesson-step">
       ${embed ? '' : renderGuideNotice('상세등록 1단계입니다. 필수 항목을 채운 뒤 다음으로 진행하세요. 나중에 해도 됩니다.')}
       ${renderSectionTitle(TUTOR_DETAIL_GROUP_LESSON)}
-      ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong>${embed ? ' · 기본정보 탭에서 수정' : ' · 마이페이지에서 수정'}</p>` : ''}
+      ${s.main_subject_note ? `<p class="form-hint">주력과목(기본등록): <strong>${s.main_subject_note}</strong> · ${subjectEditHint}</p>` : ''}
       <div class="register-grid-2">
         <div class="form-group" data-trc-field="student_target">
           <span class="form-label">지도 대상 성별</span>

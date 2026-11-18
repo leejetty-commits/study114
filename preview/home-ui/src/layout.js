@@ -99,7 +99,7 @@ function renderUtilBar(role, showAuth) {
   const onGuide = isGuideRoute();
   const displayLabel = authUser ? resolveAccountDisplayName(authUser) : '';
   const account = authUser
-    ? `<span class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</span>`
+    ? `<a href="#/mypage/account" class="home-util__account" title="${escAttr(displayLabel)}">로그인: ${escAttr(displayLabel)}</a>`
     : '';
   const base = items
     .map((item) => {
