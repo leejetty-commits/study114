@@ -19,7 +19,7 @@ export const BOOTSTRAP_SUPER_ADMIN_EMAIL = 'jetty@naver.com';
 export const MASTER_EMAILS = [BOOTSTRAP_SUPER_ADMIN_EMAIL];
 
 /** 부마스터 접근 금지 메뉴 id */
-export const SUB_MASTER_BLOCKED_MENUS = ['permissions', 'settings', 'system'];
+export const SUB_MASTER_BLOCKED_MENUS = ['permissions', 'settings', 'system', 'stats'];
 
 /** @param {string} [adminLevel] 서버가 내려준 admin_level */
 export function resolveAdminLevel(adminLevel) {

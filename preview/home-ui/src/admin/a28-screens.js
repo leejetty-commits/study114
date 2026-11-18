@@ -183,6 +183,7 @@ import { peekHubExposureRoute, registerTodayRenderers, renderTodayMarkup } from 
 import { renderSettlement, renderSettlementHub } from './a28-settlement.js';
 import { MEMBER_MAIL_PATH, renderMemberMail } from './a28-member-mail.js';
 import { WITHDRAW_REASONS_PATH, renderWithdrawReasons } from './a28-withdraw-reasons.js';
+import { STATS_PATH, renderStats } from './a28-stats.js';
 import { renderRegistrationList } from './a28-registration-list.js';
 
 function adminProductLabel(code) {
@@ -1958,6 +1959,7 @@ export function renderA28Screen(path) {
   setAdminPanelPath(path);
   let body = renderHub();
   if (path === '/admin') body = renderHub();
+  else if (path === STATS_PATH) body = renderStats();
   else if (path === '/admin/promo') body = renderPromoDesk();
   else if (path === '/admin/members') body = renderMembers();
   else if (path === '/admin/registrations') body = renderRegistrationList();

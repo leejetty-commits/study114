@@ -12,6 +12,7 @@ const LEGACY_REDIRECTS = {
 
 const ADMIN_ROUTE_PATHS = [
   '/admin',
+  '/admin/stats',
   '/admin/settlement',
   '/admin/settings/basic',
   '/admin/settings/join',
