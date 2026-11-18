@@ -306,6 +306,7 @@
 | RED LINE · 허용/금지 조치 | [28장](28-admin-console-red-line.md) · `admin-red-line-copy.js` | ✅ |
 | P17-admin 프리뷰 | `#/support/admin/*` | ✅ |
 | A28-04 신고 큐 | `#/admin/reports` · `/api/admin/reports.php` | △ API ✅ |
+| 통계 | `#/admin/stats` · `GET /api/admin/stats.php` | ✅ #266. 메뉴 맨 위. 첫 화면은 `/admin`. 부마스터 차단 |
 | A28-06 제출 큐 | `#/admin/submission-docs` · `submission-queue.php` | △ API ✅ |
 | **A28-07 노출 보정** | `#/admin/exposure` · `/api/admin/exposure.php` | **△ API ✅** |
 | A28-08 운영 로그 | `#/admin/logs` · `operation-logs.php` | △ API ✅ |
@@ -390,7 +391,8 @@
 | P23-04 | 신뢰·증빙자료 제출 | page | `#/mypage/submission-board` | ✅ | 23장 | 과외쌤 | ○ | P15-10 브리지 |
 | P23-04a/b | 제출 작성·상세 | page | …/new · …/:id | ✅ | 23장 | upload | ○ |  |
 | P17-admin | 운영 프리뷰 | admin | `#/support/admin/*` | ✅ | 17c | 내부 | △ |  |
-| A28-01 | 운영 홈 | admin | `#/admin` | △ | 28§12 | 내부 | — | RED LINE |
+| A28-01 | 운영 홈 | admin | `#/admin` | △ | 28§12 | 내부 | — | RED LINE. `getDefaultAdminPath()` = `/admin` |
+| 통계 | 가입·등록·지역 | admin | `#/admin/stats` | ✅ | #266 | 마스터 | — | `GET /api/admin/stats.php`. 부마스터 메뉴 차단 |
 | A28-04 | 신고 처리 | admin | `#/admin/reports` | △ | 28§5 | 내부 | ✅ | 큐 API |
 | A28-06 | 제출자료 확인 | admin | `#/admin/submission-docs` | △ | 28§3 | 내부 | ✅ | submitted 큐 |
 | **A28-07** | 노출·권한 보정 | admin | `#/admin/exposure` | △ | 28§3-b | 내부 | ✅ | 부록 F QA |
