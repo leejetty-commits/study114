@@ -23,7 +23,6 @@ import {
   renderGuideNotice,
   bindGlobalEvents,
   getHashQuery,
-  mypageSubmissionBoardUrl,
 } from '../layout.js';
 import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { HOME_UI_BASE } from '../../../shared/preview-links.js';
@@ -162,7 +161,6 @@ export function renderDetail() {
             <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
             <span class="form-check__label">증빙서류 제출 가능</span>
           </label>
-          <a class="register-mypage-link" href="${mypageSubmissionBoardUrl()}">제출함 열기</a>
         </div>
         <div class="form-group">
           <span class="form-label">강의스타일</span>

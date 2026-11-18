@@ -45,3 +45,12 @@
 | 공부방 | 미확인 | 미확인 |
 | 과외쌤 | 미확인 | 미확인 |
 | 학생 | 미확인 | 미확인 |
+
+## 이어하기 (같은 브랜치)
+
+- `preview/home-ui/src/layout.js` 102행만. 「로그인: ○○」 span을 같은 class·title의 `<a href="#/mypage/account">`로 바꿈. 글자는 그대로.
+- `step-contact.js`, `step-detail.js`: 「제출함 열기」 링크 줄과, 그 줄만 쓰던 `mypageSubmissionBoardUrl` import를 뺌. 체크박스 `name="proof_document_available"`는 그대로.
+- `preview/shared/site-chrome.js` 72행에도 같은 span이 있다. 허용 파일 밖이라 수정하지 않음. 홈 헤더는 `home-ui` `layout.js`를 쓴다.
+- `mypageSubmissionBoardUrl` 함수 선언은 `tutor-ui/src/layout.js`에 남아 있다. 호출은 없다. 그 파일은 허용 밖이라 선언은 그대로.
+
+이어하기 검증: 위 네 tutor verify 통과. `verify-tutor-basic-required` 실패 8건, Tutor search fields 2건, Student hope hidden required, Hide inquiry bundle 1건(`(m) 추가 CSS는 .admin-shell`). 새 실패 없음. `npm run build:dothome` 종료 코드 0. 실클릭은 미확인.

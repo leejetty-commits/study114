@@ -15,7 +15,6 @@ import {
   bindGlobalEvents,
   navigate,
   skipDetailRegistration,
-  mypageSubmissionBoardUrl,
 } from '../layout.js';
 import { validatePromoUrls, renderPromoChannelFields, bindPromoChannelAdds } from '../../../shared/promo-links.js';
 import { renderUniversityNameField, bindUniversityNameField } from '../../../shared/korean-universities.js';
@@ -93,7 +92,6 @@ export function renderContactFormHtml(opts = {}) {
           <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
           <span class="form-check__label">증빙서류 제출 가능</span>
         </label>
-        <a class="register-mypage-link" href="${mypageSubmissionBoardUrl()}">제출함 열기</a>
       </div>
       <div class="form-group" data-trc-field="teaching_style_badges">
         <span class="form-label form-label--tier">강의스타일</span>
