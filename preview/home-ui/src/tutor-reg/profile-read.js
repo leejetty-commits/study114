@@ -70,12 +70,6 @@ function yesNoBlank(flag, yes = '등록됨') {
   return flag ? yes : '';
 }
 
-function publicChoice(flag) {
-  if (flag === true) return '공개';
-  if (flag === false) return '비공개';
-  return '';
-}
-
 /**
  * @param {import('./store.js').TutorRecord} tutor
  * @returns {{ id: string, title: string, editSection: 'basic'|'detail'|'detail2'|null, rows: { label: string, value: string }[] }[]}
@@ -143,9 +137,7 @@ export function buildTutorProfileReadSections(tutor) {
         { label: '학생 대상', value: display(t.grade_band) },
         { label: '강의스타일', value: styles && styles !== '—' ? styles : '' },
         { label: '경력', value: career },
-        { label: '학력 제출자료', value: yesNoBlank(t.education_doc_submitted) },
-        { label: '학력 공개 선택', value: publicChoice(t.education_doc_public) },
-        { label: '경력 제출자료', value: yesNoBlank(t.career_doc_submitted) },
+        { label: '증빙서류 제출 가능', value: yesNoBlank(t.proof_document_available, '표시함') },
       ],
     },
   ];
