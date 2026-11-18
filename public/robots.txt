@@ -8,3 +8,4 @@ Disallow: /auth/
 Disallow: /uploads/
 
 Sitemap: https://study114.net/sitemap.xml
+#DaumWebMasterTool:485c221539e27436db45d8478c3a81a02b345044b3598d620e5c0be046549e6e:MqfNpbtb2g8b8TIcUfNFlQ==
