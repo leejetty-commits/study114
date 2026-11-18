@@ -39,7 +39,7 @@
 | `tutor_lesson_places` | 강의장소 복수 |
 | `tutor_images` | 프로필/소개/증빙보조 |
 | `tutor_teaching_style_badges` | 강의스타일 배지 |
-| `tutor_verification_documents` | 증빙서류 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) · **이번 버전 과외쌤 제출함 사용** [49](../internal/49-submission-role-split.md) |
+| `tutor_verification_documents` | 증빙서류 · **제출자료 저장** ([22장](22-platform-lifecycle-principles.md) — 운영자 검수 ✕) · **이번 버전 과외쌤 제출함 사용** [49](../internal/49-submission-role-split.md). (2026-11-19) 제출함은 2026-11-07에 숨김. 지금은 등록 폼 체크를 「증빙서류 제출 가능」으로 보여 주기만 한다. 파일 업로드·운영자 검수 없음 (#265) |
 
 ---
 

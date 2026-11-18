@@ -497,10 +497,15 @@ study-room-ui는 저장·완료 후 `return_to`가 있으면 해당 hash로 이�
 
 ---
 
+## 수업 그룹 월 수업료 (2026-11-18 #254)
+
+화면은 숫자와 「천원」이다. DB `study_room_classes.monthly_fee_amount`는 원(INT, 비울 수 있음)을 저장하고, 저장할 때 천원×1000을 넣는다. 스키마 파일은 `sql/schema/093_study_room_class_monthly_fee_amount.sql`이다. 그 전에 종현이 운영 컬럼과 기존 행 갱신을 실행했다(작업기록 `2026-11-18-study-room-class-fee-cheonwon.md`). 공개 수업 줄은 원 금액이 있을 때만 「월 N천원」이다.
+
 ## 변경 이력
 
 | 날짜 | 내용 |
 |------|------|
+| 2026-11-18 | #254 수업 그룹 월 수업료 — 화면 천원, DB `monthly_fee_amount`는 원 |
 | 2026-08-19 | 제출함 **이번 버전 UI 후순위** · 보드 재가동 ✕ · 체크리스트 집중. [49](../internal/49-submission-role-split.md) |
 | 2026-07-06 | 20장 초안 |
 | 2026-07-06 | **Notion·Cursor 합의** — `profile_status` · `inquiry_status` 2축 · [22장](22-platform-lifecycle-principles.md) · pending deprecated · 공개 준비 미완료 · 자기확인 · 딥링크 |
