@@ -68,8 +68,43 @@ function numRow(cells, rowLabel) {
 }
 
 /** @param {Record<string, number>} row */
+function regionCountCells(row) {
+  return [row.study_room, row.tutor, row.student, row.prime, row.pick]
+    .map((cell) => `<td class="member-mail__num">${esc(String(cell ?? 0))}</td>`)
+    .join('');
+}
+
+/** @param {string} id @param {string} name */
+function regionToggle(id, name) {
+  return `<button type="button" class="btn btn--secondary btn--sm" data-stats-region-toggle="${esc(id)}" aria-expanded="false">▸ ${esc(name)}</button>`;
+}
+
+/** @param {Record<string, number>} row */
 function regionCells(label, row) {
   return numRow([label, row.study_room, row.tutor, row.student, row.prime, row.pick]);
+}
+
+/** @param {{ rows?: Array<Record<string, any>>, unclassified: Record<string, number>, total: Record<string, number> }} regions */
+function regionTableRows(regions) {
+  const lines = [];
+  (regions.rows || []).forEach((row, index) => {
+    const id = `r${index}`;
+    const children = Array.isArray(row.children) ? row.children : [];
+    const label = children.length ? regionToggle(id, String(row.sido ?? '')) : esc(String(row.sido ?? ''));
+    lines.push(`<tr><th scope="row">${label}</th>${regionCountCells(row)}</tr>`);
+    children.forEach((child, childIndex) => {
+      const childId = `${id}-${childIndex}`;
+      const grands = Array.isArray(child.children) ? child.children : [];
+      const childLabel = grands.length ? regionToggle(childId, String(child.name ?? '')) : esc(String(child.name ?? ''));
+      lines.push(`<tr data-stats-region-parent="${esc(id)}" hidden><th scope="row">└ ${childLabel}</th>${regionCountCells(child)}</tr>`);
+      grands.forEach((grand) => {
+        lines.push(`<tr data-stats-region-parent="${esc(childId)}" hidden><th scope="row">　　└ ${esc(String(grand.name ?? ''))}</th>${regionCountCells(grand)}</tr>`);
+      });
+    });
+  });
+  lines.push(regionCells('미분류', regions.unclassified));
+  lines.push(regionCells('합계', regions.total));
+  return lines.join('');
 }
 
 /**
@@ -156,16 +191,13 @@ function renderStatsBody(data) {
     </div>`;
 
   const regions = data.regions;
-  const regionBody = regions.rows.map((row) => regionCells(row.sido, row)).join('')
-    + regionCells('미분류', regions.unclassified)
-    + regionCells('합계', regions.total);
-  const regionTable = `<h3 class="admin-section-title">시·도</h3>
+  const regionTable = `<h3 class="admin-section-title">지역</h3>
     <div class="member-mail__table-wrap">
       <table class="sup-admin-table member-mail__table">
         <thead><tr>
-          <th scope="col">시·도</th><th scope="col">공부방</th><th scope="col">과외쌤</th><th scope="col">학생</th><th scope="col">프라임</th><th scope="col">픽</th>
+          <th scope="col">지역</th><th scope="col">공부방</th><th scope="col">과외쌤</th><th scope="col">학생</th><th scope="col">프라임</th><th scope="col">픽</th>
         </tr></thead>
-        <tbody>${regionBody}</tbody>
+        <tbody>${regionTableRows(regions)}</tbody>
       </table>
     </div>`;
 
@@ -293,9 +325,42 @@ export function bindStats(root) {
     if (mine === seq && body) body.innerHTML = html;
   }
 
+  /** @param {Element} button @param {boolean} open */
+  function setRegionToggle(button, open) {
+    button.setAttribute('aria-expanded', open ? 'true' : 'false');
+    const name = (button.textContent || '').replace(/^[▸▾]\s*/, '');
+    button.textContent = `${open ? '▾' : '▸'} ${name}`;
+  }
+
+  /** @param {string} id */
+  function hideRegionBranch(id) {
+    box.querySelectorAll('[data-stats-region-parent]').forEach((row) => {
+      const parent = row.getAttribute('data-stats-region-parent') || '';
+      if (parent !== id && !parent.startsWith(`${id}-`)) return;
+      if (row instanceof HTMLElement) row.hidden = true;
+      row.querySelectorAll('[data-stats-region-toggle]').forEach((child) => setRegionToggle(child, false));
+    });
+  }
+
   box.addEventListener('click', (event) => {
-    const button = event.target instanceof Element ? event.target.closest('[data-stats-days]') : null;
-    if (button) load(Number(button.getAttribute('data-stats-days')) || 14);
+    const target = event.target instanceof Element ? event.target : null;
+    const daysButton = target ? target.closest('[data-stats-days]') : null;
+    if (daysButton) {
+      load(Number(daysButton.getAttribute('data-stats-days')) || 14);
+      return;
+    }
+    const regionButton = target ? target.closest('[data-stats-region-toggle]') : null;
+    if (!regionButton) return;
+    const id = regionButton.getAttribute('data-stats-region-toggle') || '';
+    const open = regionButton.getAttribute('aria-expanded') !== 'true';
+    setRegionToggle(regionButton, open);
+    if (open) {
+      box.querySelectorAll(`[data-stats-region-parent="${CSS.escape(id)}"]`).forEach((row) => {
+        if (row instanceof HTMLElement) row.hidden = false;
+      });
+      return;
+    }
+    hideRegionBranch(id);
   });
   load(14);
 }

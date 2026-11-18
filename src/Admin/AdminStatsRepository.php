@@ -7,11 +7,18 @@ namespace Study114\Admin;
 use DateTimeImmutable;
 use PDO;
 use Study114\Auth\TestAccountAllowlist;
+use Study114\Region\TutorRegionUnit;
 use Study114\Report\ReportPeriod;
 
 /** 관리자 통계 최소판. SELECT만 사용한다. */
 final class AdminStatsRepository
 {
+    private const REGION_GU = '/^(\S+시) (\S+구)$/u';
+
+    private const REGION_L2_UNSPECIFIED = '시·군·구 미지정';
+
+    private const REGION_L3_UNSPECIFIED = '구 미지정';
+
     private ReportPeriod $period;
 
     private string $testIn = '';
@@ -283,61 +290,81 @@ final class AdminStatsRepository
     }
 
     /**
-     * @return array{rows: list<array<string, int|string>>, unclassified: array<string, int>, total: array<string, int>}
+     * @return array{rows: list<array<string, mixed>>, unclassified: array<string, int>, total: array<string, int>}
      */
     private function regions(): array
     {
-        /** @var array<string, array<string, int>> $map */
+        $cities = $this->citiesWithGu();
+        /** @var array<string, array<string, array{own: array<string, int>, kids: array<string, array<string, int>>}>> $map */
         $map = [];
         $unclassified = $this->blankRegionCounts();
-        $add = function (?string $sido, string $field, int $n) use (&$map, &$unclassified): void {
+        $add = function (?string $sido, ?string $sigungu, ?string $code, string $field, int $n) use (&$map, &$unclassified, $cities): void {
             if ($n === 0) {
                 return;
             }
-            if ($sido === null || $sido === '') {
+            $sidoName = trim((string) $sido);
+            if ($sido === null || $sidoName === '') {
                 $unclassified[$field] += $n;
 
                 return;
             }
-            if (!isset($map[$sido])) {
-                $map[$sido] = $this->blankRegionCounts();
+            [$level2, $level3] = $this->classifyRegion($sidoName, $sigungu, $code, $cities);
+            if (!isset($map[$sidoName][$level2])) {
+                $map[$sidoName][$level2] = [
+                    'own' => $this->blankRegionCounts(),
+                    'kids' => [],
+                ];
             }
-            $map[$sido][$field] += $n;
+            if ($level3 === null) {
+                $map[$sidoName][$level2]['own'][$field] += $n;
+
+                return;
+            }
+            if (!isset($map[$sidoName][$level2]['kids'][$level3])) {
+                $map[$sidoName][$level2]['kids'][$level3] = $this->blankRegionCounts();
+            }
+            $map[$sidoName][$level2]['kids'][$level3][$field] += $n;
         };
         $absorb = function (array $rows, string $field) use ($add): void {
             foreach ($rows as $row) {
-                $sido = isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null;
-                $add($sido, $field, (int) ($row['n'] ?? 0));
+                $add(
+                    isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null,
+                    isset($row['sg']) && is_string($row['sg']) ? $row['sg'] : null,
+                    $this->regionCode($row['code'] ?? null),
+                    $field,
+                    (int) ($row['n'] ?? 0),
+                );
             }
         };
 
         $living = $this->livingSql();
+        $group = 'GROUP BY reg.sido_name, reg.sigungu_name, reg.sigungu_code';
         $absorb($this->rows(
-            'SELECT reg.sido_name AS sido, COUNT(*) AS n
+            'SELECT reg.sido_name AS sido, reg.sigungu_name AS sg, reg.sigungu_code AS code, COUNT(*) AS n
              FROM study_rooms sr
              INNER JOIN users u ON u.id = sr.user_id AND ' . $living . '
              LEFT JOIN regions reg ON reg.id = ' . $this->studyRoomRegionSql('sr') . '
              WHERE ' . $this->studyRoomRegisteredSql('sr') . '
-             GROUP BY reg.sido_name',
+             ' . $group,
         ), 'study_room');
         $absorb($this->rows(
-            'SELECT reg.sido_name AS sido, COUNT(*) AS n
+            'SELECT reg.sido_name AS sido, reg.sigungu_name AS sg, reg.sigungu_code AS code, COUNT(*) AS n
              FROM tutors t
              INNER JOIN users u ON u.id = t.user_id AND ' . $living . '
              LEFT JOIN regions reg ON reg.id = ' . $this->tutorRegionSql('t') . '
              WHERE ' . $this->tutorRegisteredSql('t') . '
-             GROUP BY reg.sido_name',
+             ' . $group,
         ), 'tutor');
         $absorb($this->rows(
-            'SELECT reg.sido_name AS sido, COUNT(*) AS n
+            'SELECT reg.sido_name AS sido, reg.sigungu_name AS sg, reg.sigungu_code AS code, COUNT(*) AS n
              FROM students s
              INNER JOIN users u ON u.id = s.guardian_user_id AND ' . $living . '
              LEFT JOIN regions reg ON reg.id = ' . $this->studentRegionSql('s') . '
              WHERE ' . $this->studentRegisteredSql('s') . '
-             GROUP BY reg.sido_name',
+             ' . $group,
         ), 'student');
 
-        $paidSelect = 'SELECT reg.sido_name AS sido, sub.sku_code AS sku, COUNT(DISTINCT sub.provider_id) AS n
+        $paidSelect = 'SELECT reg.sido_name AS sido, reg.sigungu_name AS sg, reg.sigungu_code AS code, sub.sku_code AS sku, COUNT(DISTINCT sub.provider_id) AS n
             FROM provider_position_subscriptions sub
             INNER JOIN users u ON u.id = sub.user_id AND ' . $living;
         $paidWhere = ' WHERE sub.provider_id IS NOT NULL AND ' . $this->activePaidSql('sub');
@@ -346,12 +373,17 @@ final class AdminStatsRepository
              LEFT JOIN study_rooms sr ON sr.id = sub.provider_id
              LEFT JOIN regions reg ON reg.id = ' . $this->studyRoomRegionSql('sr')
             . $paidWhere . " AND sub.provider_type = 'study_room'
-             GROUP BY reg.sido_name, sub.sku_code",
+             {$group}, sub.sku_code",
         ) as $row) {
             $sku = (string) ($row['sku'] ?? '');
             if ($sku === 'prime' || $sku === 'pick') {
-                $sido = isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null;
-                $add($sido, $sku, (int) ($row['n'] ?? 0));
+                $add(
+                    isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null,
+                    isset($row['sg']) && is_string($row['sg']) ? $row['sg'] : null,
+                    $this->regionCode($row['code'] ?? null),
+                    $sku,
+                    (int) ($row['n'] ?? 0),
+                );
             }
         }
         foreach ($this->rows(
@@ -359,12 +391,17 @@ final class AdminStatsRepository
              LEFT JOIN tutors t ON t.id = sub.provider_id
              LEFT JOIN regions reg ON reg.id = ' . $this->tutorRegionSql('t')
             . $paidWhere . " AND sub.provider_type = 'tutor'
-             GROUP BY reg.sido_name, sub.sku_code",
+             {$group}, sub.sku_code",
         ) as $row) {
             $sku = (string) ($row['sku'] ?? '');
             if ($sku === 'prime' || $sku === 'pick') {
-                $sido = isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null;
-                $add($sido, $sku, (int) ($row['n'] ?? 0));
+                $add(
+                    isset($row['sido']) && is_string($row['sido']) ? $row['sido'] : null,
+                    isset($row['sg']) && is_string($row['sg']) ? $row['sg'] : null,
+                    $this->regionCode($row['code'] ?? null),
+                    $sku,
+                    (int) ($row['n'] ?? 0),
+                );
             }
         }
         foreach ($this->rows(
@@ -376,7 +413,7 @@ final class AdminStatsRepository
         ) as $row) {
             $sku = (string) ($row['sku'] ?? '');
             if ($sku === 'prime' || $sku === 'pick') {
-                $add(null, $sku, (int) ($row['n'] ?? 0));
+                $add(null, null, null, $sku, (int) ($row['n'] ?? 0));
             }
         }
 
@@ -390,14 +427,14 @@ final class AdminStatsRepository
                 $names,
             ) as $row) {
                 $name = (string) ($row['sido_name'] ?? '');
-                if ($name !== '' && isset($map[$name])) {
+                if ($name !== '' && isset($map[$name]) && !isset($sorted[$name])) {
                     $sorted[$name] = true;
-                    $ordered[] = ['sido' => $name] + $map[$name];
+                    $ordered[] = $this->sidoRegionRow($name, $map[$name]);
                 }
             }
-            foreach ($map as $name => $counts) {
+            foreach ($map as $name => $levels) {
                 if (!isset($sorted[$name])) {
-                    $ordered[] = ['sido' => $name] + $counts;
+                    $ordered[] = $this->sidoRegionRow($name, $levels);
                 }
             }
         }
@@ -417,6 +454,171 @@ final class AdminStatsRepository
             'unclassified' => $unclassified,
             'total' => $total,
         ];
+    }
+
+    /**
+     * R2. 구가 있는 시. 요청마다 regions에서 한 번 뽑는다.
+     *
+     * @return array<string, array<string, true>>
+     */
+    private function citiesWithGu(): array
+    {
+        $cities = [];
+        foreach ($this->rows(
+            "SELECT DISTINCT sido_name, TRIM(sigungu_name) AS sg FROM regions WHERE sigungu_name LIKE '% %'",
+        ) as $row) {
+            $sido = trim((string) ($row['sido_name'] ?? ''));
+            $sg = $this->collapseRegionName(isset($row['sg']) ? (string) $row['sg'] : '');
+            if ($sido === '' || preg_match(self::REGION_GU, $sg, $match) !== 1) {
+                continue;
+            }
+            $cities[$sido][$match[1]] = true;
+        }
+
+        return $cities;
+    }
+
+    /**
+     * R1, R3~R6. 2단계 이름과, 있으면 3단계 이름.
+     *
+     * @param array<string, array<string, true>> $cities
+     * @return array{0: string, 1: ?string}
+     */
+    private function classifyRegion(string $sido, ?string $sigungu, ?string $code, array $cities): array
+    {
+        $sg = $this->collapseRegionName($sigungu);
+        if ($sg === '' || $sg === $sido) {
+            return [self::REGION_L2_UNSPECIFIED, null];
+        }
+        if (preg_match(self::REGION_GU, $sg, $match) === 1) {
+            return [$match[1], $match[2]];
+        }
+        if ($sido === '전남광주통합특별시') {
+            $unitCode = trim((string) $code);
+            if (in_array($unitCode, TutorRegionUnit::GWANGJU_GU_CODES, true)) {
+                return [TutorRegionUnit::GWANGJU_UNIT_NAME, $sg];
+            }
+            if ($unitCode === TutorRegionUnit::GWANGJU_SIGUNGU_CODE) {
+                return [TutorRegionUnit::GWANGJU_UNIT_NAME, self::REGION_L3_UNSPECIFIED];
+            }
+        }
+        if (isset($cities[$sido][$sg])) {
+            return [$sg, self::REGION_L3_UNSPECIFIED];
+        }
+
+        return [$sg, null];
+    }
+
+    private function collapseRegionName(?string $name): string
+    {
+        $text = trim((string) $name);
+        $collapsed = preg_replace('/\s+/u', ' ', $text);
+
+        return is_string($collapsed) ? $collapsed : '';
+    }
+
+    private function regionCode(mixed $code): ?string
+    {
+        if (is_string($code) || is_int($code)) {
+            return (string) $code;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, array{own: array<string, int>, kids: array<string, array<string, int>>}> $levels
+     * @return array<string, mixed>
+     */
+    private function sidoRegionRow(string $sido, array $levels): array
+    {
+        $children = $this->level2RegionRows($levels);
+        $counts = $this->blankRegionCounts();
+        foreach ($children as $child) {
+            foreach ($counts as $field => $value) {
+                $counts[$field] = $value + (int) $child[$field];
+            }
+        }
+
+        return ['sido' => $sido] + $counts + ['children' => $children];
+    }
+
+    /**
+     * @param array<string, array{own: array<string, int>, kids: array<string, array<string, int>>}> $levels
+     * @return list<array<string, mixed>>
+     */
+    private function level2RegionRows(array $levels): array
+    {
+        $rows = [];
+        foreach ($this->sortRegionNames(array_keys($levels)) as $name) {
+            $own = $levels[$name]['own'];
+            $kids = $levels[$name]['kids'];
+            if ($kids !== []) {
+                $hasOwn = false;
+                foreach ($own as $value) {
+                    if ($value !== 0) {
+                        $hasOwn = true;
+                        break;
+                    }
+                }
+                if ($hasOwn) {
+                    if (!isset($kids[self::REGION_L3_UNSPECIFIED])) {
+                        $kids[self::REGION_L3_UNSPECIFIED] = $this->blankRegionCounts();
+                    }
+                    foreach ($own as $field => $value) {
+                        $kids[self::REGION_L3_UNSPECIFIED][$field] += $value;
+                    }
+                }
+                $children = $this->level3RegionRows($kids);
+                $counts = $this->blankRegionCounts();
+                foreach ($children as $child) {
+                    foreach ($counts as $field => $value) {
+                        $counts[$field] = $value + (int) $child[$field];
+                    }
+                }
+            } else {
+                $children = [];
+                $counts = $own;
+            }
+            $rows[] = ['name' => $name] + $counts + ['children' => $children];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param array<string, array<string, int>> $kids
+     * @return list<array<string, mixed>>
+     */
+    private function level3RegionRows(array $kids): array
+    {
+        $rows = [];
+        foreach ($this->sortRegionNames(array_keys($kids)) as $name) {
+            $rows[] = ['name' => $name] + $kids[$name];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @param list<string> $names
+     * @return list<string>
+     */
+    private function sortRegionNames(array $names): array
+    {
+        usort($names, function (string $left, string $right): int {
+            $tail = static function (string $name): int {
+                return ($name === self::REGION_L2_UNSPECIFIED || $name === self::REGION_L3_UNSPECIFIED) ? 1 : 0;
+            };
+            $rank = $tail($left) <=> $tail($right);
+            if ($rank !== 0) {
+                return $rank;
+            }
+
+            return strcmp($left, $right);
+        });
+
+        return $names;
     }
 
     /**
