@@ -233,6 +233,14 @@ export function importGreetingHandoff() {
   return false;
 }
 
+/** 이미 받은 응답 items를 저장한다. 요청은 하지 않는다. @param {unknown[]} items @returns {boolean} */
+export function writeGreetingsFromApiItems(items) {
+  if (!Array.isArray(items)) return false;
+  const before = JSON.stringify(readGreetings());
+  writeGreetings(items.map((row) => fromApi(/** @type {Record<string, unknown>} */ (row))).filter(isRecord));
+  return JSON.stringify(readGreetings()) !== before;
+}
+
 /** @returns {Promise<boolean>} */
 export async function pullGreetingsFromApi() {
   try {
@@ -240,9 +248,7 @@ export async function pullGreetingsFromApi() {
     if (!res.ok) return false;
     const data = await res.json();
     if (!data?.ok || !Array.isArray(data.items)) return false;
-    const before = JSON.stringify(readGreetings());
-    writeGreetings(data.items.map(fromApi).filter(isRecord));
-    return JSON.stringify(readGreetings()) !== before;
+    return writeGreetingsFromApiItems(data.items);
   } catch {
     return false;
   }

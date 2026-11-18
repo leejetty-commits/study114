@@ -11,6 +11,7 @@ import {
   importGreetingHandoff,
   publishGreeting,
   pullGreetingsFromApi,
+  writeGreetingsFromApiItems,
   turnOffWelcomeGreeting,
   unpublishGreeting,
 } from '../../shared/neighborhood-greeting-store.js';
@@ -30,7 +31,21 @@ export function importNeighborhoodGreetingHandoff() {
   return importGreetingHandoff();
 }
 
-export function pullNeighborhoodGreetings() {
+export async function pullNeighborhoodGreetings() {
+  const owner = greetingOwner();
+  const flight = greetingFlight;
+  if (flight && flight.owner === owner) {
+    try {
+      await flight.promise;
+    } catch {
+      /* 홈 칸 요청이 실패하면 아래에서 다시 받는다. */
+    }
+  }
+  const nowOwner = greetingOwner();
+  const raw = greetingRaw;
+  if (raw && raw.owner === nowOwner && Date.now() - raw.at < GREETING_TTL_MS && Array.isArray(raw.items)) {
+    return writeGreetingsFromApiItems(raw.items);
+  }
   return pullGreetingsFromApi();
 }
 
@@ -143,13 +158,38 @@ function fromApi(row) {
 }
 
 async function fetchGreetings() {
-  const res = await fetch('/api/neighborhood-greetings.php', { credentials: 'include' });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok || !Array.isArray(data.items)) throw new Error('neighborhood-greetings');
-  return data.items.map(fromApi).filter((row) => row.registrationId > 0);
+  const owner = greetingOwner();
+  const epoch = greetingEpoch;
+  const run = (async () => {
+    const res = await fetch('/api/neighborhood-greetings.php', { credentials: 'include' });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok || !Array.isArray(data.items)) throw new Error('neighborhood-greetings');
+    if (epoch === greetingEpoch && owner === greetingOwner()) {
+      greetingRaw = { owner, at: Date.now(), items: data.items };
+    }
+    return data.items.map(fromApi).filter((row) => row.registrationId > 0);
+  })();
+  greetingFlight = { owner, promise: run };
+  try {
+    return await run;
+  } finally {
+    if (greetingFlight && greetingFlight.promise === run) greetingFlight = null;
+  }
 }
 
 const greetingLoader = createNewsLoader(fetchGreetings, /** @type {ReturnType<typeof fromApi>[]} */ ([]), GREETING_TTL_MS);
+
+/** @type {{ owner: string, at: number, items: unknown[] }|null} */
+let greetingRaw = null;
+/** @type {{ owner: string, promise: Promise<unknown> }|null} */
+let greetingFlight = null;
+let greetingEpoch = 0;
+
+function clearGreetingReuse() {
+  greetingEpoch += 1;
+  greetingRaw = null;
+  greetingFlight = null;
+}
 
 function greetingOwner() {
   const user = getAuthUser();
@@ -161,6 +201,7 @@ if (typeof window !== 'undefined' && typeof window.addEventListener === 'functio
   ['auth:login', 'auth:logout', 'auth:role-change'].forEach((name) => {
     window.addEventListener(name, () => {
       greetingLoader.reset();
+      clearGreetingReuse();
       closeGreetingFeed();
     });
   });
@@ -187,6 +228,7 @@ export function ensureGreetings() {
 /** 올리기·내리기 뒤 다음 홈 그리기에서 서버 값을 다시 받게 한다. */
 export function invalidateGreetings() {
   greetingLoader.reset();
+  clearGreetingReuse();
 }
 
 /**

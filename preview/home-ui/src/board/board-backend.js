@@ -21,6 +21,34 @@ const postsByBoard = new Map();
 let noticeCenterPosts = [];
 /** @type {any[]} */
 let noticeHomePosts = [];
+/** view=home&limit=3 이 진행 중일 때만 같이 쓴다. 끝나면 비운다. */
+/** @type {Promise<{ posts?: any[] }>|null} */
+let noticeHomeFlight = null;
+let noticeHomeGen = 0;
+
+function abandonNoticeHomeFlight() {
+  noticeHomeGen += 1;
+  noticeHomeFlight = null;
+}
+
+/** 홈 공지 3줄. 진행 중이면 그 요청을 돌려주고, 끝난 뒤에는 새로 받는다. */
+export function fetchNoticeHomeLimited() {
+  if (noticeHomeFlight) return noticeHomeFlight;
+  const request = fetchBoardPosts('notice', { view: 'home', limit: 3 });
+  const run = request.finally(() => {
+    if (noticeHomeFlight === run) noticeHomeFlight = null;
+  });
+  noticeHomeFlight = run;
+  return run;
+}
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  for (const name of ['auth:login', 'auth:logout', 'auth:role-change']) {
+    window.addEventListener(name, () => {
+      abandonNoticeHomeFlight();
+    });
+  }
+}
 
 export function isBoardApiMode() {
   return apiMode;
@@ -169,6 +197,7 @@ export async function apiOpenSubmissionAttachment(postKey, opts = {}) {
 export function resetNoticeCaches() {
   noticeCenterPosts = [];
   noticeHomePosts = [];
+  abandonNoticeHomeFlight();
 }
 
 export async function hydrateNoticeCenter() {
@@ -181,10 +210,13 @@ export async function hydrateNoticeCenter() {
 }
 
 export async function hydrateNoticeHome() {
+  const gen = noticeHomeGen;
   try {
-    const data = await fetchBoardPosts('notice', { view: 'home', limit: 3 });
+    const data = await fetchNoticeHomeLimited();
+    if (gen !== noticeHomeGen) return;
     noticeHomePosts = (data.posts ?? []).map((p) => ({ ...p }));
   } catch {
+    if (gen !== noticeHomeGen) return;
     noticeHomePosts = [];
   }
 }
