@@ -92,6 +92,7 @@ export function renderContactFormHtml(opts = {}) {
           <input type="checkbox" name="proof_document_available" ${s.proof_document_available ? 'checked' : ''} />
           <span class="form-check__label">증빙서류 제출 가능</span>
         </label>
+        <p class="form-hint">우동공과는 서류를 받거나 보관하지 않습니다. 쪽지로 연결된 뒤 상대가 원하면 직접 보여 줄 수 있다는 표시입니다.</p>
       </div>
       <div class="form-group" data-trc-field="teaching_style_badges">
         <span class="form-label form-label--tier">강의스타일</span>

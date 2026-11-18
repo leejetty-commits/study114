@@ -746,3 +746,15 @@ form[data-form="contact"] .register-nav [data-action="skip-detail"]::after {
   height: var(--btn-tone-hit, 44px);
   transform: translateY(-50%);
 }
+
+/* 14d 홍보 채널 간격 — 공부방·과외쌤 상세등록·마이페이지 상세정보2 공통 */
+.register-flow form[data-form] .register-promo-channels[data-promo-channels] { display: grid; gap: 16px; }
+.register-flow form[data-form] .register-promo-channels[data-promo-channels] .form-group { margin: 0; }
+.register-flow form[data-form] .register-promo-channels[data-promo-channels] > .register-promo-blog { display: grid; gap: 12px; padding: 14px 16px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f9fafb; }
+.register-flow form[data-form] .register-promo-channels[data-promo-channels] > .register-plus-btn { justify-self: start; margin: -8px 0 4px; }
+.register-flow form[data-form] .register-promo-channels[data-promo-channels] > .register-hint { margin: 0; }
+@media (min-width: 768px) {
+  .register-flow form[data-form] .register-promo-channels[data-promo-channels] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .register-flow form[data-form] .register-promo-channels[data-promo-channels] > * { grid-column: 1 / -1; }
+  .register-flow form[data-form] .register-promo-channels[data-promo-channels] > .form-group:nth-last-child(-n+3) { grid-column: auto; }
+}
