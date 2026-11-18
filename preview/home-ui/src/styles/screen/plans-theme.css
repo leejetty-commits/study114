@@ -1778,9 +1778,9 @@
   .home-app--plans-hub .plans-hub-cinema {
     grid-column: 1 / -1;
     grid-row: 1;
-    height: 208px;
+    height: auto;
     min-height: 208px;
-    max-height: 208px;
+    max-height: none;
     margin: 0 0 var(--plans-hub-hero-gap);
   }
 
