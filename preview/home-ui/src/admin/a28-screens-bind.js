@@ -17,6 +17,7 @@ import { bindTodayHub, registerTodayBinders } from './a28-today-hub.js';
 import { bindSettlement } from './a28-settlement.js';
 import { MEMBER_MAIL_PATH, bindMemberMail } from './a28-member-mail.js';
 import { WITHDRAW_REASONS_PATH, bindWithdrawReasons } from './a28-withdraw-reasons.js';
+import { STATS_PATH, bindStats } from './a28-stats.js';
 import { bindRegistrationList } from './a28-registration-list.js';
 import {
   bindCommerceAdminEvents,
@@ -57,6 +58,7 @@ export function bindA28ScreenEvents(root, path, rerender) {
   if (path === '/admin/settlement' || path === '/admin') bindSettlement(root, rerender);
   if (path === MEMBER_MAIL_PATH) bindMemberMail(root);
   if (path === WITHDRAW_REASONS_PATH) bindWithdrawReasons(root);
+  if (path === STATS_PATH) bindStats(root);
 
   root.querySelectorAll('[data-promo-copy-url]').forEach((btn) => {
     btn.addEventListener('click', async () => {

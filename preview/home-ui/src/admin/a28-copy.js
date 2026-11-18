@@ -118,6 +118,15 @@ export function adminPreviewNoticeText(path) {
  */
 export const A28_MENU = [
   {
+    id: 'stats',
+    label: '통계',
+    path: '/admin/stats',
+    menuId: 'stats',
+    masterOnly: true,
+    help: '실제 회원 기준 가입·카드·유료 이용·결제를 한눈에 봅니다.',
+    screenId: 'A28-STATS',
+  },
+  {
     id: 'hub',
     label: '운영 홈',
     path: '/admin',
@@ -505,6 +514,7 @@ export const A28_NAV = flattenAdminNav();
 /** 메뉴 id → 한글 (권한 화면용) */
 export const A28_MENU_ID_LABELS = {
   hub: '운영 홈',
+  stats: '통계',
   promo: '홍보 런치',
   settings: '사이트 기본',
   permissions: '권한·계정',
