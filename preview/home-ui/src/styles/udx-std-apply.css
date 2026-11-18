@@ -836,7 +836,7 @@ table {
 /* 로그인 직후 목적지 한 줄. 전용 페이지가 아니다. */
 .login-welcome {
   position: fixed;
-  top: 1rem;
+  top: calc(var(--preview-toolbar-h, 0px) + var(--ops-chrome-h, 0px) + var(--site-header-h, 4.75rem) + 0.75rem);
   left: 50%;
   z-index: 80;
   max-width: min(28rem, calc(100vw - 2rem));
@@ -851,6 +851,35 @@ table {
   text-align: center;
   box-shadow: 0 8px 24px rgba(28, 25, 23, 0.18);
   transform: translateX(-50%);
+  animation: login-welcome-life 4.2s linear both;
+}
+
+/* 0.4초 나타나기, 약 3.2초 머물기, 0.6초 사라지기. 가로 가운데는 유지한다. */
+@keyframes login-welcome-life {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.375rem);
+  }
+  9.5238% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  85.7143% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 0.375rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-welcome {
+    animation: none;
+    opacity: 1;
+    transform: translateX(-50%);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

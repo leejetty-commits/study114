@@ -93,5 +93,7 @@ export function presentLoginWelcome(displayName, loggedIn) {
   el.setAttribute('aria-live', 'polite');
   el.textContent = loginWelcomeText(displayName);
   document.body.appendChild(el);
-  window.setTimeout(() => el.remove(), 4200);
+  const removeWelcome = () => el.remove();
+  el.addEventListener('animationend', removeWelcome, { once: true });
+  window.setTimeout(removeWelcome, 4200);
 }
