@@ -71,9 +71,11 @@ try {
     exit;
 } catch (LoginRateLimitException $e) {
     $failToLogin($e->getMessage());
+} catch (InvalidArgumentException $e) {
+    $failToLogin($e->getMessage());
 } catch (Throwable $e) {
     error_log('[oauth/start] ' . $e::class . ' ' . $e->getMessage()
         . ' provider=' . $provider
         . ' origin=' . (study114_request_origin() ?? '-'));
-    $failToLogin($e->getMessage());
+    $failToLogin('소셜 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
 }

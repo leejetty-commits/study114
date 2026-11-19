@@ -80,11 +80,19 @@ final class AdminMemberDeleteService
                     'message' => $one['message'],
                 ];
                 $ok++;
-            } catch (Throwable $e) {
+            } catch (InvalidArgumentException $e) {
                 $results[] = [
                     'user_id' => $userId,
                     'ok' => false,
                     'message' => $e->getMessage(),
+                ];
+                $fail++;
+            } catch (Throwable $e) {
+                error_log('[member-delete] ' . $e->getMessage());
+                $results[] = [
+                    'user_id' => $userId,
+                    'ok' => false,
+                    'message' => '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
                 ];
                 $fail++;
             }

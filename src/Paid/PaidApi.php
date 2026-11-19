@@ -110,7 +110,11 @@ final class PaidApi
         } catch (InvalidArgumentException $e) {
             self::fail(422, 'validation', $e->getMessage());
         } catch (Throwable $e) {
-            self::fail(500, 'server_error', $e->getMessage());
+            if ($e instanceof \RuntimeException && $e->getMessage() === PaidCheckoutGate::CLOSED_MESSAGE) {
+                self::fail(500, 'server_error', $e->getMessage());
+            }
+            error_log('[paid] ' . $e->getMessage());
+            self::fail(500, 'server_error', '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
         }
     }
 }

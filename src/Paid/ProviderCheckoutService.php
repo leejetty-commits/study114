@@ -624,8 +624,13 @@ final class ProviderCheckoutService
                 } catch (\Throwable $e) {
                     $this->recordImmediateFailure($orderRef, $e);
                     $paid = $this->orders->getByRef($orderRef) ?? $order;
+                    $shown = $e->getMessage();
+                    if (!$e instanceof InvalidArgumentException) {
+                        error_log('[checkout] immediate: ' . $e->getMessage());
+                        $shown = '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                    }
 
-                    return $this->buildCompletePayload($paid, false, $e->getMessage());
+                    return $this->buildCompletePayload($paid, false, $shown);
                 } finally {
                     $this->releaseMemoLock($immLock);
                 }
@@ -648,8 +653,13 @@ final class ProviderCheckoutService
                     $this->releaseMemoLock($lockKey);
                     $lockKey = null;
                 }
+                $shown = $e->getMessage();
+                if (!$e instanceof InvalidArgumentException) {
+                    error_log('[checkout] fulfill: ' . $e->getMessage());
+                    $shown = '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.';
+                }
 
-                return $this->buildCompletePayload($paid, false, $e->getMessage());
+                return $this->buildCompletePayload($paid, false, $shown);
             }
 
             $paid = $this->orders->getByRef($orderRef);
