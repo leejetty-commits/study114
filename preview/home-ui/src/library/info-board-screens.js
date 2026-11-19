@@ -26,6 +26,21 @@ import {
 import { renderStateCard } from '../empty-state-copy.js';
 import { getAuthUser } from '../auth-session.js';
 import { boardLoginHref, canDiscoverBoard, STUDENT_TIPS_BOARD_KEY } from '../board-channel-acl.js';
+import { mountInfoEmbed } from './info-embed.js';
+
+/** 공부방 쏙쏙정보 목록에만 붙는 안내 탭. 서버 분류가 아니라 이 화면의 로컬 상태다. */
+const ROOM_EMBEDS = [
+  { id: 'edu-office', label: '공부방·교습소 신고·설립 안내' },
+  { id: 'franchise', label: '공부방·교습소 프랜차이즈 안내' },
+];
+
+/** @type {Map<string, string>} */
+const embedByBoard = new Map();
+
+function activeEmbed(board) {
+  if (board?.boardKey !== 'info-room') return '';
+  return embedByBoard.get(board.boardKey) || '';
+}
 
 /** 본문 줄바꿈은 CSS(pre-wrap)로 살리고, 꺾쇠는 글자로만 그린다. */
 function esc(s) {
@@ -246,14 +261,22 @@ function renderMeta(board, post, access) {
 /* ── 목록 ── */
 
 function renderTabs(board, current) {
-  const tabs = [{ key: '', label: COPY.allTab }, ...board.categories];
+  const embed = activeEmbed(board);
+  const tabs = [
+    { key: '', label: COPY.allTab, embed: '' },
+    ...board.categories.map((c) => ({ key: c.key, label: c.label, embed: '' })),
+  ];
+  if (board.boardKey === 'info-room') {
+    for (const item of ROOM_EMBEDS) tabs.push({ key: '', label: item.label, embed: item.id });
+  }
   return `
     <div class="sup-subtabs info-board__tabs" role="tablist">
       ${tabs
-        .map(
-          (t) =>
-            `<button type="button" role="tab" class="sup-subtab info-board__tab${t.key === current ? ' is-active' : ''}" aria-selected="${t.key === current}" data-info-cat="${esc(t.key)}">${esc(t.label)}</button>`,
-        )
+        .map((t) => {
+          const on = t.embed ? embed === t.embed : !embed && t.key === current;
+          const attr = t.embed ? `data-info-embed="${esc(t.embed)}"` : `data-info-cat="${esc(t.key)}"`;
+          return `<button type="button" role="tab" class="sup-subtab info-board__tab${on ? ' is-active' : ''}" aria-selected="${on}" ${attr}>${esc(t.label)}</button>`;
+        })
         .join('')}
     </div>`;
 }
@@ -278,6 +301,9 @@ function renderComposeArea(board, entry, viewer) {
 
 function renderList(board, entry, viewer) {
   const current = entry?.category || '';
+  if (activeEmbed(board)) {
+    return `${renderTabs(board, current)}<div class="info-embed" data-info-embed-host="${esc(activeEmbed(board))}"></div>`;
+  }
   let body;
   if (!entry) {
     body = renderLoading(`data-info-list-load="${esc(board.boardKey)}"`);
@@ -503,11 +529,30 @@ export function bindInfoBoardEvents(root, rerender, path) {
   root.querySelectorAll('[data-info-cat]').forEach((btn) => {
     btn.addEventListener('click', () => {
       const category = btn.getAttribute('data-info-cat') || '';
-      if ((getInfoList(viewer, boardKey)?.category || '') === category) return;
+      const hadEmbed = Boolean(activeEmbed(board));
+      if (hadEmbed) embedByBoard.delete(board.boardKey);
+      const current = getInfoList(viewer, boardKey)?.category || '';
+      if (current === category) {
+        if (hadEmbed) rerender();
+        return;
+      }
       root.querySelectorAll('[data-info-cat]').forEach((b) => b.setAttribute('disabled', ''));
       once(`${viewer.ownerKey}|list|${boardKey}`, () => loadInfoList(viewer, boardKey, category), rerender);
+      if (hadEmbed) rerender();
     });
   });
+
+  root.querySelectorAll('[data-info-embed]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-info-embed') || '';
+      if (!ROOM_EMBEDS.some((item) => item.id === id) || activeEmbed(board) === id) return;
+      embedByBoard.set(board.boardKey, id);
+      rerender();
+    });
+  });
+
+  const embedHost = /** @type {HTMLElement|null} */ (root.querySelector('[data-info-embed-host]'));
+  if (embedHost) mountInfoEmbed(embedHost, embedHost.getAttribute('data-info-embed-host') || '');
 
   root.querySelector('[data-info-more]')?.addEventListener('click', async (e) => {
     const btn = /** @type {HTMLButtonElement} */ (e.currentTarget);
