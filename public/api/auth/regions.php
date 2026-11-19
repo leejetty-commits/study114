@@ -172,7 +172,7 @@ try {
     study114_regions_json($method, $action, [
         'ok' => false,
         'error' => 'server_error',
-        'message' => $e->getMessage(),
+        'message' => '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
         'cities' => [],
         'tutor_units' => [],
     ]);

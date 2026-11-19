@@ -67,10 +67,11 @@ try {
         'message' => $e->getMessage(),
     ], JSON_UNESCAPED_UNICODE);
 } catch (Throwable $e) {
+    error_log('[withdraw] ' . $e->getMessage());
     http_response_code(500);
     echo json_encode([
         'ok' => false,
         'error' => 'withdraw_failed',
-        'message' => $e->getMessage(),
+        'message' => '일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
     ], JSON_UNESCAPED_UNICODE);
 }
