@@ -35,7 +35,7 @@ export const SITE_FOOTER_LINKS = [
   { path: '/support/policies/platform', label: '플랫폼 고지' },
   { path: '/plans/positions', label: '유료상품' },
   { path: '/plans', label: '환불정책' },
-  { path: '/about', label: '서비스 소개' },
+  { href: '/info/', label: '서비스 소개' },
   { path: '/support', label: '고객센터', supportHome: true },
 ];
 
@@ -142,6 +142,9 @@ export function renderSiteFooter(opts = {}) {
     const label = item.strong
       ? `<strong class="site-footer__link-strong">${item.label}</strong>`
       : item.label;
+    if (item.href) {
+      return `<a href="${escAttr(item.href)}"${extraAttr}>${label}</a>`;
+    }
     if (absolute) {
       const href = `${homeBase}/#${item.path}`;
       return `<a href="${href}" data-util-href="${href}"${extraAttr}>${label}</a>`;
