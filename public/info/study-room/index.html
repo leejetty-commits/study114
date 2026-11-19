@@ -14,58 +14,185 @@
   <meta property="og:url" content="https://study114.net/info/study-room/">
   <meta property="og:image" content="https://study114.net/assets/brand/og-cover-2026.png">
   <style>
-    body { margin: 0; color: #1c1c1c; background: #fff; font-family: system-ui, "Segoe UI", sans-serif; line-height: 1.7; }
-    header, main, footer { max-width: 720px; margin: 0 auto; padding: 0 16px; }
-    header { padding-top: 20px; padding-bottom: 12px; border-bottom: 1px solid #e6e6e6; }
-    .logo { height: 32px; }
-    nav { margin-top: 12px; }
-    nav a { margin-right: 14px; }
-    h1 { font-size: 1.45rem; line-height: 1.4; margin: 1.2rem 0 0.6rem; }
-    h2 { font-size: 1.1rem; margin: 1.4rem 0 0.4rem; }
-    a { color: #0b57d0; }
-    .actions a { display: inline-block; margin: 0 10px 8px 0; }
-    footer { margin-top: 28px; padding-top: 16px; padding-bottom: 28px; border-top: 1px solid #e6e6e6; font-size: 0.92rem; }
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; max-width: 100%; }
+    body {
+      color: #1c1917;
+      background: #f7f8fa;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+    }
+    img { max-width: 100%; height: auto; }
+    a { color: #266bc4; }
+    p, li, h1, h2 { overflow-wrap: break-word; }
+    .info-head { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
+    .info-head__inner, .hero__inner, .page, .info-foot__inner {
+      max-width: 960px;
+      margin: 0 auto;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .info-head__inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 20px;
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+    .logo { display: block; height: 32px; width: auto; }
+    .info-nav { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .info-nav a { font-weight: 600; text-decoration: none; }
+    .info-nav a[aria-current="page"] { color: #184a88; }
+    .hero { background: #eaf2fc; border-bottom: 1px solid #e5e7eb; }
+    .hero__inner { padding-top: 28px; padding-bottom: 32px; }
+    .hero .logo { height: 40px; margin-bottom: 16px; }
+    h1 { margin: 0 0 8px; font-size: 1.7rem; line-height: 1.35; }
+    .lead { margin: 0 0 16px; font-size: 1.05rem; }
+    .page { padding-top: 8px; padding-bottom: 12px; }
+    .section { margin: 22px 0; }
+    h2 { margin: 0 0 8px; color: #1f5ba8; font-size: 1.15rem; }
+    .panel {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .card {
+      display: block;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 16px;
+      color: inherit;
+      text-decoration: none;
+    }
+    .card strong { display: block; margin-bottom: 6px; color: #266bc4; }
+    .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+    .steps li {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-weight: 600;
+    }
+    .note {
+      margin-top: 12px;
+      background: #ffffff;
+      border-left: 4px solid #266bc4;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btn {
+      display: inline-block;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-decoration: none;
+    }
+    .btn--strong { background: #266bc4; color: #ffffff; }
+    .btn--strong:hover { background: #184a88; }
+    .btn--line { background: #ffffff; color: #266bc4; border: 1px solid #266bc4; }
+    ol, ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    .info-foot {
+      margin-top: 12px;
+      background: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      color: #6b7280;
+      font-size: 0.92rem;
+    }
+    .info-foot__inner { padding-top: 20px; padding-bottom: 32px; }
+    .info-foot p { margin: 0 0 8px; }
+    .info-foot__company { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+    .sep { color: #e5e7eb; }
+    @media (max-width: 640px) {
+      .cards { grid-template-columns: minmax(0, 1fr); }
+      h1 { font-size: 1.4rem; }
+    }
+
   </style>
 </head>
 <body>
-  <header>
-    <a href="/"><img class="logo" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과"></a>
-    <nav>
-      <a href="/info/">서비스 소개</a>
-      <a href="/info/study-room/">공부방</a>
-      <a href="/info/tutor/">과외쌤</a>
-      <a href="/info/parents/">학생·학부모</a>
-    </nav>
+  <header class="info-head">
+    <div class="info-head__inner">
+      <a href="/"><img class="logo" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과"></a>
+      <nav class="info-nav" aria-label="안내">
+        <a href="/info/">서비스 소개</a>
+        <a href="/info/study-room/" aria-current="page">공부방</a>
+        <a href="/info/tutor/">과외쌤</a>
+        <a href="/info/parents/">학생·학부모</a>
+      </nav>
+    </div>
   </header>
-  <main>
-    <h1>공부방 원장님 안내</h1>
-    <h2>동네에 공부방을 알리는 곳</h2>
-    <p>이 페이지는 동네 학부모와 학생에게 공부방을 알리려는 원장님을 위한 안내입니다. 우동공과는 공부방·과외쌤과 학생을 쪽지로 연결하는 지역 공부방 포털입니다. 이용 대상은 공부방, 과외쌤, 학생/학부모입니다. 공부방으로 등록하면, 그 지역을 고른 학생과 학부모가 지도와 목록에서 공부방을 볼 수 있습니다.</p>
-    <h2>등록 순서</h2>
-    <p>공부방 등록은 아래 순서로 이어집니다.</p>
-    <ol>
-      <li>회원가입을 합니다.</li>
-      <li>공부방을 등록합니다.</li>
-      <li>등록한 공부방이 고른 지역에 노출됩니다.</li>
-      <li>학부모와 학생이 쪽지로 문의를 보냅니다.</li>
-    </ol>
-    <p>지역을 고르면 그 동네의 공부방·과외쌤·학생 수요를 지도와 목록으로 보고, 쪽지로 연락합니다. 상세 정보와 쪽지는 로그인 후 이용할 수 있습니다. 문의를 읽고 답하려면 로그인한 상태여야 하고, 쪽지로 받은 문의의 자세한 내용도 로그인 후에 봅니다.</p>
-    <h2>유료 노출 안내</h2>
-    <p>유료 노출 상품이 있으며 자세한 내용은 로그인 후 안내합니다.</p>
-    <h2>등록 안내로 이동</h2>
-    <p>순서를 확인했다면 공부방 등록 안내로 이동합니다. 계정이 없으면 회원가입·로그인을 먼저 합니다. 이미 올라온 다른 공부방이 어떻게 보이는지는 공부방 찾기에서 볼 수 있습니다.</p>
-    <p class="actions">
-      <a href="/#/register-intro/room">공부방 등록 안내</a>
-      <a href="/auth/">회원가입·로그인</a>
-      <a href="/search/room">공부방 찾기</a>
-      <a href="/info/">서비스 소개</a>
+  <main class="page">
+    <section class="section">
+      <h1>공부방 원장님 안내</h1>
+    </section>
+    <section class="section">
+      <h2>동네에 공부방을 알리는 곳</h2>
+      <div class="panel">
+        <p>이 페이지는 동네 학부모와 학생에게 공부방을 알리려는 원장님을 위한 안내입니다. 우동공과는 공부방·과외쌤과 학생을 쪽지로 연결하는 지역 공부방 포털입니다. 이용 대상은 공부방, 과외쌤, 학생/학부모입니다. 공부방으로 등록하면, 그 지역을 고른 학생과 학부모가 지도와 목록에서 공부방을 볼 수 있습니다.</p>
+      </div>
+    </section>
+    <section class="section">
+      <h2>등록 순서</h2>
+      <div class="panel">
+        <p>공부방 등록은 아래 순서로 이어집니다.</p>
+        <ol>
+          <li>회원가입을 합니다.</li>
+          <li>공부방을 등록합니다.</li>
+          <li>등록한 공부방이 고른 지역에 노출됩니다.</li>
+          <li>학부모와 학생이 쪽지로 문의를 보냅니다.</li>
+        </ol>
+        <p>지역을 고르면 그 동네의 공부방·과외쌤·학생 수요를 지도와 목록으로 보고, 쪽지로 연락합니다. 상세 정보와 쪽지는 로그인 후 이용할 수 있습니다. 문의를 읽고 답하려면 로그인한 상태여야 하고, 쪽지로 받은 문의의 자세한 내용도 로그인 후에 봅니다.</p>
+      </div>
+    </section>
+    <section class="section">
+      <h2>유료 노출 안내</h2>
+      <div class="panel">
+        <p>유료 노출 상품이 있으며 자세한 내용은 로그인 후 안내합니다.</p>
+      </div>
+    </section>
+    <section class="section">
+      <h2>등록 안내로 이동</h2>
+      <div class="panel">
+        <p>순서를 확인했다면 공부방 등록 안내로 이동합니다. 계정이 없으면 회원가입·로그인을 먼저 합니다. 이미 올라온 다른 공부방이 어떻게 보이는지는 공부방 찾기에서 볼 수 있습니다.</p>
+        <p class="actions">
+      <a class="btn btn--strong" href="/#/register-intro/room">공부방 등록 안내</a>
+      <a class="btn btn--line" href="/search/room">공부방 찾기</a>
+      <a class="btn btn--line" href="/info/">서비스 소개</a>
+      <a class="btn btn--strong" href="/auth/#/signup/terms">회원가입</a>
+      <a class="btn btn--line" href="/auth/#/login">로그인</a>
+      <a class="btn btn--line" href="/support">고객센터</a>
+      <a class="btn btn--line" href="https://pf.kakao.com/_xkeMNX/chat" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
     </p>
+      </div>
+    </section>
   </main>
-  <footer>
-    <p>우동공과는 공부방·과외쌤과 학생을 쪽지로 연결하는 지역 공부방 포털입니다.</p>
-    <p>상호 제이에이치커머스(서비스명 우동공과) · 대표 이종현 · 사업장 주소 경기도 의정부시 능곡로26번길 40, 101동 1101호</p>
-    <p>사업자등록번호 471-29-01819 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819" target="_blank" rel="noopener noreferrer">사업자정보확인</a> · 통신판매업신고 제2025-의정부송산-0680호 · 이메일 help@study114.net</p>
-    <p><a href="/#/support/policies">이용약관·개인정보처리방침</a></p>
+  <footer class="info-foot">
+    <div class="info-foot__inner">
+      <p>우동공과는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 회원 간 거래에 대한 의무와 책임은 각 회원에게 있습니다.</p>
+      <p class="info-foot__company">
+        <span>상호 제이에이치커머스(서비스명 우동공과)</span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>대표 이종현</span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>주소 경기도 의정부시 능곡로26번길 40, 101동 1101호</span>
+      </p>
+      <p class="info-foot__company">
+        <span>사업자등록번호 471-29-01819 <a href="https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819" target="_blank" rel="noopener noreferrer">사업자정보확인</a></span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>통신판매업신고 제2025-의정부송산-0680호</span>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>이메일 <a href="mailto:help@study114.net">help@study114.net</a></span>
+      </p>
+      <p>© 2026 우동공과 · study114</p>
+      <p><a href="/#/support/policies">이용약관·개인정보처리방침</a></p>
+    </div>
   </footer>
 </body>
 </html>

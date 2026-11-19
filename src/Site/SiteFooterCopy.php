@@ -52,7 +52,7 @@ final class SiteFooterCopy
             ['href' => '/#/support/policies/platform', 'label' => '플랫폼 고지'],
             ['href' => '/#/plans/positions', 'label' => '유료상품'],
             ['href' => '/#/plans', 'label' => '환불정책'],
-            ['href' => '/#/about', 'label' => '서비스 소개'],
+            ['href' => '/info/', 'label' => '서비스 소개'],
             ['href' => '/#/support', 'label' => '고객센터'],
         ];
     }
