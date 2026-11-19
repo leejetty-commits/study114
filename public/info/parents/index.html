@@ -43,7 +43,25 @@
       padding-top: 16px;
       padding-bottom: 16px;
     }
-    .logo { display: block; height: 32px; width: auto; }
+    .info-logo {
+      --info-wordmark-h: 32px;
+      --info-symbol-h: calc(var(--info-wordmark-h) * 1.05);
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+      text-decoration: none;
+    }
+    .info-logo__symbol {
+      height: var(--info-symbol-h);
+      width: auto;
+      flex-shrink: 0;
+    }
+    .info-logo__wordmark {
+      height: var(--info-wordmark-h);
+      width: auto;
+      flex-shrink: 0;
+    }
     .info-nav { display: flex; flex-wrap: wrap; gap: 8px 14px; }
     .info-nav a { font-weight: 600; text-decoration: none; }
     .info-nav a[aria-current="page"] { color: #184a88; }
@@ -298,7 +316,7 @@
 <body>
   <header class="info-head">
     <div class="info-head__inner">
-      <a href="/"><img class="logo" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과"></a>
+      <a class="info-logo" href="/"><img class="info-logo__symbol" src="/assets/brand/udong-symbol-2026.png" alt="" width="64" height="93"><img class="info-logo__wordmark" src="/assets/brand/logo-wordmark-2026.png" alt="우동공과" width="297" height="96"></a>
       <nav class="info-nav" aria-label="안내">
         <a href="/info/">서비스 소개</a>
         <a href="/info/study-room/">공부방</a>
