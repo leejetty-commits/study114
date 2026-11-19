@@ -25,7 +25,7 @@
     }
     img { max-width: 100%; height: auto; }
     a { color: #266bc4; }
-    p, li, h1, h2 { overflow-wrap: break-word; }
+    p, li, h1, h2, span { overflow-wrap: break-word; }
     .info-head { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
     .info-head__inner, .hero__inner, .page, .info-foot__inner {
       max-width: 960px;
@@ -45,11 +45,14 @@
     .info-nav { display: flex; flex-wrap: wrap; gap: 8px 14px; }
     .info-nav a { font-weight: 600; text-decoration: none; }
     .info-nav a[aria-current="page"] { color: #184a88; }
-    .hero { background: #eaf2fc; border-bottom: 1px solid #e5e7eb; }
-    .hero__inner { padding-top: 28px; padding-bottom: 32px; }
-    .hero .logo { height: 40px; margin-bottom: 16px; }
+    .hero {
+      background: linear-gradient(160deg, #184a88 0%, #266bc4 55%, #1f5ba8 100%);
+      color: #ffffff;
+    }
+    .hero__inner { padding-top: 40px; padding-bottom: 48px; }
     h1 { margin: 0 0 8px; font-size: 1.7rem; line-height: 1.35; }
-    .lead { margin: 0 0 16px; font-size: 1.05rem; }
+    .hero h1 { color: #ffffff; font-size: 2rem; }
+    .lead { margin: 0 0 16px; font-size: 1.05rem; color: #eaf2fc; }
     .page { padding-top: 8px; padding-bottom: 12px; }
     .section { margin: 22px 0; }
     h2 { margin: 0 0 8px; color: #1f5ba8; font-size: 1.15rem; }
@@ -64,19 +67,53 @@
       display: block;
       background: #ffffff;
       border: 1px solid #e5e7eb;
+      border-top: 4px solid #266bc4;
       border-radius: 12px;
       padding: 16px;
-      color: inherit;
+      color: #1c1917;
       text-decoration: none;
     }
+    .card svg { display: block; margin-bottom: 8px; color: #266bc4; }
     .card strong { display: block; margin-bottom: 6px; color: #266bc4; }
-    .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
-    .steps li {
+    .card--tutor { border-top-color: #0f766e; }
+    .card--tutor svg, .card--tutor strong { color: #0f766e; }
+    .card--student { border-top-color: #6d5bd0; }
+    .card--student svg, .card--student strong { color: #6d5bd0; }
+    .card:hover, .card:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(28, 25, 23, 0.12);
+    }
+    .steps, .steps--4 {
+      display: grid;
+      gap: 12px;
+      margin: 0 0 12px;
+      padding: 0;
+      list-style: none;
+    }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .steps--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .steps li, .steps--4 li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
       background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       font-weight: 600;
+    }
+    .step-num {
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: #266bc4;
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
     }
     .note {
       margin-top: 12px;
@@ -85,7 +122,8 @@
       border-radius: 12px;
       padding: 12px 16px;
     }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .actions, .text-links { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .text-links { margin: 12px 0 0; }
     .btn {
       display: inline-block;
       border-radius: 8px;
@@ -96,8 +134,11 @@
     }
     .btn--strong { background: #266bc4; color: #ffffff; }
     .btn--strong:hover { background: #184a88; }
+    .hero .btn--strong { background: #ffffff; color: #266bc4; }
+    .hero .btn--strong:hover { background: #eaf2fc; color: #184a88; }
     .btn--line { background: #ffffff; color: #266bc4; border: 1px solid #266bc4; }
     ol, ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    .steps, .steps--4 { margin: 12px 0; padding-left: 0; }
     .info-foot {
       margin-top: 12px;
       background: #ffffff;
@@ -110,8 +151,8 @@
     .info-foot__company { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
     .sep { color: #e5e7eb; }
     @media (max-width: 640px) {
-      .cards { grid-template-columns: minmax(0, 1fr); }
-      h1 { font-size: 1.4rem; }
+      .cards, .steps, .steps--4 { grid-template-columns: minmax(0, 1fr); }
+      .hero h1 { font-size: 1.6rem; }
     }
 
   </style>
@@ -128,10 +169,12 @@
       </nav>
     </div>
   </header>
-  <main class="page">
-    <section class="section">
+  <section class="hero">
+    <div class="hero__inner">
       <h1>공부방 원장님 안내</h1>
-    </section>
+    </div>
+  </section>
+  <main class="page">
     <section class="section">
       <h2>동네에 공부방을 알리는 곳</h2>
       <div class="panel">
@@ -142,11 +185,11 @@
       <h2>등록 순서</h2>
       <div class="panel">
         <p>공부방 등록은 아래 순서로 이어집니다.</p>
-        <ol>
-          <li>회원가입을 합니다.</li>
-          <li>공부방을 등록합니다.</li>
-          <li>등록한 공부방이 고른 지역에 노출됩니다.</li>
-          <li>학부모와 학생이 쪽지로 문의를 보냅니다.</li>
+        <ol class="steps steps--4">
+          <li><span class="step-num" aria-hidden="true">1</span>회원가입을 합니다.</li>
+          <li><span class="step-num" aria-hidden="true">2</span>공부방을 등록합니다.</li>
+          <li><span class="step-num" aria-hidden="true">3</span>등록한 공부방이 고른 지역에 노출됩니다.</li>
+          <li><span class="step-num" aria-hidden="true">4</span>학부모와 학생이 쪽지로 문의를 보냅니다.</li>
         </ol>
         <p>지역을 고르면 그 동네의 공부방·과외쌤·학생 수요를 지도와 목록으로 보고, 쪽지로 연락합니다. 상세 정보와 쪽지는 로그인 후 이용할 수 있습니다. 문의를 읽고 답하려면 로그인한 상태여야 하고, 쪽지로 받은 문의의 자세한 내용도 로그인 후에 봅니다.</p>
       </div>
@@ -163,13 +206,15 @@
         <p>순서를 확인했다면 공부방 등록 안내로 이동합니다. 계정이 없으면 회원가입·로그인을 먼저 합니다. 이미 올라온 다른 공부방이 어떻게 보이는지는 공부방 찾기에서 볼 수 있습니다.</p>
         <p class="actions">
       <a class="btn btn--strong" href="/#/register-intro/room">공부방 등록 안내</a>
-      <a class="btn btn--line" href="/search/room">공부방 찾기</a>
-      <a class="btn btn--line" href="/info/">서비스 소개</a>
       <a class="btn btn--strong" href="/auth/#/signup/terms">회원가입</a>
       <a class="btn btn--line" href="/auth/#/login">로그인</a>
-      <a class="btn btn--line" href="/support">고객센터</a>
-      <a class="btn btn--line" href="https://pf.kakao.com/_xkeMNX/chat" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
-    </p>
+        </p>
+        <p class="text-links">
+      <a href="/search/room">공부방 찾기</a>
+      <a href="/info/">서비스 소개</a>
+      <a href="/support">고객센터</a>
+      <a href="https://pf.kakao.com/_xkeMNX/chat" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
+        </p>
       </div>
     </section>
   </main>

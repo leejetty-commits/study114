@@ -25,7 +25,7 @@
     }
     img { max-width: 100%; height: auto; }
     a { color: #266bc4; }
-    p, li, h1, h2 { overflow-wrap: break-word; }
+    p, li, h1, h2, span { overflow-wrap: break-word; }
     .info-head { background: #ffffff; border-bottom: 1px solid #e5e7eb; }
     .info-head__inner, .hero__inner, .page, .info-foot__inner {
       max-width: 960px;
@@ -45,11 +45,14 @@
     .info-nav { display: flex; flex-wrap: wrap; gap: 8px 14px; }
     .info-nav a { font-weight: 600; text-decoration: none; }
     .info-nav a[aria-current="page"] { color: #184a88; }
-    .hero { background: #eaf2fc; border-bottom: 1px solid #e5e7eb; }
-    .hero__inner { padding-top: 28px; padding-bottom: 32px; }
-    .hero .logo { height: 40px; margin-bottom: 16px; }
+    .hero {
+      background: linear-gradient(160deg, #184a88 0%, #266bc4 55%, #1f5ba8 100%);
+      color: #ffffff;
+    }
+    .hero__inner { padding-top: 40px; padding-bottom: 48px; }
     h1 { margin: 0 0 8px; font-size: 1.7rem; line-height: 1.35; }
-    .lead { margin: 0 0 16px; font-size: 1.05rem; }
+    .hero h1 { color: #ffffff; font-size: 2rem; }
+    .lead { margin: 0 0 16px; font-size: 1.05rem; color: #eaf2fc; }
     .page { padding-top: 8px; padding-bottom: 12px; }
     .section { margin: 22px 0; }
     h2 { margin: 0 0 8px; color: #1f5ba8; font-size: 1.15rem; }
@@ -64,19 +67,53 @@
       display: block;
       background: #ffffff;
       border: 1px solid #e5e7eb;
+      border-top: 4px solid #266bc4;
       border-radius: 12px;
       padding: 16px;
-      color: inherit;
+      color: #1c1917;
       text-decoration: none;
     }
+    .card svg { display: block; margin-bottom: 8px; color: #266bc4; }
     .card strong { display: block; margin-bottom: 6px; color: #266bc4; }
-    .steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
-    .steps li {
+    .card--tutor { border-top-color: #0f766e; }
+    .card--tutor svg, .card--tutor strong { color: #0f766e; }
+    .card--student { border-top-color: #6d5bd0; }
+    .card--student svg, .card--student strong { color: #6d5bd0; }
+    .card:hover, .card:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(28, 25, 23, 0.12);
+    }
+    .steps, .steps--4 {
+      display: grid;
+      gap: 12px;
+      margin: 0 0 12px;
+      padding: 0;
+      list-style: none;
+    }
+    .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .steps--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .steps li, .steps--4 li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
       background: #ffffff;
       border: 1px solid #e5e7eb;
       border-radius: 12px;
-      padding: 10px 14px;
+      padding: 12px 14px;
       font-weight: 600;
+    }
+    .step-num {
+      flex: 0 0 auto;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 999px;
+      background: #266bc4;
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
     }
     .note {
       margin-top: 12px;
@@ -85,7 +122,8 @@
       border-radius: 12px;
       padding: 12px 16px;
     }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .actions, .text-links { display: flex; flex-wrap: wrap; gap: 8px 14px; }
+    .text-links { margin: 12px 0 0; }
     .btn {
       display: inline-block;
       border-radius: 8px;
@@ -96,8 +134,11 @@
     }
     .btn--strong { background: #266bc4; color: #ffffff; }
     .btn--strong:hover { background: #184a88; }
+    .hero .btn--strong { background: #ffffff; color: #266bc4; }
+    .hero .btn--strong:hover { background: #eaf2fc; color: #184a88; }
     .btn--line { background: #ffffff; color: #266bc4; border: 1px solid #266bc4; }
     ol, ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    .steps, .steps--4 { margin: 12px 0; padding-left: 0; }
     .info-foot {
       margin-top: 12px;
       background: #ffffff;
@@ -110,8 +151,8 @@
     .info-foot__company { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
     .sep { color: #e5e7eb; }
     @media (max-width: 640px) {
-      .cards { grid-template-columns: minmax(0, 1fr); }
-      h1 { font-size: 1.4rem; }
+      .cards, .steps, .steps--4 { grid-template-columns: minmax(0, 1fr); }
+      .hero h1 { font-size: 1.6rem; }
     }
 
   </style>
@@ -130,7 +171,6 @@
   </header>
   <section class="hero">
     <div class="hero__inner">
-      <a href="/"><img class="logo" src="/assets/brand/logo-wordmark-2026.png" alt=""></a>
       <h1>우리동네 공부방·과외쌤 찾기 서비스 소개</h1>
       <p class="lead">우동공과는 공부방·과외쌤과 학생을 쪽지로 연결하는 지역 공부방 포털입니다.</p>
       <p class="actions"><a class="btn btn--strong" href="/">시작하기</a></p>
@@ -152,9 +192,9 @@
     <section class="section">
       <h2>어떻게 이용하나요</h2>
       <ol class="steps">
-        <li>지역 고르기</li>
-        <li>지도·목록으로 보기</li>
-        <li>쪽지로 연락하기</li>
+          <li><span class="step-num" aria-hidden="true">1</span>지역 고르기</li>
+          <li><span class="step-num" aria-hidden="true">2</span>지도·목록으로 보기</li>
+          <li><span class="step-num" aria-hidden="true">3</span>쪽지로 연락하기</li>
       </ol>
       <div class="panel">
         <p>지역을 고르면 그 동네의 공부방·과외쌤·학생 수요를 지도와 목록으로 보고, 쪽지로 연락합니다. 지도에서는 고른 지역의 위치를 보고, 목록에서는 그 지역의 공부방·과외쌤·학생 수요를 봅니다. 상세 정보와 쪽지는 로그인 후 이용할 수 있습니다. 글을 열어 자세한 내용을 보거나 쪽지를 보내려면 회원가입을 하고 로그인합니다.</p>
@@ -165,14 +205,17 @@
       <h2>역할별 안내</h2>
       <div class="cards">
         <a class="card" href="/info/study-room/">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 10.5 12 4l8 6.5V20H4z"/><path d="M10 20v-6h4v6"/></svg>
           <strong>공부방 원장님</strong>
           <span>공부방 원장님 안내에서는 회원가입, 공부방 등록, 지역 노출, 쪽지 문의의 순서를 읽습니다.</span>
         </a>
-        <a class="card" href="/info/tutor/">
+        <a class="card card--tutor" href="/info/tutor/">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><circle cx="12" cy="8" r="3"/><path d="M5.5 19c1.4-3 3.6-4.5 6.5-4.5s5.1 1.5 6.5 4.5"/></svg>
           <strong>과외쌤</strong>
           <span>과외쌤 안내에서는 활동 지역을 고르는 일과, 증빙서류 표시가 선택 사항이라는 점을 읽습니다.</span>
         </a>
-        <a class="card" href="/info/parents/">
+        <a class="card card--student" href="/info/parents/">
+          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M12 6.2C10 5 8 4.6 5 5v12.2c3-.4 5 0 7 1.2 2-1.2 4.2-1.6 7-1.2V5c-3-.4-5 0-7 1.2z"/><path d="M12 6.2v12.2"/></svg>
           <strong>학생·학부모</strong>
           <span>학생·학부모 안내에서는 지역으로 찾기, 지도·목록으로 비교하기, 희망 수업을 올려 연락받는 일을 읽습니다.</span>
         </a>
@@ -183,15 +226,17 @@
       <div class="panel">
         <p>찾기와 등록, 회원가입은 아래 링크로 이동합니다. 찾기 화면은 공부방과 과외쌤이 나뉘어 있고, 등록 안내는 각 역할의 기존 안내 화면으로 이어집니다.</p>
         <p class="actions">
-      <a class="btn btn--line" href="/search/room">공부방 찾기</a>
-      <a class="btn btn--line" href="/search/tutor">과외쌤 찾기</a>
-      <a class="btn btn--line" href="/#/register-intro/room">공부방 등록 안내</a>
-      <a class="btn btn--line" href="/#/register-intro/tutor">과외쌤 등록 안내</a>
       <a class="btn btn--strong" href="/auth/#/signup/terms">회원가입</a>
       <a class="btn btn--line" href="/auth/#/login">로그인</a>
-      <a class="btn btn--line" href="/support">고객센터</a>
-      <a class="btn btn--line" href="https://pf.kakao.com/_xkeMNX/chat" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
-    </p>
+        </p>
+        <p class="text-links">
+      <a href="/search/room">공부방 찾기</a>
+      <a href="/search/tutor">과외쌤 찾기</a>
+      <a href="/#/register-intro/room">공부방 등록 안내</a>
+      <a href="/#/register-intro/tutor">과외쌤 등록 안내</a>
+      <a href="/support">고객센터</a>
+      <a href="https://pf.kakao.com/_xkeMNX/chat" target="_blank" rel="noopener noreferrer">카카오톡 문의</a>
+        </p>
       </div>
     </section>
   </main>
