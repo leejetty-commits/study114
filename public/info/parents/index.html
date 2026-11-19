@@ -142,16 +142,152 @@
     ol, ul { margin: 0.4rem 0 0; padding-left: 1.2rem; }
     .steps, .steps--4 { margin: 12px 0; padding-left: 0; }
     .info-foot {
-      margin-top: 12px;
-      background: #ffffff;
-      border-top: 1px solid #e5e7eb;
-      color: #6b7280;
-      font-size: 0.92rem;
+      box-sizing: border-box;
+      width: 100%;
+      margin-top: 3rem;
+      margin-left: 0;
+      margin-right: 0;
+      padding: 1.5rem 0 3rem;
+      border-top: none;
+      background: #334155;
+      color: #94a3b8;
+      text-align: center;
+      font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-    .info-foot__inner { padding-top: 20px; padding-bottom: 32px; }
-    .info-foot p { margin: 0 0 8px; }
-    .info-foot__company { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
-    .sep { color: #e5e7eb; }
+    .info-foot .info-foot__inner {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 80rem;
+      margin-left: auto;
+      margin-right: auto;
+      padding: 0 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .info-foot p { margin: 0; }
+    .info-foot__links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 0;
+      margin: 0;
+    }
+    .info-foot__links a {
+      box-sizing: border-box;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.75rem;
+      padding: 0 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: #e2e8f0;
+      text-decoration: none;
+    }
+    .info-foot__links a:hover,
+    .info-foot__links a:focus-visible {
+      color: #f8fafc;
+      text-decoration: underline;
+      text-decoration-color: #94a3b8;
+      text-underline-offset: 0.2em;
+    }
+    .info-foot__links strong { font-weight: 700; }
+    .info-foot__sep {
+      color: #64748b;
+      font-size: 0.875rem;
+      line-height: 1;
+      user-select: none;
+    }
+    .info-foot__notice {
+      max-width: 45rem;
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+    .info-foot__biz {
+      margin: 0;
+      max-width: 80rem;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35em;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.6;
+      color: #cbd5e1;
+      text-align: center;
+    }
+    .info-foot__company {
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: baseline;
+      column-gap: 0;
+      row-gap: 0.2em;
+    }
+    .info-foot__company > span:not(.sep) {
+      display: inline;
+      white-space: nowrap;
+    }
+    .info-foot .sep {
+      display: inline;
+      margin: 0 0.45em;
+      color: #64748b;
+      user-select: none;
+      white-space: nowrap;
+    }
+    .info-foot__company a {
+      color: #e2e8f0;
+      text-decoration: underline;
+      text-decoration-color: #64748b;
+      text-underline-offset: 0.15em;
+    }
+    .info-foot__company a:hover,
+    .info-foot__company a:focus-visible {
+      color: #f8fafc;
+      text-decoration-color: #94a3b8;
+    }
+    .info-foot__legal {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.5;
+      color: #94a3b8;
+    }
+    @media (min-width: 960px) {
+      .info-foot__company { flex-wrap: nowrap; }
+    }
+    @media (max-width: 959px) {
+      .info-foot__biz { max-width: 100%; }
+    }
+    @media (max-width: 899px) {
+      .info-foot .info-foot__inner { padding-left: 1.5rem; padding-right: 1.5rem; }
+    }
+    @media (max-width: 639px) {
+      .info-foot .info-foot__inner { padding-left: 1rem; padding-right: 1rem; }
+      .info-foot__sep { display: none; }
+      .info-foot__links {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        column-gap: 4px;
+        row-gap: 0;
+        width: 100%;
+      }
+      .info-foot__links a {
+        width: auto;
+        min-height: 40px;
+        padding: 0 0.5rem;
+      }
+    }
     @media (max-width: 640px) {
       .cards, .steps, .steps--4 { grid-template-columns: minmax(0, 1fr); }
       .hero h1 { font-size: 1.6rem; }
@@ -221,7 +357,17 @@
   </main>
   <footer class="info-foot">
     <div class="info-foot__inner">
-      <p>우동공과는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 회원 간 거래에 대한 의무와 책임은 각 회원에게 있습니다.</p>
+      <nav class="info-foot__links" aria-label="정책 및 고객센터">
+        <a href="/#/support/policies/terms">이용약관</a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/#/support/policies/privacy"><strong>개인정보 처리방침</strong></a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/#/support/policies/platform">플랫폼 고지</a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/#/plans/positions">유료상품</a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/#/plans">환불정책</a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/info/">서비스 소개</a><span class="info-foot__sep" aria-hidden="true">·</span>
+        <a href="/#/support">고객센터</a>
+      </nav>
+      <p class="info-foot__notice">우동공과는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 회원 간 거래에 대한 의무와 책임은 각 회원에게 있습니다.</p>
+      <div class="info-foot__biz">
       <p class="info-foot__company">
         <span>상호 제이에이치커머스(서비스명 우동공과)</span>
         <span class="sep" aria-hidden="true">|</span>
@@ -236,8 +382,8 @@
         <span class="sep" aria-hidden="true">|</span>
         <span>이메일 <a href="mailto:help@study114.net">help@study114.net</a></span>
       </p>
-      <p>© 2026 우동공과 · study114</p>
-      <p><a href="/#/support/policies">이용약관·개인정보처리방침</a></p>
+      </div>
+      <p class="info-foot__legal">© 2026 우동공과 · study114</p>
     </div>
   </footer>
 </body>
