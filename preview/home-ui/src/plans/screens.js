@@ -1417,6 +1417,7 @@ export function bindPlansScreenEvents(root, rerender) {
             channel_key: draft.channelKey || '',
             order_name: draft.orderName || '',
             currency: draft.payCurrency || 'CURRENCY_KRW',
+            buyer_phone: draft.buyerPhone || '',
           };
         } else {
           created = await createPaidCheckout(draft.productCode, draft.apiVariant, {
@@ -1446,6 +1447,15 @@ export function bindPlansScreenEvents(root, rerender) {
         }
         let completed;
         if (String(created.pg_provider || '') === 'portone_test') {
+          const buyerName = String(getAuthUser()?.name || '').trim();
+          const buyerPhone = String(created.buyer_phone || '').replace(/\D/g, '');
+          if (!buyerName || !buyerPhone) {
+            if (errEl) {
+              errEl.hidden = false;
+              errEl.textContent = '계정설정에서 휴대폰·이름을 확인해 주세요';
+            }
+            return;
+          }
           const pay = await requestPortOneCardPayment({
             storeId: String(created.store_id || ''),
             channelKey: String(created.channel_key || ''),
@@ -1454,6 +1464,8 @@ export function bindPlansScreenEvents(root, rerender) {
             totalAmount: serverAmount,
             currency: String(created.currency || 'CURRENCY_KRW'),
             email: buyerEmail,
+            phoneNumber: buyerPhone,
+            fullName: buyerName,
           });
           if (!pay.ok) {
             setCheckoutResult({

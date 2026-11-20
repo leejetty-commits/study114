@@ -6,6 +6,7 @@ namespace Study114\Paid;
 
 use InvalidArgumentException;
 use PDO;
+use Study114\Auth\PhoneNormalizer;
 use Study114\Database\Connection;
 use Study114\Mail\MemberLifecycleMailer;
 use Study114\Messages\MessagesRepository;
@@ -286,6 +287,7 @@ final class ProviderCheckoutService
             'grant_mode' => $kind === 'position' ? $grantMode : null,
             'city_id' => is_array($tutorAxis) ? (int) $tutorAxis['city_id'] : null,
             'primary_subject_id' => is_array($tutorAxis) ? (int) $tutorAxis['primary_subject_id'] : null,
+            'buyer_phone' => $this->buyerPhoneDigits($userId),
         ];
 
         if ($pgPaymentId !== null) {
@@ -299,6 +301,21 @@ final class ProviderCheckoutService
         }
 
         return $payload;
+    }
+
+    /** 결제창에 넘길 휴대폰. 숫자만 반환하고 로그에는 남기지 않는다. */
+    private function buyerPhoneDigits(int $userId): string
+    {
+        try {
+            $stmt = $this->pdo->prepare('SELECT phone FROM user_profiles WHERE user_id = ? LIMIT 1');
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (\PDOException) {
+            return '';
+        }
+        $phone = is_array($row) ? (string) ($row['phone'] ?? '') : '';
+
+        return PhoneNormalizer::digits($phone);
     }
 
     /**

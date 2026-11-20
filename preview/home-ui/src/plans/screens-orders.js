@@ -123,6 +123,7 @@ export function scheduleCheckoutServerQuote(rerender) {
         channelKey: created.channel_key || '',
         orderName: created.order_name || '',
         payCurrency: created.currency || '',
+        buyerPhone: String(created.buyer_phone || ''),
       });
       rerender();
     })
