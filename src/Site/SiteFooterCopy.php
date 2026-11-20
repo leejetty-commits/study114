@@ -47,12 +47,12 @@ final class SiteFooterCopy
     public static function policyLinks(): array
     {
         return [
+            ['href' => '/info/', 'label' => '서비스 소개'],
             ['href' => '/#/support/policies/terms', 'label' => '이용약관'],
             ['href' => '/#/support/policies/privacy', 'label' => '개인정보 처리방침', 'strong' => true],
             ['href' => '/#/support/policies/platform', 'label' => '플랫폼 고지'],
             ['href' => '/#/plans/positions', 'label' => '유료상품'],
             ['href' => '/#/plans', 'label' => '환불정책'],
-            ['href' => '/info/', 'label' => '서비스 소개'],
             ['href' => '/#/support', 'label' => '고객센터'],
         ];
     }
