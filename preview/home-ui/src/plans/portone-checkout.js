@@ -45,6 +45,7 @@ function loadSdk() {
  *   orderName: string,
  *   totalAmount: number,
  *   currency?: string,
+ *   email: string,
  * }} params
  * @returns {Promise<{ ok: true, paymentId: string } | { ok: false, kind: 'cancel'|'fail', message: string }>}
  */
@@ -58,6 +59,9 @@ export async function requestPortOneCardPayment(params) {
     totalAmount: params.totalAmount,
     currency: params.currency || 'CURRENCY_KRW',
     payMethod: 'CARD',
+    customer: {
+      email: params.email,
+    },
   });
 
   if (response == null) {
