@@ -64,7 +64,7 @@ if (trim($company['email']) !== '') {
     ];
 }
 if (trim($company['phone']) !== '') {
-    $line2[] = ['label' => '전화', 'valueHtml' => study114_e($company['phone'])];
+    $line2[] = ['label' => '고객센터', 'valueHtml' => study114_e($company['phone'])];
 }
 
 $row1 = $renderRow($line1);
