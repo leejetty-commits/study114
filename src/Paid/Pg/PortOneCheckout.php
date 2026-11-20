@@ -6,6 +6,7 @@ namespace Study114\Paid\Pg;
 
 use InvalidArgumentException;
 use RuntimeException;
+use Study114\Paid\PaidCatalog;
 
 /**
  * 339 — 포트원 결제 확정·취소 공통 경로 (complete·웹훅·환불이 공유).
@@ -110,8 +111,34 @@ final class PortOneCheckout
     {
         $productId = trim($productId);
         $variant = trim($variant);
+        $name = '우동공과 ' . self::catalogDisplayName($productId);
 
-        return 'study114 ' . ($productId !== '' ? $productId : 'order')
-            . ($variant !== '' ? (' ' . $variant) : '');
+        return $variant !== '' ? ($name . ' ' . $variant) : $name;
+    }
+
+    /** 화면 이름은 PaidCatalog::PRODUCT_NAMES. 카탈로그에 없으면 상품. */
+    private static function catalogDisplayName(string $productId): string
+    {
+        if ($productId === '') {
+            return '상품';
+        }
+        $products = PaidCatalog::export()['products'] ?? [];
+        if (!is_array($products)) {
+            return '상품';
+        }
+        foreach ($products as $product) {
+            if (!is_array($product)) {
+                continue;
+            }
+            if ((string) ($product['product_code'] ?? '') !== $productId) {
+                continue;
+            }
+            $label = trim((string) ($product['name'] ?? ''));
+            if ($label !== '') {
+                return $label;
+            }
+        }
+
+        return '상품';
     }
 }
