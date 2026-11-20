@@ -17,11 +17,11 @@
 ## 1. 허용 파일 (이것만 수정)
 1. `preview/shared/site-footer.js`
    - `SITE_FOOTER_COMPANY.phone`: `''` → `'070-4001-1422'`
-   - `SITE_FOOTER_COPYRIGHT`: `'© 2026 우동공과 · study114'` → `'© 2026 우동공과 · study114 | 「우동공과」 상표출원 제40-2026-0229906호'`
+   - `SITE_FOOTER_COPYRIGHT`: `'© 2026 우동공과 · study114'` → `'© 2026 우동공과 · study114 | 상표출원 제40-2026-0229906호'`
    - **주의:** `®`, `등록상표`, `특허` 표기 금지. `21h`의 `SITE_FOOTER_LINKS` 순서는 유지.
 2. `src/Site/SiteFooterCopy.php`
    - `company()['phone']`: `''` → `'070-4001-1422'`
-   - `COPYRIGHT`: `'© 2026 우동공과 · study114'` → `'© 2026 우동공과 · study114 | 「우동공과」 상표출원 제40-2026-0229906호'`
+   - `COPYRIGHT`: `'© 2026 우동공과 · study114'` → `'© 2026 우동공과 · study114 | 상표출원 제40-2026-0229906호'`
 3. `public/info/` 6개 파일(`index.html`, `study-room/index.html`, `tutor/index.html`, `parents/index.html`, `edu-office/index.html`, `franchise/index.html`)
    - 하단 두 번째 `<p class="info-foot__company">`의 이메일 `<span>` 뒤에 아래 두 줄 추가:
      ```html
@@ -29,7 +29,7 @@
      <span>전화 070-4001-1422</span>
      ```
    - `<p class="info-foot__legal">` 문구 교체:
-     `© 2026 우동공과 · study114 | 「우동공과」 상표출원 제40-2026-0229906호`
+     `© 2026 우동공과 · study114 | 상표출원 제40-2026-0229906호`
 4. 5개 SPA `index.html`(`preview/home-ui/index.html`, `preview/auth-ui/index.html`, `preview/search-ui/index.html`, `preview/study-room-ui/index.html`, `preview/tutor-ui/index.html`)
    - `#site-biz-static` 안 `이메일 help@study114.net</p>`를 `이메일 help@study114.net · 전화 070-4001-1422</p>`로 수정.
    - `preview/home-ui/index.html`의 Organization JSON-LD에 `"telephone":"+82-70-4001-1422"` 추가.
@@ -41,7 +41,7 @@
 - 홈 로딩 속도에 영향 주는 스크립트/폰트/번들 변경 금지.
 
 ## 3. 수락 기준
-- 운영 홈, `/info/` 6개 페이지, 로그인 화면(PHP 푸터) 모두 하단 2줄 끝에 `전화 070-4001-1422`가 보이고, 저작권 줄에 `「우동공과」 상표출원 제40-2026-0229906호`가 보인다.
+- 운영 홈, `/info/` 6개 페이지, 로그인 화면(PHP 푸터) 모두 하단 2줄 끝에 `전화 070-4001-1422`가 보이고, 저작권 줄에 `상표출원 제40-2026-0229906호`가 보인다.
 - `®` 또는 `등록상표`가 어디에도 없다.
 - 5개 SPA HTML `#site-biz-static`에도 `전화 070-4001-1422`가 들어 있다.
 - 변경 파일 목록이 허용 파일 14개(코드·HTML 13개 + 작업기록 1개)와 정확히 일치.
