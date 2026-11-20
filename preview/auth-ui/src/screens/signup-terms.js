@@ -212,6 +212,7 @@ export function renderSignupTerms() {
       <h1 class="auth-heading">${AUTH_WELCOME_COPY.gateTitle}</h1>
       <p class="auth-subheading mb-8">${AUTH_WELCOME_COPY.gateSub}</p>
       <p class="auth-section-title mb-4">${AUTH_WELCOME_COPY.termsSection}</p>
+      <p class="form-hint mb-2">${AUTH_WELCOME_COPY.termsReadHint}</p>
       <p class="form-hint mb-6">${AUTH_WELCOME_COPY.termsSub}</p>
 
       <form data-form="terms">
