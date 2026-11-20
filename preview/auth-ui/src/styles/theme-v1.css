@@ -44,11 +44,6 @@
   border-radius: var(--product-radius-card, 0.75rem);
 }
 
-[data-theme='v1'] .terms-all {
-  background: var(--brand-blue-light);
-  border: 1px solid rgba(43, 127, 255, 0.14);
-}
-
 [data-theme='v1'] .step-indicator__dot.is-active {
   background: var(--brand-blue);
 }
