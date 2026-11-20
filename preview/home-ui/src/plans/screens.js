@@ -26,7 +26,7 @@ import {
 import { ensureStudyRoomStore } from '../study-room-reg/index.js';
 import { ensureTutorStore } from '../tutor-reg/index.js';
 import { AUTH_UI_BASE } from '../../../shared/preview-links.js';
-import { isTestAccountUser } from '../auth-session.js';
+import { getAuthUser, isTestAccountUser } from '../auth-session.js';
 import {
   getCatalogByFamily,
   getProductConfig,
@@ -1382,6 +1382,15 @@ export function bindPlansScreenEvents(root, rerender) {
       }
       if (!draft) return;
 
+      const buyerEmail = String(getAuthUser()?.email || '').trim();
+      if (!buyerEmail) {
+        if (errEl) {
+          errEl.hidden = false;
+          errEl.textContent = '계정설정에서 이메일을 확인해 주세요';
+        }
+        return;
+      }
+
       const methodEl = root.querySelector('input[name="plans_pay_method"]:checked');
       const method = methodEl instanceof HTMLInputElement ? methodEl.value : 'card';
 
@@ -1444,6 +1453,7 @@ export function bindPlansScreenEvents(root, rerender) {
             orderName: String(created.order_name || `${draft.productName} ${draft.optionLabel}`),
             totalAmount: serverAmount,
             currency: String(created.currency || 'CURRENCY_KRW'),
+            email: buyerEmail,
           });
           if (!pay.ok) {
             setCheckoutResult({
