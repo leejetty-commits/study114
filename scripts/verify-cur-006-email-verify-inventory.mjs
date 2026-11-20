@@ -156,6 +156,7 @@ const intentionalNoGate = [
   /\/auth\/password\//,
   /\/auth\/profile\.php$/,
   /\/auth\/profile-address\.php$/,
+  /\/auth\/marketing-consent\.php$/,
   /\/auth\/withdraw\.php$/,
   /\/auth\/account-contact\.php$/,
   /\/auth\/phone\//,
