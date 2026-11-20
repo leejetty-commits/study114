@@ -21,6 +21,8 @@ export const signupState = {
   termsAgreed: false,
   /** 약관 칸별 체크. 약관 화면으로 돌아올 때 복원 */
   termsChecked: {},
+  /** 마케팅 수신. null이면 아직 고르지 않음. 전체 동의와 분리 */
+  marketingConsent: null,
   accountAddress: '',
   /** 공통가입 폼 임시값 — 역할 선택 후 signup API 호출 */
   accountDraft: null,
@@ -79,14 +81,13 @@ export const TERMS_TEMP = false;
 export const TERMS = [
   { id: 'service', label: '서비스 이용약관', required: true },
   { id: 'privacy', label: '개인정보 수집·이용', required: true },
-  { id: 'location', label: '위치기반 서비스 이용약관', required: true },
-  { id: 'marketing', label: '마케팅 정보 수신', required: false },
 ];
 
 export function resetSignupState() {
   signupState.role = null;
   signupState.termsAgreed = false;
   signupState.termsChecked = {};
+  signupState.marketingConsent = null;
   signupState.accountAddress = '';
   signupState.accountDraft = null;
   signupState.profileGender = null;

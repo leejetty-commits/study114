@@ -14,7 +14,7 @@ export const SUPPORT_CONTACT_PATHS = ['/support/contact/tickets'];
 /** 레거시: 고객센터 내 문의 목록 → 마이페이지 개인 관리 화면 */
 export const SUPPORT_TICKETS_REDIRECT = '/mypage/contact';
 
-const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact'];
+const POLICY_SLUGS = ['terms', 'privacy', 'platform', 'trust', 'safety', 'student-privacy', 'reporting', 'account-contact', 'marketing'];
 const FAQ_SLUGS = FAQ_TABS.map((t) => t.slug);
 const LIBRARY_SECTIONS = ['templates', 'guides'];
 

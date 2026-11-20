@@ -6,13 +6,15 @@ import { AUTH_WELCOME_COPY } from '../../../shared/auth-welcome-copy.js';
 const TERM_POLICY_PATH = {
   service: '/policy/terms',
   privacy: '/policy/privacy',
-  location: '/policy/platform',
-  marketing: '/policy/privacy',
+  marketing: '/policy/marketing',
 };
 
 export function renderSignupTerms() {
   const checked = signupState.termsChecked || {};
   const allChecked = TERMS.length > 0 && TERMS.every((term) => checked[term.id]);
+  const marketing = signupState.marketingConsent;
+  const marketingYes = marketing === true ? 'checked' : '';
+  const marketingNo = marketing === false ? 'checked' : '';
   const termsItems = TERMS.map(
     (term) => `
       <div class="terms-item">
@@ -48,11 +50,28 @@ export function renderSignupTerms() {
             <input class="form-check__input" type="checkbox" id="terms-all" data-check-all ${allChecked ? 'checked' : ''} />
             <span class="form-check__label"><strong>전체 동의</strong></span>
           </label>
-          <p class="form-check__meta">선택 항목 포함 전체 동의 · 개별 선택도 가능합니다.</p>
+          <p class="form-check__meta">필수 약관만 한 번에 동의합니다. 마케팅 수신은 아래에서 따로 고릅니다.</p>
         </div>
 
         <div class="terms-list mb-8">
           ${termsItems}
+          <div class="terms-item">
+            <div class="form-check">
+              <span class="form-check__label">[선택] 마케팅 정보 수신</span>
+            </div>
+            <button type="button" class="terms-item__view" data-action="view-terms" data-term-id="marketing">보기</button>
+          </div>
+          <div class="terms-item">
+            <label class="form-check">
+              <input class="form-check__input" type="radio" name="marketing_consent" value="yes" ${marketingYes} />
+              <span class="form-check__label">동의함</span>
+            </label>
+            <label class="form-check">
+              <input class="form-check__input" type="radio" name="marketing_consent" value="no" ${marketingNo} />
+              <span class="form-check__label">동의하지 않음</span>
+            </label>
+          </div>
+          <p class="form-hint">동의함 또는 동의하지 않음 중 하나를 골라 주세요. 동의하지 않아도 가입할 수 있습니다.</p>
         </div>
 
         <button type="submit" class="btn btn--primary btn--block" data-submit-terms disabled>
@@ -76,12 +95,17 @@ export function bindSignupTermsEvents(root) {
   const form = root.querySelector('[data-form="terms"]');
   const checkAll = root.querySelector('[data-check-all]');
   const termChecks = root.querySelectorAll('.terms-check');
+  const marketingRadios = root.querySelectorAll('input[name="marketing_consent"]');
   const submitBtn = root.querySelector('[data-submit-terms]');
+
+  function selectedMarketing() {
+    return [...marketingRadios].find((radio) => radio.checked) || null;
+  }
 
   function updateSubmitState() {
     const requiredChecks = [...termChecks].filter((c) => c.dataset.required === 'true');
     const allRequiredChecked = requiredChecks.every((c) => c.checked);
-    submitBtn.disabled = !allRequiredChecked;
+    submitBtn.disabled = !(allRequiredChecked && selectedMarketing());
   }
 
   checkAll?.addEventListener('change', () => {
@@ -98,6 +122,12 @@ export function bindSignupTermsEvents(root) {
     });
   });
 
+  marketingRadios.forEach((radio) => {
+    radio.addEventListener('change', () => {
+      updateSubmitState();
+    });
+  });
+
   updateSubmitState();
 
   root.querySelectorAll('[data-action="view-terms"]').forEach((btn) => {
@@ -110,11 +140,14 @@ export function bindSignupTermsEvents(root) {
 
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
+    const picked = selectedMarketing();
+    if (!picked || submitBtn.disabled) return;
     const next = {};
     termChecks.forEach((check) => {
       next[check.name] = check.checked;
     });
     signupState.termsChecked = next;
+    signupState.marketingConsent = picked.value === 'yes';
     markTermsAgreed();
     navigate('/signup/form');
   });

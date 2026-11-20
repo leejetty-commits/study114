@@ -1148,6 +1148,21 @@ function renderAccount(role, profile) {
         </div>
       </article>
 
+      <article class="account-card" data-marketing-consent-card>
+        <div class="account-card__head">
+          <h3 class="account-card__title">이벤트·혜택 정보 수신(선택)</h3>
+          <p class="account-card__desc">이벤트, 할인, 회원 혜택 안내를 이메일과 문자로 받습니다. 꺼도 가입과 이용에는 영향이 없습니다.</p>
+        </div>
+        <div class="account-card__body">
+          <label class="account-check">
+            <input type="checkbox" data-marketing-consent />
+            <span>이벤트·혜택 정보 수신(선택)</span>
+          </label>
+          <p class="account-meta__hint" data-marketing-consent-status>불러오는 중…</p>
+          <p class="form-error" data-marketing-consent-error hidden role="alert"></p>
+        </div>
+      </article>
+
       <article class="account-card">
         <div class="account-card__head">
           <h3 class="account-card__title">계정 정보</h3>
@@ -1809,6 +1824,64 @@ let plansHistoryRows = null;
 let contactHistoryHydrateAttempted = false;
 const PLANS_HYDRATE_TIMEOUT_MS = 8000;
 
+/** @param {HTMLElement} root */
+function bindMarketingConsentEvents(root) {
+  const box = root.querySelector('[data-marketing-consent]');
+  if (!(box instanceof HTMLInputElement)) return;
+  const statusEl = root.querySelector('[data-marketing-consent-status]');
+  const errorEl = root.querySelector('[data-marketing-consent-error]');
+  const showError = (message) => {
+    if (!errorEl) return;
+    errorEl.hidden = !message;
+    errorEl.textContent = message || '';
+  };
+  const paint = (data) => {
+    box.checked = Number(data.marketing_consent) === 1;
+    const at = String(data.marketing_consent_at || '').trim();
+    if (statusEl) {
+      statusEl.textContent = at ? `마지막 변경 ${at}` : '아직 바꾸지 않았습니다.';
+    }
+  };
+
+  box.disabled = true;
+  fetch('/api/auth/marketing-consent.php', { credentials: 'include' })
+    .then((res) => res.json().then((data) => ({ res, data })))
+    .then(({ res, data }) => {
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || '수신 설정을 불러오지 못했습니다.');
+      }
+      paint(data);
+      box.disabled = false;
+    })
+    .catch((err) => {
+      showError(err instanceof Error ? err.message : '수신 설정을 불러오지 못했습니다.');
+    });
+
+  box.addEventListener('change', async () => {
+    const next = box.checked ? 1 : 0;
+    box.disabled = true;
+    showError('');
+    try {
+      const save = await fetch('/api/auth/marketing-consent.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ marketing_consent: next }),
+      });
+      const saved = await save.json().catch(() => ({}));
+      if (!save.ok || !saved.ok) {
+        box.checked = next !== 1;
+        throw new Error(saved.message || '저장하지 못했습니다.');
+      }
+      paint(saved);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : '저장하지 못했습니다.');
+    } finally {
+      box.disabled = false;
+    }
+  });
+}
+
 const PRIME_MATCH_LABEL = '조건이 맞는 프라임 과외쌤에게 요약 프로필을 쪽지로 추천해도 될까요?';
 
 /** @param {HTMLElement} root */
@@ -1960,6 +2033,7 @@ export function bindMypageScreenEvents(root, rerender) {
   bindPasswordChangeEvents(root);
   bindDisplayNameEvents(root, rerender);
   bindHomeAddressEvents(root);
+  bindMarketingConsentEvents(root);
   bindWithdrawEvents(root);
   bindPrimeMatchConsentEvents(root);
   if (path === '/mypage/wishlist') {

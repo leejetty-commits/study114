@@ -34,6 +34,7 @@ export const STATIC_POLICY_RESERVED_SLUGS = [
   'student-privacy',
   'reporting',
   'account-contact',
+  'marketing',
 ];
 
 /** @type {Record<BoardType, { label: string; desc: string }>} */

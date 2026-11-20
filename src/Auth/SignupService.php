@@ -71,6 +71,7 @@ final class SignupService
         }
         $emailOptIn = 1;
         $safeNumberOptIn = 0;
+        $marketing = $this->marketingOptIn($input);
 
         $addressZip = isset($input['address_zip']) && trim((string) $input['address_zip']) !== ''
             ? trim((string) $input['address_zip']) : null;
@@ -106,7 +107,9 @@ final class SignupService
                 $defaultComplexId,
                 $smsOptIn,
                 $emailOptIn,
-                $safeNumberOptIn
+                $safeNumberOptIn,
+                $marketing['value'],
+                $marketing['stamp']
             );
             $this->insertRole($pdo, $userId, $roleType);
             $pdo->commit();
@@ -183,15 +186,18 @@ final class SignupService
         ?int $defaultComplexId,
         int $smsOptIn,
         int $emailOptIn,
-        int $safeNumberOptIn
+        int $safeNumberOptIn,
+        int $marketingConsent,
+        int $marketingStamp
     ): void {
         $stmt = $pdo->prepare(
             'INSERT INTO user_profiles (
                 user_id, real_name, phone, gender, birth_date,
                 address_zip, address_line1, address_line2,
                 default_region_id, default_complex_id,
-                sms_opt_in, email_opt_in, safe_number_opt_in
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                sms_opt_in, email_opt_in, safe_number_opt_in,
+                marketing_consent, marketing_consent_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, IF(? = 1, NOW(), NULL))'
         );
         $stmt->execute([
             $userId,
@@ -207,7 +213,27 @@ final class SignupService
             $smsOptIn,
             $emailOptIn,
             $safeNumberOptIn,
+            $marketingConsent,
+            $marketingStamp,
         ]);
+    }
+
+    /**
+     * 키가 없으면 기존 회원과 같이 0·시각 없음.
+     * 동의하지 않음도 선택이면 시각을 남긴다.
+     *
+     * @param array<string, mixed> $input
+     * @return array{value: int, stamp: int}
+     */
+    private function marketingOptIn(array $input): array
+    {
+        if (!array_key_exists('marketing_consent', $input)) {
+            return ['value' => 0, 'stamp' => 0];
+        }
+        $raw = $input['marketing_consent'];
+        $yes = $raw === true || $raw === 1 || $raw === '1';
+
+        return ['value' => $yes ? 1 : 0, 'stamp' => 1];
     }
 
     private function insertRole(PDO $pdo, int $userId, string $roleType): void
