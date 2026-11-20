@@ -11,7 +11,7 @@
 
 ## 수정
 
-- `ProviderCheckoutService::createOrder` 응답에 `buyer_phone`(숫자만)을 추가한다.
+- `ProviderCheckoutService::createOrder` 응답에 `buyer_phone`(숫자만)을 추가한다. 결제 검증용 DB에 프로필 전화번호 칸이 없으면 빈 문자열을 돌려 주문 생성이 중단되지 않게 한다. 번호는 로그에 남기지 않는다.
 - `screens-orders.js`는 노출상품 draft에 그 번호만 저장한다.
 - `screens.js`는 이름과 번호를 넘긴다. 하나라도 비어 있으면 결제창을 열지 않는다.
 - `portone-checkout.js`는 `customer`에 `phoneNumber`, `fullName`만 추가한다.

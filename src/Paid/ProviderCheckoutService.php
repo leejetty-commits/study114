@@ -306,9 +306,13 @@ final class ProviderCheckoutService
     /** 결제창에 넘길 휴대폰. 숫자만 반환하고 로그에는 남기지 않는다. */
     private function buyerPhoneDigits(int $userId): string
     {
-        $stmt = $this->pdo->prepare('SELECT phone FROM user_profiles WHERE user_id = ? LIMIT 1');
-        $stmt->execute([$userId]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->pdo->prepare('SELECT phone FROM user_profiles WHERE user_id = ? LIMIT 1');
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (\PDOException) {
+            return '';
+        }
         $phone = is_array($row) ? (string) ($row['phone'] ?? '') : '';
 
         return PhoneNormalizer::digits($phone);
