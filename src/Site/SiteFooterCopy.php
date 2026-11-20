@@ -12,7 +12,7 @@ final class SiteFooterCopy
     public const NOTICE =
         '우동공과는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 회원 간 거래에 대한 의무와 책임은 각 회원에게 있습니다.';
 
-    public const COPYRIGHT = '© 2026 우동공과 · study114';
+    public const COPYRIGHT = '© 2026 우동공과 · study114 | 상표출원 제40-2026-0229906호';
 
     /** 공정거래위원회 사업자정보 확인. 사업자번호 471-29-01819. */
     public const BIZ_CHECK_URL = 'https://www.ftc.go.kr/bizCommPop.do?wrkr_no=4712901819';
@@ -37,7 +37,7 @@ final class SiteFooterCopy
             'bizNo' => '471-29-01819',
             'mailOrder' => '제2025-의정부송산-0680호',
             'email' => 'help@study114.net',
-            'phone' => '',
+            'phone' => '070-4001-1422',
         ];
     }
 
