@@ -164,6 +164,9 @@ export function bindSignupRoleEvents(root) {
     submitBtn.textContent = '계정 생성 중…';
     try {
       const payload = { ...draft, role: selected };
+      if (typeof signupState.marketingConsent === 'boolean') {
+        payload.marketing_consent = signupState.marketingConsent;
+      }
       const res = await fetch('/api/auth/signup.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Study114-Soft-Error': '1' },
