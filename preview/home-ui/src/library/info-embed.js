@@ -106,7 +106,7 @@ async function loadEmbed(kind) {
 
 function paintReady(host, kind, html) {
   const path = PATHS[kind];
-  host.innerHTML = `<div class="info-embed__body">${html}</div><p class="info-embed__out"><a href="${path}">새 창에서 보기</a></p>`;
+  host.innerHTML = `<div class="info-embed__body">${html}</div><p class="info-embed__out"><a href="${path}" target="_blank" rel="noopener noreferrer">새 탭에서 보기</a></p>`;
 }
 
 function paintError(host, kind) {
