@@ -100,7 +100,7 @@ function renderCompanyBlock(company) {
     });
   }
   if (String(company.phone || '').trim()) {
-    line2.push({ label: '전화', valueHtml: esc(company.phone) });
+    line2.push({ label: '고객센터', valueHtml: esc(company.phone) });
   }
 
   const rows = [renderCompanyRow(line1), renderCompanyRow(line2)].filter(Boolean);
