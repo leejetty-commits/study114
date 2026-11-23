@@ -94,6 +94,7 @@ import {
   A28_EXPOSURE_ACTIONS,
   A28_INQUIRY_STATUS_LABELS,
   A28_MEMBER_STATUS_LABELS,
+  A28_MEMBER_STATUS_FILTER_LABELS,
   A28_MEMBER_ROLE_LABELS,
   A28_MEMBER_TIER_LABELS,
   adminChannelRoleLabel,
@@ -1527,20 +1528,22 @@ function renderMembers() {
      <p class="a28-help">회원 조회와 정지·다시 활성·탈퇴 처리, 유료 이용·역할 확인을 제공합니다. 다른 회원으로 대신 로그인하거나 역할을 부여하는 기능은 없습니다.</p>
      <div class="admin-ov" role="group" aria-label="회원 상태 집계">
        ${chip('all', '전체')}
-       ${chip('active', '정상')}
-       ${chip('pending', '대기')}
-       ${chip('blocked', '정지')}
-       ${chip('withdrawn', '탈퇴')}
+       ${chip('active', A28_MEMBER_STATUS_FILTER_LABELS.active)}
+       ${chip('pending', A28_MEMBER_STATUS_FILTER_LABELS.pending)}
+       ${chip('blocked', A28_MEMBER_STATUS_FILTER_LABELS.blocked)}
+       ${chip('withdrawn', A28_MEMBER_STATUS_FILTER_LABELS.withdrawn)}
+       ${chip('test', A28_MEMBER_STATUS_FILTER_LABELS.test)}
      </div>
      <form class="admin-filter-bar" data-member-filter>
        <div class="admin-filter-bar__row">
          ${renderRegionSelects({ sido: filters.sido || '', region: filters.region || '' })}
          <select name="status" class="admin-input--sm">
            <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
-           <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
-           <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>대기</option>
-           <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>정지</option>
-           <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
+           <option value="active"${filters.status === 'active' ? ' selected' : ''}>${A28_MEMBER_STATUS_FILTER_LABELS.active}</option>
+           <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>${A28_MEMBER_STATUS_FILTER_LABELS.pending}</option>
+           <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>${A28_MEMBER_STATUS_FILTER_LABELS.blocked}</option>
+           <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>${A28_MEMBER_STATUS_FILTER_LABELS.withdrawn}</option>
+           <option value="test"${filters.status === 'test' ? ' selected' : ''}>${A28_MEMBER_STATUS_FILTER_LABELS.test}</option>
          </select>
          <select name="role_type" class="admin-input--sm">
            <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 포함 · 전체</option>
@@ -1574,8 +1577,9 @@ function renderMembers() {
 
 /** @param {typeof A28_MEMBER_SEED} seed */
 function countMemberSeed(seed) {
-  const out = { all: seed.length, active: 0, pending: 0, blocked: 0, withdrawn: 0 };
+  const out = { all: seed.length, active: 0, pending: 0, blocked: 0, withdrawn: 0, test: 0 };
   for (const m of seed) {
+    if (m.status === 'test') continue;
     if (Object.prototype.hasOwnProperty.call(out, m.status)) {
       out[m.status] += 1;
     }

@@ -31,7 +31,7 @@ final class AdminMemberService
      * @return array{
      *   members: list<array<string, mixed>>,
      *   total: int,
-     *   counts: array{all: int, active: int, pending: int, blocked: int, withdrawn: int}
+     *   counts: array{all: int, active: int, pending: int, blocked: int, withdrawn: int, test: int}
      * }
      */
     public function list(array $filters = []): array

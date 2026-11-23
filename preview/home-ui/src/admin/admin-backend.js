@@ -234,6 +234,7 @@ export async function hydrateMembersCache(filters = {}) {
       pending: Number(data.counts?.pending ?? 0),
       blocked: Number(data.counts?.blocked ?? 0),
       withdrawn: Number(data.counts?.withdrawn ?? 0),
+      test: Number(data.counts?.test ?? 0),
     },
     filters: {
       q: String(filters.q || ''),

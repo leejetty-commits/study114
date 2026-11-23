@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Study114\Admin;
 
 use PDO;
+use Study114\Auth\TestAccountAllowlist;
 
 final class AdminMemberRepository
 {
@@ -118,49 +119,41 @@ final class AdminMemberRepository
     }
 
     /**
-     * 상태별 집계 칩용. q·role_type만 반영하고 status 필터는 무시 (영카트 local_ov 패턴).
-     * all 은 withdrawn 을 빼서, 상태 전체 목록 합계와 맞춘다.
+     * 상태별 집계 칩용. 고른 status 는 무시하고 q·역할·지역만 반영한다.
+     * all 은 탈퇴를 빼며 테스트 계정을 포함한다.
+     * active 는 active 이면서 테스트 목록에 없는 회원이다.
+     * pending·blocked·withdrawn 은 그 users.status 그대로다. 테스트 계정도 그 상태면 센다.
+     * test 는 테스트 목록이면서 탈퇴가 아닌 회원이다. 목록이 비면 0.
      *
-     * @param array{q?: string, role_type?: string} $filters
-     * @return array{all: int, active: int, pending: int, blocked: int, withdrawn: int}
+     * @param array{q?: string, role_type?: string, sido?: string, region?: int} $filters
+     * @return array{all: int, active: int, pending: int, blocked: int, withdrawn: int, test: int}
      */
     public function countByStatus(array $filters = []): array
     {
-        [$where, $params] = $this->buildListWhere($filters, false);
-        $sql = 'SELECT u.status, COUNT(*) AS cnt
-                FROM users u
-                LEFT JOIN user_profiles p ON p.user_id = u.id
-                WHERE ' . implode(' AND ', $where) . '
-                GROUP BY u.status';
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+        unset($filters['status']);
         $out = [
             'all' => 0,
             'active' => 0,
             'pending' => 0,
             'blocked' => 0,
             'withdrawn' => 0,
+            'test' => 0,
         ];
-        if (!is_array($rows)) {
-            return $out;
-        }
-        foreach ($rows as $row) {
-            $status = (string) ($row['status'] ?? '');
-            $cnt = (int) ($row['cnt'] ?? 0);
-            if ($status !== 'withdrawn') {
-                $out['all'] += $cnt;
-            }
-            if (array_key_exists($status, $out)) {
-                $out[$status] = $cnt;
-            }
+        foreach (array_keys($out) as $status) {
+            $one = $filters;
+            $one['status'] = $status;
+            $out[$status] = $this->countMembers($one);
         }
 
         return $out;
     }
 
     /**
+     * status 가 없거나 all 이면 탈퇴만 뺀다. 테스트 계정은 남긴다.
+     * active 는 active 이면서 테스트 id 를 NOT IN 한다. 테스트 목록이 비면 NOT IN 을 붙이지 않는다.
+     * test 는 테스트 id 이면서 탈퇴가 아닌 회원이다. 목록이 비면 0건(0=1).
+     * pending·blocked·withdrawn 은 users.status 만 비교한다.
+     *
      * @param array{q?: string, status?: string, role_type?: string, sido?: string, region?: int} $filters
      * @return array{0: list<string>, 1: list<mixed>}
      */
@@ -194,6 +187,27 @@ final class AdminMemberRepository
             $status = trim((string) ($filters['status'] ?? ''));
             if ($status === '' || $status === 'all') {
                 $where[] = "u.status <> 'withdrawn'";
+            } elseif ($status === 'active' || $status === 'test') {
+                $testIds = TestAccountAllowlist::userIds($this->pdo);
+                if ($status === 'active') {
+                    $where[] = "u.status = 'active'";
+                    if ($testIds !== []) {
+                        $where[] = 'u.id NOT IN (' . implode(',', array_fill(0, count($testIds), '?')) . ')';
+                        foreach ($testIds as $testId) {
+                            $params[] = $testId;
+                        }
+                    }
+                } else {
+                    $where[] = "u.status <> 'withdrawn'";
+                    if ($testIds === []) {
+                        $where[] = '0=1';
+                    } else {
+                        $where[] = 'u.id IN (' . implode(',', array_fill(0, count($testIds), '?')) . ')';
+                        foreach ($testIds as $testId) {
+                            $params[] = $testId;
+                        }
+                    }
+                }
             } else {
                 $where[] = 'u.status = ?';
                 $params[] = $status;

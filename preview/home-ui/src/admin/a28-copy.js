@@ -569,12 +569,21 @@ export function memberBenefitEndNotice(member) {
   return A28_MEMBER_BENEFIT_END_NOTICE;
 }
 
-/** 회원 상태 — 승인·반려 용어 금지 (A28-02) */
+/** 회원 상태 — 승인·반려 용어 금지 (A28-02). 행·상세 글자. */
 export const A28_MEMBER_STATUS_LABELS = {
   active: '정상',
   pending: '대기',
   blocked: '정지',
   withdrawn: '탈퇴',
+};
+
+/** 회원 목록 칩·상태 선택지. 행·상세에는 쓰지 않는다. */
+export const A28_MEMBER_STATUS_FILTER_LABELS = {
+  active: '정상(테스트 제외)',
+  pending: '대기',
+  blocked: '정지',
+  withdrawn: '탈퇴',
+  test: '테스트',
 };
 
 /** 관리자 화면 역할 글자. 키 guardian_student 는 바꾸지 않는다. */
