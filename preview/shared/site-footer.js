@@ -173,8 +173,8 @@ export function renderSiteFooter(opts = {}) {
           ${links}
         </nav>
         <p class="site-footer__notice home-footer__notice">${SITE_FOOTER_NOTICE}</p>
-        <p class="site-footer__notice home-footer__notice">${SITE_FOOTER_COMPLAINT}</p>
         ${renderCompanyBlock(company)}
+        <p class="site-footer__notice home-footer__notice">${SITE_FOOTER_COMPLAINT}</p>
         <p class="site-footer__legal">${SITE_FOOTER_COPYRIGHT}</p>
       </div>
     </footer>
