@@ -77,6 +77,7 @@ $row2 = $renderRow($line2);
   <?php endforeach; ?>
 </nav>
 <p class="auth-shell__footer-notice"><?= study114_e(SiteFooterCopy::NOTICE) ?></p>
+<p class="auth-shell__footer-notice"><?= study114_e(SiteFooterCopy::COMPLAINT) ?></p>
 <?php if ($row1 !== '' || $row2 !== ''): ?>
 <div class="auth-shell__footer-company">
   <?= $row1 ?>

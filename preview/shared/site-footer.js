@@ -9,6 +9,9 @@ import { HOME_UI_BASE } from './preview-links.js';
 export const SITE_FOOTER_NOTICE =
   '우동공과는 통신판매중개자이며 통신판매의 당사자가 아닙니다. 회원 간 거래에 대한 의무와 책임은 각 회원에게 있습니다.';
 
+export const SITE_FOOTER_COMPLAINT =
+  '해당 사이트에서 판매되는 모든 상품에 환불 및 모든 민원의 책임은 제이에이치커머스에 있습니다. 민원담당자: 이종현 연락처: 070-4001-1422';
+
 export const SITE_FOOTER_COPYRIGHT = '© 2026 우동공과 · study114 | 상표출원 제40-2026-0229906호';
 
 /**
@@ -170,6 +173,7 @@ export function renderSiteFooter(opts = {}) {
           ${links}
         </nav>
         <p class="site-footer__notice home-footer__notice">${SITE_FOOTER_NOTICE}</p>
+        <p class="site-footer__notice home-footer__notice">${SITE_FOOTER_COMPLAINT}</p>
         ${renderCompanyBlock(company)}
         <p class="site-footer__legal">${SITE_FOOTER_COPYRIGHT}</p>
       </div>
