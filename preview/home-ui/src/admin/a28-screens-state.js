@@ -27,7 +27,7 @@ export const SMS_STATUS_KO = {
 /**
  * Mutable UI filters/selection. Reassign fields via `a28Ui.x = ...` (not free `let` rebinding).
  * @type {{
- *   memberFilters: { q: string, status: string, role_type: string },
+ *   memberFilters: { q: string, status: string, role_type: string, sido: string, region: string },
  *   channelFilters: { q: string, status: string, sectionOwner: string },
  *   openSectionAccessId: string|null,
  *   openMemberId: number|null,
@@ -37,7 +37,7 @@ export const SMS_STATUS_KO = {
  * }}
  */
 export const a28Ui = {
-  memberFilters: { q: '', status: 'all', role_type: 'all' },
+  memberFilters: { q: '', status: 'all', role_type: 'all', sido: '', region: '' },
   channelFilters: { q: '', status: 'all', sectionOwner: 'all' },
   openSectionAccessId: null,
   openMemberId: null,

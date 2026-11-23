@@ -161,7 +161,7 @@ final class AdminMemberRepository
     }
 
     /**
-     * @param array{q?: string, status?: string, role_type?: string} $filters
+     * @param array{q?: string, status?: string, role_type?: string, sido?: string, region?: int} $filters
      * @return array{0: list<string>, 1: list<mixed>}
      */
     private function buildListWhere(array $filters, bool $includeStatus): array
@@ -171,30 +171,23 @@ final class AdminMemberRepository
 
         $q = trim((string) ($filters['q'] ?? ''));
         if ($q !== '') {
-            $where[] = '(u.email LIKE ? OR p.real_name LIKE ? OR p.phone LIKE ? OR CAST(u.id AS CHAR) = ?'
-                . ' OR EXISTS (SELECT 1 FROM study_rooms _sr WHERE _sr.user_id = u.id AND _sr.deleted_at IS NULL AND _sr.study_room_name LIKE ?)'
-                . ' OR EXISTS (SELECT 1 FROM tutors _t WHERE _t.user_id = u.id AND _t.tutor_display_name LIKE ?)'
-                . ' OR EXISTS (SELECT 1 FROM tutor_regions _tr'
-                . '   INNER JOIN tutors _t2 ON _t2.id = _tr.tutor_id AND _t2.user_id = u.id'
-                . '   INNER JOIN regions _rg ON _rg.id = _tr.region_id'
-                . '   WHERE _rg.sido_name LIKE ? OR _rg.sigungu_name LIKE ?)'
-                . ' OR EXISTS (SELECT 1 FROM study_room_regions _srr'
-                . '   INNER JOIN study_rooms _sr2 ON _sr2.id = _srr.study_room_id AND _sr2.user_id = u.id AND _sr2.deleted_at IS NULL'
-                . '   INNER JOIN regions _rg2 ON _rg2.id = _srr.region_id'
-                . '   WHERE _srr.is_primary = 1 AND (_rg2.sido_name LIKE ? OR _rg2.sigungu_name LIKE ? OR _rg2.dong_name LIKE ?))'
-                . ')';
             $like = '%' . $q . '%';
+            $parts = [
+                'p.real_name LIKE ?',
+                'u.email LIKE ?',
+                'EXISTS (SELECT 1 FROM study_rooms _sr WHERE _sr.user_id = u.id AND _sr.deleted_at IS NULL AND _sr.study_room_name LIKE ?)',
+                'EXISTS (SELECT 1 FROM tutors _t WHERE _t.user_id = u.id AND _t.tutor_display_name LIKE ?)',
+            ];
             $params[] = $like;
             $params[] = $like;
             $params[] = $like;
-            $params[] = $q;
             $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
-            $params[] = $like;
+            $digits = preg_replace('/\D+/', '', $q);
+            if (is_string($digits) && strlen($digits) >= 3) {
+                $parts[] = "REPLACE(REPLACE(REPLACE(COALESCE(p.phone,''),'-',''),' ',''),'.','') LIKE ?";
+                $params[] = '%' . $digits . '%';
+            }
+            $where[] = '(' . implode(' OR ', $parts) . ')';
         }
 
         if ($includeStatus) {
@@ -215,6 +208,39 @@ final class AdminMemberRepository
             )';
             $params[] = $roleType;
             $params[] = 'active';
+        }
+
+        $regionId = (int) ($filters['region'] ?? 0);
+        $sido = trim((string) ($filters['sido'] ?? ''));
+        if ($regionId > 0) {
+            $sido = '';
+        }
+        if ($regionId > 0 || $sido !== '') {
+            $regionArg = $regionId > 0 ? $regionId : null;
+            $sidoArg = $sido !== '' ? $sido : null;
+            [$roomSql, $roomParams] = AdminRegionFilter::positionalExists('srr_f.region_id', $regionArg, $sidoArg);
+            [$tutorSql, $tutorParams] = AdminRegionFilter::positionalExists('tr_f.region_id', $regionArg, $sidoArg);
+            $where[] = '(EXISTS (
+                SELECT 1 FROM study_rooms sr_f
+                INNER JOIN study_room_regions srr_f
+                  ON srr_f.study_room_id = sr_f.id AND srr_f.slot = 1
+                 AND srr_f.region_id IS NOT NULL AND srr_f.region_id <> 0
+                WHERE sr_f.user_id = u.id AND sr_f.deleted_at IS NULL
+                  AND ' . $roomSql . '
+            ) OR EXISTS (
+                SELECT 1 FROM tutors t_f
+                INNER JOIN tutor_regions tr_f
+                  ON tr_f.tutor_id = t_f.id AND tr_f.priority_order = 0
+                 AND tr_f.region_id IS NOT NULL AND tr_f.region_id <> 0
+                WHERE t_f.user_id = u.id
+                  AND ' . $tutorSql . '
+            ))';
+            foreach ($roomParams as $param) {
+                $params[] = $param;
+            }
+            foreach ($tutorParams as $param) {
+                $params[] = $param;
+            }
         }
 
         return [$where, $params];

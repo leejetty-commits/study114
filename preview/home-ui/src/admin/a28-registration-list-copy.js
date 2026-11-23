@@ -16,6 +16,12 @@ export const REGISTRATION_REGION_WORD = {
   student: '희망지역',
 };
 
+export const REGISTRATION_FILTER_SIDO = '광역시/도';
+
+export const REGISTRATION_FILTER_SIGUNGU = '시군구';
+
+export const REGISTRATION_FILTER_NAME = '이름';
+
 export const REGISTRATION_COLUMNS = {
   name: '이름',
   date: '등록일',

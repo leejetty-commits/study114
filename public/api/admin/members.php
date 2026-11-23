@@ -7,6 +7,8 @@ require_once dirname(__DIR__, 3) . '/src/bootstrap.php';
 use Study114\Admin\AdminApi;
 use Study114\Admin\AdminMemberDeleteService;
 use Study114\Admin\AdminMemberService;
+use Study114\Admin\AdminRegionFilter;
+use Study114\Database\Connection;
 
 AdminApi::bootstrap();
 
@@ -21,11 +23,18 @@ AdminApi::run(static function (): void {
             AdminApi::ok(['member' => $service->detail($id)]);
         }
 
+        $region = AdminRegionFilter::parse(
+            Connection::get(),
+            AdminApi::queryString('sido'),
+            AdminApi::queryString('region'),
+        );
         AdminApi::ok($service->list([
             'q' => (string) (AdminApi::queryString('q', '') ?? ''),
             'status' => (string) (AdminApi::queryString('status', 'all') ?? 'all'),
             'role_type' => (string) (AdminApi::queryString('role_type', 'all') ?? 'all'),
             'limit' => AdminApi::queryInt('limit', 50),
+            'sido' => (string) ($region['sido'] ?? ''),
+            'region' => (int) ($region['regionId'] ?? 0),
         ]));
     }
 

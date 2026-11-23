@@ -125,6 +125,7 @@ $pdo->exec(
 $pdo->exec(
     'CREATE TABLE regions (
         id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+        sido_code VARCHAR(2) NOT NULL DEFAULT \'\',
         sido_name VARCHAR(50) NOT NULL,
         sigungu_name VARCHAR(50) NOT NULL,
         sigungu_code VARCHAR(20) NOT NULL,
@@ -132,6 +133,7 @@ $pdo->exec(
         unit_level ENUM(\'sido\',\'sigungu\',\'dong\') NOT NULL,
         official_code VARCHAR(10) NULL,
         is_selectable TINYINT(1) NOT NULL DEFAULT 0,
+        is_active TINYINT(1) NOT NULL DEFAULT 1,
         PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
 );
@@ -200,12 +202,12 @@ function userId(PDO $pdo, string $email, ?string $level, string $status = 'activ
     return (int) $pdo->lastInsertId();
 }
 
-function regionId(PDO $pdo, string $sido, string $gu, string $code, string $dong, string $level, ?string $official, int $selectable): int
+function regionId(PDO $pdo, string $sido, string $gu, string $code, string $dong, string $level, ?string $official, int $selectable, string $sidoCode = ''): int
 {
     $pdo->prepare(
-        'INSERT INTO regions (sido_name, sigungu_name, sigungu_code, dong_name, unit_level, official_code, is_selectable)
-         VALUES (?,?,?,?,?,?,?)'
-    )->execute([$sido, $gu, $code, $dong, $level, $official, $selectable]);
+        'INSERT INTO regions (sido_code, sido_name, sigungu_name, sigungu_code, dong_name, unit_level, official_code, is_selectable)
+         VALUES (?,?,?,?,?,?,?,?)'
+    )->execute([$sidoCode, $sido, $gu, $code, $dong, $level, $official, $selectable]);
 
     return (int) $pdo->lastInsertId();
 }
@@ -215,9 +217,10 @@ $super = userId($pdo, 'super159c@t159c.test', 'super_admin');
 $sub = userId($pdo, 'sub159c@t159c.test', 'sub_master');
 $plain = userId($pdo, 'plain159c@t159c.test', null);
 
-$guA = regionId($pdo, '서울특별시', '강남구', '11680', '', 'sigungu', '1168000000', 1);
-$dongA = regionId($pdo, '서울특별시', '강남구', '1168010100', '역삼동', 'dong', null, 0);
-$guB = regionId($pdo, '부산광역시', '해운대구', '26350', '', 'sigungu', '2635000000', 1);
+$guA = regionId($pdo, '서울특별시', '강남구', '11680', '', 'sigungu', '1168000000', 1, '11');
+$dongA = regionId($pdo, '서울특별시', '강남구', '1168010100', '역삼동', 'dong', null, 0, '11');
+$guB = regionId($pdo, '부산광역시', '해운대구', '26350', '', 'sigungu', '2635000000', 1, '26');
+$seoulSido = regionId($pdo, '서울특별시', '서울특별시', '11000', '', 'sido', '1100000000', 1, '11');
 ok('regions-ready', $guA > 0 && $dongA > 0 && $guB > 0 && $guA !== $guB);
 
 $period = new ReportPeriod();
@@ -289,6 +292,7 @@ addRoom($pdo, $owner, '미완성공부방', 'draft', $storedDb, null);
 addRoom($pdo, $owner, '옛공부방', 'published', $storedOldDb, $dongA);
 addRoom($pdo, $owner, '먼공부방', 'published', $storedFarDb, $dongA);
 $dropTutor = addTutor($pdo, $owner, '지울과외', 'published', $storedDb, $dongA);
+addTutor($pdo, $owner, '서울단위과외', 'published', $storedDb, $seoulSido);
 addTutor($pdo, $owner, '숨김과외', 'hidden', $storedDb, $dongA);
 addTutor($pdo, $owner, '지역없는과외', 'published', $storedDb, null);
 addStudent($pdo, $owner, '숨김학생', 'hidden', $storedPhp, 'tutor', null, $dongA);
@@ -344,6 +348,23 @@ ok('region-other-zero', $byGuB['total'] === 0, (string) $byGuB['total']);
 ok('region-exact-dong', in_array('게시공부방', array_column($byDong['items'], 'name'), true));
 ok('region-label', str_contains((string) ($byGuA['items'][0]['region'] ?? ''), '강남구'), (string) ($byGuA['items'][0]['region'] ?? ''));
 
+$bySido = $repo->page('study_room', null, null, null, 1, 50, '11');
+ok('sido-seoul-includes-dong-room', in_array('숨김공부방', array_column($bySido['items'], 'name'), true));
+$byBusan = $repo->page('study_room', null, null, null, 1, 50, '26');
+ok('sido-busan-zero', $byBusan['total'] === 0, (string) $byBusan['total']);
+$named = $repo->page('study_room', null, null, $guA, 1, 50, null, '숨김');
+$namedNames = array_column($named['items'], 'name');
+ok('name-and-region', in_array('숨김공부방', $namedNames, true) && !in_array('게시공부방', $namedNames, true), implode(',', $namedNames));
+$mismatch = false;
+$mismatchMessage = '';
+try {
+    $repo->page('study_room', null, null, $guA, 1, 50, '26');
+} catch (InvalidArgumentException $e) {
+    $mismatch = true;
+    $mismatchMessage = $e->getMessage();
+}
+ok('sido-region-mismatch-message', $mismatch && $mismatchMessage === '시군구가 고른 광역시/도에 속하지 않습니다.', $mismatchMessage);
+
 $tutors = $repo->page('tutor', null, null, null, 1, 50);
 $tutorNames = array_column($tutors['items'], 'name');
 ok('tutor-hidden-in', in_array('숨김과외', $tutorNames, true) && (array_column($tutors['items'], 'status', 'name')['숨김과외'] ?? '') === '숨김');
@@ -354,6 +375,8 @@ $tutorsAfter = $repo->page('tutor', null, null, null, 1, 50);
 ok('tutor-delete-after', !in_array('지울과외', array_column($tutorsAfter['items'], 'name'), true));
 $tutorGuB = $repo->page('tutor', null, null, $guB, 1, 50);
 ok('tutor-other-region-zero', $tutorGuB['total'] === 0);
+$tutorGangnam = $repo->page('tutor', null, null, $guA, 1, 50);
+ok('tutor-sido-unit-in-gangnam', in_array('서울단위과외', array_column($tutorGangnam['items'], 'name'), true), implode(',', array_column($tutorGangnam['items'], 'name')));
 
 $students = $repo->page('student', null, null, null, 1, 50);
 $studentNames = array_column($students['items'], 'name');
@@ -502,6 +525,12 @@ ok('api-other-region-zero', $filtered['status'] === 200 && ($filtered['json']['t
 $matched = httpCall('GET', $base . '?role=tutor&region=' . $guA, [$superCookie]);
 ok('api-tutor-region', $matched['status'] === 200 && (int) ($matched['json']['total'] ?? 0) >= 1, $matched['body']);
 ok('api-tutor-word-source', str_contains((string) file_get_contents(dirname(__DIR__) . '/preview/home-ui/src/admin/a28-registration-list-copy.js'), '과외지역'));
+$badSido = httpCall('GET', $base . '?role=study_room&sido=26&region=' . $guA, [$superCookie]);
+ok(
+    'sido-region-mismatch-422',
+    $badSido['status'] === 422 && str_contains((string) ($badSido['json']['message'] ?? ''), '시군구가 고른 광역시/도에 속하지 않습니다.'),
+    $badSido['status'] . ' ' . $badSido['body']
+);
 
 stopApi();
 

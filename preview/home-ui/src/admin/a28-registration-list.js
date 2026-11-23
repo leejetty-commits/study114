@@ -1,8 +1,12 @@
 import { esc, renderPanel } from './a28-screens-shared.js';
+import { bindRegionSelects, renderRegionSelects } from './admin-region-options.js';
 import { fetchRegistrationList } from './registration-list-api.js';
 import {
   REGISTRATION_COLUMNS,
   REGISTRATION_EMPTY,
+  REGISTRATION_FILTER_NAME,
+  REGISTRATION_FILTER_SIDO,
+  REGISTRATION_FILTER_SIGUNGU,
   REGISTRATION_LEAD,
   REGISTRATION_REGION_WORD,
   REGISTRATION_TABS,
@@ -12,7 +16,7 @@ import {
 /** @type {{ key: string, data: Record<string, unknown>|null, error: string }} */
 let view = { key: '', data: null, error: '' };
 
-/** @returns {{ role: string, from: string, to: string, region: string, page: number }} */
+/** @returns {{ role: string, from: string, to: string, sido: string, region: string, q: string, page: number }} */
 export function readRegistrationQuery() {
   const raw = String(window.location.hash || '').replace(/^#/, '');
   const q = raw.includes('?') ? raw.slice(raw.indexOf('?') + 1) : '';
@@ -25,18 +29,22 @@ export function readRegistrationQuery() {
     role: safeRole,
     from: params.get('from') || '',
     to: params.get('to') || '',
+    sido: params.get('sido') || '',
     region: params.get('region') || '',
+    q: params.get('q') || '',
     page,
   };
 }
 
-/** @param {{ role: string, from: string, to: string, region: string, page: number }} query */
+/** @param {{ role: string, from: string, to: string, sido?: string, region: string, q?: string, page: number }} query */
 export function registrationHash(query) {
   const params = new URLSearchParams();
   params.set('role', query.role);
   if (query.from) params.set('from', query.from);
   if (query.to) params.set('to', query.to);
+  if (query.sido) params.set('sido', query.sido);
   if (query.region) params.set('region', query.region);
+  if (query.q) params.set('q', query.q);
   params.set('page', String(query.page || 1));
   return `/admin/registrations?${params}`;
 }
@@ -74,8 +82,14 @@ export function renderRegistrationList() {
   const body = `
     <div class="admin-actions" data-reg-tabs>${tabs}</div>
     <form class="admin-actions" data-reg-filters>
-      <label class="a28-help">${esc(regionWord)}
-        <input class="admin-input" name="region" inputmode="numeric" value="${esc(query.region)}" />
+      ${renderRegionSelects({
+        sido: query.sido,
+        region: query.region,
+        sidoLabel: `${regionWord} ${REGISTRATION_FILTER_SIDO}`,
+        sigunguLabel: `${regionWord} ${REGISTRATION_FILTER_SIGUNGU}`,
+      })}
+      <label class="a28-help">${esc(REGISTRATION_FILTER_NAME)}
+        <input class="admin-input" name="q" value="${esc(query.q)}" />
       </label>
       <label class="a28-help">시작일
         <input class="admin-input" type="date" name="from" value="${esc(fromValue)}" />
@@ -118,7 +132,9 @@ export function bindRegistrationList(root, rerender) {
       role: query.role,
       from: query.from,
       to: query.to,
+      sido: query.sido,
       region: query.region,
+      q: query.q,
       page: query.page,
       perPage: 50,
     })
@@ -142,6 +158,7 @@ export function bindRegistrationList(root, rerender) {
   });
 
   const form = root.querySelector('[data-reg-filters]');
+  bindRegionSelects(form, () => rerender());
   form?.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!(form instanceof HTMLFormElement)) return;
@@ -150,7 +167,9 @@ export function bindRegistrationList(root, rerender) {
       role: query.role,
       from: String(fd.get('from') || ''),
       to: String(fd.get('to') || ''),
+      sido: String(fd.get('sido') || '').trim(),
       region: String(fd.get('region') || '').trim(),
+      q: String(fd.get('q') || '').trim(),
       page: 1,
     });
   });

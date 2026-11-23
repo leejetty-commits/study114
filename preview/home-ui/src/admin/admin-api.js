@@ -74,13 +74,15 @@ export async function fetchCommerceOverview(limit = 50, userId = '') {
 }
 
 /**
- * @param {{ q?: string, status?: string, role_type?: string, limit?: number }} [filters]
+ * @param {{ q?: string, status?: string, role_type?: string, sido?: string, region?: string, limit?: number }} [filters]
  */
 export async function fetchAdminMembers(filters = {}) {
   const params = new URLSearchParams();
   if (filters.q) params.set('q', filters.q);
   if (filters.status) params.set('status', filters.status);
   if (filters.role_type) params.set('role_type', filters.role_type);
+  if (filters.sido) params.set('sido', filters.sido);
+  if (filters.region) params.set('region', filters.region);
   if (filters.limit) params.set('limit', String(filters.limit));
   const qs = params.toString();
   const res = await adminFetch(`/api/admin/members.php${qs ? `?${qs}` : ''}`, CREDENTIALS);
