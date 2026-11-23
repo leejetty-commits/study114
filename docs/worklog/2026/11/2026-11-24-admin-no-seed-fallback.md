@@ -3,6 +3,8 @@
 - 지시: `origin/work/admin-no-seed-fallback-doc` 의 `docs/worklog/grok-sync/docs/admin-no-seed-fallback.md`
 - 기준: `origin/main` `52e814cc`
 - 브랜치: `work/admin-no-seed-fallback`
+- 커밋: `12e6eb3b`
+- PR: https://github.com/leejetty-commits/study114/pull/299
 - 실행: Cursor. 병합하지 않음.
 
 ## 한 일
