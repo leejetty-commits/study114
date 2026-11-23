@@ -13,9 +13,16 @@ use Study114\Database\Connection;
 AdminApi::bootstrap();
 
 AdminApi::run(static function (): void {
+    $method = AdminApi::method();
+    if ($method === 'GET' && AdminApi::queryInt('id', 0) <= 0) {
+        $status = (string) (AdminApi::queryString('status', 'all') ?? 'all');
+        if (!in_array($status, ['all', 'active', 'pending', 'blocked', 'withdrawn', 'test'], true)) {
+            throw new InvalidArgumentException('status는 all, active, pending, blocked, withdrawn, test만 허용됩니다.');
+        }
+    }
+
     $auth = AdminApi::requireAdmin();
     $service = new AdminMemberService();
-    $method = AdminApi::method();
 
     if ($method === 'GET') {
         $id = AdminApi::queryInt('id', 0);
