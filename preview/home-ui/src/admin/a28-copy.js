@@ -586,6 +586,9 @@ export const A28_MEMBER_STATUS_FILTER_LABELS = {
   test: '테스트',
 };
 
+/** 운영 회원 목록이 0명일 때 표 대신 보여 주는 한 줄. */
+export const A28_MEMBER_LIST_EMPTY = '조건에 맞는 회원이 없어요';
+
 /** 관리자 화면 역할 글자. 키 guardian_student 는 바꾸지 않는다. */
 export const ADMIN_GUARDIAN_ROLE_LABEL = '학생';
 

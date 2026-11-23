@@ -95,6 +95,7 @@ import {
   A28_INQUIRY_STATUS_LABELS,
   A28_MEMBER_STATUS_LABELS,
   A28_MEMBER_STATUS_FILTER_LABELS,
+  A28_MEMBER_LIST_EMPTY,
   A28_MEMBER_ROLE_LABELS,
   A28_MEMBER_TIER_LABELS,
   adminChannelRoleLabel,
@@ -213,6 +214,79 @@ function presetLabel(id) {
  * @param {object|null} [apiDetail]
  */
 function buildMemberDetail(id, apiDetail = null) {
+  if (isAdminApiMode()) {
+    if (!apiDetail) {
+      return {
+        id: Number(id),
+        email: '',
+        name: '',
+        phone: '',
+        status: '',
+        primaryRole: '',
+        emailVerified: false,
+        gender: '',
+        birthDate: '',
+        address: '',
+        smsOptIn: false,
+        emailOptIn: false,
+        createdAt: '',
+        lastLoginAt: '',
+        isMaster: false,
+        roles: [],
+        oauth: [],
+        paid: {
+          subscriptionTier: '',
+          positions: [],
+          tickets: [],
+          orders: [],
+        },
+        profileCounts: { studyRooms: 0, tutors: 0, students: 0 },
+        hasPayment: false,
+        studyRoomName: '',
+        tutorDisplayName: '',
+        primaryRegionLabel: '',
+        _source: 'loading',
+      };
+    }
+    const src = apiDetail;
+    return {
+      id: Number(src.id ?? id),
+      email: src.email || '',
+      name: src.name || '—',
+      phone: src.phone || '',
+      status: src.status || '',
+      primaryRole: src.primaryRole || '',
+      emailVerified: src.emailVerified === true,
+      gender: src.gender ?? '',
+      birthDate: src.birthDate ?? '',
+      address: src.address ?? '',
+      smsOptIn: src.smsOptIn === true,
+      emailOptIn: src.emailOptIn === true,
+      createdAt: src.createdAt || '—',
+      lastLoginAt: src.lastLoginAt || '—',
+      isMaster: Boolean(src.isMaster),
+      isOperatorAccount: src.isOperatorAccount === true,
+      roles: Array.isArray(src.roles) ? src.roles : [],
+      oauth: Array.isArray(src.oauth) ? src.oauth : [],
+      paid: {
+        subscriptionTier: src.paid?.subscriptionTier || src.subscriptionTier || '',
+        positions: Array.isArray(src.paid?.positions) ? src.paid.positions : [],
+        tickets: Array.isArray(src.paid?.tickets) ? src.paid.tickets : [],
+        orders: Array.isArray(src.paid?.orders) ? src.paid.orders : [],
+      },
+      profileCounts: {
+        studyRooms: src.profileCounts?.studyRooms ?? src.studyRoomCount ?? 0,
+        tutors: src.profileCounts?.tutors ?? src.tutorCount ?? 0,
+        students: src.profileCounts?.students ?? src.studentCount ?? 0,
+      },
+      hasPayment: src.hasPayment === true,
+      studyRoomName: src.studyRoomName || '',
+      tutorDisplayName: src.tutorDisplayName || '',
+      primaryRegionLabel: src.primaryRegionLabel || '',
+      _source: 'api',
+    };
+  }
+
   const seed = A28_MEMBER_SEED.find((m) => Number(m.id) === Number(id));
   const base = apiDetail || seed;
   if (!base && !apiDetail) {
@@ -1366,13 +1440,30 @@ function renderCommerce() {
 }
 
 function renderMembers() {
-  const cache = isAdminApiMode() ? getMembersCache() : null;
+  const apiMode = isAdminApiMode();
+  const cache = apiMode ? getMembersCache() : null;
   const filters = cache?.filters ?? a28Ui.memberFilters;
-  const seedFiltered = A28_MEMBER_SEED.filter((m) => filters.status === 'all' || m.status === filters.status);
-  const members = cache?.members?.length ? cache.members : seedFiltered;
+  const emptyCounts = { all: 0, active: 0, pending: 0, blocked: 0, withdrawn: 0, test: 0 };
+  let members;
+  let counts;
+  let totalLabel;
+  if (apiMode) {
+    if (cache) {
+      members = Array.isArray(cache.members) ? cache.members : [];
+      counts = cache.counts ?? emptyCounts;
+      totalLabel = cache.total ?? 0;
+    } else {
+      members = [];
+      counts = emptyCounts;
+      totalLabel = 0;
+    }
+  } else {
+    const seedFiltered = A28_MEMBER_SEED.filter((m) => filters.status === 'all' || m.status === filters.status);
+    members = seedFiltered;
+    counts = countMemberSeed(A28_MEMBER_SEED);
+    totalLabel = seedFiltered.length;
+  }
   const master = isMasterAdmin();
-  const counts = cache?.counts ?? countMemberSeed(A28_MEMBER_SEED);
-  const totalLabel = cache?.total ?? seedFiltered.length;
 
   const chip = (key, label) => {
     const n = Number(counts[key] ?? 0);
@@ -1411,7 +1502,13 @@ function renderMembers() {
     .join('');
 
   let detailHtml = '';
-  if (a28Ui.openMemberId) {
+  if (a28Ui.openMemberId && isAdminApiMode() && !getMemberDetailCache(a28Ui.openMemberId)) {
+    detailHtml = renderDetailDrawer(
+      `member-${a28Ui.openMemberId}`,
+      `회원 #${a28Ui.openMemberId}`,
+      `<p class="a28-help">불러오는 중…</p>`,
+    );
+  } else if (a28Ui.openMemberId) {
     const apiDetail = isAdminApiMode() ? getMemberDetailCache(a28Ui.openMemberId) : null;
     const detail = buildMemberDetail(a28Ui.openMemberId, apiDetail);
     const roles = (detail.roles || [])
@@ -1567,10 +1664,16 @@ function renderMembers() {
        <button type="button" class="btn btn--primary btn--sm" data-member-bulk="restore">선택 다시 활성</button>
        ${master ? '<button type="button" class="btn btn--danger btn--sm" data-member-bulk="delete" title="최대 6명">선택 삭제</button>' : ''}
      </div>
-     <table class="sup-admin-table">
+     ${
+       apiMode && !cache
+         ? '<p class="a28-help">목록을 불러오는 중…</p>'
+         : apiMode && members.length === 0
+           ? `<p class="sup-empty">${esc(A28_MEMBER_LIST_EMPTY)}</p>`
+           : `<table class="sup-admin-table">
        <thead><tr><th></th><th>식별번호</th><th>회원</th><th>휴대폰</th><th>대표 역할</th><th>공부방</th><th>과외쌤</th><th>홍보지역1</th><th>상태</th><th>유료</th><th>소셜</th><th>최근 로그인</th><th></th></tr></thead>
        <tbody>${rows || '<tr><td colspan="13" class="sup-empty">회원 없음</td></tr>'}</tbody>
-     </table>
+     </table>`
+     }
      ${detailHtml}`,
   );
 }
