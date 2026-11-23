@@ -7,6 +7,7 @@ namespace Study114\Registration;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use PDO;
+use Study114\Admin\AdminRegionFilter;
 use Study114\Database\Connection;
 use Study114\Report\ReportPeriod;
 
@@ -169,18 +170,20 @@ final class BasicCardRegisteredQuery
         int $page,
         int $perPage,
         ?int $regionId = null,
+        ?string $sido = null,
+        ?string $name = null,
     ): array {
         $this->assertRole($role);
         $page = max(1, $page);
         $perPage = max(1, min(100, $perPage));
         $offset = ($page - 1) * $perPage;
-        $where = $this->adminWhere($role, $includeDeleted, $regionId);
-        $total = $this->countRoleForAdmin($role, $start, $end, $includeDeleted, $regionId);
+        $where = $this->adminWhere($role, $includeDeleted, $regionId, $sido, $name);
+        $total = $this->countRoleForAdmin($role, $start, $end, $includeDeleted, $regionId, $sido, $name);
         $sql = 'SELECT ' . $this->selectAdmin($role) . ' FROM ' . $this->from($role)
             . ' WHERE ' . $where
             . ' ORDER BY registered_at, id LIMIT ' . $perPage . ' OFFSET ' . $offset;
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($this->adminBounds($role, $start, $end, $regionId));
+        $stmt->execute($this->adminBounds($role, $start, $end, $regionId, $sido, $name));
         $items = [];
         foreach ($stmt->fetchAll() as $row) {
             $region = $row['region_id'] ?? null;
@@ -203,33 +206,61 @@ final class BasicCardRegisteredQuery
         DateTimeImmutable $end,
         bool $includeDeleted,
         ?int $regionId,
+        ?string $sido = null,
+        ?string $name = null,
     ): int {
         $this->assertRole($role);
-        $sql = 'SELECT COUNT(*) FROM ' . $this->from($role) . ' WHERE ' . $this->adminWhere($role, $includeDeleted, $regionId);
+        $sql = 'SELECT COUNT(*) FROM ' . $this->from($role) . ' WHERE ' . $this->adminWhere($role, $includeDeleted, $regionId, $sido, $name);
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($this->adminBounds($role, $start, $end, $regionId));
+        $stmt->execute($this->adminBounds($role, $start, $end, $regionId, $sido, $name));
 
         return (int) $stmt->fetchColumn();
     }
 
-    private function adminWhere(string $role, bool $includeDeleted, ?int $regionId): string
-    {
+    private function adminWhere(
+        string $role,
+        bool $includeDeleted,
+        ?int $regionId,
+        ?string $sido = null,
+        ?string $name = null,
+    ): string {
         $where = $this->where($role, $includeDeleted);
-        if ($regionId === null || $regionId < 1) {
-            return $where;
+        if ($regionId !== null && $regionId > 0) {
+            $where .= $this->regionFilterSql($role);
+        } elseif ($sido !== null && $sido !== '') {
+            $where .= $this->sidoFilterSql($role);
+        }
+        if (trim((string) $name) !== '') {
+            $where .= $this->nameFilterSql($role);
         }
 
-        return $where . $this->regionFilterSql($role);
+        return $where;
     }
 
-    /** @return array{start: string, end: string, region_exact?: int, region_self?: int, region_gu?: int} */
-    private function adminBounds(string $role, DateTimeImmutable $start, DateTimeImmutable $end, ?int $regionId): array
-    {
+    /** @return array<string, int|string> */
+    private function adminBounds(
+        string $role,
+        DateTimeImmutable $start,
+        DateTimeImmutable $end,
+        ?int $regionId,
+        ?string $sido = null,
+        ?string $name = null,
+    ): array {
         $bounds = $this->bounds($role, $start, $end);
         if ($regionId !== null && $regionId > 0) {
-            $bounds['region_exact'] = $regionId;
-            $bounds['region_self'] = $regionId;
-            $bounds['region_gu'] = $regionId;
+            [, $extra] = AdminRegionFilter::namedExists($this->representativeRegionExpr($role), $regionId, null);
+            foreach ($extra as $key => $value) {
+                $bounds[$key] = $value;
+            }
+        } elseif ($sido !== null && $sido !== '') {
+            [, $extra] = AdminRegionFilter::namedExists($this->representativeRegionExpr($role), null, $sido);
+            foreach ($extra as $key => $value) {
+                $bounds[$key] = $value;
+            }
+        }
+        $trimmed = trim((string) $name);
+        if ($trimmed !== '') {
+            $bounds['name_like'] = '%' . $trimmed . '%';
         }
 
         return $bounds;
@@ -237,30 +268,27 @@ final class BasicCardRegisteredQuery
 
     private function regionFilterSql(string $role): string
     {
-        $rep = $this->representativeRegionExpr($role);
+        [$sql] = AdminRegionFilter::namedExists($this->representativeRegionExpr($role), 1, null);
 
-        return ' AND (' . $rep . ' = :region_exact OR EXISTS (
-            SELECT 1 FROM regions card_region
-            WHERE card_region.id = ' . $rep . '
-              AND (
-                (
-                  card_region.unit_level <> \'dong\'
-                  AND card_region.is_selectable = 1
-                  AND card_region.id = :region_self
-                )
-                OR (
-                  card_region.unit_level = \'dong\'
-                  AND CHAR_LENGTH(card_region.sigungu_code) >= 5
-                  AND EXISTS (
-                    SELECT 1 FROM regions region_gu
-                    WHERE region_gu.id = :region_gu
-                      AND region_gu.is_selectable = 1
-                      AND CHAR_LENGTH(region_gu.official_code) >= 5
-                      AND LEFT(region_gu.official_code, 5) = LEFT(card_region.sigungu_code, 5)
-                  )
-                )
-              )
-        ))';
+        return ' AND ' . $sql;
+    }
+
+    private function sidoFilterSql(string $role): string
+    {
+        [$sql] = AdminRegionFilter::namedExists($this->representativeRegionExpr($role), null, '00');
+
+        return ' AND ' . $sql;
+    }
+
+    private function nameFilterSql(string $role): string
+    {
+        $column = match ($role) {
+            'study_room' => 'sr.study_room_name',
+            'tutor' => 't.tutor_display_name',
+            'student' => "COALESCE(s.public_display_name,'')",
+        };
+
+        return ' AND ' . $column . ' LIKE :name_like';
     }
 
     private function representativeRegionExpr(string $role): string

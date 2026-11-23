@@ -36,6 +36,7 @@ import { bulkDeleteAdminMembers, deleteAdminMember } from './admin-api.js';
 import { deleteHomePopup, ensureHomePopups, peekHomePopups, saveHomePopup } from './home-popup-api.js';
 import { s114Alert, s114Confirm } from '../../../shared/confirm-dialog.js';
 import { a28Ui } from './a28-screens-state.js';
+import { bindRegionSelects } from './admin-region-options.js';
 import { peekHubExposureRoute } from './a28-today-hub.js';
 
 const MEMBER_ACTION_CONFIRM = {
@@ -523,6 +524,7 @@ export function bindMembersScreen(root, rerender, navigate) {
       .catch(() => {});
   }
   const form = root.querySelector('[data-member-filter]');
+  bindRegionSelects(form, () => rerender());
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!(form instanceof HTMLFormElement)) return;
@@ -531,6 +533,8 @@ export function bindMembersScreen(root, rerender, navigate) {
       q: String(fd.get('q') || '').trim(),
       status: String(fd.get('status') || 'all'),
       role_type: String(fd.get('role_type') || 'all'),
+      sido: String(fd.get('sido') || '').trim(),
+      region: String(fd.get('region') || '').trim(),
     };
     a28Ui.openMemberId = null;
     try {

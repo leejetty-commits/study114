@@ -214,13 +214,15 @@ function commerceUserIdFromLocation() {
 }
 
 /**
- * @param {{ q?: string, status?: string, role_type?: string, limit?: number }} [filters]
+ * @param {{ q?: string, status?: string, role_type?: string, sido?: string, region?: string, limit?: number }} [filters]
  */
 export async function hydrateMembersCache(filters = {}) {
   const data = await fetchAdminMembers({
     q: filters.q || '',
     status: filters.status || 'all',
     role_type: filters.role_type || 'all',
+    sido: filters.sido || '',
+    region: filters.region || '',
     limit: filters.limit || 50,
   });
   membersCache = {
@@ -237,6 +239,8 @@ export async function hydrateMembersCache(filters = {}) {
       q: String(filters.q || ''),
       status: String(filters.status || 'all'),
       role_type: String(filters.role_type || 'all'),
+      sido: String(filters.sido || ''),
+      region: String(filters.region || ''),
     },
   };
   return membersCache;

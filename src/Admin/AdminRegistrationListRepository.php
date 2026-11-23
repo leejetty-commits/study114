@@ -7,6 +7,7 @@ namespace Study114\Admin;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use Study114\Database\Connection;
+use Study114\Admin\AdminRegionFilter;
 use Study114\Registration\BasicCardRegisteredQuery;
 use Study114\Registration\OfficialRegionLabel;
 use Study114\Report\ReportPeriod;
@@ -57,6 +58,8 @@ final class AdminRegistrationListRepository
         ?int $regionId,
         int $page,
         int $perPage,
+        ?string $sido = null,
+        ?string $q = null,
     ): array {
         if (!in_array($role, self::ROLES, true)) {
             throw new InvalidArgumentException('role은 study_room, tutor, student만 가능합니다.');
@@ -68,7 +71,19 @@ final class AdminRegistrationListRepository
         }
         $perPage = min(100, $perPage);
         $region = ($regionId !== null && $regionId > 0) ? $regionId : null;
-        $listed = $this->query->listByRoleForAdmin($role, $start, $end, false, $page, $perPage, $region);
+        $sido = AdminRegionFilter::effectiveSido(Connection::get(), $region, $sido);
+        $name = trim((string) $q);
+        $listed = $this->query->listByRoleForAdmin(
+            $role,
+            $start,
+            $end,
+            false,
+            $page,
+            $perPage,
+            $region,
+            $sido,
+            $name !== '' ? $name : null,
+        );
         $tz = $this->period->measuredTz();
         $source = $role === 'student' ? 'php' : 'db';
         $items = [];

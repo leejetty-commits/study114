@@ -73,6 +73,7 @@ import {
   apiPatchOperator,
   apiResetOperatorPassword,
 } from './admin-backend.js';
+import { renderRegionSelects } from './admin-region-options.js';
 import { isMasterAdmin } from './admin-guard.js';
 import { getAuthUser } from '../auth-session.js';
 import {
@@ -1532,23 +1533,28 @@ function renderMembers() {
        ${chip('withdrawn', '탈퇴')}
      </div>
      <form class="admin-filter-bar" data-member-filter>
-       <input type="search" name="q" class="admin-input" placeholder="이메일·이름·휴대폰·식별번호·공부방·과외쌤·지역" value="${esc(filters.q || '')}" />
-       <select name="status" class="admin-input--sm">
-         <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
-         <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
-         <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>대기</option>
-         <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>정지</option>
-         <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
-       </select>
-       <select name="role_type" class="admin-input--sm">
-         <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 포함 · 전체</option>
-         <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학생 포함</option>
-         <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방 포함</option>
-         <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤 포함</option>
-         <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자 포함</option>
-       </select>
-       <button type="submit" class="btn btn--primary btn--sm">검색</button>
-       <button type="button" class="btn btn--secondary btn--sm" data-member-refresh>새로고침</button>
+       <div class="admin-filter-bar__row">
+         ${renderRegionSelects({ sido: filters.sido || '', region: filters.region || '' })}
+         <select name="status" class="admin-input--sm">
+           <option value="all"${filters.status === 'all' ? ' selected' : ''}>상태 전체</option>
+           <option value="active"${filters.status === 'active' ? ' selected' : ''}>정상</option>
+           <option value="pending"${filters.status === 'pending' ? ' selected' : ''}>대기</option>
+           <option value="blocked"${filters.status === 'blocked' ? ' selected' : ''}>정지</option>
+           <option value="withdrawn"${filters.status === 'withdrawn' ? ' selected' : ''}>탈퇴</option>
+         </select>
+         <select name="role_type" class="admin-input--sm">
+           <option value="all"${filters.role_type === 'all' ? ' selected' : ''}>역할 포함 · 전체</option>
+           <option value="guardian_student"${filters.role_type === 'guardian_student' ? ' selected' : ''}>학생 포함</option>
+           <option value="study_room_owner"${filters.role_type === 'study_room_owner' ? ' selected' : ''}>공부방 포함</option>
+           <option value="tutor"${filters.role_type === 'tutor' ? ' selected' : ''}>과외쌤 포함</option>
+           <option value="admin"${filters.role_type === 'admin' ? ' selected' : ''}>운영자 포함</option>
+         </select>
+       </div>
+       <div class="admin-filter-bar__row">
+         <input type="search" name="q" class="admin-input" placeholder="공부방·과외쌤 이름 · 회원 이름 · 휴대폰 · 이메일" value="${esc(filters.q || '')}" />
+         <button type="submit" class="btn btn--primary btn--sm">검색</button>
+         <button type="button" class="btn btn--secondary btn--sm" data-member-refresh>새로고침</button>
+       </div>
      </form>
      <p class="a28-help">${isAdminApiMode() ? `서버 조회 · 목록 ${members.length}명 / 조건 일치 ${Number(totalLabel).toLocaleString()}명` : '미리보기 — 상태 항목을 눌러 골라 보세요.'}</p>
      <div class="admin-bulk-bar" data-member-bulk-bar>

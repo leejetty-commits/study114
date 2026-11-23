@@ -11,14 +11,16 @@ async function readJson(res) {
 }
 
 /**
- * @param {{ role?: string, from?: string, to?: string, region?: string, page?: number, perPage?: number }} [query]
+ * @param {{ role?: string, from?: string, to?: string, sido?: string, region?: string, q?: string, page?: number, perPage?: number }} [query]
  */
 export async function fetchRegistrationList(query = {}) {
   const params = new URLSearchParams();
   params.set('role', query.role || 'study_room');
   if (query.from) params.set('from', query.from);
   if (query.to) params.set('to', query.to);
+  if (query.sido) params.set('sido', query.sido);
   if (query.region) params.set('region', query.region);
+  if (query.q) params.set('q', query.q);
   params.set('page', String(query.page || 1));
   params.set('perPage', String(query.perPage || 50));
   const res = await adminFetch(`/api/admin/registrations.php?${params}`, {
