@@ -41,7 +41,7 @@ import {
   isAdminSettingsReady,
   ensureAdminSettings,
 } from './site-settings-store.js';
-import { getMembersCache } from './admin-backend.js';
+import { getMembersCache, isAdminApiMode } from './admin-backend.js';
 import {
   saveSmsSettings,
   saveTemplateGroup,
@@ -817,7 +817,11 @@ export function bindNotifyAdminEvents(root, path, rerender) {
 
       const cache = getMembersCache();
 
-      const list = cache?.members?.length ? cache.members : A28_MEMBER_SEED;
+      const list = isAdminApiMode()
+        ? (Array.isArray(cache?.members) ? cache.members : [])
+        : cache?.members?.length
+          ? cache.members
+          : A28_MEMBER_SEED;
 
       const data = syncPhonesFromMembers(list);
 
