@@ -70,29 +70,168 @@ function ok(string $name, bool $cond, string $detail = ''): void
 }
 
 if ($mode === 'nope') {
-    $_SERVER['REQUEST_METHOD'] = 'GET';
-    $_GET = ['status' => 'nope'];
-    $_SERVER['HTTP_X_STUDY114_SOFT_ERROR'] = '1';
-    ob_start();
-    register_shutdown_function(static function (): void {
-        $body = ob_get_clean();
-        if (!is_string($body)) {
-            $body = '';
+    $host = getenv('STUDY114_DB_HOST');
+    $host = is_string($host) && $host !== '' ? $host : '127.0.0.1';
+    if (!in_array($host, ['127.0.0.1', 'localhost'], true)) {
+        fwrite(STDERR, "실행 못 함: 로컬 데이터베이스만 허용\n");
+        exit(1);
+    }
+    $portRaw = getenv('STUDY114_DB_PORT');
+    $port = is_string($portRaw) && $portRaw !== '' ? (int) $portRaw : 3307;
+    if (!in_array($port, [3306, 3307], true)) {
+        fwrite(STDERR, "실행 못 함: 로컬 포트만 허용\n");
+        exit(1);
+    }
+    $user = getenv('STUDY114_DB_USER');
+    $user = is_string($user) && $user !== '' ? $user : 'root';
+    $passw = getenv('STUDY114_DB_PASS');
+    $passw = is_string($passw) ? $passw : 'study114dev';
+    $dbName = 'study114_member_test_' . gmdate('YmdHis') . '_' . random_int(100000, 999999);
+    if (!preg_match('/^study114_member_test_[0-9]{14}_[0-9]{6}$/', $dbName)) {
+        fwrite(STDERR, "실행 못 함: 임시 데이터베이스 이름이 아님\n");
+        exit(1);
+    }
+
+    $configPath = dirname(__DIR__) . '/config/database.php';
+    $createdConfig = false;
+    $created = false;
+    $pdo = null;
+    try {
+        $pdo = new PDO(
+            sprintf('mysql:host=%s;port=%d;charset=utf8mb4', $host, $port),
+            $user,
+            $passw,
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+            ]
+        );
+        $pdo->exec(
+            'CREATE DATABASE `' . $dbName . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
+        );
+        $created = true;
+        $pdo->exec('USE `' . $dbName . '`');
+        $pdo->exec(
+            'CREATE TABLE users (
+                id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                email VARCHAR(255) NOT NULL,
+                status VARCHAR(32) NOT NULL,
+                admin_level VARCHAR(32) NULL,
+                email_verified_at DATETIME NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+        );
+        $insertAdmin = $pdo->prepare(
+            'INSERT INTO users (email, status, admin_level, email_verified_at) VALUES (?, ?, ?, ?)'
+        );
+        $insertAdmin->execute(['admin-verify@example.com', 'active', 'super_admin', '2026-01-01 00:00:00']);
+        $adminId = (int) $pdo->lastInsertId();
+
+        putenv('STUDY114_DB_HOST=' . $host);
+        putenv('STUDY114_DB_PORT=' . (string) $port);
+        putenv('STUDY114_DB_NAME=' . $dbName);
+        putenv('STUDY114_DB_USER=' . $user);
+        putenv('STUDY114_DB_PASS=' . $passw);
+        $_ENV['STUDY114_DB_HOST'] = $host;
+        $_ENV['STUDY114_DB_PORT'] = (string) $port;
+        $_ENV['STUDY114_DB_NAME'] = $dbName;
+        $_ENV['STUDY114_DB_USER'] = $user;
+        $_ENV['STUDY114_DB_PASS'] = $passw;
+        $_SERVER['STUDY114_DB_HOST'] = $host;
+        $_SERVER['STUDY114_DB_PORT'] = (string) $port;
+        $_SERVER['STUDY114_DB_NAME'] = $dbName;
+        $_SERVER['STUDY114_DB_USER'] = $user;
+        $_SERVER['STUDY114_DB_PASS'] = $passw;
+
+        if (is_file($configPath)) {
+            $configSrc = file_get_contents($configPath);
+            if (!is_string($configSrc) || !str_contains($configSrc, 'STUDY114_DB_NAME')) {
+                throw new RuntimeException('config');
+            }
+        } else {
+            file_put_contents(
+                $configPath,
+                "<?php\n\ndeclare(strict_types=1);\n\nreturn [\n"
+                . "    'driver' => 'mysql',\n"
+                . "    'host' => getenv('STUDY114_DB_HOST') ?: '127.0.0.1',\n"
+                . "    'port' => (int) (getenv('STUDY114_DB_PORT') ?: 3307),\n"
+                . "    'database' => getenv('STUDY114_DB_NAME') ?: '',\n"
+                . "    'username' => getenv('STUDY114_DB_USER') ?: 'root',\n"
+                . "    'password' => getenv('STUDY114_DB_PASS') ?: '',\n"
+                . "    'charset' => 'utf8mb4',\n"
+                . "    'collation' => 'utf8mb4_unicode_ci',\n"
+                . "];\n"
+            );
+            $createdConfig = true;
         }
-        $start = strpos($body, '{');
-        $json = $start === false ? null : json_decode(substr($body, $start), true);
-        $http = is_array($json) ? (int) ($json['http_status'] ?? 0) : 0;
-        $ok = is_array($json) && ($json['error'] ?? '') === 'validation' && $http === 422;
-        echo $ok ? "PASS  status-nope-422\n" : "FAIL  status-nope-422 — http={$http}\n";
-        echo 'summary pass=' . ($ok ? '1' : '0') . ' fail=' . ($ok ? '0' : '1') . "\n";
-        if (!$ok) {
-            exit(1);
+
+        $_SERVER['REQUEST_METHOD'] = 'GET';
+        $_GET = ['status' => 'nope'];
+        $_SERVER['HTTP_X_STUDY114_SOFT_ERROR'] = '1';
+        session_start();
+        $_SESSION['auth'] = [
+            'user_id' => $adminId,
+            'email' => 'admin-verify@example.com',
+            'role_type' => 'admin',
+            'name' => 'verify',
+            'admin_level' => 'super_admin',
+            'console_unlocked_at' => time(),
+        ];
+
+        $GLOBALS['verify_drop_db'] = $dbName;
+        $GLOBALS['verify_drop_pdo'] = $pdo;
+        $GLOBALS['verify_config_created'] = $createdConfig;
+        $GLOBALS['verify_config_path'] = $configPath;
+        ob_start();
+        register_shutdown_function(static function (): void {
+            $dropName = (string) ($GLOBALS['verify_drop_db'] ?? '');
+            $dropPdo = $GLOBALS['verify_drop_pdo'] ?? null;
+            if ($dropPdo instanceof PDO && preg_match('/^study114_member_test_[0-9]{14}_[0-9]{6}$/', $dropName)) {
+                try {
+                    $dropPdo->exec('DROP DATABASE `' . $dropName . '`');
+                } catch (Throwable) {
+                }
+            }
+            if (!empty($GLOBALS['verify_config_created'])) {
+                $path = (string) ($GLOBALS['verify_config_path'] ?? '');
+                if ($path !== '' && is_file($path)) {
+                    unlink($path);
+                }
+            }
+            $body = ob_get_clean();
+            if (!is_string($body)) {
+                $body = '';
+            }
+            $start = strpos($body, '{');
+            $json = $start === false ? null : json_decode(substr($body, $start), true);
+            $http = is_array($json) ? (int) ($json['http_status'] ?? 0) : 0;
+            $error = is_array($json) ? (string) ($json['error'] ?? '') : '';
+            $ok = $error === 'validation' && $http === 422;
+            echo $ok ? "PASS  status-nope-422\n" : "FAIL  status-nope-422 — http={$http} error={$error}\n";
+            echo 'summary pass=' . ($ok ? '1' : '0') . ' fail=' . ($ok ? '0' : '1') . "\n";
+            if (!$ok) {
+                exit(1);
+            }
+        });
+        require dirname(__DIR__) . '/public/api/admin/members.php';
+        echo "FAIL  status-nope-422 — no-exit\n";
+        echo "summary pass=0 fail=1\n";
+        exit(1);
+    } catch (Throwable) {
+        if ($created && $pdo instanceof PDO && preg_match('/^study114_member_test_[0-9]{14}_[0-9]{6}$/', $dbName)) {
+            try {
+                $pdo->exec('DROP DATABASE `' . $dbName . '`');
+            } catch (Throwable) {
+            }
         }
-    });
-    require dirname(__DIR__) . '/public/api/admin/members.php';
-    echo "FAIL  status-nope-422 — no-exit\n";
-    echo "summary pass=0 fail=1\n";
-    exit(1);
+        if ($createdConfig && is_file($configPath)) {
+            unlink($configPath);
+        }
+        echo "FAIL  status-nope-422 — db\n";
+        echo "summary pass=0 fail=1\n";
+        fwrite(STDERR, "실행 못 함: 임시 데이터베이스 시험 실패\n");
+        exit(1);
+    }
 }
 
 if ($mode === 'filled') {
