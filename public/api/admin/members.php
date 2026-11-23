@@ -14,13 +14,6 @@ AdminApi::bootstrap();
 
 AdminApi::run(static function (): void {
     $method = AdminApi::method();
-    if ($method === 'GET' && AdminApi::queryInt('id', 0) <= 0) {
-        $status = (string) (AdminApi::queryString('status', 'all') ?? 'all');
-        if (!in_array($status, ['all', 'active', 'pending', 'blocked', 'withdrawn', 'test'], true)) {
-            throw new InvalidArgumentException('status는 all, active, pending, blocked, withdrawn, test만 허용됩니다.');
-        }
-    }
-
     $auth = AdminApi::requireAdmin();
     $service = new AdminMemberService();
 
@@ -28,6 +21,11 @@ AdminApi::run(static function (): void {
         $id = AdminApi::queryInt('id', 0);
         if ($id > 0) {
             AdminApi::ok(['member' => $service->detail($id)]);
+        }
+
+        $status = (string) (AdminApi::queryString('status', 'all') ?? 'all');
+        if (!in_array($status, ['all', 'active', 'pending', 'blocked', 'withdrawn', 'test'], true)) {
+            throw new InvalidArgumentException('status는 all, active, pending, blocked, withdrawn, test만 허용됩니다.');
         }
 
         $region = AdminRegionFilter::parse(
