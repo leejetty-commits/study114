@@ -90,7 +90,7 @@
 | sms_opt_in | TINYINT(1) | NO | default 0 · SMS 수신 |
 | email_opt_in | TINYINT(1) | NO | default 0 · 이메일 수신 |
 | safe_number_opt_in | TINYINT(1) | NO | default 0 · **확장만** (§10-3) |
-| phone_verified_at | DATETIME | YES | 가입 단계에서는 NULL 유지. 쪽지 수신 ON 때 후속 |
+| phone_verified_at | DATETIME | YES | 가입 단계에서는 NULL 유지. 쪽지 수신 ON 때 후속(SMS OTP 본인인증, 구현 완료). 현재 `4abb7dbd` 이후 연결 제거·미동작. 심사 뒤 `5055dbe9` 기준으로 재연결 |
 | created_at / updated_at | DATETIME | NO | |
 
 ### 5-1. 2장 가입 UI ↔ DB 매핑 (잠금)

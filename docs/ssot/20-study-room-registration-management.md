@@ -188,6 +188,8 @@
 
 **휴대폰 확인:** 노출 게이트 ✕ · `쪽지 받는 중` ON 저장 시도 시에만 `phone_verified_at` 확인.
 
+> **2026-11-25 종현 확정:** 실명 본인확인은 쓰지 않는다(비용). 가입단계는 메일인증만. 쪽지설정 휴대폰 SMS OTP가 본인인증이다(알고리즘 구현 완료: `11b433c0` 등). 현재 `4abb7dbd`(2026-09-22)로 화면·서버 연결이 끊겨 있으며, 심사 뒤 `5055dbe9` 기준으로 다시 연결한다. 문자 발송사 연동은 아직 없다. feature flag/`hidden` 숨김은 아니다.
+
 DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zip.sql` (신규 DEFAULT `open`).  
 `052_inquiry_default_paused.sql` 은 **폐기(옛 설계 잔재)**.
 
@@ -315,6 +317,8 @@ DDL: `study_rooms.inquiry_status` ENUM — `067_publish_inquiry_split_address_zi
 **금지 표현:** 노출·상담 · 상담 수용 · 쪽지 활성화 · 대기 문의 가능(1차 UI).
 
 **휴대폰 게이트:** `쪽지 받는 중` ON 저장 시도 시 `phone_verified_at` 확인 · 실패 시 OFF·기존 사유 유지.
+
+> 위 게이트가 정본 위치다. 현재 연결은 `4abb7dbd` 이후 없고, 심사 뒤 `5055dbe9` 기준으로 복구한다. 상세는 위 「휴대폰 확인」 주를 따른다.
 
 ### 7-2. P20-06 (논리 ID)
 
